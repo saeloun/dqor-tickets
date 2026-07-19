@@ -412,8 +412,10 @@ button { cursor: pointer; }
 .site-footer__links a:hover { color: var(--color-ruby); }
 .site-footer__inner p { margin: 0; }
 .site-footer__inner p span { color: var(--color-ruby); }
-.site-footer__association { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-.site-footer__association-logo { width: auto; height: 1.75rem; }
+.site-footer__association { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.site-footer__association-name { color: var(--color-ruby); }
+.site-footer__association-logo { width: auto; height: 0.95rem; }
+:root[data-theme="dark"] .site-footer__association-logo { filter: invert(1) brightness(1.7); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
