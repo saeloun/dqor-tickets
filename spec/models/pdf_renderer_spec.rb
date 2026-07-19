@@ -36,11 +36,11 @@ RSpec.describe PdfRenderer, type: :model do
 
     render(Object.new, template: :invoice)
 
-    expect(Ferrum::Browser).to have_received(:new).with(hash_including(browser_options: {
+    expect(Ferrum::Browser).to have_received(:new).with(hash_including(browser_options: hash_including(
       "no-sandbox" => nil,
       "disable-gpu" => nil,
       "disable-dev-shm-usage" => nil
-    }))
+    )))
   ensure
     ENV["CHROME_NO_SANDBOX"] = previous_value
   end
