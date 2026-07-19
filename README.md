@@ -177,6 +177,8 @@ Restore never overwrites the live database. Stop the app and replace `storage/pr
 
 Use `rzp_test_...` credentials while developing and validating the full checkout flow. Switch all three Razorpay values to the live account before sales open. In the Razorpay dashboard, configure the app's `/webhooks/razorpay` endpoint and subscribe to `order.paid` or `payment.captured`, `payment.failed`, and `refund.processed`; use the same webhook secret as `RAZORPAY_WEBHOOK_SECRET`.
 
+If the site sits behind a CDN or proxy with bot protection (for example Cloudflare's orange-cloud), point the Razorpay webhook at the origin host rather than the proxied domain, or add a rule that exempts `/webhooks/*` from bot challenges. Otherwise the proxy can reject Razorpay's server-to-server delivery. The reconciliation sweep still recovers any missed webhook, but the direct route avoids the problem entirely.
+
 The app treats prices as GST-inclusive and currently uses SAC 998596 and Maharashtra supplier state code 27. Verify the SAC code, GST rate, buyer place-of-supply rules, invoice wording, and credit-note treatment with your chartered accountant before accepting live payments.
 
 ## Admin
