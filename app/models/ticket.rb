@@ -24,7 +24,7 @@ class Ticket < ApplicationRecord
   validates :attendee_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
 
   def attach_pdf!
-    pdf.attach(io: StringIO.new(TicketPdf.new(self).render), filename: "DQOR-ticket-#{id}.pdf", content_type: "application/pdf") unless pdf.attached?
+    pdf.attach(io: StringIO.new(PdfRenderer.render(self, template: :ticket)), filename: "DQOR-ticket-#{id}.pdf", content_type: "application/pdf") unless pdf.attached?
   end
 
   def check_in!(date)

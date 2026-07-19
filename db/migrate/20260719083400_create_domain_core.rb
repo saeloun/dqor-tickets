@@ -45,7 +45,7 @@ class CreateDomainCore < ActiveRecord::Migration[8.1]
       t.datetime :expires_at
       t.string :razorpay_order_id
       t.references :coupon, foreign_key: true
-      t.jsonb :metadata, null: false, default: {}
+      t.json :metadata, null: false, default: {}
       t.timestamps
     end
     add_index :orders, :code, unique: true
@@ -74,7 +74,7 @@ class CreateDomainCore < ActiveRecord::Migration[8.1]
       t.string :tshirt_size
       t.string :dietary_preference
       t.string :secret, null: false
-      t.jsonb :checked_in_at, null: false, default: {}
+      t.json :checked_in_at, null: false, default: {}
       t.datetime :canceled_at
       t.timestamps
     end
@@ -86,7 +86,7 @@ class CreateDomainCore < ActiveRecord::Migration[8.1]
       t.references :order, null: false, foreign_key: true
       t.string :kind, null: false
       t.integer :amount_paise, null: false
-      t.jsonb :raw, null: false, default: {}
+      t.json :raw, null: false, default: {}
       t.timestamps
     end
     add_index :payment_events, :razorpay_event_id, unique: true
@@ -105,8 +105,8 @@ class CreateDomainCore < ActiveRecord::Migration[8.1]
       t.references :order, null: false, foreign_key: true
       t.string :number, null: false
       t.date :issued_on, null: false
-      t.jsonb :buyer_snapshot, null: false, default: {}
-      t.jsonb :line_items, null: false, default: []
+      t.json :buyer_snapshot, null: false, default: {}
+      t.json :line_items, null: false, default: []
       t.string :kind, null: false, default: "invoice"
       t.references :refers_to, foreign_key: { to_table: :invoices }
       t.timestamps

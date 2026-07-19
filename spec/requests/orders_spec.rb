@@ -106,6 +106,7 @@ RSpec.describe "Orders", type: :request do
   end
 
   it "confirms a free order without calling Razorpay" do
+    allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
     free = create(:ticket_type, name: "Community Pass", price_paise: 0)
 
     expect { post orders_path, params: checkout_params(quantities: { free.id.to_s => "1" }) }

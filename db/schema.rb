@@ -11,9 +11,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.1].define(version: 2026_07_19_090000) do
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_catalog.plpgsql"
-
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -47,7 +44,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_090000) do
     t.string "email", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
-    t.index "lower((email)::text)", name: "index_admin_users_on_lower_email", unique: true
+    t.index "lower(email)", name: "index_admin_users_on_lower_email", unique: true
   end
 
   create_table "coupons", force: :cascade do |t|
@@ -57,28 +54,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_090000) do
     t.integer "discount_paise"
     t.integer "max_uses"
     t.integer "percent"
-    t.bigint "ticket_type_id"
+    t.integer "ticket_type_id"
     t.datetime "updated_at", null: false
     t.integer "uses_count", default: 0, null: false
     t.datetime "valid_from"
     t.datetime "valid_until"
-    t.index "lower((code)::text)", name: "index_coupons_on_lower_code", unique: true
+    t.index "lower(code)", name: "index_coupons_on_lower_code", unique: true
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
   end
 
   create_table "invoices", force: :cascade do |t|
-    t.jsonb "buyer_snapshot", default: {}, null: false
+    t.json "buyer_snapshot", default: {}, null: false
     t.datetime "created_at", null: false
     t.date "issued_on", null: false
     t.string "kind", default: "invoice", null: false
-    t.jsonb "line_items", default: [], null: false
+    t.json "line_items", default: [], null: false
     t.string "number", null: false
-    t.bigint "order_id", null: false
-    t.bigint "refers_to_id"
+    t.integer "order_id", null: false
+    t.integer "refers_to_id"
     t.datetime "updated_at", null: false
     t.index ["number"], name: "index_invoices_on_number", unique: true
     t.index ["order_id"], name: "index_invoices_on_order_id"
-    t.index ["order_id"], name: "index_invoices_one_invoice_per_order", unique: true, where: "((kind)::text = 'invoice'::text)"
+    t.index ["order_id"], name: "index_invoices_one_invoice_per_order", unique: true, where: "kind = 'invoice'"
     t.index ["refers_to_id"], name: "index_invoices_on_refers_to_id"
   end
 
@@ -87,13 +84,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_090000) do
     t.string "buyer_name", null: false
     t.string "buyer_phone"
     t.string "code", null: false
-    t.bigint "coupon_id"
+    t.integer "coupon_id"
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.datetime "expires_at"
     t.string "gst_legal_name"
     t.string "gstin"
-    t.jsonb "metadata", default: {}, null: false
+    t.json "metadata", default: {}, null: false
     t.string "razorpay_order_id"
     t.integer "status", default: 0, null: false
     t.integer "total_paise", default: 0, null: false
@@ -107,31 +104,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_090000) do
     t.integer "amount_paise", null: false
     t.datetime "created_at", null: false
     t.string "kind", null: false
-    t.bigint "order_id", null: false
-    t.jsonb "raw", default: {}, null: false
+    t.integer "order_id", null: false
+    t.json "raw", default: {}, null: false
     t.string "razorpay_event_id", null: false
     t.string "razorpay_payment_id"
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_payment_events_on_order_id"
     t.index ["razorpay_event_id"], name: "index_payment_events_on_razorpay_event_id", unique: true
-    t.index ["razorpay_payment_id"], name: "index_payment_events_on_razorpay_payment_id", unique: true, where: "(razorpay_payment_id IS NOT NULL)"
+    t.index ["razorpay_payment_id"], name: "index_payment_events_on_razorpay_payment_id", unique: true, where: "razorpay_payment_id IS NOT NULL"
   end
 
   create_table "refunds", force: :cascade do |t|
     t.integer "amount_paise", null: false
     t.datetime "created_at", null: false
     t.string "credit_note_number"
-    t.bigint "order_id", null: false
+    t.integer "order_id", null: false
     t.string "razorpay_refund_id"
     t.string "status", null: false
-    t.jsonb "ticket_ids", default: [], null: false
+    t.json "ticket_ids", default: [], null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_refunds_on_order_id"
-    t.index ["razorpay_refund_id"], name: "index_refunds_on_razorpay_refund_id", unique: true, where: "(razorpay_refund_id IS NOT NULL)"
+    t.index ["razorpay_refund_id"], name: "index_refunds_on_razorpay_refund_id", unique: true, where: "razorpay_refund_id IS NOT NULL"
   end
 
   create_table "sessions", force: :cascade do |t|
-    t.bigint "admin_user_id", null: false
+    t.integer "admin_user_id", null: false
     t.datetime "created_at", null: false
     t.string "ip_address"
     t.datetime "updated_at", null: false
@@ -162,13 +159,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_090000) do
     t.string "attendee_email"
     t.string "attendee_name"
     t.datetime "canceled_at"
-    t.jsonb "checked_in_at", default: {}, null: false
+    t.json "checked_in_at", default: {}, null: false
     t.datetime "created_at", null: false
     t.string "dietary_preference"
-    t.bigint "order_id", null: false
+    t.integer "order_id", null: false
     t.integer "price_paise", null: false
     t.string "secret", null: false
-    t.bigint "ticket_type_id", null: false
+    t.integer "ticket_type_id", null: false
     t.string "tshirt_size"
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_tickets_on_order_id"

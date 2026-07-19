@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      :root {
+        --background: hsl(40, 30%, 96%);
+        --card: hsl(40, 25%, 98%);
+        --foreground: hsl(0, 0%, 12%);
+        --foreground-soft: hsl(0, 0%, 25%);
+        --muted: hsl(20, 30%, 94%);
+        --muted-foreground: hsl(20, 15%, 45%);
+        --border: hsl(30, 20%, 86%);
+        --border-strong: hsl(30, 20%, 78%);
+        --ruby: hsl(348, 70%, 35%);
+        --gold: hsl(40, 80%, 50%);
+        --font-display: "Playfair Display", Georgia, serif;
+        --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+      }
+
+      @page { size: A4; margin: 12mm; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: white; color: var(--foreground); font: 10px/1.45 var(--font-sans); }
+      h1, h2 { margin: 0; font-family: var(--font-display); }
+      h1 { color: var(--ruby); font-size: 25px; letter-spacing: 0.02em; }
+      h2 { color: var(--ruby); font-size: 13px; }
+      .page { border-top: 5px solid var(--ruby); }
+      .gold-line { height: 3px; margin-bottom: 20px; background: var(--gold); }
+      .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+      .eyebrow { margin-bottom: 4px; color: var(--ruby); font-size: 9px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+      .accent { margin-top: 3px; color: var(--foreground-soft); font-family: "Noto Sans Devanagari", var(--font-display); font-size: 12px; }
+      .invoice-meta { min-width: 190px; padding: 12px 14px; border: 1px solid var(--border-strong); background: var(--background); }
+      .invoice-number { margin: 3px 0 7px; color: var(--ruby); font: 700 14px var(--font-display); }
+      .label { color: var(--muted-foreground); font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+      .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+      .party { min-height: 112px; padding: 14px; border: 1px solid var(--border); background: var(--card); }
+      .party h2 { margin-bottom: 9px; }
+      .party-name { margin-bottom: 4px; font-weight: 700; }
+      .address { white-space: pre-line; }
+      .tax-id { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--border); }
+      table { width: 100%; border-collapse: collapse; }
+      th { padding: 8px 5px; border-bottom: 2px solid var(--ruby); color: var(--ruby); font-size: 7px; letter-spacing: 0.05em; text-align: right; text-transform: uppercase; }
+      th:first-child, td:first-child { text-align: left; }
+      td { padding: 10px 5px; border-bottom: 1px solid var(--border); text-align: right; vertical-align: top; }
+      .line-name { font-weight: 700; }
+      .line-sac { margin-top: 2px; color: var(--muted-foreground); font-size: 8px; }
+      .summary { width: 310px; margin: 18px 0 0 auto; }
+      .summary-row { display: flex; justify-content: space-between; padding: 5px 9px; }
+      .summary-row:nth-child(odd) { background: var(--muted); }
+      .grand-total { margin-top: 5px; padding: 9px; border-top: 3px solid var(--gold); color: var(--ruby); font: 700 14px var(--font-display); }
+      .footer { display: flex; justify-content: space-between; margin-top: 26px; padding-top: 10px; border-top: 1px solid var(--border-strong); color: var(--muted-foreground); font-size: 8px; }
+    </style>
+  </head>
+  <body>
+    <% totals = invoice.line_items.each_with_object(Hash.new(0)) do |line_item, sum| %>
+      <% %w[taxable cgst sgst igst total_paise].each { |key| sum[key] += line_item.fetch(key) } %>
+    <% end %>
+    <main class="page">
+      <div class="gold-line"></div>
+      <header class="header">
+        <div>
+          <div class="eyebrow">Deccan Queen on Rails 2026</div>
+          <h1><%= invoice.credit_note? ? "Credit Note" : "GST Tax Invoice" %></h1>
+          <div class="accent">डेक्कन क्वीन · Pune</div>
+        </div>
+        <div class="invoice-meta">
+          <div class="label"><%= invoice.credit_note? ? "Credit note number" : "Invoice number" %></div>
+          <div class="invoice-number"><%= invoice.number %></div>
+          <div><span class="label">Issued</span> <%= invoice.issued_on.to_fs(:long) %></div>
+          <% if invoice.refers_to %>
+            <div><span class="label">Refers to</span> <%= invoice.refers_to.number %></div>
+          <% end %>
+        </div>
+      </header>
+
+      <section class="parties">
+        <div class="party">
+          <h2>Seller</h2>
+          <div class="party-name"><%= ENV.fetch("SELLER_NAME", "Saeloun Software Pvt Ltd") %></div>
+          <div class="address"><%= ENV.fetch("SELLER_ADDRESS", "Pune, Maharashtra") %></div>
+          <div class="tax-id"><span class="label">GSTIN</span> <%= ENV.fetch("SELLER_GSTIN", "") %></div>
+        </div>
+        <div class="party">
+          <h2>Buyer</h2>
+          <div class="party-name"><%= invoice.buyer_snapshot["gst_legal_name"].presence || invoice.buyer_snapshot.fetch("buyer_name") %></div>
+          <div><%= invoice.buyer_snapshot.fetch("email") %></div>
+          <div class="tax-id"><span class="label">GSTIN</span> <%= invoice.buyer_snapshot["gstin"].presence || "B2C" %></div>
+          <div><span class="label">Place of supply</span> State <%= invoice.buyer_snapshot["billing_state_code"].presence || "27" %></div>
+        </div>
+      </section>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Gross</th>
+            <th>Discount</th>
+            <th>Taxable</th>
+            <th>CGST</th>
+            <th>SGST</th>
+            <th>IGST</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% invoice.line_items.each do |line_item| %>
+            <tr>
+              <td>
+                <div class="line-name"><%= line_item.fetch("name") %></div>
+                <div class="line-sac">SAC 998596 · GST inclusive</div>
+              </td>
+              <% %w[price_paise discount_paise taxable cgst sgst igst total_paise].each do |key| %>
+                <td><%= number_to_currency(line_item.fetch(key) / 100.0, unit: "₹", precision: 2) %></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+      <section class="summary">
+        <div class="summary-row"><span>Taxable total</span><strong><%= number_to_currency(totals["taxable"] / 100.0, unit: "₹", precision: 2) %></strong></div>
+        <div class="summary-row"><span>CGST</span><strong><%= number_to_currency(totals["cgst"] / 100.0, unit: "₹", precision: 2) %></strong></div>
+        <div class="summary-row"><span>SGST</span><strong><%= number_to_currency(totals["sgst"] / 100.0, unit: "₹", precision: 2) %></strong></div>
+        <div class="summary-row"><span>IGST</span><strong><%= number_to_currency(totals["igst"] / 100.0, unit: "₹", precision: 2) %></strong></div>
+        <div class="summary-row grand-total"><span>Grand total</span><span><%= number_to_currency(totals["total_paise"] / 100.0, unit: "₹", precision: 2) %></span></div>
+      </section>
+
+      <footer class="footer">
+        <span>This is a computer-generated tax document.</span>
+        <span>Pune · October 8–11, 2026</span>
+      </footer>
+    </main>
+  </body>
+</html>

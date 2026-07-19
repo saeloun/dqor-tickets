@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe ConfirmOrderJob, type: :job do
+  before { allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test") }
+
   def order_with_event(status: :pending, expires_at: 30.minutes.from_now, capacity: 2)
     ticket_type = create(:ticket_type, capacity:)
     order = create(:order, status:, expires_at:, razorpay_order_id: "order_#{SecureRandom.hex(4)}")

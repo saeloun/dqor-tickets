@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe ProcessRefundJob, type: :job do
+  before { allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test") }
+
   it "cancels selected tickets, attaches a credit note, and enqueues email" do
     order = create(:order, :paid)
     selected = create(:ticket, order:)

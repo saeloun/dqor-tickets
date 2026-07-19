@@ -20,14 +20,16 @@ RSpec.describe "checkout concurrency", type: :model do
     TicketType.delete_all
   end
 
-  it "lets only one checkout reserve the last seat", :aggregate_failures do
+  it "uses SQLite immediate transactions to prevent two connections reserving the last seat", :aggregate_failures do
     ticket_type = TicketType.create!(name: "Last Seat", slug: "last-seat", price_paise: 100, capacity: 1)
+    connections = Queue.new
     ready = Queue.new
     start = Queue.new
 
     threads = 2.times.map do |number|
       Thread.new do
-        ActiveRecord::Base.connection_pool.with_connection do
+        ActiveRecord::Base.connection_pool.with_connection do |connection|
+          connections << connection.object_id
           ready << true
           start.pop
           Orders::Checkout.call(
@@ -46,6 +48,7 @@ RSpec.describe "checkout concurrency", type: :model do
 
     expect(results.count { |result| result.is_a?(Order) }).to eq(1)
     expect(results.count { |result| result.is_a?(Orders::Checkout::SoldOut) }).to eq(1)
+    expect(2.times.map { connections.pop }.uniq.size).to eq(2)
     expect(Ticket.count).to eq(1)
   end
 end

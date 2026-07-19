@@ -15,7 +15,7 @@ class Invoice < ApplicationRecord
   before_destroy { raise ActiveRecord::ReadOnlyRecord, "invoices cannot be destroyed" }
 
   def attach_pdf!
-    pdf.attach(io: StringIO.new(InvoicePdf.new(self).render), filename: "#{number.tr('/', '-')}.pdf", content_type: "application/pdf") unless pdf.attached?
+    pdf.attach(io: StringIO.new(PdfRenderer.render(self, template: :invoice)), filename: "#{number.tr('/', '-')}.pdf", content_type: "application/pdf") unless pdf.attached?
   end
 
   def self.issue_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil)

@@ -156,3 +156,10 @@ Rails Girls applications & approval flows, waitlist auto-offers, self-serve tran
 - Confirm Explore Pune Day price (assumed ₹2,000) and cap (assumed 50).
 - Confirm prices are GST-inclusive (assumed yes).
 - Razorpay KYC + live keys; GSTIN/legal entity details for invoice header; CA sign-off on SAC/place-of-supply; SMTP provider choice; DNS record for tickets subdomain.
+
+## Addendum: adopted from tixly review (2026-07-19)
+
+- **Reconciliation sweep**: the recurring job also polls Razorpay for pending orders older than 2 minutes with a payment attempt and completes any whose webhook/callback was lost (same idempotent confirm path).
+- **Leveled payment audit log**: PaymentEvent gains `level` (info/warn/error) and `mode` (test/live) stamped from the key prefix; every gateway interaction is recorded (order_created, signature_mismatch, polling_check_failed, ...), not just webhooks.
+- **₹0-order guard**: buyer-side totals below ₹1 (Razorpay minimum) skip the gateway and complete immediately via the comp path; coupons cannot reduce a total below zero.
+- **v1.1 candidate — self-serve ticket transfer**: magic-link accept (48h token) that rotates `ticket.secret` and replaces attendee fields; old QR invalidates naturally. Not in v1.

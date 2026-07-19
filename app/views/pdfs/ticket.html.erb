@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      :root {
+        --background: hsl(40, 30%, 96%);
+        --card: hsl(40, 25%, 98%);
+        --foreground: hsl(0, 0%, 12%);
+        --foreground-soft: hsl(0, 0%, 25%);
+        --muted-foreground: hsl(20, 15%, 45%);
+        --border: hsl(30, 20%, 86%);
+        --ruby: hsl(348, 70%, 35%);
+        --secondary: hsl(20, 45%, 92%);
+        --gold: hsl(40, 80%, 50%);
+        --gold-light: hsl(42, 85%, 65%);
+        --font-display: "Playfair Display", Georgia, serif;
+        --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+      }
+
+      @page { size: A5 landscape; margin: 8mm; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: white; color: var(--foreground); font: 11px/1.35 var(--font-sans); }
+      .ticket { position: relative; display: grid; grid-template-columns: 1fr 58mm; min-height: 126mm; overflow: hidden; border: 1px solid var(--border); border-top: 5px solid var(--ruby); background: var(--card); }
+      .ticket::before { position: absolute; top: 0; right: 58mm; bottom: 0; border-left: 2px dashed var(--border); content: ""; }
+      .main { display: flex; flex-direction: column; padding: 10mm; }
+      .route-band { display: flex; align-items: center; justify-content: space-between; margin: -4mm -4mm 8mm; padding: 4mm 5mm; border-bottom: 3px solid var(--gold); background: var(--secondary); color: var(--ruby); }
+      .brand { font: 700 18px var(--font-display); }
+      .devanagari { font: 700 15px "Noto Sans Devanagari", var(--font-display); }
+      .event { margin-bottom: 2mm; color: var(--ruby); font: 700 27px/1.05 var(--font-display); }
+      .dates { color: var(--foreground-soft); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+      .journey { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 10mm; }
+      .label { display: block; margin-bottom: 1mm; color: var(--muted-foreground); font-size: 8px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; }
+      .value { color: var(--foreground); font: 700 17px var(--font-display); }
+      .ticket-type { color: var(--ruby); }
+      .footer { margin-top: auto; padding-top: 6mm; border-top: 1px solid var(--border); color: var(--foreground-soft); font-weight: 600; }
+      .stub { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 7mm 6mm; background: var(--background); text-align: center; }
+      .stub-title { color: var(--ruby); font: 700 13px var(--font-display); }
+      .qr { display: flex; width: 43mm; height: 43mm; align-items: center; justify-content: center; margin: 5mm 0 3mm; padding: 2mm; border: 3px solid var(--gold-light); background: white; }
+      .qr svg { width: 100%; height: 100%; }
+      .order-code { font: 700 15px var(--font-display); letter-spacing: 0.08em; }
+      .secret { margin-top: 2mm; color: var(--muted-foreground); font: 7px ui-monospace, monospace; word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <%
+      validity = case ticket.ticket_type.slug
+      when "explore-pune-day" then "October 11, 2026"
+      when /rails-girls/ then "October 10, 2026"
+      else "October 8–9, 2026"
+      end
+    %>
+    <main class="ticket">
+      <section class="main">
+        <div class="route-band">
+          <span class="brand">DQOR · PUNE 2026</span>
+          <span class="devanagari">डेक्कन क्वीन</span>
+        </div>
+        <div class="event">Deccan Queen on Rails</div>
+        <div class="dates">Pune · October 8–11, 2026</div>
+
+        <div class="journey">
+          <div>
+            <span class="label">Attendee</span>
+            <span class="value"><%= ticket.attendee_name.presence || ticket.order.buyer_name %></span>
+          </div>
+          <div>
+            <span class="label">Ticket type</span>
+            <span class="value ticket-type"><%= ticket.ticket_type.name %></span>
+          </div>
+          <div>
+            <span class="label">Valid for</span>
+            <span class="value"><%= validity %></span>
+          </div>
+          <div>
+            <span class="label">Order</span>
+            <span class="value"><%= ticket.order.code %></span>
+          </div>
+        </div>
+
+        <footer class="footer">Pune · October 8–11, 2026</footer>
+      </section>
+      <aside class="stub">
+        <div class="stub-title">Entry QR</div>
+        <div class="qr"><%= raw RQRCode::QRCode.new(ticket.secret).as_svg(module_size: 6, standalone: true, use_path: true) %></div>
+        <div class="label">Order code</div>
+        <div class="order-code"><%= ticket.order.code %></div>
+        <div class="secret"><%= ticket.secret %></div>
+      </aside>
+    </main>
+  </body>
+</html>
