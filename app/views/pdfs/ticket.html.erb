@@ -1,45 +1,389 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="utf-8">
     <style>
       :root {
-        --background: hsl(40, 30%, 96%);
-        --card: hsl(40, 25%, 98%);
-        --foreground: hsl(0, 0%, 12%);
-        --foreground-soft: hsl(0, 0%, 25%);
-        --muted-foreground: hsl(20, 15%, 45%);
-        --border: hsl(30, 20%, 86%);
+        --cream: hsl(40, 30%, 96%);
+        --ink: hsl(0, 0%, 12%);
+        --ink-soft: hsl(0, 0%, 25%);
         --ruby: hsl(348, 70%, 35%);
-        --secondary: hsl(20, 45%, 92%);
         --gold: hsl(40, 80%, 50%);
-        --gold-light: hsl(42, 85%, 65%);
-        --font-display: "Playfair Display", Georgia, serif;
-        --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+        --saffron: hsl(28, 88%, 50%);
+        --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+        --font-devanagari: "Noto Serif Devanagari", "Noto Sans Devanagari", serif;
+        --font-mono: "Courier New", Courier, monospace;
       }
 
-      @page { size: A5 landscape; margin: 8mm; }
+      @page { size: A5 landscape; margin: 7mm; }
       * { box-sizing: border-box; }
-      body { margin: 0; background: white; color: var(--foreground); font: 11px/1.35 var(--font-sans); }
-      .ticket { position: relative; display: grid; grid-template-columns: 1fr 58mm; min-height: 126mm; overflow: hidden; border: 1px solid var(--border); border-top: 5px solid var(--ruby); background: var(--card); }
-      .ticket::before { position: absolute; top: 0; right: 58mm; bottom: 0; border-left: 2px dashed var(--border); content: ""; }
-      .main { display: flex; flex-direction: column; padding: 10mm; }
-      .route-band { display: flex; align-items: center; justify-content: space-between; margin: -4mm -4mm 8mm; padding: 4mm 5mm; border-bottom: 3px solid var(--gold); background: var(--secondary); color: var(--ruby); }
-      .brand { font: 700 18px var(--font-display); }
-      .devanagari { font: 700 15px "Noto Sans Devanagari", var(--font-display); }
-      .event { margin-bottom: 2mm; color: var(--ruby); font: 700 27px/1.05 var(--font-display); }
-      .dates { color: var(--foreground-soft); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-      .journey { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 10mm; }
-      .label { display: block; margin-bottom: 1mm; color: var(--muted-foreground); font-size: 8px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; }
-      .value { color: var(--foreground); font: 700 17px var(--font-display); }
-      .ticket-type { color: var(--ruby); }
-      .footer { margin-top: auto; padding-top: 6mm; border-top: 1px solid var(--border); color: var(--foreground-soft); font-weight: 600; }
-      .stub { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 7mm 6mm; background: var(--background); text-align: center; }
-      .stub-title { color: var(--ruby); font: 700 13px var(--font-display); }
-      .qr { display: flex; width: 43mm; height: 43mm; align-items: center; justify-content: center; margin: 5mm 0 3mm; padding: 2mm; border: 3px solid var(--gold-light); background: white; }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font: 10px/1.25 Georgia, "Times New Roman", serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .ticket {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 48mm;
+        width: 196mm;
+        height: 134mm;
+        overflow: hidden;
+        border: 2mm solid var(--ruby);
+        background-color: var(--cream);
+        background-image:
+          radial-gradient(circle at 18% 22%, hsl(40 80% 50% / 0.09) 0 0.35mm, transparent 0.45mm),
+          radial-gradient(circle at 76% 68%, hsl(348 70% 35% / 0.045) 0 0.3mm, transparent 0.45mm),
+          repeating-linear-gradient(7deg, transparent 0 2.5mm, hsl(28 88% 50% / 0.025) 2.6mm 2.8mm);
+      }
+
+      .ticket::after {
+        position: absolute;
+        z-index: 5;
+        inset: 2.4mm;
+        border: 0.45mm solid var(--gold);
+        content: "";
+        pointer-events: none;
+      }
+
+      .corner {
+        position: absolute;
+        z-index: 6;
+        width: 8mm;
+        height: 8mm;
+        pointer-events: none;
+      }
+
+      .corner::before,
+      .corner::after {
+        position: absolute;
+        content: "";
+      }
+
+      .corner::before {
+        inset: 0;
+        border-top: 0.65mm double var(--ruby);
+        border-left: 0.65mm double var(--ruby);
+      }
+
+      .corner::after {
+        top: 1.8mm;
+        left: 1.8mm;
+        width: 2.2mm;
+        height: 2.2mm;
+        border: 0.35mm solid var(--gold);
+        background: var(--cream);
+        transform: rotate(45deg);
+      }
+
+      .corner-tl { top: 3.5mm; left: 3.5mm; }
+      .corner-tr { top: 3.5mm; right: 3.5mm; transform: rotate(90deg); }
+      .corner-br { right: 3.5mm; bottom: 3.5mm; transform: rotate(180deg); }
+      .corner-bl { bottom: 3.5mm; left: 3.5mm; transform: rotate(270deg); }
+
+      .main-panel {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        padding: 6mm 7mm 5mm;
+      }
+
+      .masthead {
+        text-align: center;
+      }
+
+      .eyebrow {
+        color: var(--ruby);
+        font-size: 7.5px;
+        font-weight: 700;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+      }
+
+      .hindi-title {
+        margin-top: 1.2mm;
+        color: var(--ruby);
+        font: 700 18px/1 var(--font-devanagari);
+      }
+
+      .event-title {
+        margin-top: 0.5mm;
+        color: var(--ink);
+        font: 700 22px/1 var(--font-display);
+        letter-spacing: 0.055em;
+        text-transform: uppercase;
+      }
+
+      .established {
+        display: flex;
+        align-items: center;
+        gap: 2.5mm;
+        margin-top: 1.7mm;
+        color: var(--ruby);
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      .established::before,
+      .established::after {
+        height: 0.35mm;
+        flex: 1;
+        background: var(--gold);
+        content: "";
+      }
+
+      .route-strip {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 4mm;
+        margin-top: 4mm;
+        padding: 2.4mm 3mm;
+        border-top: 0.6mm solid var(--ruby);
+        border-bottom: 0.6mm solid var(--ruby);
+        background: hsl(28 88% 50% / 0.07);
+      }
+
+      .route {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        justify-content: center;
+        color: var(--ruby);
+        font: 700 13px var(--font-display);
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+      }
+
+      .route-arrow {
+        margin: 0 3mm;
+        color: var(--saffron);
+        font-size: 17px;
+        line-height: 1;
+      }
+
+      .travel-dates {
+        padding: 1.4mm 2.2mm;
+        border: 0.45mm solid var(--gold);
+        box-shadow: inset 0 0 0 0.25mm var(--ruby);
+        color: var(--ink);
+        font: 700 8px var(--font-mono);
+        letter-spacing: 0.055em;
+        white-space: nowrap;
+      }
+
+      .identity {
+        position: relative;
+        min-height: 26mm;
+        margin-top: 4mm;
+        padding: 2.5mm 31mm 2.5mm 3mm;
+        border-left: 1.2mm solid var(--gold);
+        border-bottom: 0.35mm solid hsl(348 70% 35% / 0.28);
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 1mm;
+        color: var(--ruby);
+        font: 700 7px var(--font-mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .passenger-name {
+        display: -webkit-box;
+        max-height: 13mm;
+        overflow: hidden;
+        color: var(--ink);
+        font: 700 18px/1.08 var(--font-display);
+        overflow-wrap: anywhere;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .rubber-stamp {
+        position: absolute;
+        top: -0.5mm;
+        right: 1mm;
+        display: flex;
+        width: 27mm;
+        height: 27mm;
+        align-items: center;
+        justify-content: center;
+        border: 0.8mm double hsl(348 70% 35% / 0.58);
+        border-radius: 50%;
+        color: hsl(348 70% 35% / 0.64);
+        font: 700 7px/1.25 var(--font-mono);
+        letter-spacing: 0.08em;
+        text-align: center;
+        text-transform: uppercase;
+        transform: rotate(-8deg);
+      }
+
+      .rubber-stamp::before {
+        position: absolute;
+        inset: 2mm;
+        border: 0.35mm solid hsl(348 70% 35% / 0.45);
+        border-radius: 50%;
+        content: "";
+      }
+
+      .rubber-stamp strong {
+        display: block;
+        color: inherit;
+        font-size: 10px;
+        letter-spacing: 0.04em;
+      }
+
+      .classification {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+        gap: 3mm;
+        margin-top: 3.5mm;
+      }
+
+      .class-box,
+      .validity-box {
+        min-width: 0;
+        min-height: 22mm;
+        padding: 2.5mm 3mm;
+        border: 0.45mm solid var(--ruby);
+        box-shadow: inset 0 0 0 0.35mm var(--gold);
+      }
+
+      .class-value {
+        display: -webkit-box;
+        max-height: 11mm;
+        overflow: hidden;
+        color: var(--ruby);
+        font: 700 12px/1.12 var(--font-display);
+        letter-spacing: 0.035em;
+        overflow-wrap: anywhere;
+        text-transform: uppercase;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .validity-value {
+        color: var(--ink);
+        font: 700 11px/1.15 var(--font-display);
+        text-transform: uppercase;
+      }
+
+      .serial-strip {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 4mm;
+        margin-top: auto;
+        padding: 2.5mm 3mm 0;
+        border-top: 0.55mm solid var(--gold);
+      }
+
+      .serial-number {
+        color: var(--ruby);
+        font: 700 13px var(--font-mono);
+        letter-spacing: 0.13em;
+        overflow-wrap: anywhere;
+      }
+
+      .admit {
+        color: var(--ink-soft);
+        font: 700 7px var(--font-mono);
+        letter-spacing: 0.14em;
+        text-align: right;
+        text-transform: uppercase;
+      }
+
+      .stub {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 7mm 5mm 6mm;
+        border-left: 0.7mm dashed var(--ruby);
+        text-align: center;
+      }
+
+      .stub::before,
+      .stub::after {
+        position: absolute;
+        left: -2.5mm;
+        z-index: 7;
+        width: 4.2mm;
+        height: 4.2mm;
+        border: 0.55mm solid var(--ruby);
+        border-radius: 50%;
+        background: var(--cream);
+        content: "";
+      }
+
+      .stub::before { top: -3.1mm; }
+      .stub::after { bottom: -3.1mm; }
+
+      .stub-eyebrow {
+        color: var(--ruby);
+        font: 700 7px var(--font-mono);
+        letter-spacing: 0.19em;
+        text-transform: uppercase;
+      }
+
+      .stub-title {
+        margin-top: 1mm;
+        color: var(--ink);
+        font: 700 14px var(--font-display);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .qr {
+        display: flex;
+        width: 35mm;
+        height: 35mm;
+        align-items: center;
+        justify-content: center;
+        margin: 4mm 0 3mm;
+        padding: 2mm;
+        border: 0.8mm double var(--gold);
+        background: var(--cream);
+      }
+
       .qr svg { width: 100%; height: 100%; }
-      .order-code { font: 700 15px var(--font-display); letter-spacing: 0.08em; }
-      .secret { margin-top: 2mm; color: var(--muted-foreground); font: 7px ui-monospace, monospace; word-break: break-all; }
+
+      .stub-order {
+        max-width: 100%;
+        color: var(--ruby);
+        font: 700 11px var(--font-mono);
+        letter-spacing: 0.08em;
+        overflow-wrap: anywhere;
+      }
+
+      .secret {
+        max-width: 100%;
+        margin-top: 2mm;
+        color: var(--ink-soft);
+        font: 6px/1.15 var(--font-mono);
+        overflow-wrap: anywhere;
+      }
+
+      .stub-footer {
+        margin-top: auto;
+        color: var(--ruby);
+        font: 700 6.5px var(--font-mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
     </style>
   </head>
   <body>
@@ -51,41 +395,64 @@
       end
     %>
     <main class="ticket">
-      <section class="main">
-        <div class="route-band">
-          <span class="brand">DQOR · PUNE 2026</span>
-          <span class="devanagari">डेक्कन क्वीन</span>
-        </div>
-        <div class="event">Deccan Queen on Rails</div>
-        <div class="dates">Pune · October 8–11, 2026</div>
+      <span class="corner corner-tl"></span>
+      <span class="corner corner-tr"></span>
+      <span class="corner corner-br"></span>
+      <span class="corner corner-bl"></span>
 
-        <div class="journey">
-          <div>
-            <span class="label">Attendee</span>
-            <span class="value"><%= ticket.attendee_name.presence || ticket.order.buyer_name %></span>
+      <section class="main-panel">
+        <header class="masthead">
+          <div class="eyebrow">भारतीय रेल प्रेरित / Heritage Express</div>
+          <div class="hindi-title">डेक्कन क्वीन</div>
+          <div class="event-title">Deccan Queen on Rails</div>
+          <div class="established">Est. Pune · 2026</div>
+        </header>
+
+        <div class="route-strip">
+          <div class="route">
+            <span>PUNE JN</span>
+            <span class="route-arrow">▸</span>
+            <span>DQOR 2026</span>
           </div>
-          <div>
-            <span class="label">Ticket type</span>
-            <span class="value ticket-type"><%= ticket.ticket_type.name %></span>
-          </div>
-          <div>
-            <span class="label">Valid for</span>
-            <span class="value"><%= validity %></span>
-          </div>
-          <div>
-            <span class="label">Order</span>
-            <span class="value"><%= ticket.order.code %></span>
-          </div>
+          <div class="travel-dates">08 OCT — 09 OCT 2026</div>
         </div>
 
-        <footer class="footer">Pune · October 8–11, 2026</footer>
+        <section class="identity">
+          <span class="label">Passenger / यात्री</span>
+          <div class="passenger-name"><%= ticket.attendee_name.presence || ticket.order.buyer_name %></div>
+          <div class="rubber-stamp">
+            <div>DQOR 2026<strong>◆</strong>Pune</div>
+          </div>
+        </section>
+
+        <section class="classification">
+          <div class="class-box">
+            <span class="label">Class / श्रेणी</span>
+            <div class="class-value"><%= ticket.ticket_type.name %></div>
+          </div>
+          <div class="validity-box">
+            <span class="label">Valid for / वैधता</span>
+            <div class="validity-value"><%= validity %></div>
+          </div>
+        </section>
+
+        <footer class="serial-strip">
+          <div>
+            <span class="label">Serial No.</span>
+            <div class="serial-number"><%= ticket.order.code %></div>
+          </div>
+          <div class="admit">First Class Heritage Card<br>Admit One · Pune</div>
+        </footer>
       </section>
+
       <aside class="stub">
+        <div class="stub-eyebrow">Retain This Stub</div>
         <div class="stub-title">Entry QR</div>
         <div class="qr"><%= raw RQRCode::QRCode.new(ticket.secret).as_svg(module_size: 6, standalone: true, use_path: true) %></div>
-        <div class="label">Order code</div>
-        <div class="order-code"><%= ticket.order.code %></div>
+        <span class="label">Serial No.</span>
+        <div class="stub-order"><%= ticket.order.code %></div>
         <div class="secret"><%= ticket.secret %></div>
+        <div class="stub-footer">DQOR 2026 · Pune JN</div>
       </aside>
     </main>
   </body>
