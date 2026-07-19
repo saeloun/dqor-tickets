@@ -7,6 +7,7 @@ export default class extends Controller {
     orderId: String,
     name: String,
     email: String,
+    phone: String,
     amount: Number,
     expiresAt: String,
     callbackUrl: String,
@@ -29,7 +30,7 @@ export default class extends Controller {
       amount: this.amountValue,
       currency: "INR",
       name: "Deccan Queen on Rails",
-      prefill: { name: this.nameValue, email: this.emailValue },
+      prefill: { name: this.nameValue, email: this.emailValue, contact: this.phoneValue },
       theme: { color: "#9b1c31" },
       handler: response => this.submit(response)
     }).open()

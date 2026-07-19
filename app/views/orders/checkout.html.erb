@@ -39,6 +39,7 @@
       data-checkout-order-id-value="<%= @order.razorpay_order_id %>"
       data-checkout-name-value="<%= @order.buyer_name %>"
       data-checkout-email-value="<%= @order.email %>"
+      data-checkout-phone-value="<%= @order.buyer_phone %>"
       data-checkout-amount-value="<%= @order.total_paise %>"
       data-checkout-expires-at-value="<%= @order.expires_at.iso8601 %>"
       data-checkout-callback-url-value="<%= payment_callback_path %>"
