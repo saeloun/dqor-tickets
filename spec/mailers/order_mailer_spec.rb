@@ -17,4 +17,14 @@ RSpec.describe OrderMailer, type: :mailer do
     expect(mail.attachments.map(&:filename)).to contain_exactly("invoice.pdf", "ticket-0.pdf", "ticket-1.pdf")
     expect(mail.html_part.body.to_s).to include(order.code, "/orders/#{order.code}")
   end
+
+  it "sends a confirmation link without attachments while documents are pending" do
+    order = create(:order, :paid, email: "buyer@example.com")
+
+    mail = described_class.confirmation(order, documents_pending: true)
+
+    expect(mail.attachments).to be_empty
+    expect(mail.text_part.body.to_s).to include("being prepared", order_url(order.code))
+    expect(described_class.delivery_job).to eq(MailDeliveryJob)
+  end
 end

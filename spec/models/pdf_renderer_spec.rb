@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe PdfRenderer, type: :model do
   def render(record, template:)
     described_class.render(record, template:)
-  rescue Ferrum::BinaryNotFoundError => error
+  rescue Ferrum::BinaryNotFoundError, Ferrum::ProcessTimeoutError => error
     skip "Chrome binary is unavailable: #{error.message}"
   end
 
@@ -43,5 +43,19 @@ RSpec.describe PdfRenderer, type: :model do
     )))
   ensure
     ENV["CHROME_NO_SANDBOX"] = previous_value
+  end
+
+  it "recreates Chromium after a transient rendering failure" do
+    failed_browser = instance_double(Ferrum::Browser, pdf: nil, quit: nil)
+    working_browser = instance_double(Ferrum::Browser, pdf: "%PDF-test", quit: nil)
+    allow(failed_browser).to receive(:content=).and_raise(Ferrum::ProcessTimeoutError.new(30, ""))
+    allow(working_browser).to receive(:content=)
+    allow(ApplicationController).to receive(:render).and_return("<html></html>")
+    allow(Ferrum::Browser).to receive(:new).and_return(failed_browser, working_browser)
+
+    expect(render(Object.new, template: :invoice)).to eq("%PDF-test")
+    expect(Ferrum::Browser).to have_received(:new).twice
+    expect(failed_browser).to have_received(:quit)
+    expect(working_browser).to have_received(:quit)
   end
 end

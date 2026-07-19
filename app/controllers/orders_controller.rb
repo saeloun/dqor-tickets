@@ -25,7 +25,7 @@ class OrdersController < ApplicationController
     render_checkout_error(error.message)
   rescue ActiveRecord::RecordInvalid => error
     render_checkout_error(error.record.errors.full_messages.to_sentence)
-  rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, SocketError, Ferrum::Error
+  rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET, SocketError, Ferrum::Error
     order&.update!(status: :expired) if order&.pending?
     render_checkout_error("We couldn't start checkout. Please try again.")
   end
@@ -33,11 +33,18 @@ class OrdersController < ApplicationController
   def show
     @order = Order.find_by!(code: params.expect(:code))
     @order.confirm_from_razorpay_if_stalled!
+    regenerate_documents
   rescue ActiveRecord::RecordNotFound
     render file: Rails.root.join("public/404.html"), status: :not_found, layout: false
   end
 
   private
+    def regenerate_documents
+      @order.attach_documents! if @order.paid?
+    rescue *ApplicationJob::DOCUMENT_ERRORS
+      GenerateOrderDocumentsJob.perform_later(@order)
+    end
+
     def render_checkout_error(message)
       @ticket_types = TicketType.where(hidden: false).order(:position, :id)
       flash.now[:alert] = message

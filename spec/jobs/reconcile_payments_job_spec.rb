@@ -29,7 +29,7 @@ RSpec.describe ReconcilePaymentsJob, type: :job do
       headers: { "Content-Type" => "application/json" }
     )
 
-    described_class.perform_now
+    expect { described_class.perform_now }.to have_enqueued_job(described_class)
 
     expect(order.payment_events.sole).to have_attributes(kind: "polling_check_failed", level: "warn", mode: "test")
   end

@@ -185,14 +185,12 @@ class Order < ApplicationRecord
       event.raw = payment
     end
     ConfirmOrderJob.perform_now(razorpay_order_id, payment_event.id)
-  rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, SocketError => error
-    payment_events.create!(
-      razorpay_event_id: "polling_check_failed_#{SecureRandom.uuid}",
-      kind: "polling_check_failed",
-      level: "warn",
-      amount_paise: total_paise,
-      raw: { "error" => error.class.name, "message" => error.message }
-    )
+  rescue Razorpay::Error => error
+    record_polling_failure(error)
+    raise ApplicationJob::TransientRazorpayError, error.message if error.status.to_i == 429 || error.status.to_i >= 500
+  rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET, SocketError => error
+    record_polling_failure(error)
+    raise
   end
 
   def refund_tickets!(ticket_ids)
@@ -213,14 +211,7 @@ class Order < ApplicationRecord
       event = payment_events.create!(razorpay_event_id: "free_refund_#{refund.id}", kind: "refund.processed", amount_paise: 0)
       ProcessRefundJob.perform_now(refund.id, event.id)
     else
-      gateway_refund = Razorpay::Payment.fetch(payment_id).refund(amount: amount_paise)
-      refund.update!(razorpay_refund_id: gateway_refund.id)
-      payment_events.create!(
-        razorpay_event_id: "refund_created_#{gateway_refund.id}",
-        kind: "refund_created",
-        amount_paise:,
-        raw: { "razorpay_refund_id" => gateway_refund.id }
-      )
+      InitiateRefundJob.perform_later(refund, payment_id)
     end
 
     refund
@@ -247,27 +238,21 @@ class Order < ApplicationRecord
       event.raw = payment
     end
     ConfirmOrderJob.perform_later(razorpay_order_id, payment_event.id)
-  rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, SocketError => error
-    payment_events.create!(
-      razorpay_event_id: "polling_check_failed_#{SecureRandom.uuid}",
-      kind: "polling_check_failed",
-      level: "warn",
-      amount_paise: total_paise,
-      raw: { "error" => error.class.name, "message" => error.message }
-    )
+  rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET, SocketError => error
+    record_polling_failure(error)
     Rails.logger.error("Razorpay fallback failed for order_id=#{id}: #{error.message}")
   end
 
-  def deliver_confirmation!
-    attach_documents!
+  def deliver_confirmation!(documents_pending: false)
+    attach_documents! unless documents_pending
 
     with_lock do
       return false if metadata["confirmation_enqueued_at"]
 
+      OrderMailer.confirmation(self, documents_pending:).deliver_later
       update!(metadata: metadata.merge("confirmation_enqueued_at" => Time.current.iso8601))
     end
 
-    OrderMailer.confirmation(self).deliver_later
     true
   end
 
@@ -282,6 +267,16 @@ class Order < ApplicationRecord
   end
 
   private
+    def record_polling_failure(error)
+      payment_events.create!(
+        razorpay_event_id: "polling_check_failed_#{SecureRandom.uuid}",
+        kind: "polling_check_failed",
+        level: "warn",
+        amount_paise: total_paise,
+        raw: { "error" => error.class.name, "message" => error.message }
+      )
+    end
+
     def ensure_payable!
       raise InvalidTransition, "only pending or expired orders can be paid" unless pending? || expired?
       return unless expired? || (expires_at && expires_at <= Time.current)

@@ -1,4 +1,5 @@
 class PdfRenderer
+  RETRYABLE_ERRORS = [ Ferrum::ProcessTimeoutError, Ferrum::TimeoutError, Ferrum::DeadBrowserError ].freeze
   OPTIONS = {
     invoice: { format: :A4 },
     ticket: { format: :A5, landscape: true }
@@ -18,10 +19,17 @@ class PdfRenderer
         "single-process" => nil
       }
     end
-    browser = Ferrum::Browser.new(**browser_options)
-    browser.content = html
-    browser.pdf(**OPTIONS.fetch(template), encoding: :binary, print_background: true)
-  ensure
-    browser&.quit
+    3.times do |attempt|
+      browser = nil
+      begin
+        browser = Ferrum::Browser.new(**browser_options)
+        browser.content = html
+        return browser.pdf(**OPTIONS.fetch(template), encoding: :binary, print_background: true)
+      rescue *RETRYABLE_ERRORS
+        raise if attempt == 2
+      ensure
+        browser&.quit
+      end
+    end
   end
 end

@@ -23,6 +23,20 @@ RSpec.describe "Order status", type: :request do
     expect(response.body).to include("Your tickets are confirmed", "Download tax invoice", "Download Conference Pass ticket")
   end
 
+  it "regenerates missing paid-order documents on demand" do
+    order = create(:order, :paid)
+    ticket = create(:ticket, order:)
+    invoice = Invoice.issue_for!(order)
+    allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
+
+    get order_path(order.code)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Download tax invoice", "Download Conference Pass ticket")
+    expect(invoice.reload.pdf).to be_attached
+    expect(ticket.reload.pdf).to be_attached
+  end
+
   it "shows an expired order with a retry link" do
     order = create(:order, status: :expired, expires_at: 1.minute.ago)
 

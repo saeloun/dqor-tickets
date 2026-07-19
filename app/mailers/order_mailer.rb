@@ -1,10 +1,13 @@
 class OrderMailer < ApplicationMailer
   default from: ENV.fetch("MAIL_FROM", "tickets@deccanqueenonrails.com")
 
-  def confirmation(order)
+  def confirmation(order, documents_pending: false)
     @order = order
-    attach(@order.invoices.invoice.sole)
-    @order.tickets.find_each { |ticket| attach(ticket) }
+    @documents_pending = documents_pending
+    unless @documents_pending
+      attach(@order.invoices.invoice.sole)
+      @order.tickets.find_each { |ticket| attach(ticket) }
+    end
     mail(to: @order.email, subject: "Your Deccan Queen on Rails tickets")
   end
 

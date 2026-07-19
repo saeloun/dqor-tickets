@@ -24,6 +24,10 @@ export default class extends Controller {
   }
 
   open() {
+    if (!this.orderIdValue) {
+      window.location.reload()
+      return
+    }
     new window.Razorpay({
       key: this.keyValue,
       order_id: this.orderIdValue,

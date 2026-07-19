@@ -48,7 +48,27 @@ RSpec.describe ConfirmOrderJob, type: :job do
     end
 
     expect(order.invoices.invoice.count).to eq(1)
-    expect(enqueued_jobs.count { |job| job[:job] == ActionMailer::MailDeliveryJob }).to eq(1)
+    expect(enqueued_jobs.count { |job| job[:job] == MailDeliveryJob }).to eq(1)
+  end
+
+  it "retries a transient failure without duplicating confirmation side effects" do
+    order, event = order_with_event
+    attempts = 0
+    allow_any_instance_of(Order).to receive(:mark_paid!).and_wrap_original do |method, *arguments|
+      attempts += 1
+      raise Net::OpenTimeout, "timed out" if attempts == 1
+
+      method.call(*arguments)
+    end
+
+    perform_enqueued_jobs(only: [ described_class, DeliverOrderConfirmationJob ]) do
+      described_class.perform_later(order.razorpay_order_id, event.id)
+    end
+
+    expect(attempts).to eq(2)
+    expect(order.reload).to be_paid
+    expect(order.invoices.invoice.count).to eq(1)
+    expect(enqueued_jobs.count { |job| job[:job] == MailDeliveryJob }).to eq(1)
   end
 
   it "revives an expired order when stock remains" do

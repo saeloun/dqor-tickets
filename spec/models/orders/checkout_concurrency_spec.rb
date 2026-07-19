@@ -21,6 +21,8 @@ RSpec.describe "checkout concurrency", type: :model do
   end
 
   it "uses SQLite immediate transactions to prevent two connections reserving the last seat", :aggregate_failures do
+    expect(ActiveRecord::Base.connection_db_config.configuration_hash).to include(timeout: 15_000, default_transaction_mode: "immediate")
+
     ticket_type = TicketType.create!(name: "Last Seat", slug: "last-seat", price_paise: 100, capacity: 1)
     connections = Queue.new
     ready = Queue.new

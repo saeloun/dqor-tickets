@@ -1,5 +1,9 @@
 <h1>Your Deccan Queen on Rails tickets are confirmed</h1>
 <p>Hello <%= @order.buyer_name %>,</p>
-<p>Payment for order <strong><%= @order.code %></strong> is confirmed. Your tax invoice and ticket PDFs are attached.</p>
+<% if @documents_pending %>
+  <p>Payment for order <strong><%= @order.code %></strong> is confirmed. Your tickets and tax invoice are being prepared and will be available from your order page.</p>
+<% else %>
+  <p>Payment for order <strong><%= @order.code %></strong> is confirmed. Your tax invoice and ticket PDFs are attached.</p>
+<% end %>
 <p><%= link_to "View your order", order_url(@order.code) %></p>
 <p>See you in Pune.</p>

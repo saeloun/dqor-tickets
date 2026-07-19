@@ -83,13 +83,19 @@ RSpec.describe Order, type: :model do
         headers: { "Content-Type" => "application/json" }
       )
 
-      refund = order.refund_tickets!([ selected.id ])
+      refund = nil
+      perform_enqueued_jobs(only: InitiateRefundJob) do
+        refund = order.refund_tickets!([ selected.id ])
+      end
 
-      expect(refund).to have_attributes(status: "initiated", amount_paise: selected.price_paise, razorpay_refund_id: "rfnd_test", ticket_ids: [ selected.id ])
+      expect(refund.reload).to have_attributes(status: "initiated", amount_paise: selected.price_paise, razorpay_refund_id: "rfnd_test", ticket_ids: [ selected.id ])
       expect(order.payment_events.find_by(kind: "refund_created")).to have_attributes(amount_paise: selected.price_paise, level: "info", mode: "test")
       expect(selected.reload.canceled_at).to be_nil
       expect(untouched.reload.canceled_at).to be_nil
-      expect(a_request(:post, "https://api.razorpay.com/v1/payments/pay_test/refund").with(body: hash_including("amount" => selected.price_paise.to_s))).to have_been_made.once
+      expect(a_request(:post, "https://api.razorpay.com/v1/payments/pay_test/refund").with(
+        body: hash_including("amount" => selected.price_paise.to_s),
+        headers: { "X-Refund-Idempotency" => "dqor-refund-#{refund.id}" }
+      )).to have_been_made.once
     end
 
     it "immediately completes a free-ticket refund without Razorpay" do
@@ -127,6 +133,29 @@ RSpec.describe Order, type: :model do
       allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
 
       expect { order.resend_confirmation! }.to have_enqueued_mail(OrderMailer, :confirmation)
+    end
+  end
+
+  describe "#deliver_confirmation!" do
+    it "does not claim delivery until the mail job is enqueued" do
+      order = create(:order, :paid)
+      create(:ticket, order:)
+      Invoice.issue_for!(order)
+      allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
+      attempts = 0
+      queue_adapter = MailDeliveryJob.queue_adapter
+      allow(queue_adapter).to receive(:enqueue).and_wrap_original do |method, *arguments|
+        attempts += 1
+        raise ActiveRecord::StatementInvalid, "database is busy" if attempts == 1
+
+        method.call(*arguments)
+      end
+
+      expect { order.deliver_confirmation! }.to raise_error(ActiveRecord::StatementInvalid)
+      expect(order.reload.metadata).not_to include("confirmation_enqueued_at")
+
+      expect { order.deliver_confirmation! }.to have_enqueued_mail(OrderMailer, :confirmation).once
+      expect(order.reload.metadata).to include("confirmation_enqueued_at")
     end
   end
 end
