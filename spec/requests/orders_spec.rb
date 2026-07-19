@@ -1,0 +1,122 @@
+require "rails_helper"
+
+RSpec.describe "Orders", type: :request do
+  let(:ticket_type) { create(:ticket_type, slug: "conference-pass-regular", price_paise: 400_000, capacity: 5, max_per_order: 4) }
+  let(:razorpay_url) { "https://api.razorpay.com/v1/orders" }
+
+  def checkout_params(quantities: { ticket_type.id.to_s => "1" }, **attributes)
+    attendees = quantities.to_h do |ticket_type_id, quantity|
+      [
+        ticket_type_id,
+        quantity.to_i.times.to_h do |index|
+          [ index.to_s, { attendee_name: "Attendee #{index + 1}", attendee_email: "attendee#{index + 1}@example.com" } ]
+        end
+      ]
+    end
+    {
+      checkout: {
+        email: "buyer@example.com",
+        buyer_name: "Buyer",
+        buyer_phone: "9999999999",
+        quantities:,
+        attendees:
+      }.merge(attributes)
+    }
+  end
+
+  def stub_razorpay_order(id: "order_test")
+    stub_request(:post, razorpay_url).to_return(
+      status: 200,
+      body: { entity: "order", id:, amount: 400_000, currency: "INR" }.to_json,
+      headers: { "Content-Type" => "application/json" }
+    )
+  end
+
+  it "creates a held order and Razorpay order" do
+    stub_razorpay_order
+
+    expect { post orders_path, params: checkout_params }
+      .to change(Order, :count).by(1)
+      .and change(Ticket, :count).by(1)
+
+    order = Order.last
+    expect(response).to have_http_status(:created)
+    expect(response.body).to include("Pay securely with Razorpay", order.code)
+    expect(order.razorpay_order_id).to eq("order_test")
+    expect(order.tickets.sole).to have_attributes(attendee_name: "Attendee 1", attendee_email: "attendee1@example.com")
+    expect(a_request(:post, razorpay_url).with(body: hash_including("amount" => "400000", "currency" => "INR", "receipt" => order.code))).to have_been_made.once
+  end
+
+  it "rejects a sold-out selection without calling Razorpay" do
+    create(:ticket, ticket_type:, order: create(:order, :paid))
+    ticket_type.update!(capacity: 1)
+
+    expect { post orders_path, params: checkout_params }.not_to change(Order, :count)
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("does not have 1 tickets available")
+    expect(a_request(:post, razorpay_url)).not_to have_been_made
+  end
+
+  it "applies a coupon before creating the Razorpay order" do
+    coupon = create(:coupon, code: "POOL", ticket_type:, discount_paise: 50_000)
+    stub_razorpay_order
+
+    post orders_path, params: checkout_params(coupon_code: "pool")
+
+    expect(response).to have_http_status(:created)
+    expect(Order.last.total_paise).to eq(350_000)
+    expect(Order.last.coupon).to eq(coupon)
+    expect(a_request(:post, razorpay_url).with(body: hash_including("amount" => "350000"))).to have_been_made.once
+  end
+
+  it "enforces the conference-pass gate" do
+    add_on = create(:ticket_type, slug: "explore-pune-day", requires_conference_pass: true, price_paise: 200_000)
+
+    post orders_path, params: checkout_params(quantities: { add_on.id.to_s => "1" })
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("a paid conference pass is required")
+  end
+
+  it "allows Explore Pune Day with a conference pass in the same cart" do
+    add_on = create(:ticket_type, slug: "explore-pune-day", requires_conference_pass: true, price_paise: 200_000)
+    stub_razorpay_order
+
+    post orders_path, params: checkout_params(quantities: { ticket_type.id.to_s => "1", add_on.id.to_s => "1" })
+
+    expect(response).to have_http_status(:created)
+    expect(Order.last.tickets.count).to eq(2)
+  end
+
+  it "allows a standalone add-on for an existing paid conference order" do
+    paid_order = create(:order, :paid, email: "owner@example.com")
+    create(:ticket, order: paid_order, ticket_type:)
+    add_on = create(:ticket_type, slug: "explore-pune-day", requires_conference_pass: true, price_paise: 200_000)
+    stub_razorpay_order
+
+    post orders_path, params: checkout_params(
+      quantities: { add_on.id.to_s => "1" },
+      conference_order_code: paid_order.code,
+      conference_order_email: "OWNER@example.com"
+    )
+
+    expect(response).to have_http_status(:created)
+    expect(Order.last.tickets.sole.ticket_type).to eq(add_on)
+  end
+
+  it "confirms a free order without calling Razorpay" do
+    free = create(:ticket_type, name: "Community Pass", price_paise: 0)
+
+    expect { post orders_path, params: checkout_params(quantities: { free.id.to_s => "1" }) }
+      .to have_enqueued_mail(OrderMailer, :confirmation)
+
+    order = Order.last
+    expect(response).to have_http_status(:created)
+    expect(order).to be_paid
+    expect(order.payment_events.sole.kind).to eq("comp")
+    expect(order.invoices.invoice.sole.pdf).to be_attached
+    expect(order.tickets.sole.pdf).to be_attached
+    expect(a_request(:post, razorpay_url)).not_to have_been_made
+  end
+end

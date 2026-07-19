@@ -7,4 +7,44 @@
  * depending on specificity.
  *
  * Consider organizing styles into separate files for maintainability.
- */
+*/
+
+:root {
+  --color-primary: #9b1c31;
+  --color-primary-hover: #7d1627;
+  --color-background: #fffaf0;
+  --color-card: #ffffff;
+  --color-border: #e5d8c7;
+  --color-muted: #6b625a;
+  --radius: 0.75rem;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; color: #291f20; background: var(--color-background); font-family: Inter, system-ui, sans-serif; }
+h1, h2, h3 { font-family: Georgia, serif; }
+input, button { font: inherit; }
+.page-shell { width: min(70rem, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 4rem; }
+.page-shell.narrow { max-width: 48rem; }
+.page-hero { padding: 2rem 0; text-align: center; }
+.page-hero h1 { margin: 0.25rem 0; color: var(--color-primary); }
+.eyebrow, .status-badge { color: var(--color-primary); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.ticket-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; }
+.ticket-grid > h2 { grid-column: 1 / -1; }
+.ticket-card, .form-card, .status-card { padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-card); }
+.ticket-card--sold-out, .ticket-card--coming-soon { opacity: 0.68; }
+.ticket-price { color: var(--color-primary); font-size: 1.5rem; font-weight: 700; }
+.checkout-form { display: grid; gap: 1rem; }
+.form-card { display: grid; gap: 0.5rem; }
+.form-card input { width: 100%; padding: 0.7rem; border: 1px solid var(--color-border); border-radius: 0.4rem; }
+.field-hint { color: var(--color-muted); font-size: 0.9rem; }
+.attendee-fields { display: grid; gap: 0.4rem; margin-top: 1rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 0.5rem; }
+.btn-primary { display: inline-block; width: fit-content; padding: 0.8rem 1.15rem; border: 0; border-radius: 0.45rem; color: white; background: var(--color-primary); font-weight: 700; text-decoration: none; cursor: pointer; }
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }
+.alert { padding: 1rem; border: 1px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); background: white; }
+.order-summary p { display: flex; justify-content: space-between; gap: 1rem; }
+.order-total { padding-top: 1rem; border-top: 1px solid var(--color-border); font-size: 1.15rem; }
+.status-card { margin-top: 1rem; text-align: center; }
+.download-list { display: grid; gap: 0.75rem; margin-top: 1.5rem; }
+.spinner { width: 2rem; height: 2rem; margin: 0 auto; border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

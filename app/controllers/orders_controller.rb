@@ -1,0 +1,80 @@
+class OrdersController < ApplicationController
+  allow_unauthenticated_access
+  rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to root_path, alert: "Please wait before trying again." }
+
+  def create
+    checkout = checkout_params
+    order = Orders::Checkout.call(
+      order_attributes: order_attributes(checkout),
+      items: items(checkout),
+      coupon_code: checkout[:coupon_code],
+      conference_order_code: checkout[:conference_order_code],
+      conference_order_email: checkout[:conference_order_email]
+    )
+
+    if order.total_paise.zero?
+      order.complete_comp!
+    else
+      order.create_razorpay_order!
+    end
+    @order = order
+    render :checkout, status: :created
+  rescue Orders::Checkout::SoldOut, Orders::Checkout::InvalidSelection, Orders::Checkout::ConferencePassRequired, Coupon::Invalid => error
+    render_checkout_error(error.message)
+  rescue ActiveRecord::RecordInvalid => error
+    render_checkout_error(error.record.errors.full_messages.to_sentence)
+  end
+
+  def show
+    @order = Order.find_by!(code: params.expect(:code))
+    @order.confirm_from_razorpay_if_stalled!
+  end
+
+  private
+    def render_checkout_error(message)
+      @ticket_types = TicketType.where(hidden: false).order(:position, :id)
+      flash.now[:alert] = message
+      render "tickets/index", status: :unprocessable_content
+    end
+
+    def checkout_params
+      params.expect(checkout: [
+        :email, :buyer_name, :buyer_phone, :gstin, :gst_legal_name, :billing_state_code,
+        :coupon_code, :conference_order_code, :conference_order_email, { quantities: {}, attendees: {} }
+      ])
+    end
+
+    def order_attributes(checkout)
+      checkout.slice(:email, :buyer_name, :buyer_phone, :gstin, :gst_legal_name, :billing_state_code).to_h.symbolize_keys
+    end
+
+    def items(checkout)
+      quantities = checkout.fetch(:quantities, {}).to_h
+      items = quantities.filter_map do |ticket_type_id, quantity|
+        ticket_type_id = Integer(ticket_type_id, exception: false)
+        quantity = Integer(quantity, exception: false)
+        next unless ticket_type_id&.positive? && ticket_type_id.bit_length <= 63 && quantity&.positive?
+
+        attendees = attendees_for(checkout, ticket_type_id)
+        complete = attendees.size == quantity && attendees.all? { |attendee| attendee.values_at(:attendee_name, :attendee_email).all?(&:present?) }
+        raise Orders::Checkout::InvalidSelection, "attendee name and email are required for every ticket" unless complete
+
+        { ticket_type_id:, quantity:, attendees: }
+      end
+      hidden_ids = TicketType.where(id: items.pluck(:ticket_type_id), hidden: true).ids
+      raise Orders::Checkout::InvalidSelection, "ticket type not found" if hidden_ids.any?
+
+      items
+    end
+
+    def attendees_for(checkout, ticket_type_id)
+      group = checkout[:attendees]&.[](ticket_type_id.to_s)
+      return [] unless group.respond_to?(:values)
+
+      group.values.filter_map do |attributes|
+        next unless attributes.respond_to?(:slice)
+
+        attributes.slice(:attendee_name, :attendee_email, :tshirt_size, :dietary_preference).to_h.symbolize_keys
+      end
+    end
+end

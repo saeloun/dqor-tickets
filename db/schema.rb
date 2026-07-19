@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_19_083400) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_19_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -124,8 +124,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_083400) do
     t.bigint "order_id", null: false
     t.string "razorpay_refund_id"
     t.string "status", null: false
+    t.jsonb "ticket_ids", default: [], null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_refunds_on_order_id"
+    t.index ["razorpay_refund_id"], name: "index_refunds_on_razorpay_refund_id", unique: true, where: "(razorpay_refund_id IS NOT NULL)"
   end
 
   create_table "sessions", force: :cascade do |t|

@@ -13,10 +13,19 @@ class Ticket < ApplicationRecord
   belongs_to :order
   belongs_to :ticket_type
 
+  has_one_attached :pdf
+
   has_secure_token :secret, length: 24
+
+  normalizes :attendee_email, with: ->(email) { email.strip.downcase }
 
   validates :price_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :secret, presence: true, uniqueness: true
+  validates :attendee_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+
+  def attach_pdf!
+    pdf.attach(io: StringIO.new(TicketPdf.new(self).render), filename: "DQOR-ticket-#{id}.pdf", content_type: "application/pdf") unless pdf.attached?
+  end
 
   def check_in!(date)
     with_lock do

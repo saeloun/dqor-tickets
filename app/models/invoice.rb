@@ -1,4 +1,6 @@
 class Invoice < ApplicationRecord
+  has_one_attached :pdf
+
   belongs_to :order
   belongs_to :refers_to, class_name: "Invoice", optional: true
   has_many :credit_notes, class_name: "Invoice", foreign_key: :refers_to_id, dependent: :restrict_with_exception, inverse_of: :refers_to
@@ -11,6 +13,10 @@ class Invoice < ApplicationRecord
   validate :reference_is_invoice
 
   before_destroy { raise ActiveRecord::ReadOnlyRecord, "invoices cannot be destroyed" }
+
+  def attach_pdf!
+    pdf.attach(io: StringIO.new(InvoicePdf.new(self).render), filename: "#{number.tr('/', '-')}.pdf", content_type: "application/pdf") unless pdf.attached?
+  end
 
   def self.issue_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil)
     existing = order.invoices.invoice.first if kind.to_s == "invoice"

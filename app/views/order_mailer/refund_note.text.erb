@@ -1,0 +1,7 @@
+Your credit note is ready
+
+Hello <%= @order.buyer_name %>,
+
+Refund <%= @refund.razorpay_refund_id %> has been processed. Credit note <%= @credit_note.number %> is attached.
+
+View your order: <%= order_url(@order.code) %>

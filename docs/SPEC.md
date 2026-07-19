@@ -31,7 +31,9 @@ New Rails 8 app `saeloun/dqor-tickets`, PostgreSQL, deployed on Render at `ticke
 
 ### Architecture
 
-- **Stack**: Rails 8.0.x, Ruby 3.4.x, PostgreSQL 16 (Render), Solid Queue (jobs, in-DB — no Redis), Solid Cache, Propshaft + importmap + plain CSS (site tokens; no Node build), Hotwire (Turbo for checkout status polling).
+- **Stack** (revised 2026-07-19): Rails 8.1.x, Ruby 4.0.x, **SQLite** (app + Solid Queue/Cache/Cable, WAL, immediate transactions — ONCE/Writebook shape, one server, no other resources), Propshaft + importmap + plain CSS (site tokens; no Node build), Hotwire (Turbo for checkout status polling).
+- **PDFs**: ferrum + Chromium (in Dockerfile) rendering HTML/CSS templates with the brand tokens; generated at confirmation time and stored in Cloudflare R2 via Active Storage (private bucket, signed URLs — the R2 section stands). Email attaches the generated PDFs.
+- **Locking**: SQLite single-writer immediate transactions replace SELECT FOR UPDATE in checkout.
 - **Gems** (the whole list): razorpay, avo, prawn + prawn-qrcode (invoice + ticket PDFs), rqrcode, friendly_id NOT needed (fixed slugs), devise NOT needed — admin auth via Rails 8 built-in `has_secure_password` + session (one AdminUser model, Avo authenticates against it). rspec-rails + capybara + webmock for tests. rubocop-rails-omakase. That's it — no aasm (plain enum + guards), no money-rails (integer paise + helper), no cancancan (single admin role).
 - **No JS build**: checkout.js loaded from Razorpay CDN; one Stimulus controller for the checkout modal + countdown.
 

@@ -1,0 +1,38 @@
+<main class="page-shell narrow">
+  <%= turbo_frame_tag "order_status", data: { controller: "poll", poll_url_value: order_path(@order.code), poll_active_value: @order.pending? } do %>
+    <section class="status-card status-card--<%= @order.status %>">
+      <p class="eyebrow">Order <%= @order.code %></p>
+
+      <% if @order.pending? %>
+        <div class="spinner" aria-hidden="true"></div>
+        <h1>Confirming your payment</h1>
+        <% if @order.payment_events.exists?(kind: "payment.failed") %>
+          <p>The payment failed. No charge was confirmed. You can return and try again.</p>
+          <%= link_to "Choose tickets", root_path, class: "btn-primary" %>
+        <% else %>
+          <p>Razorpay is confirming the payment. This page updates automatically.</p>
+        <% end %>
+      <% elsif @order.paid? %>
+        <h1>Your tickets are confirmed</h1>
+        <p>We sent the invoice and tickets to <%= @order.email %>.</p>
+        <div class="download-list">
+          <% if (invoice = @order.invoices.invoice.first)&.pdf&.attached? %>
+            <%= link_to "Download tax invoice", rails_blob_path(invoice.pdf, disposition: "attachment") %>
+          <% end %>
+          <% @order.tickets.where(canceled_at: nil).includes(:ticket_type).each do |ticket| %>
+            <%= link_to "Download #{ticket.ticket_type.name} ticket", rails_blob_path(ticket.pdf, disposition: "attachment") if ticket.pdf.attached? %>
+          <% end %>
+          <% @order.invoices.credit_note.each do |credit_note| %>
+            <%= link_to "Download credit note #{credit_note.number}", rails_blob_path(credit_note.pdf, disposition: "attachment") if credit_note.pdf.attached? %>
+          <% end %>
+        </div>
+      <% elsif @order.expired? %>
+        <h1>This order expired</h1>
+        <p>The inventory hold ended before payment confirmation.</p>
+        <%= link_to "Try again", root_path, class: "btn-primary" %>
+      <% else %>
+        <h1>This order was canceled</h1>
+      <% end %>
+    </section>
+  <% end %>
+</main>
