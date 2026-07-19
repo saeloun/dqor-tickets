@@ -11,7 +11,7 @@
     <p class="alert" role="alert"><%= flash[:alert] %></p>
   <% end %>
 
-  <%= form_with url: orders_path, scope: :checkout, class: "checkout-form", data: { turbo: false, controller: "cart" } do |form| %>
+  <%= form_with url: orders_path, scope: :checkout, class: "checkout-form", data: { turbo: false, controller: "cart", cart_preview_url_value: checkout_preview_path } do |form| %>
     <section class="tickets-grid" aria-labelledby="tickets-heading">
       <h2 id="tickets-heading" class="sr-only">Available tickets</h2>
 
@@ -110,7 +110,8 @@
         </div>
         <div class="field">
           <%= form.label :coupon_code, "Coupon code" %>
-          <%= form.text_field :coupon_code, autocomplete: "off", placeholder: "Optional" %>
+          <%= form.text_field :coupon_code, autocomplete: "off", placeholder: "Optional", data: { cart_target: "coupon", action: "input->cart#couponChanged" } %>
+          <p class="coupon-message" data-cart-target="discount" role="status" aria-live="polite" hidden></p>
         </div>
       </div>
 

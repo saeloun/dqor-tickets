@@ -5,6 +5,7 @@ Rails.application.routes.draw do
 
   resource :checkin, only: %i[show create]
 
+  resource :checkout_preview, only: :create
   resources :orders, param: :code, only: [ :create, :show ]
   post "payments/callback", to: "payments#callback", as: :payment_callback
 

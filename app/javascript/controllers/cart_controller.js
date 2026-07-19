@@ -1,11 +1,17 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["quantity", "attendees", "template", "total", "addOnGate"]
+  static targets = ["quantity", "attendees", "template", "total", "addOnGate", "coupon", "discount"]
+  static values = { previewUrl: String }
 
   connect() {
+    this.previewRequest = 0
     this.quantityTargets.forEach(quantity => this.syncQuantity(quantity))
     this.updateOrder()
+  }
+
+  disconnect() {
+    clearTimeout(this.previewTimeout)
   }
 
   increment(event) {
@@ -26,6 +32,11 @@ export default class extends Controller {
   sync(event) {
     this.syncQuantity(event.currentTarget)
     this.updateOrder()
+  }
+
+  couponChanged() {
+    this.showSubtotal()
+    this.queuePreview(400)
   }
 
   quantityFor(control) {
@@ -51,15 +62,77 @@ export default class extends Controller {
   }
 
   updateOrder() {
-    const total = this.quantityTargets.reduce((sum, quantity) => sum + this.count(quantity) * Number(quantity.dataset.unitPrice), 0)
-    this.totalTarget.textContent = new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0
-    }).format(total / 100)
+    this.showSubtotal()
 
     const addOnSelected = this.quantityTargets.some(quantity => quantity.dataset.ticketKind === "add-on" && this.count(quantity) > 0)
     const conferenceSelected = this.quantityTargets.some(quantity => quantity.dataset.ticketKind === "conference" && this.count(quantity) > 0)
     this.addOnGateTarget.hidden = !addOnSelected || conferenceSelected
+    this.queuePreview()
+  }
+
+  showSubtotal() {
+    this.totalTarget.textContent = this.formatMoney(this.subtotal)
+  }
+
+  queuePreview(delay = 0) {
+    clearTimeout(this.previewTimeout)
+    const request = ++this.previewRequest
+    this.discountTarget.hidden = true
+    if (!this.couponTarget.value.trim()) return
+
+    this.previewTimeout = setTimeout(() => this.previewCoupon(request), delay)
+  }
+
+  async previewCoupon(request) {
+    try {
+      const response = await fetch(this.previewUrlValue, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector("meta[name='csrf-token']").content
+        },
+        body: JSON.stringify({
+          checkout_preview: {
+            coupon_code: this.couponTarget.value,
+            items: this.quantityTargets.map(quantity => ({
+              ticket_type_id: quantity.dataset.ticketTypeId,
+              quantity: this.count(quantity)
+            })).filter(item => item.quantity > 0)
+          }
+        })
+      })
+      if (!response.ok) throw new Error(response.statusText)
+
+      const preview = await response.json()
+      if (request !== this.previewRequest) return
+
+      this.totalTarget.textContent = this.formatMoney(preview.total_paise)
+      this.discountTarget.textContent = preview.coupon.applied
+        ? `Coupon ${preview.coupon.code} applied · −${this.formatMoney(preview.discount_paise)}`
+        : preview.coupon.message
+      this.discountTarget.classList.toggle("coupon-message--applied", preview.coupon.applied)
+      this.discountTarget.classList.toggle("coupon-message--invalid", !preview.coupon.applied)
+      this.discountTarget.hidden = false
+    } catch {
+      if (request !== this.previewRequest) return
+
+      this.showSubtotal()
+      this.discountTarget.hidden = true
+    }
+  }
+
+  formatMoney(paise) {
+    const fractionDigits = paise % 100 === 0 ? 0 : 2
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
+    }).format(paise / 100)
+  }
+
+  get subtotal() {
+    return this.quantityTargets.reduce((sum, quantity) => sum + this.count(quantity) * Number(quantity.dataset.unitPrice), 0)
   }
 }

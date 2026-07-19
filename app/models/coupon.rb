@@ -1,6 +1,13 @@
 class Coupon < ApplicationRecord
   class Invalid < StandardError; end
 
+  def self.find_by_code(code)
+    code = code.to_s.strip
+    return if code.blank?
+
+    find_by("lower(code) = ?", code.downcase) || raise(Invalid, "Coupon not valid")
+  end
+
   belongs_to :ticket_type, optional: true
   has_many :orders, dependent: :restrict_with_exception
 
@@ -15,10 +22,11 @@ class Coupon < ApplicationRecord
   validate :valid_window_is_ordered
 
   def discount_for(subtotals, at: Time.current)
-    raise Invalid, "coupon is not active" unless available?(at:)
+    message = unavailable_message(at:)
+    raise Invalid, message if message
 
     subtotal = ticket_type_id ? subtotals.fetch(ticket_type_id, 0) : subtotals.values.sum
-    raise Invalid, "coupon does not apply to these tickets" if subtotal.zero?
+    raise Invalid, "Coupon does not apply to these tickets" if subtotal.zero?
 
     [ discount_paise || (subtotal * percent / 100.0).round, subtotal ].min
   end
@@ -28,6 +36,13 @@ class Coupon < ApplicationRecord
   end
 
   private
+    def unavailable_message(at:)
+      return "Coupon not active" unless active?
+      return "Coupon not valid yet" if valid_from && valid_from > at
+      return "Coupon has expired" if valid_until && valid_until < at
+      "Coupon usage limit reached" if max_uses && uses_count >= max_uses
+    end
+
     def one_discount_type
       errors.add(:base, "set either discount paise or percent") unless discount_paise.present? ^ percent.present?
     end

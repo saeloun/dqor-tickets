@@ -332,6 +332,9 @@ button { cursor: pointer; }
 }
 .field input::placeholder { color: var(--color-muted-foreground); opacity: 0.7; }
 .field input:focus { border-color: var(--color-ring); box-shadow: 0 0 0 3px color-mix(in hsl, var(--color-ring), transparent 78%); }
+.coupon-message { margin: 0; color: var(--color-muted-foreground); font-size: 0.82rem; }
+.coupon-message--applied { color: var(--color-success); }
+.coupon-message--invalid { color: var(--color-destructive); }
 
 .attendee-list:empty { display: none; }
 .attendee-fields { margin: 1.5rem 0 0; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-background-alt); }

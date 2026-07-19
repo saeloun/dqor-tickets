@@ -94,9 +94,7 @@ module Orders
       end
 
       def find_coupon
-        return if @coupon_code.blank?
-
-        Coupon.find_by("lower(code) = ?", @coupon_code.strip.downcase) || raise(Coupon::Invalid, "coupon not found")
+        Coupon.find_by_code(@coupon_code)
       end
   end
 end
