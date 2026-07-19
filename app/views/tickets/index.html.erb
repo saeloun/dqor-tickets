@@ -55,6 +55,9 @@
               <% else %>
                 <span class="ticket-price-amount"><%= state %></span>
               <% end %>
+              <% if ticket_type.capacity %>
+                <span class="<%= class_names("ticket-availability", "ticket-availability--low": available <= 10) %>"><%= available %> of <%= ticket_type.capacity %> left</span>
+              <% end %>
             </div>
 
             <% if add_on %>
@@ -70,7 +73,7 @@
               <div class="quantity-stepper" data-ticket-control>
                 <button type="button" data-action="cart#decrement" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Remove one <%= ticket_type.name %>">−</button>
                 <%= number_field_tag "checkout[quantities][#{ticket_type.id}]", 0,
-                      id: "checkout_quantities_#{ticket_type.id}", min: 0, max: ticket_type.max_per_order,
+                      id: "checkout_quantities_#{ticket_type.id}", min: 0, max: [ticket_type.max_per_order, (available if ticket_type.capacity)].compact.min,
                       data: { cart_target: "quantity", ticket_type_id: ticket_type.id, ticket_kind: "conference", unit_price: ticket_type.price_paise, action: "change->cart#sync input->cart#sync" },
                       aria: { label: "#{ticket_type.name} quantity" } %>
                 <button type="button" data-action="cart#increment" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Add one <%= ticket_type.name %>">+</button>

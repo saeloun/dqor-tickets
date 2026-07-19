@@ -10,6 +10,7 @@ ticket_types = [
     description: "Conference pass for Oct 8–9",
     price_paise: 350_000,
     capacity: 30,
+    active: true,
     position: 1
   },
   {
@@ -18,6 +19,7 @@ ticket_types = [
     description: "Conference pass for Oct 8–9",
     price_paise: 400_000,
     capacity: 140,
+    active: false,
     position: 2
   },
   {
@@ -26,6 +28,7 @@ ticket_types = [
     description: "Conference pass for Oct 8–9",
     price_paise: 500_000,
     capacity: 30,
+    active: false,
     position: 3
   },
   {
@@ -34,6 +37,7 @@ ticket_types = [
     description: "Explore Pune on Oct 11",
     price_paise: 200_000,
     capacity: 50,
+    active: false,
     requires_conference_pass: true,
     position: 4
   },

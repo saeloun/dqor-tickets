@@ -272,9 +272,11 @@ button { cursor: pointer; }
 .ticket-check--retreat svg { color: var(--color-gold); }
 
 .ticket-card-footer { padding: 1.25rem 1.5rem 1.5rem; border-top: 1px solid var(--color-border); background: var(--color-background-alt); }
-.ticket-price { min-height: 2.65rem; display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.9rem; }
+.ticket-price { min-height: 2.65rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; margin-bottom: 0.9rem; }
 .ticket-price-amount { font-family: var(--font-display); font-size: 1.55rem; font-weight: 700; text-transform: capitalize; }
 .ticket-price-note { color: var(--color-muted-foreground); font-size: 0.74rem; }
+.ticket-availability { flex-basis: 100%; color: var(--color-muted-foreground); font-size: 0.74rem; }
+.ticket-availability--low { color: var(--color-saffron); font-weight: 700; }
 .ticket-unavailable { margin: 0; color: var(--color-muted-foreground); font-size: 0.9rem; }
 
 .quantity-stepper { height: 2.85rem; display: grid; grid-template-columns: 2.85rem 1fr 2.85rem; border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-card); }
@@ -410,6 +412,8 @@ button { cursor: pointer; }
 .site-footer__links a:hover { color: var(--color-ruby); }
 .site-footer__inner p { margin: 0; }
 .site-footer__inner p span { color: var(--color-ruby); }
+.site-footer__association { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.site-footer__association-logo { width: auto; height: 1.75rem; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 

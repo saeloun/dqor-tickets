@@ -25,4 +25,23 @@ RSpec.describe PdfRenderer, type: :model do
 
     expect_pdf(render(ticket, template: :ticket))
   end
+
+  it "disables the Chromium sandbox when configured" do
+    browser = instance_double(Ferrum::Browser, pdf: "%PDF-test", quit: nil)
+    allow(browser).to receive(:content=)
+    allow(ApplicationController).to receive(:render).and_return("<html></html>")
+    allow(Ferrum::Browser).to receive(:new).and_return(browser)
+    previous_value = ENV["CHROME_NO_SANDBOX"]
+    ENV["CHROME_NO_SANDBOX"] = "1"
+
+    render(Object.new, template: :invoice)
+
+    expect(Ferrum::Browser).to have_received(:new).with(hash_including(browser_options: {
+      "no-sandbox" => nil,
+      "disable-gpu" => nil,
+      "disable-dev-shm-usage" => nil
+    }))
+  ensure
+    ENV["CHROME_NO_SANDBOX"] = previous_value
+  end
 end

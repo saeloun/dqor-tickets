@@ -303,6 +303,16 @@
         text-transform: uppercase;
       }
 
+      .foundation-lockup {
+        margin-top: 1mm;
+        color: var(--ink-soft);
+        font: 700 5.5px var(--font-mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .foundation-lockup strong { color: var(--ruby); }
+
       .stub {
         position: relative;
         z-index: 1;
@@ -441,7 +451,10 @@
             <span class="label">Serial No.</span>
             <div class="serial-number"><%= ticket.order.code %></div>
           </div>
-          <div class="admit">First Class Heritage Card<br>Admit One · Pune</div>
+          <div class="admit">
+            First Class Heritage Card<br>Admit One · Pune
+            <div class="foundation-lockup">In association with the <strong>Rails Foundation</strong></div>
+          </div>
         </footer>
       </section>
 

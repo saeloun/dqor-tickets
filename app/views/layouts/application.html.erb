@@ -80,6 +80,11 @@
           <a href="https://deccanqueenonrails.com/privacy">Privacy</a>
           <a href="https://deccanqueenonrails.com/refund-policy">Refunds</a>
         </nav>
+        <% if File.exist?(Rails.root.join("app/assets/images/rails-foundation.svg")) %>
+          <%= image_tag "rails-foundation.svg", alt: "In association with the Rails Foundation", class: "site-footer__association-logo" %>
+        <% else %>
+          <p class="site-footer__association">In association with the <span>Rails Foundation</span></p>
+        <% end %>
         <p>Made with <span aria-label="Ruby on Rails">Rails</span> in Pune</p>
       </div>
     </footer>
