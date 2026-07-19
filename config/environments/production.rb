@@ -22,7 +22,7 @@ Rails.application.configure do
   # config.asset_host = "http://assets.example.com"
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :r2
+  config.active_storage.service = ENV["R2_BUCKET"].present? ? :r2 : :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true
@@ -53,7 +53,7 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  host = ENV.fetch("APP_HOST")
+  host = ENV.fetch("APP_HOST", "tickets.deccanqueenonrails.com")
   config.action_mailer.default_options = { from: ENV["MAIL_FROM"] }
   config.action_mailer.default_url_options = { host:, protocol: "https" }
   config.action_mailer.delivery_method = :smtp
@@ -77,12 +77,7 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.hosts << host
+  config.hosts << ".onrender.com"
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
