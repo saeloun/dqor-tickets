@@ -1,4 +1,6 @@
 class Order < ApplicationRecord
+  require "csv"
+
   CODE_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ379"
 
   class InsufficientAvailability < StandardError; end
@@ -27,6 +29,7 @@ class Order < ApplicationRecord
 
   scope :reserving_inventory, ->(at = Time.current) { paid.or(pending.where("expires_at > ?", at)) }
   scope :overdue, ->(at = Time.current) { pending.where("expires_at <= ?", at) }
+  scope :reconcilable, ->(at = 2.minutes.ago) { pending.where.not(razorpay_order_id: nil).where(created_at: ...at) }
 
   def self.generate_code
     loop do
@@ -37,6 +40,88 @@ class Order < ApplicationRecord
 
   def self.expire_overdue!(at: Time.current)
     overdue(at).update_all(status: statuses[:expired], updated_at: at)
+  end
+
+  def self.reconcile_pending_payments!
+    reconcilable.find_each(&:reconcile_payment!)
+  end
+
+  def self.issue_comps!(emails:, attendee_names: "")
+    email_list = emails.to_s.lines.map(&:strip).compact_blank
+    names = attendee_names.to_s.lines.map(&:strip)
+    raise ArgumentError, "enter at least one email" if email_list.empty?
+
+    ticket_type = TicketType.find_by!(slug: "complimentary-pass", hidden: true)
+
+    transaction do
+      email_list.map.with_index do |email, index|
+        create!(email:, buyer_name: names[index].presence || email, total_paise: 0, expires_at: 30.minutes.from_now).tap do |order|
+          order.tickets.create!(ticket_type:, price_paise: 0, attendee_name: names[index].presence || email, attendee_email: email)
+          order.complete_comp!
+        end
+      end
+    end
+  end
+
+  def self.orders_csv(relation = all)
+    CSV.generate(headers: true) do |csv|
+      csv << %w[code status buyer_name email buyer_phone tickets subtotal_paise discount_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon gstin gst_legal_name billing_state_code tshirt_sizes dietary_preferences]
+      relation.includes(:coupon, tickets: :ticket_type).find_each do |order|
+        lines = Invoice.line_item_snapshot(order)
+        csv << [
+          order.code,
+          order.status,
+          order.buyer_name,
+          order.email,
+          order.buyer_phone,
+          order.tickets.map { |ticket| ticket.ticket_type.name }.join(" | "),
+          order.tickets.sum(&:price_paise),
+          order.metadata.fetch("discount_paise", 0),
+          order.total_paise,
+          lines.sum { |line| line.fetch("taxable") },
+          lines.sum { |line| line.fetch("cgst") },
+          lines.sum { |line| line.fetch("sgst") },
+          lines.sum { |line| line.fetch("igst") },
+          order.coupon&.code,
+          order.gstin,
+          order.gst_legal_name,
+          order.billing_state_code,
+          order.tickets.filter_map(&:tshirt_size).join(" | "),
+          order.tickets.filter_map(&:dietary_preference).join(" | ")
+        ]
+      end
+    end
+  end
+
+  def self.attendees_csv(relation = all)
+    CSV.generate(headers: true) do |csv|
+      csv << %w[order_code order_status buyer_name buyer_email ticket_id ticket_type attendee_name attendee_email price_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon tshirt_size dietary_preference]
+      relation.includes(:coupon, tickets: :ticket_type).find_each do |order|
+        lines = Invoice.line_item_snapshot(order).index_by { |line| line.fetch("ticket_id") }
+        order.tickets.each do |ticket|
+          line = lines.fetch(ticket.id)
+          csv << [
+            order.code,
+            order.status,
+            order.buyer_name,
+            order.email,
+            ticket.id,
+            ticket.ticket_type.name,
+            ticket.attendee_name,
+            ticket.attendee_email,
+            ticket.price_paise,
+            line.fetch("total_paise"),
+            line.fetch("taxable"),
+            line.fetch("cgst"),
+            line.fetch("sgst"),
+            line.fetch("igst"),
+            order.coupon&.code,
+            ticket.tshirt_size,
+            ticket.dietary_preference
+          ]
+        end
+      end
+    end
   end
 
   def mark_paid!(payment_event)
@@ -56,20 +141,88 @@ class Order < ApplicationRecord
 
   def create_razorpay_order!
     return self if razorpay_order_id?
+    return complete_comp! if total_paise < 100
 
     razorpay_order = Razorpay::Order.create(amount: total_paise, currency: "INR", receipt: code)
     update!(razorpay_order_id: razorpay_order.id)
+    payment_events.create!(
+      razorpay_event_id: "order_created_#{razorpay_order.id}",
+      kind: "order_created",
+      amount_paise: total_paise,
+      raw: { "razorpay_order_id" => razorpay_order.id }
+    )
     self
   end
 
   def complete_comp!
     payment_event = payment_events.create_or_find_by!(razorpay_event_id: "comp_#{code}") do |event|
       event.kind = "comp"
-      event.amount_paise = 0
+      event.amount_paise = total_paise
     end
 
     mark_paid!(payment_event)
     deliver_confirmation!
+  end
+
+  def reconcile_payment!
+    return unless pending? && razorpay_order_id?
+
+    payment = Array(Razorpay::Order.fetch(razorpay_order_id).payments.items).find { |item| item["captured"] || item["status"] == "captured" }
+    unless payment
+      payment_events.create!(
+        razorpay_event_id: "polling_checked_#{SecureRandom.uuid}",
+        kind: "polling_checked",
+        amount_paise: total_paise
+      )
+      return
+    end
+
+    payment_event = payment_events.create_or_find_by!(razorpay_event_id: "reconcile_#{payment.fetch("id")}") do |event|
+      event.razorpay_payment_id = payment.fetch("id") unless payment_events.exists?(razorpay_payment_id: payment.fetch("id"))
+      event.kind = "reconciled_captured"
+      event.amount_paise = payment.fetch("amount", total_paise)
+      event.raw = payment
+    end
+    ConfirmOrderJob.perform_now(razorpay_order_id, payment_event.id)
+  rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, SocketError => error
+    payment_events.create!(
+      razorpay_event_id: "polling_check_failed_#{SecureRandom.uuid}",
+      kind: "polling_check_failed",
+      level: "warn",
+      amount_paise: total_paise,
+      raw: { "error" => error.class.name, "message" => error.message }
+    )
+  end
+
+  def refund_tickets!(ticket_ids)
+    selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
+    selected_tickets = tickets.where(id: selected_ids, canceled_at: nil)
+    raise ArgumentError, "select at least one refundable ticket" unless selected_tickets.count == selected_ids.size && selected_ids.any?
+
+    lines = invoices.invoice.sole.line_items.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+    amount_paise = lines.sum { |line| line.fetch("total_paise") }
+    payment_id = if amount_paise.positive?
+      payment_events.order(created_at: :desc).filter_map do |event|
+        event.razorpay_payment_id || event.raw.dig("payload", "payment", "entity", "id")
+      end.first || raise(ArgumentError, "order has no Razorpay payment")
+    end
+
+    refund = refunds.create!(amount_paise:, ticket_ids: selected_ids, status: "initiated")
+    if amount_paise.zero?
+      event = payment_events.create!(razorpay_event_id: "free_refund_#{refund.id}", kind: "refund.processed", amount_paise: 0)
+      ProcessRefundJob.perform_now(refund.id, event.id)
+    else
+      gateway_refund = Razorpay::Payment.fetch(payment_id).refund(amount: amount_paise)
+      refund.update!(razorpay_refund_id: gateway_refund.id)
+      payment_events.create!(
+        razorpay_event_id: "refund_created_#{gateway_refund.id}",
+        kind: "refund_created",
+        amount_paise:,
+        raw: { "razorpay_refund_id" => gateway_refund.id }
+      )
+    end
+
+    refund
   end
 
   def confirm_from_razorpay_if_stalled!
@@ -78,7 +231,14 @@ class Order < ApplicationRecord
     return unless claim_fallback_check!
 
     payment = Array(Razorpay::Order.fetch(razorpay_order_id).payments.items).find { |item| item["captured"] || item["status"] == "captured" }
-    return unless payment
+    unless payment
+      payment_events.create!(
+        razorpay_event_id: "polling_checked_#{SecureRandom.uuid}",
+        kind: "polling_checked",
+        amount_paise: total_paise
+      )
+      return
+    end
 
     payment_event = payment_events.create_or_find_by!(razorpay_event_id: "fallback_#{payment.fetch("id")}") do |event|
       event.kind = "fallback_captured"
@@ -87,6 +247,13 @@ class Order < ApplicationRecord
     end
     ConfirmOrderJob.perform_later(razorpay_order_id, payment_event.id)
   rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, SocketError => error
+    payment_events.create!(
+      razorpay_event_id: "polling_check_failed_#{SecureRandom.uuid}",
+      kind: "polling_check_failed",
+      level: "warn",
+      amount_paise: total_paise,
+      raw: { "error" => error.class.name, "message" => error.message }
+    )
     Rails.logger.error("Razorpay fallback failed for order_id=#{id}: #{error.message}")
   end
 
@@ -99,6 +266,11 @@ class Order < ApplicationRecord
       OrderMailer.confirmation(self).deliver_later
       true
     end
+  end
+
+  def resend_confirmation!
+    attach_documents!
+    OrderMailer.confirmation(self).deliver_later
   end
 
   def attach_documents!

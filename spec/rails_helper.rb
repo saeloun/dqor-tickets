@@ -26,4 +26,11 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.include ActiveSupport::Testing::TimeHelpers
   config.include ActiveJob::TestHelper
+
+  config.include Module.new {
+    def sign_in_admin(admin = create(:admin_user, password: "password123"))
+      post session_path, params: { email: admin.email, password: "password123" }
+      admin
+    end
+  }, type: :request
 end

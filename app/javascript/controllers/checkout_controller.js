@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["button", "countdown"]
+  static targets = ["button", "countdown", "timer"]
   static values = {
     key: String,
     orderId: String,
@@ -40,6 +40,7 @@ export default class extends Controller {
     const minutes = String(Math.floor(remaining / 60)).padStart(2, "0")
     const seconds = String(remaining % 60).padStart(2, "0")
     this.countdownTarget.textContent = `${minutes}:${seconds}`
+    this.timerTarget.classList.toggle("countdown-pill--urgent", remaining < 300)
     this.buttonTarget.disabled = remaining === 0
   }
 

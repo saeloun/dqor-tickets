@@ -43,6 +43,7 @@ RSpec.describe "Orders", type: :request do
     expect(response).to have_http_status(:created)
     expect(response.body).to include("Pay securely with Razorpay", order.code)
     expect(order.razorpay_order_id).to eq("order_test")
+    expect(order.payment_events.sole).to have_attributes(kind: "order_created", level: "info", mode: "test")
     expect(order.tickets.sole).to have_attributes(attendee_name: "Attendee 1", attendee_email: "attendee1@example.com")
     expect(a_request(:post, razorpay_url).with(body: hash_including("amount" => "400000", "currency" => "INR", "receipt" => order.code))).to have_been_made.once
   end
@@ -118,6 +119,17 @@ RSpec.describe "Orders", type: :request do
     expect(order.payment_events.sole.kind).to eq("comp")
     expect(order.invoices.invoice.sole.pdf).to be_attached
     expect(order.tickets.sole.pdf).to be_attached
+    expect(a_request(:post, razorpay_url)).not_to have_been_made
+  end
+
+  it "confirms a sub-rupee order without calling Razorpay" do
+    allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
+    low_cost = create(:ticket_type, name: "Token Pass", price_paise: 99)
+
+    post orders_path, params: checkout_params(quantities: { low_cost.id.to_s => "1" })
+
+    expect(Order.last).to be_paid
+    expect(Order.last.payment_events.sole.amount_paise).to eq(99)
     expect(a_request(:post, razorpay_url)).not_to have_been_made
   end
 end

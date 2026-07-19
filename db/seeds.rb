@@ -58,3 +58,12 @@ Coupon.find_or_create_by!(code: "DQFRIENDS") do |coupon|
   coupon.max_uses = 20
   coupon.ticket_type = regular
 end
+
+# Coupon.find_or_create_by!(code: "TEAM10") do |coupon|
+#   coupon.percent = 10
+# end
+
+# Coupon.find_or_create_by!(code: "GIVEAWAY") do |coupon|
+#   coupon.percent = 100
+#   coupon.max_uses = 5
+# end

@@ -12,7 +12,7 @@ class OrdersController < ApplicationController
       conference_order_email: checkout[:conference_order_email]
     )
 
-    if order.total_paise.zero?
+    if order.total_paise < 100
       order.complete_comp!
     else
       order.create_razorpay_order!

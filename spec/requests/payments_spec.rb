@@ -27,8 +27,9 @@ RSpec.describe "Payments", type: :request do
         razorpay_payment_id: payment_id,
         razorpay_signature: "invalid"
       }
-    end.not_to change(PaymentEvent, :count)
+    end.to change(PaymentEvent, :count).by(1)
 
     expect(response).to have_http_status(:unprocessable_content)
+    expect(order.payment_events.sole).to have_attributes(kind: "signature_mismatch", level: "warn", mode: "test")
   end
 end

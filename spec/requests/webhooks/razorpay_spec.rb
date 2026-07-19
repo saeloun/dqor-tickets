@@ -43,9 +43,10 @@ RSpec.describe "Razorpay webhooks", type: :request do
     order = create(:order, razorpay_order_id: "order_test")
 
     expect { post_webhook(payment_payload("payment.captured", order), signature: "invalid") }
-      .not_to change(PaymentEvent, :count)
+      .to change(PaymentEvent, :count).by(1)
 
     expect(response).to have_http_status(:bad_request)
+    expect(order.payment_events.sole).to have_attributes(kind: "signature_mismatch", level: "warn", mode: "test")
   end
 
   it "deduplicates an event before processing" do

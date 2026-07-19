@@ -55,6 +55,15 @@ RSpec.describe Coupon, type: :model do
     expect(coupon.reload.uses_count).to eq(0)
   end
 
+  it "floors a discount at the eligible subtotal" do
+    coupon = create(:coupon, ticket_type: regular, discount_paise: 500_000)
+
+    order = checkout(coupon)
+
+    expect(order.total_paise).to eq(0)
+    expect(order.metadata.fetch("discount_paise")).to eq(400_000)
+  end
+
   it "increments uses once when payment is confirmed" do
     coupon = create(:coupon, ticket_type: regular, discount_paise: 50_000)
     order = checkout(coupon)

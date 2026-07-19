@@ -14,7 +14,10 @@ module Webhooks
 
       handle_event(payload, event_id)
       head :ok
-    rescue SecurityError, JSON::ParserError, KeyError, TypeError
+    rescue SecurityError
+      record_signature_mismatch(raw)
+      head :bad_request
+    rescue JSON::ParserError, KeyError, TypeError
       head :bad_request
     end
 
@@ -67,6 +70,21 @@ module Webhooks
           amount_paise: entity["amount"] || entity["amount_paid"] || order.total_paise,
           raw: payload
         )
+      end
+
+      def record_signature_mismatch(raw)
+        payload = JSON.parse(raw)
+        return unless order = find_order(payload)
+
+        order.payment_events.create!(
+          razorpay_event_id: "signature_mismatch_#{SecureRandom.uuid}",
+          kind: "signature_mismatch",
+          level: "warn",
+          amount_paise: order.total_paise,
+          raw: { "event" => payload["event"] }
+        )
+      rescue JSON::ParserError
+        nil
       end
   end
 end

@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   root "tickets#index"
 
+  mount_avo at: "/avo"
+
+  resource :checkin, only: %i[show create]
+
   resources :orders, param: :code, only: [ :create, :show ]
   post "payments/callback", to: "payments#callback", as: :payment_callback
 
@@ -19,4 +23,10 @@ Rails.application.routes.draw do
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+end
+
+if defined? ::Avo
+  Avo::Engine.routes.draw do
+    get "dashboard", to: "tools#dashboard", as: :dashboard
+  end
 end

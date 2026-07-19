@@ -1,85 +1,181 @@
-<main class="page-shell">
-  <header class="page-hero">
-    <p class="eyebrow">डेक्कन क्वीन</p>
-    <h1>Deccan Queen on Rails 2026</h1>
-    <p>Pune, October 8-11</p>
-  </header>
+<% content_for :title, "Tickets · Deccan Queen on Rails" %>
+
+<main class="storefront">
+  <section class="storefront-hero">
+    <p class="section-label">Tickets</p>
+    <h1>Choose your conference pass</h1>
+    <p>Two days of Ruby, Rails, and good company in Pune — with an optional day out in the city.</p>
+  </section>
 
   <% if flash[:alert] %>
     <p class="alert" role="alert"><%= flash[:alert] %></p>
   <% end %>
 
   <%= form_with url: orders_path, scope: :checkout, class: "checkout-form", data: { turbo: false, controller: "cart" } do |form| %>
-    <section class="ticket-grid" aria-labelledby="tickets-heading">
-      <h2 id="tickets-heading">Choose your tickets</h2>
+    <section class="tickets-grid" aria-labelledby="tickets-heading">
+      <h2 id="tickets-heading" class="sr-only">Available tickets</h2>
 
       <% @ticket_types.each do |ticket_type| %>
         <% available = ticket_type.available_quantity %>
         <% state = if ticket_type.purchasable? && available.positive? then "on sale" elsif ticket_type.purchasable? then "sold out" else "coming soon" end %>
-        <article class="ticket-card ticket-card--<%= state.parameterize %>">
-          <span class="status-badge"><%= state %></span>
-          <h3><%= ticket_type.name %></h3>
-          <p><%= ticket_type.description %></p>
-          <p class="ticket-price"><%= number_to_currency(ticket_type.price_paise / 100.0, unit: "₹", precision: 0) %></p>
+        <% add_on = ticket_type.requires_conference_pass? %>
+        <% featured = ticket_type.slug == "conference-pass-regular" %>
+        <% includes = add_on ? ["Guided tour around Pune", "Local food trail", "Transport included", "Limited to 50 guests"] : ["All talks and keynotes", "Lunch and chai on both days", "Conference afterparty", "Explore Pune Day add-on available"] %>
 
-          <% if ticket_type.requires_conference_pass? %>
-            <%= check_box_tag "checkout[quantities][#{ticket_type.id}]", 1, false, disabled: state != "on sale", data: { cart_target: "quantity", ticket_type_id: ticket_type.id, action: "cart#sync" } %>
-            <%= label_tag "checkout_quantities_#{ticket_type.id}", "Add Explore Pune Day" %>
-            <p class="field-hint">Requires a conference pass in this cart or a paid conference order below.</p>
-          <% else %>
-            <%= label_tag "checkout_quantities_#{ticket_type.id}", "Quantity" %>
-            <%= number_field_tag "checkout[quantities][#{ticket_type.id}]", nil, id: "checkout_quantities_#{ticket_type.id}", min: 0, max: ticket_type.max_per_order, disabled: state != "on sale", data: { cart_target: "quantity", ticket_type_id: ticket_type.id, action: "cart#sync" } %>
-          <% end %>
+        <article class="ticket-card <%= add_on ? "ticket-card--retreat" : "ticket-card--conference" %> <%= "ticket-card--featured" if featured %> ticket-card--<%= state.parameterize %>">
+          <div class="ticket-card-header">
+            <div class="ticket-card-badges">
+              <span class="ticket-type-badge <%= add_on ? "ticket-type-badge--retreat" : "ticket-type-badge--conference" %>"><%= add_on ? "Explore Pune Day" : "Conference" %></span>
+              <span class="ticket-state-badge"><%= state %></span>
+            </div>
+            <h2 class="ticket-card-title"><%= ticket_type.name %></h2>
+            <div class="ticket-card-date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              <%= add_on ? "October 11, 2026 (Sunday)" : "October 8 & 9, 2026" %>
+            </div>
+          </div>
 
-          <div data-cart-target="attendees" data-ticket-type-id="<%= ticket_type.id %>"></div>
-          <template data-cart-target="template" data-ticket-type-id="<%= ticket_type.id %>">
-            <fieldset class="attendee-fields">
-              <legend>Attendee NEW_NUMBER</legend>
-              <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_name">Name</label>
-              <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_name" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][attendee_name]" required>
-              <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_email">Email</label>
-              <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_email" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][attendee_email]" type="email" required>
-              <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_tshirt">T-shirt size</label>
-              <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_tshirt" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][tshirt_size]">
-              <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_dietary">Dietary preference</label>
-              <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_dietary" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][dietary_preference]">
-            </fieldset>
-          </template>
+          <div class="ticket-card-body">
+            <p class="ticket-card-desc"><%= ticket_type.description %></p>
+            <ul class="ticket-includes">
+              <% includes.each do |item| %>
+                <li class="<%= add_on ? "ticket-check--retreat" : "ticket-check--conference" %>">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <%= item %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+
+          <div class="ticket-card-footer">
+            <div class="ticket-price">
+              <% if state == "on sale" %>
+                <span class="ticket-price-amount"><%= inr(ticket_type.price_paise) %></span>
+                <span class="ticket-price-note">GST included</span>
+              <% else %>
+                <span class="ticket-price-amount"><%= state %></span>
+              <% end %>
+            </div>
+
+            <% if add_on %>
+              <%= check_box_tag "checkout[quantities][#{ticket_type.id}]", 1, false,
+                    id: "checkout_quantities_#{ticket_type.id}", disabled: state != "on sale",
+                    class: "add-on-checkbox__input",
+                    data: { cart_target: "quantity", ticket_type_id: ticket_type.id, ticket_kind: "add-on", unit_price: ticket_type.price_paise, action: "cart#sync" } %>
+              <%= label_tag "checkout_quantities_#{ticket_type.id}", class: "add-on-checkbox" do %>
+                <span class="add-on-checkbox__mark" aria-hidden="true">✓</span>
+                <span>Add Explore Pune Day</span>
+              <% end %>
+            <% elsif state == "on sale" %>
+              <div class="quantity-stepper" data-ticket-control>
+                <button type="button" data-action="cart#decrement" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Remove one <%= ticket_type.name %>">−</button>
+                <%= number_field_tag "checkout[quantities][#{ticket_type.id}]", 0,
+                      id: "checkout_quantities_#{ticket_type.id}", min: 0, max: ticket_type.max_per_order,
+                      data: { cart_target: "quantity", ticket_type_id: ticket_type.id, ticket_kind: "conference", unit_price: ticket_type.price_paise, action: "change->cart#sync input->cart#sync" },
+                      aria: { label: "#{ticket_type.name} quantity" } %>
+                <button type="button" data-action="cart#increment" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Add one <%= ticket_type.name %>">+</button>
+              </div>
+            <% else %>
+              <p class="ticket-unavailable"><%= state == "sold out" ? "This tier has sold out." : "Sales open soon." %></p>
+            <% end %>
+          </div>
         </article>
       <% end %>
     </section>
 
-    <section class="form-card" aria-labelledby="buyer-heading">
-      <h2 id="buyer-heading">Buyer details</h2>
-      <%= form.label :buyer_name, "Name" %>
-      <%= form.text_field :buyer_name, required: true, autocomplete: "name" %>
-      <%= form.label :email %>
-      <%= form.email_field :email, required: true, autocomplete: "email" %>
-      <%= form.label :buyer_phone, "Phone" %>
-      <%= form.telephone_field :buyer_phone, autocomplete: "tel" %>
-      <%= form.label :coupon_code, "Coupon code" %>
-      <%= form.text_field :coupon_code, autocomplete: "off" %>
+    <section class="order-panel" aria-labelledby="buyer-heading">
+      <div class="order-panel__heading">
+        <div>
+          <p class="section-label">Checkout</p>
+          <h2 id="buyer-heading">Your order</h2>
+        </div>
+        <p>Attendee details appear as you add passes.</p>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <%= form.label :buyer_name, "Buyer name" %>
+          <%= form.text_field :buyer_name, required: true, autocomplete: "name", placeholder: "Your full name" %>
+        </div>
+        <div class="field">
+          <%= form.label :email, "Email" %>
+          <%= form.email_field :email, required: true, autocomplete: "email", placeholder: "you@example.com" %>
+        </div>
+        <div class="field">
+          <%= form.label :buyer_phone, "Phone" %>
+          <%= form.telephone_field :buyer_phone, autocomplete: "tel", placeholder: "+91 98765 43210" %>
+        </div>
+        <div class="field">
+          <%= form.label :coupon_code, "Coupon code" %>
+          <%= form.text_field :coupon_code, autocomplete: "off", placeholder: "Optional" %>
+        </div>
+      </div>
+
+      <div class="attendee-list">
+        <% @ticket_types.each do |ticket_type| %>
+          <div data-cart-target="attendees" data-ticket-type-id="<%= ticket_type.id %>"></div>
+          <template data-cart-target="template" data-ticket-type-id="<%= ticket_type.id %>">
+            <fieldset class="attendee-fields">
+              <legend><%= ticket_type.name %> · Attendee NEW_NUMBER</legend>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_name">Name</label>
+                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_name" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][attendee_name]" autocomplete="name" required>
+                </div>
+                <div class="field">
+                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_email">Email</label>
+                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_email" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][attendee_email]" type="email" autocomplete="email" required>
+                </div>
+                <div class="field">
+                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_tshirt">T-shirt size</label>
+                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_tshirt" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][tshirt_size]" placeholder="Optional">
+                </div>
+                <div class="field">
+                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_dietary">Dietary preference</label>
+                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_dietary" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][dietary_preference]" placeholder="Optional">
+                </div>
+              </div>
+            </fieldset>
+          </template>
+        <% end %>
+      </div>
+
+      <section class="add-on-gate" data-cart-target="addOnGate" hidden aria-labelledby="conference-heading">
+        <h3 id="conference-heading">Already have a conference pass?</h3>
+        <p>For a standalone Explore Pune Day add-on, enter the paid order details from your confirmation email.</p>
+        <div class="field-grid">
+          <div class="field">
+            <%= form.label :conference_order_code, "Paid order code" %>
+            <%= form.text_field :conference_order_code, maxlength: 8, autocomplete: "off" %>
+          </div>
+          <div class="field">
+            <%= form.label :conference_order_email, "Paid order email" %>
+            <%= form.email_field :conference_order_email, autocomplete: "email" %>
+          </div>
+        </div>
+      </section>
+
+      <details class="gst-details">
+        <summary>Need a GST invoice?</summary>
+        <div class="field-grid">
+          <div class="field">
+            <%= form.label :gst_legal_name, "Legal name" %>
+            <%= form.text_field :gst_legal_name %>
+          </div>
+          <div class="field">
+            <%= form.label :gstin, "GSTIN" %>
+            <%= form.text_field :gstin %>
+          </div>
+          <div class="field">
+            <%= form.label :billing_state_code, "Billing state code" %>
+            <%= form.text_field :billing_state_code, maxlength: 2, inputmode: "numeric" %>
+          </div>
+        </div>
+      </details>
+
+      <%= form.button class: "btn btn-primary order-cta", type: "submit" do %>
+        Continue to payment <span aria-hidden="true">·</span> <span data-cart-target="total"><%= inr(0) %></span>
+      <% end %>
     </section>
-
-    <section class="form-card" aria-labelledby="conference-heading">
-      <h2 id="conference-heading">Already have a conference pass?</h2>
-      <p>For a standalone Explore Pune Day add-on, enter the paid order details from your confirmation email.</p>
-      <%= form.label :conference_order_code, "Paid order code" %>
-      <%= form.text_field :conference_order_code, maxlength: 8, autocomplete: "off" %>
-      <%= form.label :conference_order_email, "Paid order email" %>
-      <%= form.email_field :conference_order_email, autocomplete: "email" %>
-    </section>
-
-    <details class="form-card">
-      <summary>GST invoice details</summary>
-      <%= form.label :gst_legal_name, "Legal name" %>
-      <%= form.text_field :gst_legal_name %>
-      <%= form.label :gstin, "GSTIN" %>
-      <%= form.text_field :gstin %>
-      <%= form.label :billing_state_code, "State code" %>
-      <%= form.text_field :billing_state_code, maxlength: 2, inputmode: "numeric" %>
-    </details>
-
-    <%= form.submit "Continue to payment", class: "btn-primary" %>
   <% end %>
 </main>

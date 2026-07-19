@@ -1,29 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title><%= content_for(:title) || "Dqor Tickets" %></title>
+    <title><%= content_for(:title) || "Deccan Queen on Rails Tickets" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Dqor Tickets">
+    <meta name="application-name" content="Deccan Queen on Rails Tickets">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%= javascript_tag nonce: true do %>
+      (function () {
+        var STORAGE_KEY = 'dqor-theme';
+
+        function getSystemTheme() {
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function applyTheme(theme) {
+          if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+        }
+
+        function getStoredTheme() {
+          try { return localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
+        }
+
+        function storeTheme(theme) {
+          try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+        }
+
+        function getCurrentTheme() {
+          return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        }
+
+        applyTheme(getStoredTheme() || getSystemTheme());
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+          if (!getStoredTheme()) applyTheme(e.matches ? 'dark' : 'light');
+        });
+
+        window.__dqorTheme = { applyTheme, storeTheme, getCurrentTheme };
+      })();
+    <% end %>
+
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
+    <header class="site-header" data-controller="theme">
+      <div class="site-header__inner">
+        <a class="wordmark" href="https://deccanqueenonrails.com">
+          <span class="wordmark__eyebrow" lang="mr">डेक्कन क्वीन</span>
+          <span class="wordmark__name">Deccan Queen on Rails</span>
+        </a>
+        <p class="event-date">Oct 8–11, 2026 <span aria-hidden="true">·</span> Pune</p>
+        <button class="theme-toggle" type="button" data-action="theme#toggle" data-theme-target="button" aria-label="Switch to dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+      </div>
+    </header>
+
     <%= yield %>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <a class="site-footer__brand" href="https://deccanqueenonrails.com">Deccan Queen on Rails</a>
+        <nav class="site-footer__links" aria-label="Legal">
+          <a href="https://deccanqueenonrails.com/terms">Terms</a>
+          <a href="https://deccanqueenonrails.com/privacy">Privacy</a>
+          <a href="https://deccanqueenonrails.com/refund-policy">Refunds</a>
+        </nav>
+        <p>Made with <span aria-label="Ruby on Rails">Rails</span> in Pune</p>
+      </div>
+    </footer>
   </body>
 </html>

@@ -1,0 +1,54 @@
+<% content_for :head do %>
+  <style>
+    .checkin { max-width: 42rem; margin: 0 auto; padding: 1rem; font-family: system-ui, sans-serif; }
+    .checkin h1 { margin: .5rem 0 1rem; font-size: 1.75rem; }
+    .checkin-controls { display: grid; gap: .75rem; margin-bottom: 1rem; }
+    .checkin label { display: grid; gap: .25rem; font-weight: 600; }
+    .checkin input, .checkin select, .checkin button { min-height: 2.75rem; padding: .65rem .75rem; border: 1px solid #9ca3af; border-radius: .5rem; font: inherit; }
+    .checkin button { cursor: pointer; color: white; background: #991b1b; border-color: #991b1b; font-weight: 700; }
+    .checkin-result { margin: 1rem 0; padding: 1rem; border-radius: .5rem; font-weight: 700; }
+    .checkin-result--success { color: #14532d; background: #dcfce7; }
+    .checkin-result--warning { color: #713f12; background: #fef3c7; }
+    .checkin-result--error { color: #7f1d1d; background: #fee2e2; }
+    .checkin-results { display: grid; gap: .75rem; margin-top: 1rem; }
+    .checkin-ticket { padding: 1rem; border: 1px solid #d1d5db; border-radius: .5rem; background: white; }
+    .checkin-ticket p { margin: .25rem 0 .75rem; }
+    #checkin-reader { overflow: hidden; border-radius: .5rem; }
+    @media (min-width: 36rem) { .checkin-controls { grid-template-columns: 10rem 1fr auto; align-items: end; } }
+  </style>
+<% end %>
+
+<main class="checkin" data-controller="checkin">
+  <h1>Attendee check-in</h1>
+
+  <form class="checkin-controls" method="get" action="<%= checkin_path %>">
+    <label>
+      Event date
+      <select name="date" data-checkin-target="date">
+        <% CheckinsController::EVENT_DATES.each do |date| %>
+          <option value="<%= date.iso8601 %>" <%= "selected" if date == @date %>><%= date.strftime("%b %-d") %></option>
+        <% end %>
+      </select>
+    </label>
+    <label>
+      Name, email, or order code
+      <input name="q" value="<%= @query %>" autocomplete="off">
+    </label>
+    <button type="submit">Search</button>
+  </form>
+
+  <div id="checkin-reader"></div>
+  <div class="checkin-result" data-checkin-target="result" role="status" aria-live="polite" hidden></div>
+
+  <% if @tickets %>
+    <section class="checkin-results" aria-label="Search results">
+      <% @tickets.each do |ticket| %>
+        <article class="checkin-ticket">
+          <strong><%= ticket.attendee_name.presence || "Unnamed attendee" %></strong>
+          <p><%= ticket.attendee_email %> · <%= ticket.ticket_type.name %> · <%= ticket.order.code %></p>
+          <button type="button" data-action="checkin#scanTicket" data-secret="<%= ticket.secret %>">Check in</button>
+        </article>
+      <% end %>
+    </section>
+  <% end %>
+</main>

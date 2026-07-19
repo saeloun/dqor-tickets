@@ -17,6 +17,15 @@ class PaymentsController < ApplicationController
     end
     redirect_to order_path(order.code)
   rescue SecurityError
+    if order = Order.find_by(razorpay_order_id: params[:razorpay_order_id])
+      order.payment_events.create!(
+        razorpay_event_id: "signature_mismatch_#{SecureRandom.uuid}",
+        kind: "signature_mismatch",
+        level: "warn",
+        amount_paise: order.total_paise,
+        raw: params.permit(:razorpay_order_id, :razorpay_payment_id).to_h
+      )
+    end
     head :unprocessable_content
   end
 end

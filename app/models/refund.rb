@@ -2,7 +2,7 @@ class Refund < ApplicationRecord
   belongs_to :order
 
   validates :status, presence: true
-  validates :amount_paise, numericality: { only_integer: true, greater_than: 0 }
+  validates :amount_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   def process!(payment_event)
     raise ArgumentError, "payment event belongs to another order" unless payment_event.order_id == order_id

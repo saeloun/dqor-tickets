@@ -1,32 +1,39 @@
+<% content_for :title, "Review order #{@order.code} · Deccan Queen on Rails" %>
 <% content_for :head do %>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <% end %>
 
-<main class="page-shell narrow">
-  <header class="page-hero">
-    <p class="eyebrow">Order <%= @order.code %></p>
+<main class="checkout-page">
+  <header class="checkout-heading">
+    <p class="section-label">Order <%= @order.code %></p>
     <h1>Review your order</h1>
+    <p>Your tickets are held while you complete payment.</p>
   </header>
 
-  <section class="form-card order-summary">
-    <% @order.tickets.includes(:ticket_type).group_by(&:ticket_type).each do |ticket_type, tickets| %>
-      <p><span><%= tickets.size %> × <%= ticket_type.name %></span><strong><%= number_to_currency(tickets.sum(&:price_paise) / 100.0, unit: "₹") %></strong></p>
-    <% end %>
-    <% if @order.metadata.fetch("discount_paise", 0).positive? %>
-      <p><span>Coupon discount</span><strong>-<%= number_to_currency(@order.metadata.fetch("discount_paise") / 100.0, unit: "₹") %></strong></p>
-    <% end %>
-    <p class="order-total"><span>Total</span><strong><%= number_to_currency(@order.total_paise / 100.0, unit: "₹") %></strong></p>
+  <section class="checkout-card order-summary" aria-labelledby="summary-heading">
+    <h2 id="summary-heading">Order summary</h2>
+    <div class="summary-lines">
+      <% @order.tickets.includes(:ticket_type).group_by(&:ticket_type).each do |ticket_type, tickets| %>
+        <p><span><%= ticket_type.name %> × <%= tickets.size %></span><strong><%= inr(tickets.sum(&:price_paise)) %></strong></p>
+      <% end %>
+      <% if @order.metadata.fetch("discount_paise", 0).positive? %>
+        <p class="summary-discount"><span>Coupon discount</span><strong>−<%= inr(@order.metadata.fetch("discount_paise")) %></strong></p>
+      <% end %>
+      <p class="order-total"><span>Total</span><strong><%= inr(@order.total_paise) %></strong></p>
+    </div>
+    <p class="tax-note">All prices include applicable GST.</p>
   </section>
 
   <% if @order.paid? %>
-    <section class="status-card status-card--paid">
+    <section class="checkout-card checkout-action status-card--paid">
+      <span class="success-icon" aria-hidden="true">✓</span>
       <h2>Confirmed</h2>
       <p>Your complimentary order is ready.</p>
-      <%= link_to "View tickets", order_path(@order.code), class: "btn-primary" %>
+      <%= link_to "View tickets", order_path(@order.code), class: "btn btn-primary" %>
     </section>
   <% else %>
     <section
-      class="status-card"
+      class="checkout-card checkout-action"
       data-controller="checkout"
       data-checkout-key-value="<%= ENV['RAZORPAY_KEY_ID'] %>"
       data-checkout-order-id-value="<%= @order.razorpay_order_id %>"
@@ -36,8 +43,12 @@
       data-checkout-expires-at-value="<%= @order.expires_at.iso8601 %>"
       data-checkout-callback-url-value="<%= payment_callback_path %>"
       data-checkout-csrf-value="<%= form_authenticity_token %>">
-      <p>Complete payment within <strong data-checkout-target="countdown">30:00</strong>.</p>
-      <button type="button" class="btn-primary" data-checkout-target="button" data-action="checkout#open">Pay securely with Razorpay</button>
+      <p class="countdown-pill" data-checkout-target="timer">Reserved for <strong data-checkout-target="countdown">30:00</strong></p>
+      <button type="button" class="btn btn-primary payment-button" data-checkout-target="button" data-action="checkout#open">Pay with Razorpay</button>
+      <p class="secure-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Pay securely with Razorpay. Card and UPI details never touch our servers.
+      </p>
     </section>
   <% end %>
 </main>
