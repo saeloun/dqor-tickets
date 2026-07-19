@@ -53,7 +53,7 @@ class Order < ApplicationRecord
 
     ticket_type = TicketType.find_by!(slug: "complimentary-pass", hidden: true)
 
-    transaction do
+    orders = transaction do
       email_list.map.with_index do |email, index|
         create!(email:, buyer_name: names[index].presence || email, total_paise: 0, expires_at: 30.minutes.from_now).tap do |order|
           order.tickets.create!(ticket_type:, price_paise: 0, attendee_name: names[index].presence || email, attendee_email: email)
@@ -61,6 +61,8 @@ class Order < ApplicationRecord
         end
       end
     end
+    orders.each { |order| DeliverOrderConfirmationJob.perform_later(order) }
+    orders
   end
 
   def self.orders_csv(relation = all)
@@ -161,7 +163,6 @@ class Order < ApplicationRecord
     end
 
     mark_paid!(payment_event)
-    deliver_confirmation!
   end
 
   def reconcile_payment!
@@ -258,14 +259,16 @@ class Order < ApplicationRecord
   end
 
   def deliver_confirmation!
+    attach_documents!
+
     with_lock do
       return false if metadata["confirmation_enqueued_at"]
 
-      attach_documents!
       update!(metadata: metadata.merge("confirmation_enqueued_at" => Time.current.iso8601))
-      OrderMailer.confirmation(self).deliver_later
-      true
     end
+
+    OrderMailer.confirmation(self).deliver_later
+    true
   end
 
   def resend_confirmation!

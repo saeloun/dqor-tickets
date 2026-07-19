@@ -49,6 +49,15 @@ RSpec.describe "Razorpay webhooks", type: :request do
     expect(order.payment_events.sole).to have_attributes(kind: "signature_mismatch", level: "warn", mode: "test")
   end
 
+  it "raises when the webhook secret is missing" do
+    order = create(:order, razorpay_order_id: "order_test")
+    allow(ENV).to receive(:fetch).and_call_original
+    allow(ENV).to receive(:fetch).with("RAZORPAY_WEBHOOK_SECRET").and_raise(KeyError, "key not found")
+
+    expect { post_webhook(payment_payload("payment.captured", order), signature: "signed") }
+      .to raise_error(KeyError, "key not found")
+  end
+
   it "deduplicates an event before processing" do
     order = create(:order, razorpay_order_id: "order_test")
     payload = payment_payload("order.paid", order)

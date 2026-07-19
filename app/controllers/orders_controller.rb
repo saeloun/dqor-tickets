@@ -1,6 +1,7 @@
 class OrdersController < ApplicationController
   allow_unauthenticated_access
   rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to root_path, alert: "Please wait before trying again." }
+  rate_limit to: 10, within: 1.minute, only: :show, name: "show", with: -> { redirect_to root_path, alert: "Please wait before trying again." }
 
   def create
     checkout = checkout_params
@@ -14,6 +15,7 @@ class OrdersController < ApplicationController
 
     if order.total_paise < 100
       order.complete_comp!
+      DeliverOrderConfirmationJob.perform_later(order)
     else
       order.create_razorpay_order!
     end
@@ -23,11 +25,16 @@ class OrdersController < ApplicationController
     render_checkout_error(error.message)
   rescue ActiveRecord::RecordInvalid => error
     render_checkout_error(error.record.errors.full_messages.to_sentence)
+  rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, SocketError, Ferrum::Error
+    order&.update!(status: :expired) if order&.pending?
+    render_checkout_error("We couldn't start checkout. Please try again.")
   end
 
   def show
     @order = Order.find_by!(code: params.expect(:code))
     @order.confirm_from_razorpay_if_stalled!
+  rescue ActiveRecord::RecordNotFound
+    render file: Rails.root.join("public/404.html"), status: :not_found, layout: false
   end
 
   private

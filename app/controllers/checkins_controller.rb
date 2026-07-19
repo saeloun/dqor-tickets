@@ -2,7 +2,7 @@ class CheckinsController < ApplicationController
   EVENT_DATES = (8..11).map { |day| Date.new(2026, 10, day) }.freeze
 
   def show
-    @date = event_date(params[:date])
+    @date = event_date(params[:date], fallback: true)
     @query = params[:q].to_s.strip
     @tickets = search(@query) if @query.present?
   end
@@ -23,11 +23,15 @@ class CheckinsController < ApplicationController
   end
 
   private
-    def event_date(value)
+    def event_date(value, fallback: false)
       date = value.present? ? Date.iso8601(value) : default_date
       raise ArgumentError unless EVENT_DATES.include?(date)
 
       date
+    rescue ArgumentError
+      raise unless fallback
+
+      default_date
     end
 
     def default_date

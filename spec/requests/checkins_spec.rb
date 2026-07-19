@@ -19,6 +19,17 @@ RSpec.describe "Check-ins", type: :request do
     expect(response.body).to include("Grace Hopper", ticket.order.code, ticket.secret)
   end
 
+  it "defaults an invalid date to the current event day" do
+    sign_in_admin
+
+    travel_to Time.zone.local(2026, 10, 9, 12) do
+      get checkin_path, params: { date: "garbage" }
+    end
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include('value="2026-10-09" selected')
+  end
+
   it "checks in a ticket for the selected day" do
     sign_in_admin
     ticket = create(:ticket)

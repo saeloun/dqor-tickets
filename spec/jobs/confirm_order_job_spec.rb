@@ -11,13 +11,31 @@ RSpec.describe ConfirmOrderJob, type: :job do
     [ order, event, ticket_type ]
   end
 
-  it "marks the order paid, attaches documents, and enqueues confirmation" do
+  it "marks the order paid and enqueues confirmation delivery" do
     order, event = order_with_event
 
     expect { described_class.perform_now(order.razorpay_order_id, event.id) }
-      .to have_enqueued_mail(OrderMailer, :confirmation)
+      .to have_enqueued_job(DeliverOrderConfirmationJob).with(order)
 
     expect(order.reload).to be_paid
+    expect(order.invoices.invoice.count).to eq(1)
+    expect(order.invoices.invoice.sole.pdf).not_to be_attached
+  end
+
+  it "renders documents after the payment transaction commits" do
+    order, event = order_with_event
+    open_transactions = ActiveRecord::Base.connection.open_transactions
+    allow(PdfRenderer).to receive(:render) do
+      expect(ActiveRecord::Base.connection.open_transactions).to eq(open_transactions)
+      "%PDF-1.7 test"
+    end
+
+    expect do
+      perform_enqueued_jobs(only: DeliverOrderConfirmationJob) do
+        described_class.perform_now(order.razorpay_order_id, event.id)
+      end
+    end.to have_enqueued_mail(OrderMailer, :confirmation)
+
     expect(order.invoices.invoice.sole.pdf).to be_attached
     expect(order.tickets.sole.pdf).to be_attached
   end
@@ -25,8 +43,9 @@ RSpec.describe ConfirmOrderJob, type: :job do
   it "is idempotent" do
     order, event = order_with_event
 
-    clear_enqueued_jobs
-    2.times { described_class.perform_now(order.razorpay_order_id, event.id) }
+    perform_enqueued_jobs(only: DeliverOrderConfirmationJob) do
+      2.times { described_class.perform_now(order.razorpay_order_id, event.id) }
+    end
 
     expect(order.invoices.invoice.count).to eq(1)
     expect(enqueued_jobs.count { |job| job[:job] == ActionMailer::MailDeliveryJob }).to eq(1)

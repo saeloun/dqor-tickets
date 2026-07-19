@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe ReconcilePaymentsJob, type: :job do
-  before { allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test") }
-
   it "completes a captured pending payment through the confirmation path" do
     order = create(:order, created_at: 3.minutes.ago, razorpay_order_id: "order_test")
     create(:ticket, order:)
@@ -17,7 +15,7 @@ RSpec.describe ReconcilePaymentsJob, type: :job do
       headers: { "Content-Type" => "application/json" }
     )
 
-    expect { described_class.perform_now }.to have_enqueued_mail(OrderMailer, :confirmation)
+    expect { described_class.perform_now }.to have_enqueued_job(DeliverOrderConfirmationJob).with(order)
 
     expect(order.reload).to be_paid
     expect(order.payment_events.sole).to have_attributes(kind: "reconciled_captured", razorpay_payment_id: "pay_test", level: "info", mode: "test")

@@ -107,18 +107,18 @@ RSpec.describe "Orders", type: :request do
   end
 
   it "confirms a free order without calling Razorpay" do
-    allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
+    allow(PdfRenderer).to receive(:render)
     free = create(:ticket_type, name: "Community Pass", price_paise: 0)
 
     expect { post orders_path, params: checkout_params(quantities: { free.id.to_s => "1" }) }
-      .to have_enqueued_mail(OrderMailer, :confirmation)
+      .to have_enqueued_job(DeliverOrderConfirmationJob).with(kind_of(Order))
 
     order = Order.last
     expect(response).to have_http_status(:created)
     expect(order).to be_paid
     expect(order.payment_events.sole.kind).to eq("comp")
-    expect(order.invoices.invoice.sole.pdf).to be_attached
-    expect(order.tickets.sole.pdf).to be_attached
+    expect(order.invoices.invoice.count).to eq(1)
+    expect(PdfRenderer).not_to have_received(:render)
     expect(a_request(:post, razorpay_url)).not_to have_been_made
   end
 
@@ -131,5 +131,33 @@ RSpec.describe "Orders", type: :request do
     expect(Order.last).to be_paid
     expect(Order.last.payment_events.sole.amount_paise).to eq(99)
     expect(a_request(:post, razorpay_url)).not_to have_been_made
+  end
+
+  it "expires the inventory hold when Razorpay is unavailable" do
+    stub_request(:post, razorpay_url).to_timeout
+
+    post orders_path, params: checkout_params
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("Please try again.")
+    expect(Order.last).to be_expired
+  end
+
+  it "expires a pending free order after a Ferrum failure" do
+    free = create(:ticket_type, name: "Community Pass", price_paise: 0)
+    allow_any_instance_of(Order).to receive(:complete_comp!).and_raise(Ferrum::Error, "render failed")
+
+    post orders_path, params: checkout_params(quantities: { free.id.to_s => "1" })
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("Please try again.")
+    expect(Order.last).to be_expired
+  end
+
+  it "returns a friendly 404 for an unknown order code" do
+    get order_path("UNKNOWN3")
+
+    expect(response).to have_http_status(:not_found)
+    expect(response.body).to include("The page you were looking for doesn't exist")
   end
 end

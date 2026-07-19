@@ -9,16 +9,19 @@ module Webhooks
       event_id = request.headers["X-Razorpay-Event-Id"]
       return head :bad_request if signature.blank? || event_id.blank?
 
-      Razorpay::Utility.verify_webhook_signature(raw, signature, ENV.fetch("RAZORPAY_WEBHOOK_SECRET"))
-      payload = JSON.parse(raw)
+      secret = ENV.fetch("RAZORPAY_WEBHOOK_SECRET")
+      begin
+        Razorpay::Utility.verify_webhook_signature(raw, signature, secret)
+        payload = JSON.parse(raw)
 
-      handle_event(payload, event_id)
-      head :ok
-    rescue SecurityError
-      record_signature_mismatch(raw)
-      head :bad_request
-    rescue JSON::ParserError, KeyError, TypeError
-      head :bad_request
+        handle_event(payload, event_id)
+        head :ok
+      rescue SecurityError
+        record_signature_mismatch(raw)
+        head :bad_request
+      rescue JSON::ParserError, KeyError, TypeError
+        head :bad_request
+      end
     end
 
     private

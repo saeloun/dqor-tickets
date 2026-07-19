@@ -53,11 +53,10 @@ RSpec.describe Order, type: :model do
   describe ".issue_comps!" do
     it "creates and confirms one complimentary order per email" do
       create(:ticket_type, name: "Complimentary Pass", slug: "complimentary-pass", hidden: true, price_paise: 0, capacity: nil)
-      allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
 
       expect do
         described_class.issue_comps!(emails: "ada@example.com\ngrace@example.com", attendee_names: "Ada\nGrace")
-      end.to have_enqueued_mail(OrderMailer, :confirmation).twice
+      end.to have_enqueued_job(DeliverOrderConfirmationJob).twice
 
       expect(described_class.last(2)).to all(be_paid)
       expect(described_class.last(2).map { |order| order.tickets.sole.attendee_name }).to eq(%w[Ada Grace])
