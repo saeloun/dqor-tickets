@@ -164,7 +164,8 @@ button { cursor: pointer; }
   gap: 1.5rem;
 }
 
-.wordmark { display: grid; text-decoration: none; line-height: 1.05; }
+.wordmark { display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1.05; }
+.wordmark__logo { width: auto; height: 36px; vertical-align: middle; }
 .wordmark__eyebrow {
   color: var(--color-ruby);
   font-family: "Noto Sans Devanagari", var(--font-sans);
