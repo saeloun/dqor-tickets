@@ -87,8 +87,12 @@
           <h2>Buyer</h2>
           <div class="party-name"><%= invoice.buyer_snapshot["gst_legal_name"].presence || invoice.buyer_snapshot.fetch("buyer_name") %></div>
           <div><%= invoice.buyer_snapshot.fetch("email") %></div>
-          <div class="tax-id"><span class="label">GSTIN</span> <%= invoice.buyer_snapshot["gstin"].presence || "B2C" %></div>
-          <div><span class="label">Place of supply</span> State <%= invoice.buyer_snapshot["billing_state_code"].presence || "27" %></div>
+          <% if invoice.buyer_snapshot["gstin"].present? %>
+            <div class="tax-id"><span class="label">GSTIN</span> <%= invoice.buyer_snapshot["gstin"] %></div>
+          <% end %>
+          <% if invoice.buyer_snapshot["billing_state_code"].present? %>
+            <div><span class="label">Place of supply</span> State <%= invoice.buyer_snapshot["billing_state_code"] %></div>
+          <% end %>
         </div>
       </section>
 
@@ -110,7 +114,7 @@
             <tr>
               <td>
                 <div class="line-name"><%= line_item.fetch("name") %></div>
-                <div class="line-sac">SAC 998596 · GST inclusive</div>
+                <div class="line-sac">SAC <%= ENV.fetch("SELLER_SAC", "998596") %> · GST inclusive</div>
               </td>
               <% %w[price_paise discount_paise taxable cgst sgst igst total_paise].each do |key| %>
                 <td><%= number_to_currency(line_item.fetch(key) / 100.0, unit: "₹", precision: 2) %></td>
