@@ -6,9 +6,15 @@ class OrderMailer < ApplicationMailer
     @documents_pending = documents_pending
     unless @documents_pending
       attach(@order.invoices.invoice.sole)
-      @order.tickets.find_each { |ticket| attach(ticket) }
     end
     mail(to: @order.email, subject: "Your Deccan Queen on Rails tickets")
+  end
+
+  def ticket(ticket)
+    @ticket = ticket
+    @order = ticket.order
+    attach(@ticket)
+    mail(to: @ticket.attendee_email, subject: "Your Deccan Queen on Rails ticket")
   end
 
   def refund_note(refund)

@@ -54,7 +54,7 @@ class OrdersController < ApplicationController
     def checkout_params
       params.expect(checkout: [
         :email, :buyer_name, :buyer_phone, :gstin, :gst_legal_name, :billing_state_code,
-        :coupon_code, :conference_order_code, :conference_order_email, { quantities: {}, attendees: {} }
+        :coupon_code, :conference_order_code, :conference_order_email, { quantities: {} }
       ])
     end
 
@@ -69,26 +69,11 @@ class OrdersController < ApplicationController
         quantity = Integer(quantity, exception: false)
         next unless ticket_type_id&.positive? && ticket_type_id.bit_length <= 63 && quantity&.positive?
 
-        attendees = attendees_for(checkout, ticket_type_id)
-        complete = attendees.size == quantity && attendees.all? { |attendee| attendee.values_at(:attendee_name, :attendee_email).all?(&:present?) }
-        raise Orders::Checkout::InvalidSelection, "attendee name and email are required for every ticket" unless complete
-
-        { ticket_type_id:, quantity:, attendees: }
+        { ticket_type_id:, quantity: }
       end
       hidden_ids = TicketType.where(id: items.pluck(:ticket_type_id), hidden: true).ids
       raise Orders::Checkout::InvalidSelection, "ticket type not found" if hidden_ids.any?
 
       items
-    end
-
-    def attendees_for(checkout, ticket_type_id)
-      group = checkout[:attendees]&.[](ticket_type_id.to_s)
-      return [] unless group.respond_to?(:values)
-
-      group.values.filter_map do |attributes|
-        next unless attributes.respond_to?(:slice)
-
-        attributes.slice(:attendee_name, :attendee_email, :tshirt_size, :dietary_preference).to_h.symbolize_keys
-      end
     end
 end

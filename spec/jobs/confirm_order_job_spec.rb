@@ -37,7 +37,7 @@ RSpec.describe ConfirmOrderJob, type: :job do
     end.to have_enqueued_mail(OrderMailer, :confirmation)
 
     expect(order.invoices.invoice.sole.pdf).to be_attached
-    expect(order.tickets.sole.pdf).to be_attached
+    expect(order.tickets.sole.pdf).not_to be_attached
   end
 
   it "is idempotent" do

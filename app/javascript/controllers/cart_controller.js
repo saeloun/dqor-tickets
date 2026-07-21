@@ -1,12 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["quantity", "attendees", "template", "total", "addOnGate", "coupon", "discount"]
+  static targets = ["quantity", "total", "addOnGate", "coupon", "discount"]
   static values = { previewUrl: String }
 
   connect() {
     this.previewRequest = 0
-    this.quantityTargets.forEach(quantity => this.syncQuantity(quantity))
     this.updateOrder()
   }
 
@@ -18,19 +17,16 @@ export default class extends Controller {
     const quantity = this.quantityFor(event.currentTarget)
     const max = quantity.max ? Number(quantity.max) : Infinity
     quantity.value = Math.min(Number(quantity.value || 0) + 1, max)
-    this.syncQuantity(quantity)
     this.updateOrder()
   }
 
   decrement(event) {
     const quantity = this.quantityFor(event.currentTarget)
     quantity.value = Math.max(Number(quantity.value || 0) - 1, 0)
-    this.syncQuantity(quantity)
     this.updateOrder()
   }
 
   sync(event) {
-    this.syncQuantity(event.currentTarget)
     this.updateOrder()
   }
 
@@ -46,19 +42,6 @@ export default class extends Controller {
   count(quantity) {
     const parsed = Number.parseInt(quantity.value || "0", 10)
     return quantity.type === "checkbox" ? Number(quantity.checked) : Math.max(0, Number.isNaN(parsed) ? 0 : parsed)
-  }
-
-  syncQuantity(quantity) {
-    const count = this.count(quantity)
-    const ticketTypeId = quantity.dataset.ticketTypeId
-    const attendees = this.attendeesTargets.find(target => target.dataset.ticketTypeId === ticketTypeId)
-    const template = this.templateTargets.find(target => target.dataset.ticketTypeId === ticketTypeId)
-
-    while (attendees.children.length < count) {
-      const index = attendees.children.length
-      attendees.insertAdjacentHTML("beforeend", template.innerHTML.replaceAll("NEW_INDEX", index).replaceAll("NEW_NUMBER", index + 1))
-    }
-    while (attendees.children.length > count) attendees.lastElementChild.remove()
   }
 
   updateOrder() {

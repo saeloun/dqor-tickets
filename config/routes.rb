@@ -7,6 +7,9 @@ Rails.application.routes.draw do
 
   resource :checkout_preview, only: :create
   resources :orders, param: :code, only: [ :create, :show ]
+  patch "orders/:code/tickets/:id/assign", to: "ticket_assignments#update", as: :assign_order_ticket
+  get "claim/:claim_token", to: "ticket_assignments#show", as: :ticket_claim
+  patch "claim/:claim_token", to: "ticket_assignments#update"
   post "payments/callback", to: "payments#callback", as: :payment_callback
 
   namespace :webhooks do

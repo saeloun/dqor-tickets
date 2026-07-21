@@ -92,7 +92,7 @@
           <p class="section-label">Checkout</p>
           <h2 id="buyer-heading">Your order</h2>
         </div>
-        <p>Attendee details appear as you add passes.</p>
+        <p>Assign attendees after payment.</p>
       </div>
 
       <div class="field-grid">
@@ -115,35 +115,6 @@
         </div>
       </div>
 
-      <div class="attendee-list">
-        <% @ticket_types.each do |ticket_type| %>
-          <div data-cart-target="attendees" data-ticket-type-id="<%= ticket_type.id %>"></div>
-          <template data-cart-target="template" data-ticket-type-id="<%= ticket_type.id %>">
-            <fieldset class="attendee-fields">
-              <legend><%= ticket_type.name %> · Attendee NEW_NUMBER</legend>
-              <div class="field-grid">
-                <div class="field">
-                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_name">Name</label>
-                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_name" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][attendee_name]" autocomplete="name" required>
-                </div>
-                <div class="field">
-                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_email">Email</label>
-                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_email" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][attendee_email]" type="email" autocomplete="email" required>
-                </div>
-                <div class="field">
-                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_tshirt">T-shirt size</label>
-                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_tshirt" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][tshirt_size]" placeholder="Optional">
-                </div>
-                <div class="field">
-                  <label for="attendee_<%= ticket_type.id %>_NEW_INDEX_dietary">Dietary preference</label>
-                  <input id="attendee_<%= ticket_type.id %>_NEW_INDEX_dietary" name="checkout[attendees][<%= ticket_type.id %>][NEW_INDEX][dietary_preference]" placeholder="Optional">
-                </div>
-              </div>
-            </fieldset>
-          </template>
-        <% end %>
-      </div>
-
       <section class="add-on-gate" data-cart-target="addOnGate" hidden aria-labelledby="conference-heading">
         <h3 id="conference-heading">Already have a conference pass?</h3>
         <p>For a standalone Explore Pune Day add-on, enter the paid order details from your confirmation email.</p>
@@ -158,24 +129,6 @@
           </div>
         </div>
       </section>
-
-      <details class="gst-details">
-        <summary>Need a GST invoice?</summary>
-        <div class="field-grid">
-          <div class="field">
-            <%= form.label :gst_legal_name, "Legal name" %>
-            <%= form.text_field :gst_legal_name %>
-          </div>
-          <div class="field">
-            <%= form.label :gstin, "GSTIN" %>
-            <%= form.text_field :gstin %>
-          </div>
-          <div class="field">
-            <%= form.label :billing_state_code, "Billing state code" %>
-            <%= form.text_field :billing_state_code, maxlength: 2, inputmode: "numeric" %>
-          </div>
-        </div>
-      </details>
 
       <%= form.button class: "btn btn-primary order-cta", type: "submit" do %>
         Continue to payment <span aria-hidden="true">·</span> <span data-cart-target="total"><%= inr(0) %></span>

@@ -36,10 +36,7 @@ module Orders
 
         selections.each do |selection|
           type = ticket_types.fetch(selection[:ticket_type_id])
-          selection[:quantity].times do |index|
-            attributes = selection[:attendees][index]&.symbolize_keys || {}
-            order.tickets.create!(attributes.slice(:attendee_name, :attendee_email, :tshirt_size, :dietary_preference).merge(ticket_type: type, price_paise: type.price_paise))
-          end
+          selection[:quantity].times { order.tickets.create!(ticket_type: type, price_paise: type.price_paise) }
         end
 
         order
@@ -50,12 +47,11 @@ module Orders
       def normalize_items
         selections = @items.map do |item|
           item = item.symbolize_keys
-          attendees = Array(item[:attendees])
-          quantity = item[:quantity] || attendees.length
+          quantity = item[:quantity]
           type_id = item[:ticket_type_id] || item[:ticket_type]&.id
           raise InvalidSelection, "ticket type and positive quantity are required" unless type_id && quantity.to_i.positive?
 
-          { ticket_type_id: type_id.to_i, quantity: quantity.to_i, attendees: }
+          { ticket_type_id: type_id.to_i, quantity: quantity.to_i }
         end
         raise InvalidSelection, "select at least one ticket" if selections.empty?
 

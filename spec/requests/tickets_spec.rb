@@ -18,7 +18,7 @@ RSpec.describe "Tickets", type: :request do
     expect(response.body).to include(sold_out.name, "sold out")
     expect(response.body).to include(coming_soon.name, "coming soon")
     expect(response.body).to include(%(class="ticket-availability ticket-availability--low">0 of 1 left))
-    expect(response.body).to include("Add Explore Pune Day", "Paid order code", "Coupon code", "T-shirt size", "Dietary preference")
+    expect(response.body).to include("Add Explore Pune Day", "Paid order code", "Coupon code")
     expect(response.body).not_to include("Hidden")
 
     unlimited_card = response.parsed_body.css(".ticket-card").find { |card| card.text.include?(unlimited.name) }

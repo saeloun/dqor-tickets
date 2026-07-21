@@ -3,11 +3,11 @@ Your Deccan Queen on Rails tickets are confirmed
 Hello <%= @order.buyer_name %>,
 
 <% if @documents_pending %>
-Payment for order <%= @order.code %> is confirmed. Your tickets and tax invoice are being prepared and will be available from your order page.
+Payment for order <%= @order.code %> is confirmed. Your tax invoice is being prepared and will be available from your order page.
 <% else %>
-Payment for order <%= @order.code %> is confirmed. Your tax invoice and ticket PDFs are attached.
+Payment for order <%= @order.code %> is confirmed. Your tax invoice is attached.
 <% end %>
 
-View your order: <%= order_url(@order.code) %>
+You've got <%= pluralize(@order.tickets.count, "ticket") %> — assign them to your attendees here: <%= order_url(@order.code) %>
 
 See you in Pune.

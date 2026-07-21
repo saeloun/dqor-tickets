@@ -1,0 +1,21 @@
+<%= form_with model: ticket, scope: :ticket, url:, method: :patch, class: "assignment-form" do |form| %>
+  <div class="field-grid">
+    <div class="field">
+      <%= form.label :attendee_name, "Attendee name" %>
+      <%= form.text_field :attendee_name, required: true, autocomplete: "name" %>
+    </div>
+    <div class="field">
+      <%= form.label :attendee_email, "Attendee email" %>
+      <%= form.email_field :attendee_email, required: true, autocomplete: "email" %>
+    </div>
+    <div class="field">
+      <%= form.label :dietary_preference, "Dietary restrictions" %>
+      <%= form.text_field :dietary_preference, placeholder: "Optional" %>
+    </div>
+  </div>
+  <div class="assignment-checkbox">
+    <%= form.check_box :childcare_needed %>
+    <%= form.label :childcare_needed, "Needs childcare / day care" %>
+  </div>
+  <%= form.submit ticket.assigned? ? "Update ticket" : "Assign this ticket", class: "btn btn-primary" %>
+<% end %>

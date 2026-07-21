@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_19_130200) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_21_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -303,10 +303,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_130200) do
   end
 
   create_table "tickets", force: :cascade do |t|
+    t.datetime "assigned_at"
     t.string "attendee_email"
     t.string "attendee_name"
     t.datetime "canceled_at"
     t.json "checked_in_at", default: {}, null: false
+    t.boolean "childcare_needed", default: false, null: false
+    t.string "claim_token"
     t.datetime "created_at", null: false
     t.string "dietary_preference"
     t.integer "order_id", null: false
@@ -315,6 +318,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_130200) do
     t.integer "ticket_type_id", null: false
     t.string "tshirt_size"
     t.datetime "updated_at", null: false
+    t.index ["claim_token"], name: "index_tickets_on_claim_token", unique: true
     t.index ["order_id"], name: "index_tickets_on_order_id"
     t.index ["secret"], name: "index_tickets_on_secret", unique: true
     t.index ["ticket_type_id"], name: "index_tickets_on_ticket_type_id"

@@ -16,6 +16,8 @@ RSpec.describe Orders::Checkout, type: :model do
     expect(order.total_paise).to eq(700_000)
     expect(order.tickets.pluck(:price_paise)).to eq([ 350_000, 350_000 ])
     expect(order.tickets.pluck(:secret).uniq.size).to eq(2)
+    expect(order.tickets).to all(have_attributes(attendee_name: nil, attendee_email: nil, assigned_at: nil))
+    expect(order.tickets).to all(satisfy { |ticket| !ticket.assigned? && !ticket.pdf.attached? })
   end
 
   it "counts unexpired pending tickets against capacity" do

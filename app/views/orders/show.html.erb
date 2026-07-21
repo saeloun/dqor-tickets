@@ -16,16 +16,22 @@
           <p class="status-hint" role="status">Please keep this page open.</p>
         <% end %>
       <% elsif @order.paid? %>
+        <% tickets = @order.tickets.where(canceled_at: nil).includes(:ticket_type).to_a %>
+        <% assigned_count = tickets.count(&:assigned?) %>
         <span class="success-icon" aria-hidden="true">✓</span>
         <h1>Your tickets are confirmed</h1>
-        <p>We sent the invoice and tickets to <strong><%= @order.email %></strong>.</p>
+        <p>We sent the invoice to <strong><%= @order.email %></strong>.</p>
+
+        <% if flash[:notice] %>
+          <p class="notice" role="status"><%= flash[:notice] %></p>
+        <% end %>
+        <% if flash[:alert] %>
+          <p class="alert" role="alert"><%= flash[:alert] %></p>
+        <% end %>
 
         <div class="download-list">
           <% if (invoice = @order.invoices.invoice.first)&.pdf&.attached? %>
             <%= link_to "Download tax invoice", rails_blob_path(invoice.pdf, disposition: "attachment"), class: "btn btn-gold" %>
-          <% end %>
-          <% @order.tickets.where(canceled_at: nil).includes(:ticket_type).each do |ticket| %>
-            <%= link_to "Download #{ticket.ticket_type.name} ticket", rails_blob_path(ticket.pdf, disposition: "attachment"), class: "btn btn-gold" if ticket.pdf.attached? %>
           <% end %>
           <% @order.invoices.credit_note.each do |credit_note| %>
             <%= link_to "Download credit note #{credit_note.number}", rails_blob_path(credit_note.pdf, disposition: "attachment"), class: "btn btn-gold" if credit_note.pdf.attached? %>
@@ -33,15 +39,26 @@
         </div>
 
         <div class="attendee-summary">
-          <h2>Attendees</h2>
-          <ul>
-            <% @order.tickets.where(canceled_at: nil).includes(:ticket_type).each do |ticket| %>
-              <li>
-                <span><strong><%= ticket.attendee_name %></strong><small><%= ticket.attendee_email %></small></span>
-                <span><%= ticket.ticket_type.name %></span>
-              </li>
-            <% end %>
-          </ul>
+          <h2><%= assigned_count %> of <%= tickets.size %> tickets assigned</h2>
+          <% if assigned_count < tickets.size %>
+            <p>Assign each ticket now, or share its private claim link with the attendee.</p>
+          <% end %>
+
+          <% tickets.each do |ticket| %>
+            <article class="ticket-assignment">
+              <h3><%= ticket.ticket_type.name %></h3>
+              <% if ticket.assigned? %>
+                <p><strong><%= ticket.attendee_name %></strong><br><%= ticket.attendee_email %></p>
+                <%= link_to "Download ticket", rails_blob_path(ticket.pdf, disposition: "attachment"), class: "btn btn-gold" if ticket.pdf.attached? %>
+              <% else %>
+                <%= render "ticket_assignments/form", ticket:, url: assign_order_ticket_path(@order.code, ticket) %>
+                <div class="claim-link field">
+                  <%= label_tag "claim_link_#{ticket.id}", "Copy claim link" %>
+                  <%= text_field_tag "claim_link_#{ticket.id}", ticket_claim_url(ticket.claim_token), readonly: true %>
+                </div>
+              <% end %>
+            </article>
+          <% end %>
         </div>
       <% elsif @order.expired? %>
         <h1>This order expired</h1>

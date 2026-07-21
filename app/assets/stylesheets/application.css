@@ -337,16 +337,10 @@ button { cursor: pointer; }
 .coupon-message--applied { color: var(--color-success); }
 .coupon-message--invalid { color: var(--color-destructive); }
 
-.attendee-list:empty { display: none; }
-.attendee-fields { margin: 1.5rem 0 0; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-background-alt); }
-.attendee-fields legend { padding: 0 0.5rem; color: var(--color-ruby); font-family: var(--font-display); font-weight: 700; }
-.attendee-fields .field-grid { margin-top: 0; }
 .add-on-gate { margin-top: 1.5rem; padding: 1.25rem; border-left: 3px solid var(--color-gold); border-radius: var(--radius-md); background: hsl(40 80% 50% / 0.08); }
 .add-on-gate h3 { margin-bottom: 0.35rem; }
 .add-on-gate > p { margin-bottom: 0; color: var(--color-muted-foreground); font-size: 0.9rem; }
 
-.gst-details { margin-top: 1.5rem; border-top: 1px solid var(--color-border); }
-.gst-details summary { padding-top: 1.25rem; color: var(--color-ruby); font-weight: 700; cursor: pointer; }
 .btn {
   display: inline-flex;
   align-items: center;
@@ -408,6 +402,16 @@ button { cursor: pointer; }
 .attendee-summary li > span { display: grid; color: var(--color-muted-foreground); font-size: 0.85rem; text-align: right; }
 .attendee-summary li > span:first-child { color: var(--color-foreground); text-align: left; }
 .attendee-summary small { color: var(--color-muted-foreground); font-size: 0.78rem; }
+.attendee-summary > p { color: var(--color-muted-foreground); }
+.ticket-assignment { margin-top: 1rem; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-background-alt); text-align: left; }
+.ticket-assignment h3 { margin-bottom: 0.75rem; }
+.ticket-assignment > p { color: var(--color-foreground-soft); }
+.assignment-form { text-align: left; }
+.assignment-form .field-grid { margin-top: 0; }
+.assignment-checkbox { display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0; }
+.assignment-checkbox input { width: 1rem; height: 1rem; }
+.claim-link { margin-top: 1.25rem; }
+.notice { color: var(--color-success); }
 
 .site-footer { border-top: 1px solid var(--color-border); background: var(--color-background-alt); }
 .site-footer__inner { width: min(100% - 3rem, 1080px); min-height: 7rem; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; color: var(--color-muted-foreground); font-size: 0.82rem; }

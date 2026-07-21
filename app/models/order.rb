@@ -263,7 +263,6 @@ class Order < ApplicationRecord
 
   def attach_documents!
     invoices.invoice.sole.attach_pdf!
-    tickets.includes(:ticket_type).find_each(&:attach_pdf!)
   end
 
   private

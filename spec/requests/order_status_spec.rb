@@ -10,31 +10,32 @@ RSpec.describe "Order status", type: :request do
     expect(response.body).to include("Confirming your payment", "data-controller=\"poll\"")
   end
 
-  it "shows a paid order with invoice and ticket downloads" do
+  it "shows a paid order with invoice download and attendee assignment" do
     order = create(:order, :paid)
-    ticket = create(:ticket, order:)
+    ticket = create(:ticket, order:, attendee_name: nil, attendee_email: nil)
     invoice = Invoice.issue_for!(order)
     invoice.pdf.attach(io: StringIO.new("invoice"), filename: "invoice.pdf", content_type: "application/pdf")
-    ticket.pdf.attach(io: StringIO.new("ticket"), filename: "ticket.pdf", content_type: "application/pdf")
 
     get order_path(order.code)
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Your tickets are confirmed", "Download tax invoice", "Download Conference Pass ticket")
+    expect(response.body).to include("Your tickets are confirmed", "Download tax invoice", "0 of 1 tickets assigned", "Assign this ticket")
+    expect(response.body).to include(ticket_claim_url(ticket.claim_token))
+    expect(response.body).not_to include("Download ticket")
   end
 
-  it "regenerates missing paid-order documents on demand" do
+  it "regenerates a missing invoice without generating an unassigned ticket" do
     order = create(:order, :paid)
-    ticket = create(:ticket, order:)
+    ticket = create(:ticket, order:, attendee_name: nil, attendee_email: nil)
     invoice = Invoice.issue_for!(order)
     allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
 
     get order_path(order.code)
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Download tax invoice", "Download Conference Pass ticket")
+    expect(response.body).to include("Download tax invoice", "Assign this ticket")
     expect(invoice.reload.pdf).to be_attached
-    expect(ticket.reload.pdf).to be_attached
+    expect(ticket.reload.pdf).not_to be_attached
   end
 
   it "shows an expired order with a retry link" do

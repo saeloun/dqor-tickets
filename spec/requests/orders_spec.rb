@@ -5,21 +5,12 @@ RSpec.describe "Orders", type: :request do
   let(:razorpay_url) { "https://api.razorpay.com/v1/orders" }
 
   def checkout_params(quantities: { ticket_type.id.to_s => "1" }, **attributes)
-    attendees = quantities.to_h do |ticket_type_id, quantity|
-      [
-        ticket_type_id,
-        quantity.to_i.times.to_h do |index|
-          [ index.to_s, { attendee_name: "Attendee #{index + 1}", attendee_email: "attendee#{index + 1}@example.com" } ]
-        end
-      ]
-    end
     {
       checkout: {
         email: "buyer@example.com",
         buyer_name: "Buyer",
         buyer_phone: "9999999999",
-        quantities:,
-        attendees:
+        quantities:
       }.merge(attributes)
     }
   end
@@ -32,7 +23,7 @@ RSpec.describe "Orders", type: :request do
     )
   end
 
-  it "creates a held order and Razorpay order" do
+  it "creates a held order with an unassigned ticket and Razorpay order" do
     stub_razorpay_order
 
     expect { post orders_path, params: checkout_params }
@@ -44,7 +35,9 @@ RSpec.describe "Orders", type: :request do
     expect(response.body).to include("Pay securely with Razorpay", order.code)
     expect(order.razorpay_order_id).to eq("order_test")
     expect(order.payment_events.sole).to have_attributes(kind: "order_created", level: "info", mode: "test")
-    expect(order.tickets.sole).to have_attributes(attendee_name: "Attendee 1", attendee_email: "attendee1@example.com")
+    expect(order.tickets.sole).to have_attributes(attendee_name: nil, attendee_email: nil, assigned_at: nil)
+    expect(order.tickets.sole).not_to be_assigned
+    expect(order.tickets.sole.pdf).not_to be_attached
     expect(a_request(:post, razorpay_url).with(body: hash_including("amount" => "400000", "currency" => "INR", "receipt" => order.code))).to have_been_made.once
   end
 
