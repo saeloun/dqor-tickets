@@ -55,26 +55,3 @@ ticket_types = [
 ticket_types.each do |attributes|
   TicketType.find_or_create_by!(slug: attributes[:slug]) { |ticket_type| ticket_type.assign_attributes(attributes) }
 end
-
-regular = TicketType.find_by!(slug: "conference-pass-regular")
-Coupon.find_or_create_by!(code: "DQFRIENDS") do |coupon|
-  coupon.discount_paise = 50_000
-  coupon.max_uses = 20
-  coupon.ticket_type = regular
-end
-
-early_bird = TicketType.find_by!(slug: "conference-pass-early-bird")
-Coupon.find_or_create_by!(code: "DQORTEST10") do |coupon|
-  coupon.discount_paise = 349_000
-  coupon.max_uses = 25
-  coupon.ticket_type = early_bird
-end
-
-# Coupon.find_or_create_by!(code: "TEAM10") do |coupon|
-#   coupon.percent = 10
-# end
-
-# Coupon.find_or_create_by!(code: "GIVEAWAY") do |coupon|
-#   coupon.percent = 100
-#   coupon.max_uses = 5
-# end
