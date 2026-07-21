@@ -17,7 +17,6 @@ class ApplicationJob < ActiveJob::Base
     *DOCUMENT_ERRORS,
     Timeout::Error,
     ActiveRecord::StatementInvalid,
-    SQLite3::BusyException,
     Razorpay::ServerError,
     Razorpay::GatewayError,
     TransientRazorpayError

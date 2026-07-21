@@ -63,6 +63,13 @@ Coupon.find_or_create_by!(code: "DQFRIENDS") do |coupon|
   coupon.ticket_type = regular
 end
 
+early_bird = TicketType.find_by!(slug: "conference-pass-early-bird")
+Coupon.find_or_create_by!(code: "DQORTEST10") do |coupon|
+  coupon.discount_paise = 349_000
+  coupon.max_uses = 25
+  coupon.ticket_type = early_bird
+end
+
 # Coupon.find_or_create_by!(code: "TEAM10") do |coupon|
 #   coupon.percent = 10
 # end

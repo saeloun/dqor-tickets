@@ -19,7 +19,7 @@ module Orders
     def call
       Order.transaction do
         selections = normalize_items
-        ticket_types = TicketType.where(id: selections.pluck(:ticket_type_id)).order(:id).index_by(&:id)
+        ticket_types = TicketType.where(id: selections.pluck(:ticket_type_id)).order(:id).lock.load.index_by(&:id)
         raise InvalidSelection, "ticket type not found" unless ticket_types.size == selections.size
 
         validate_selections!(selections, ticket_types)
