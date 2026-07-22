@@ -4,10 +4,6 @@
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
   ./bin/rails runner "Rails.application.load_seed if TicketType.none?"
-
-  if [ -n "$PURGE_ORDER_DATA" ]; then
-    ./bin/rails runner "[Refund, Invoice, Ticket, PaymentEvent, Order, Coupon].each(&:delete_all); Rails.logger.info('PURGE_ORDER_DATA: cleared all order, payment, invoice, and coupon data')"
-  fi
 fi
 
 exec "${@}"
