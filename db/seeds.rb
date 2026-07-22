@@ -17,9 +17,9 @@ ticket_types = [
     name: "Conference Pass — Regular",
     slug: "conference-pass-regular",
     description: "Conference pass for Oct 8–9",
-    price_paise: 400_000,
+    price_paise: 550_000,
     capacity: 140,
-    active: false,
+    active: true,
     position: 2
   },
   {
@@ -32,6 +32,15 @@ ticket_types = [
     position: 3
   },
   {
+    name: "Supporter Pass",
+    slug: "supporter-pass",
+    description: "Back the conference and be named on the site",
+    price_paise: 1_000_000,
+    capacity: nil,
+    active: true,
+    position: 4
+  },
+  {
     name: "Explore Pune Day Add-on",
     slug: "explore-pune-day",
     description: "Explore Pune on Oct 11",
@@ -39,7 +48,7 @@ ticket_types = [
     capacity: 50,
     active: false,
     requires_conference_pass: true,
-    position: 4
+    position: 5
   },
   {
     name: "Complimentary Pass",
@@ -48,7 +57,7 @@ ticket_types = [
     price_paise: 0,
     capacity: nil,
     hidden: true,
-    position: 5
+    position: 6
   }
 ]
 

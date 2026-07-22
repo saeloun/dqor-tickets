@@ -20,7 +20,14 @@
         <% state = if ticket_type.purchasable? && available.positive? then "on sale" elsif ticket_type.purchasable? then "sold out" else "coming soon" end %>
         <% add_on = ticket_type.requires_conference_pass? %>
         <% featured = ticket_type.slug == "conference-pass-regular" %>
-        <% includes = add_on ? ["Guided tour around Pune", "Local food trail", "Transport included", "Limited to 50 guests"] : ["All talks and keynotes", "Lunch and chai on both days", "Explore Pune Day add-on available"] %>
+        <% supporter = ticket_type.slug == "supporter-pass" %>
+        <% includes = if add_on
+             [ "Guided tour around Pune", "Local food trail", "Transport included", "Limited to 50 guests" ]
+           elsif supporter
+             [ "All talks and keynotes", "Lunch and chai on both days", "Your name listed as a supporter on deccanqueenonrails.com", "Explore Pune Day add-on available" ]
+           else
+             [ "All talks and keynotes", "Lunch and chai on both days", "Explore Pune Day add-on available" ]
+           end %>
 
         <article class="ticket-card <%= add_on ? "ticket-card--retreat" : "ticket-card--conference" %> <%= "ticket-card--featured" if featured %> ticket-card--<%= state.parameterize %>">
           <div class="ticket-card-header">
