@@ -1,0 +1,36 @@
+<% content_for :title, "My tickets · Deccan Queen on Rails" %>
+
+<main class="status-page">
+  <section class="status-card status-card--paid">
+    <p class="section-label">My tickets</p>
+    <h1>Orders for <%= @email %></h1>
+
+    <% if @orders.any? %>
+      <p>Open an order to download tickets, assign attendees, or get the tax invoice.</p>
+
+      <ul class="order-list">
+        <% @orders.each do |order| %>
+          <% tickets = order.tickets.reject(&:canceled_at?) %>
+          <li class="order-list__item">
+            <p class="order-list__code"><%= link_to order.code, order_path(order.code) %></p>
+            <p class="order-list__meta">
+              Booked <%= order.created_at.to_date.to_fs(:long) %>
+              <span aria-hidden="true">·</span>
+              <%= pluralize(tickets.size, "ticket") %>
+              <span aria-hidden="true">·</span>
+              <%= tickets.count(&:assigned?) %> assigned
+            </p>
+            <ul class="order-list__tickets">
+              <% tickets.each do |ticket| %>
+                <li><%= ticket.ticket_type.name %> — <%= ticket.assigned? ? ticket.attendee_name : "unassigned" %></li>
+              <% end %>
+            </ul>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>We could not find any paid orders for this address.</p>
+      <p><%= link_to "Choose tickets", root_path, class: "btn btn-primary" %></p>
+    <% end %>
+  </section>
+</main>

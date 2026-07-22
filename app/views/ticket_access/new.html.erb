@@ -1,0 +1,24 @@
+<% content_for :title, "Find my tickets · Deccan Queen on Rails" %>
+
+<main class="status-page">
+  <section class="status-card">
+    <p class="section-label">Find my tickets</p>
+    <h1>Get your tickets by email</h1>
+    <p>Enter the email address you used when booking. We will send you a link to your orders.</p>
+
+    <% if flash[:notice] %>
+      <p class="status-hint" role="status"><%= flash[:notice] %></p>
+    <% end %>
+    <% if flash[:alert] %>
+      <p class="checkin-result checkin-result--error"><%= flash[:alert] %></p>
+    <% end %>
+
+    <%= form_with url: find_tickets_path, method: :post, class: "find-tickets-form" do |form| %>
+      <%= form.label :email, "Email address" %>
+      <%= form.email_field :email, required: true, autofocus: true, autocomplete: "email", placeholder: "you@example.com" %>
+      <%= form.submit "Email me my tickets", class: "btn btn-primary" %>
+    <% end %>
+
+    <p><%= link_to "Choose tickets", root_path %></p>
+  </section>
+</main>
