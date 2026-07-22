@@ -77,8 +77,22 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip ci')"
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       RAILS_ENV: test
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/dqor_tickets_test"
       CHROME_PATH: /usr/bin/chromium-browser
       CHROME_NO_SANDBOX: "1"
     steps:
