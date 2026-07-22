@@ -9,7 +9,8 @@ Rails.application.routes.draw do
   resources :orders, param: :code, only: [ :create, :show ]
   get "tickets/find", to: "ticket_access#new", as: :find_tickets
   post "tickets/find", to: "ticket_access#create"
-  get "tickets/access/:token", to: "ticket_access#show", as: :ticket_access
+  get "tickets/access", to: "ticket_access#show", as: :ticket_access
+  get "tickets/mine", to: "ticket_access#index", as: :my_tickets
   patch "orders/:code/tickets/:id/assign", to: "ticket_assignments#update", as: :assign_order_ticket
   get "claim/:claim_token", to: "ticket_assignments#show", as: :ticket_claim
   patch "claim/:claim_token", to: "ticket_assignments#update"

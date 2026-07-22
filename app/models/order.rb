@@ -245,12 +245,16 @@ class Order < ApplicationRecord
 
   def deliver_confirmation!(documents_pending: false)
     attach_documents! unless documents_pending
+    documents_pending ||= !invoices.invoice.first&.pdf&.attached?
 
     with_lock do
-      return false if metadata["confirmation_enqueued_at"]
+      return false if metadata["confirmation_enqueued_at"] && !metadata["confirmation_documents_pending"]
 
       OrderMailer.confirmation(self, documents_pending:).deliver_later
-      update!(metadata: metadata.merge("confirmation_enqueued_at" => Time.current.iso8601))
+      update!(metadata: metadata.merge(
+        "confirmation_enqueued_at" => Time.current.iso8601,
+        "confirmation_documents_pending" => documents_pending
+      ))
     end
 
     true
@@ -262,7 +266,9 @@ class Order < ApplicationRecord
   end
 
   def attach_documents!
-    invoices.invoice.first&.attach_pdf!
+    return unless paid?
+
+    Invoice.issue_for!(self).attach_pdf!
   end
 
   private

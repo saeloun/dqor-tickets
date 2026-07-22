@@ -13,7 +13,10 @@ export default class extends Controller {
   }
 
   disconnect() {
-    this.scanner?.clear().catch(() => {})
+    window.clearTimeout(this.resumeTimeout)
+    const scanner = this.scanner
+    this.scanner = null
+    scanner?.clear().catch(() => {})
   }
 
   scanTicket(event) {
@@ -21,6 +24,9 @@ export default class extends Controller {
   }
 
   async scan(secret) {
+    if (this.scanning) return
+
+    this.scanning = true
     this.pauseScanner()
     try {
       const response = await fetch("/checkin", {
@@ -37,7 +43,8 @@ export default class extends Controller {
     } catch (_) {
       this.show("error", "Check-in failed. Try again.")
     } finally {
-      window.setTimeout(() => this.resumeScanner(), 1200)
+      this.scanning = false
+      this.resumeTimeout = window.setTimeout(() => this.resumeScanner(), 1200)
     }
   }
 

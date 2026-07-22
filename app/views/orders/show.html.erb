@@ -52,9 +52,12 @@
                 <%= link_to "Download ticket", rails_blob_path(ticket.pdf, disposition: "attachment"), class: "btn btn-gold" if ticket.pdf.attached? %>
               <% else %>
                 <%= render "ticket_assignments/form", ticket:, url: assign_order_ticket_path(@order.code, ticket) %>
-                <div class="claim-link field">
-                  <%= label_tag "claim_link_#{ticket.id}", "Copy claim link" %>
-                  <%= text_field_tag "claim_link_#{ticket.id}", ticket_claim_url(ticket.claim_token), readonly: true %>
+                <div class="claim-link field" data-controller="clipboard">
+                  <%= label_tag "claim_link_#{ticket.id}", "Private claim link" %>
+                  <div class="claim-link__row">
+                    <%= text_field_tag "claim_link_#{ticket.id}", ticket_claim_url(ticket.claim_token), readonly: true, data: { clipboard_target: "source" } %>
+                    <button type="button" class="claim-link__copy" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+                  </div>
                 </div>
               <% end %>
             </article>

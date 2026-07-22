@@ -208,8 +208,19 @@ RSpec.describe "Authentication", type: :system do
       fill_in "password_confirmation", with: "something-else"
       click_button "Save"
 
-      expect(page).to have_content("Passwords did not match.")
+      expect(page).to have_content("Password confirmation doesn't match Password")
       expect(page).to have_button("Save")
+      expect(admin.reload.authenticate(password)).to be_truthy
+    end
+
+    it "reports the real reason when the new password is too short" do
+      visit edit_password_path(admin.password_reset_token)
+      fill_in "password", with: "short1"
+      fill_in "password_confirmation", with: "short1"
+      click_button "Save"
+
+      expect(page).to have_content("Password is too short (minimum is 8 characters)")
+      expect(page).to have_no_content("Passwords did not match.")
       expect(admin.reload.authenticate(password)).to be_truthy
     end
 

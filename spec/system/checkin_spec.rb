@@ -26,7 +26,7 @@ RSpec.describe "Check-in", type: :system do
   around do |example|
     forgery_protection = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
-    example.run
+    travel_to(Time.utc(2026, 7, 1, 9, 0)) { example.run }
     ActionController::Base.allow_forgery_protection = forgery_protection
   end
 
@@ -195,5 +195,22 @@ RSpec.describe "Check-in", type: :system do
     visit checkin_path(date: "garbage")
 
     expect(page).to have_select("date", selected: "Oct 8")
+  end
+
+  describe "on a device with no camera" do
+    before { driven_by :cuprite }
+
+    it "still checks in from the search results when no scanner is running" do
+      ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Grace Hopper")
+
+      visit checkin_path
+      sign_in
+      fill_in "q", with: "Grace"
+      click_button "Search"
+      find("button[data-secret='#{ticket.secret}']").click
+
+      expect(page).to have_css(".checkin-result--success", text: "Checked in Grace Hopper")
+      expect(ticket.reload.checked_in_at).to have_key("2026-10-08")
+    end
   end
 end

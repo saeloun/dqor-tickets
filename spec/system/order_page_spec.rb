@@ -92,15 +92,15 @@ RSpec.describe "Order page", type: :system do
       expect(invoice.reload.pdf).to be_attached
     end
 
-    it "still shows the tickets when the paid order has no invoice yet" do
+    it "issues the missing invoice instead of 404ing when a paid order has none" do
       order = create(:order, :paid)
       create(:ticket, order:)
 
-      visit order_path(order.code)
+      expect { visit order_path(order.code) }.to change { order.invoices.invoice.count }.from(0).to(1)
 
       expect(page).to have_content("Your tickets are confirmed")
       expect(page).to have_no_content("The page you were looking for doesn't exist")
-      expect(page).to have_no_link("Download tax invoice")
+      expect(page).to have_link("Download tax invoice")
     end
   end
 

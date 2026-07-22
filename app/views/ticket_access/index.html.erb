@@ -7,6 +7,7 @@
 
     <% if @orders.any? %>
       <p>Open an order to download tickets, assign attendees, or get the tax invoice.</p>
+      <p class="status-hint">This page stays open in this browser. The emailed link itself works for 24 hours &mdash; request a new one any time.</p>
 
       <ul class="order-list">
         <% @orders.each do |order| %>
