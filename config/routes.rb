@@ -16,7 +16,7 @@ Rails.application.routes.draw do
     resource :razorpay, only: :create, controller: "razorpay"
   end
 
-  resource :session
+  resource :session, only: %i[new create destroy]
   resources :passwords, param: :token
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

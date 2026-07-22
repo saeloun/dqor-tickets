@@ -21,14 +21,14 @@ export default class extends Controller {
   }
 
   async scan(secret) {
-    this.scanner?.pause(true)
+    this.pauseScanner()
     try {
       const response = await fetch("/checkin", {
         method: "POST",
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "X-CSRF-Token": document.querySelector("meta[name=csrf-token]").content
+          "X-CSRF-Token": document.querySelector("meta[name=csrf-token]")?.content ?? ""
         },
         body: JSON.stringify({ secret, date: this.dateTarget.value })
       })
@@ -37,7 +37,21 @@ export default class extends Controller {
     } catch (_) {
       this.show("error", "Check-in failed. Try again.")
     } finally {
-      window.setTimeout(() => this.scanner?.resume(), 1200)
+      window.setTimeout(() => this.resumeScanner(), 1200)
+    }
+  }
+
+  pauseScanner() {
+    try {
+      this.scanner?.pause(true)
+    } catch (_) {
+    }
+  }
+
+  resumeScanner() {
+    try {
+      this.scanner?.resume()
+    } catch (_) {
     }
   }
 

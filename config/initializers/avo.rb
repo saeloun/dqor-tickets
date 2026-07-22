@@ -2,6 +2,7 @@ Avo.configure do |config|
   config.root_path = "/avo"
   config.home_path = "/avo/dashboard"
   config.authorization_client = nil
+  config.sign_out_path_name = :session_path
   config.current_user_method do
     Current.admin_user
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_21_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_22_145938) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,6 +78,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_21_000000) do
     t.datetime "updated_at", null: false
     t.index ["number"], name: "index_invoices_on_number", unique: true
     t.index ["order_id"], name: "index_invoices_on_order_id"
+    t.index ["order_id"], name: "index_invoices_on_order_id_where_invoice", unique: true, where: "((kind)::text = 'invoice'::text)"
     t.index ["order_id"], name: "index_invoices_one_invoice_per_order", unique: true, where: "((kind)::text = 'invoice'::text)"
     t.index ["refers_to_id"], name: "index_invoices_on_refers_to_id"
   end

@@ -262,7 +262,7 @@ class Order < ApplicationRecord
   end
 
   def attach_documents!
-    invoices.invoice.sole.attach_pdf!
+    invoices.invoice.first&.attach_pdf!
   end
 
   private

@@ -73,7 +73,7 @@ export default class extends Controller {
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "X-CSRF-Token": document.querySelector("meta[name='csrf-token']").content
+          "X-CSRF-Token": document.querySelector("meta[name='csrf-token']")?.content ?? ""
         },
         body: JSON.stringify({
           checkout_preview: {
@@ -97,9 +97,10 @@ export default class extends Controller {
       this.discountTarget.classList.toggle("coupon-message--applied", preview.coupon.applied)
       this.discountTarget.classList.toggle("coupon-message--invalid", !preview.coupon.applied)
       this.discountTarget.hidden = false
-    } catch {
+    } catch (error) {
       if (request !== this.previewRequest) return
 
+      console.error("Coupon preview failed", error)
       this.showSubtotal()
       this.discountTarget.hidden = true
     }

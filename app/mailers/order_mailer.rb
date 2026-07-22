@@ -3,10 +3,10 @@ class OrderMailer < ApplicationMailer
 
   def confirmation(order, documents_pending: false)
     @order = order
-    @documents_pending = documents_pending
-    unless @documents_pending
-      attach(@order.invoices.invoice.sole)
-    end
+    invoice = @order.invoices.invoice.first unless documents_pending
+    @documents_pending = documents_pending || !invoice&.pdf&.attached?
+
+    attach(invoice) unless @documents_pending
     mail(to: @order.email, subject: "Your Deccan Queen on Rails tickets")
   end
 
