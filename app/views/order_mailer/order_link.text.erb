@@ -1,0 +1,24 @@
+<% tickets = @order.tickets.reject(&:canceled_at?) %>
+<% unassigned = tickets.reject(&:assigned?) %>
+Your Deccan Queen on Rails order
+
+Hello <%= @order.buyer_name %>,
+
+Here is the permanent link to order <%= @order.code %>. Bookmark it — it is where
+you download your tickets and tax invoice, and where you name your attendees:
+
+<%= order_url(@order.code) %>
+<% if unassigned.any? %>
+<%= pluralize(unassigned.size, "ticket") %> still <%= unassigned.one? ? "has" : "have" %> nobody named on <%= unassigned.one? ? "it" : "them" %>. Assign them from the
+link above, or send an attendee their own private link below so they fill in
+their own name, dietary needs, T-shirt size and childcare.
+<% else %>
+All <%= pluralize(tickets.size, "ticket") %> already have an attendee. If anything needs correcting,
+use the links below.
+<% end %>
+<% tickets.each do |ticket| %>
+- <%= ticket.ticket_type.name %><%= " — #{ticket.attendee_name}" if ticket.assigned? %>
+  <%= ticket_claim_url(ticket.claim_token) %>
+<% end %>
+
+See you in Pune.

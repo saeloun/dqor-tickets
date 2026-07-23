@@ -1,0 +1,30 @@
+<% tickets = @order.tickets.reject(&:canceled_at?) %>
+<% unassigned = tickets.reject(&:assigned?) %>
+
+<h1>Your Deccan Queen on Rails order</h1>
+<p>Hello <%= @order.buyer_name %>,</p>
+
+<p>Here is the permanent link to order <strong><%= @order.code %></strong>. Bookmark it — it is where you download your tickets and tax invoice, and where you name your attendees:</p>
+
+<p><%= link_to order_url(@order.code), order_url(@order.code) %></p>
+
+<% if unassigned.any? %>
+  <p><strong><%= pluralize(unassigned.size, "ticket") %> still <%= unassigned.one? ? "has" : "have" %> nobody named on <%= unassigned.one? ? "it" : "them" %>.</strong> You can assign them from the link above, or send an attendee their own private link so they fill in their own name, dietary needs, T-shirt size and childcare:</p>
+<% else %>
+  <p>All <%= pluralize(tickets.size, "ticket") %> already have an attendee. If anything needs correcting — a T-shirt size, a dietary note — use the links below:</p>
+<% end %>
+
+<ul>
+  <% tickets.each do |ticket| %>
+    <li>
+      <%= ticket.ticket_type.name %> —
+      <% if ticket.assigned? %>
+        <%= ticket.attendee_name %> (<%= link_to "update details", ticket_claim_url(ticket.claim_token) %>)
+      <% else %>
+        <%= link_to "claim this ticket", ticket_claim_url(ticket.claim_token) %>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<p>See you in Pune.</p>

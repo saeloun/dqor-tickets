@@ -262,6 +262,10 @@ class Order < ApplicationRecord
     true
   end
 
+  def deliver_order_link!
+    OrderMailer.order_link(self).deliver_later
+  end
+
   def resend_confirmation!
     attach_documents!
     OrderMailer.confirmation(self).deliver_later

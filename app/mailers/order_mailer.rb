@@ -10,6 +10,11 @@ class OrderMailer < ApplicationMailer
     mail(to: @order.email, subject: "Your Deccan Queen on Rails tickets")
   end
 
+  def order_link(order)
+    @order = order
+    mail(to: @order.email, subject: "Your Deccan Queen on Rails order link")
+  end
+
   def ticket(ticket)
     @ticket = ticket
     @order = ticket.order

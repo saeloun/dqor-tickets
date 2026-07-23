@@ -36,6 +36,7 @@ class Avo::Resources::Order < Avo::BaseResource
   def actions
     action Avo::Actions::RefundTickets
     action Avo::Actions::ResendConfirmation
+    action Avo::Actions::EmailOrderLink
     action Avo::Actions::ExportOrdersCsv
     action Avo::Actions::ExportAttendeesCsv
   end

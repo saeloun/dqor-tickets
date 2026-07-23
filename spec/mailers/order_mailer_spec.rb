@@ -37,6 +37,26 @@ RSpec.describe OrderMailer, type: :mailer do
     expect(html).to include("Grace Hopper", "update details")
   end
 
+  it "sends the order permalink with a claim link per ticket" do
+    order = create(:order, :paid, email: "buyer@example.com", buyer_name: "Ada Lovelace")
+    unassigned = create(:ticket, order:, attendee_name: nil, attendee_email: nil)
+    assigned = create(:ticket, order:, attendee_name: "Grace Hopper")
+    canceled = create(:ticket, order:, canceled_at: Time.current)
+
+    mail = described_class.order_link(order)
+
+    expect(mail.to).to eq([ "buyer@example.com" ])
+    expect(mail.subject).to eq("Your Deccan Queen on Rails order link")
+    expect(mail.attachments).to be_empty
+    [ mail.html_part.body.to_s, mail.text_part.body.to_s ].each do |body|
+      expect(body).to include(order_url(order.code))
+      expect(body).to include(ticket_claim_url(unassigned.claim_token))
+      expect(body).to include(ticket_claim_url(assigned.claim_token))
+      expect(body).not_to include(ticket_claim_url(canceled.claim_token))
+    end
+    expect(mail.html_part.body.to_s).to include("1 ticket still", "Grace Hopper")
+  end
+
   it "sends a confirmation link without attachments while documents are pending" do
     order = create(:order, :paid, email: "buyer@example.com")
 
