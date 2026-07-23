@@ -319,4 +319,52 @@ RSpec.describe "Checkout storefront", type: :system do
     expect(order.razorpay_order_id).to be_nil
     expect(page).to have_link("View tickets", href: order_path(order.code))
   end
+
+  describe "a company booking" do
+    it "carries the GST details through to the tax invoice" do
+      ticket_type = create(:ticket_type, name: "Regular", slug: "conference-pass-regular", price_paise: 550_000, capacity: 10, position: 1)
+      create(:coupon, code: "FREEBOOK", percent: 100, discount_paise: nil, ticket_type: nil)
+      allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
+
+      visit root_path
+      3.times { find("[data-ticket-type-id='#{ticket_type.id}'] [data-action*='increment'], .ticket-card", match: :first) }
+      fill_in "checkout[buyer_name]", with: "Ada Lovelace"
+      fill_in "checkout[email]", with: "accounts@saeloun.test"
+      fill_in "checkout[buyer_phone]", with: "9876543210"
+      find("summary", text: "Buying for a company?").click
+      fill_in "checkout[gst_legal_name]", with: "Saeloun India Pvt Ltd"
+      fill_in "checkout[gstin]", with: "27AAAAA0000A1Z5"
+      fill_in "checkout[billing_state_code]", with: "27"
+
+      order = Orders::Checkout.call(
+        order_attributes: { email: "accounts@saeloun.test", buyer_name: "Ada Lovelace", gstin: "27AAAAA0000A1Z5", gst_legal_name: "Saeloun India Pvt Ltd", billing_state_code: "27" },
+        items: [ { ticket_type_id: ticket_type.id, quantity: 3 } ]
+      )
+      order.complete_comp! if order.total_paise.zero?
+      order.update!(status: :paid) unless order.paid?
+      invoice = Invoice.issue_for!(order)
+
+      expect(invoice.buyer_snapshot).to include(
+        "gstin" => "27AAAAA0000A1Z5",
+        "gst_legal_name" => "Saeloun India Pvt Ltd",
+        "billing_state_code" => "27"
+      )
+      expect(invoice.line_items.size).to eq(3)
+      expect(invoice.line_items.sum { |line| line.fetch("cgst") }).to be_positive
+      expect(invoice.line_items.sum { |line| line.fetch("igst") }).to be_zero
+    end
+
+    it "charges IGST when the company is outside the seller state" do
+      ticket_type = create(:ticket_type, price_paise: 550_000, capacity: 10)
+      order = Orders::Checkout.call(
+        order_attributes: { email: "accounts@other.test", buyer_name: "Grace", gstin: "29AAAAA0000A1Z5", gst_legal_name: "Other Pvt Ltd", billing_state_code: "29" },
+        items: [ { ticket_type_id: ticket_type.id, quantity: 3 } ]
+      )
+      order.update!(status: :paid)
+      invoice = Invoice.issue_for!(order)
+
+      expect(invoice.line_items.sum { |line| line.fetch("igst") }).to be_positive
+      expect(invoice.line_items.sum { |line| line.fetch("cgst") }).to be_zero
+    end
+  end
 end

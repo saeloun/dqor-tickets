@@ -122,6 +122,25 @@
         </div>
       </div>
 
+      <details class="gst-details">
+        <summary>Buying for a company? Add GST details</summary>
+        <p class="gst-hint">We put these on your tax invoice so your company can claim input credit. Leave blank for a personal booking.</p>
+        <div class="field-grid">
+          <div class="field">
+            <%= form.label :gst_legal_name, "Registered company name" %>
+            <%= form.text_field :gst_legal_name, autocomplete: "organization", placeholder: "Saeloun India Pvt Ltd" %>
+          </div>
+          <div class="field">
+            <%= form.label :gstin, "GSTIN" %>
+            <%= form.text_field :gstin, maxlength: 15, autocomplete: "off", placeholder: "27AAAAA0000A1Z5" %>
+          </div>
+          <div class="field">
+            <%= form.label :billing_state_code, "State code" %>
+            <%= form.text_field :billing_state_code, maxlength: 2, inputmode: "numeric", autocomplete: "off", placeholder: "27" %>
+          </div>
+        </div>
+      </details>
+
       <section class="add-on-gate" data-cart-target="addOnGate" hidden aria-labelledby="conference-heading">
         <h3 id="conference-heading">Already have a conference pass?</h3>
         <p>For a standalone Explore Pune Day add-on, enter the paid order details from your confirmation email.</p>

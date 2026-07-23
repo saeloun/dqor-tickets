@@ -476,3 +476,7 @@ button { cursor: pointer; }
 .claim-link__copy:hover { border-color: var(--color-border-strong); background: var(--color-muted); }
 
 .assignment-summary { margin: 0.25rem 0 0.75rem; color: var(--color-muted-foreground); font-size: 0.9rem; }
+
+.gst-details { margin: 0 0 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.75rem 1rem; background: var(--color-card); }
+.gst-details summary { cursor: pointer; font-weight: 600; color: var(--color-foreground); }
+.gst-hint { margin: 0.6rem 0 0.9rem; color: var(--color-muted-foreground); font-size: 0.9rem; }
