@@ -54,6 +54,10 @@ class Order < ApplicationRecord
     ticket_type = TicketType.find_by!(slug: "complimentary-pass", hidden: true)
 
     orders = transaction do
+      if ticket_type.capacity && ticket_type.available_quantity < email_list.size
+        raise InsufficientAvailability, "only #{ticket_type.available_quantity} complimentary tickets remain"
+      end
+
       email_list.map.with_index do |email, index|
         create!(email:, buyer_name: names[index].presence || email, total_paise: 0, expires_at: 30.minutes.from_now).tap do |order|
           order.tickets.create!(ticket_type:, price_paise: 0, attendee_name: names[index].presence || email, attendee_email: email)
@@ -65,19 +69,25 @@ class Order < ApplicationRecord
     orders
   end
 
+  def self.exportable(relation)
+    scope = relation.is_a?(ActiveRecord::Relation) ? relation : where(id: Array(relation).map(&:id))
+    scope.includes(:coupon, tickets: :ticket_type).order(:id)
+  end
+
   def self.orders_csv(relation = all)
     CSV.generate(headers: true) do |csv|
       csv << %w[code status buyer_name email buyer_phone tickets subtotal_paise discount_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon gstin gst_legal_name billing_state_code tshirt_sizes dietary_preferences childcare_count]
-      relation.includes(:coupon, tickets: :ticket_type).find_each do |order|
+      exportable(relation).find_each do |order|
         lines = Invoice.line_item_snapshot(order)
+        ordered_tickets = order.tickets.sort_by(&:id)
         csv << [
           order.code,
           order.status,
           order.buyer_name,
           order.email,
           order.buyer_phone,
-          order.tickets.map { |ticket| ticket.ticket_type.name }.join(" | "),
-          order.tickets.sum(&:price_paise),
+          ordered_tickets.map { |ticket| ticket.ticket_type.name }.join(" | "),
+          ordered_tickets.sum(&:price_paise),
           order.metadata.fetch("discount_paise", 0),
           order.total_paise,
           lines.sum { |line| line.fetch("taxable") },
@@ -88,9 +98,9 @@ class Order < ApplicationRecord
           order.gstin,
           order.gst_legal_name,
           order.billing_state_code,
-          order.tickets.filter_map(&:tshirt_size).join(" | "),
-          order.tickets.filter_map(&:dietary_preference).join(" | "),
-          order.tickets.count(&:childcare_needed?)
+          ordered_tickets.filter_map(&:tshirt_size).join(" | "),
+          ordered_tickets.filter_map(&:dietary_preference).join(" | "),
+          ordered_tickets.count(&:childcare_needed?)
         ]
       end
     end
@@ -99,9 +109,9 @@ class Order < ApplicationRecord
   def self.attendees_csv(relation = all)
     CSV.generate(headers: true) do |csv|
       csv << %w[order_code order_status buyer_name buyer_email ticket_id ticket_type attendee_name attendee_email price_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon tshirt_size dietary_preference childcare_needed]
-      relation.includes(:coupon, tickets: :ticket_type).find_each do |order|
+      exportable(relation).find_each do |order|
         lines = Invoice.line_item_snapshot(order).index_by { |line| line.fetch("ticket_id") }
-        order.tickets.each do |ticket|
+        order.tickets.sort_by(&:id).each do |ticket|
           line = lines.fetch(ticket.id)
           csv << [
             order.code,
@@ -197,10 +207,16 @@ class Order < ApplicationRecord
 
   def refund_tickets!(ticket_ids)
     selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
+    raise ArgumentError, "only a paid order can be refunded" unless paid?
+
     selected_tickets = tickets.where(id: selected_ids, canceled_at: nil)
     raise ArgumentError, "select at least one refundable ticket" unless selected_tickets.count == selected_ids.size && selected_ids.any?
 
-    lines = invoices.invoice.sole.line_items.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+    already_refunding = refunds.where(status: Refund::OPEN_STATUSES).flat_map(&:ticket_ids).intersection(selected_ids)
+    raise Refund::AlreadyRefunded, "a refund is already in progress for those tickets" if already_refunding.any?
+
+    invoice = invoices.invoice.first or raise ArgumentError, "order #{code} has no invoice to refund against"
+    lines = invoice.line_items.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
     amount_paise = lines.sum { |line| line.fetch("total_paise") }
     payment_id = if amount_paise.positive?
       payment_events.order(created_at: :desc).filter_map do |event|

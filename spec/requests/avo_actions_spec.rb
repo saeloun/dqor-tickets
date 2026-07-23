@@ -500,18 +500,25 @@ RSpec.describe "Avo admin actions", type: :request do
         .to match_array([ "Ada Lovelace", "Grace Hopper" ])
     end
 
-    # KNOWN BUG, not fixed here on purpose. Avo hands `handle` an Array of records whenever the
-    # organiser ticks individual rows on the index (Avo::ActionsController#find_records_from_resource_ids
-    # ends up at `Order.find(["12", "13"])`), and `Order.orders_csv` immediately calls `relation.includes`.
-    # Ticking rows and pressing "Export orders CSV" therefore 500s; only "select all" works today.
-    it "raises when the organiser exports a hand-picked set of rows" do
+    # Avo hands `handle` an Array of records whenever the organiser ticks individual rows on the
+    # index (Avo::ActionsController#find_records_from_resource_ids ends up at `Order.find(["12"])`),
+    # so both exports have to tolerate an Array as well as a relation.
+    it "exports a hand-picked set of rows" do
       sign_in_admin
 
-      expect { run_action(Avo::Actions::ExportOrdersCsv, records: [ order ]) }
-        .to raise_error(NoMethodError, /undefined method 'includes' for an instance of Array/)
+      run_action(Avo::Actions::ExportOrdersCsv, records: [ order ])
+      expect(CSV.parse(downloaded_csv, headers: true).map { |row| row["code"] }).to eq([ order.code ])
 
-      expect { run_action(Avo::Actions::ExportAttendeesCsv, records: [ order ]) }
-        .to raise_error(NoMethodError, /undefined method 'includes' for an instance of Array/)
+      run_action(Avo::Actions::ExportAttendeesCsv, records: [ order ])
+      expect(CSV.parse(downloaded_csv, headers: true).map { |row| row["order_code"] }.uniq).to eq([ order.code ])
+    end
+
+    it "exports nothing rather than blowing up when no rows are ticked" do
+      sign_in_admin
+
+      run_action(Avo::Actions::ExportOrdersCsv, records: [])
+
+      expect(CSV.parse(downloaded_csv, headers: true).count).to be_zero
     end
   end
 

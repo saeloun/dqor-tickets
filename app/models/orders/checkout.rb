@@ -63,6 +63,7 @@ module Orders
         selections.each do |selection|
           type = ticket_types.fetch(selection[:ticket_type_id])
           quantity = selection[:quantity]
+          raise InvalidSelection, "ticket type not found" if type.hidden?
           raise InvalidSelection, "#{type.name} is not on sale" unless type.purchasable?(at: now)
           raise InvalidSelection, "#{type.name} quantity is below its minimum" if quantity < type.min_per_order
           raise InvalidSelection, "#{type.name} quantity exceeds its maximum" if type.max_per_order && quantity > type.max_per_order

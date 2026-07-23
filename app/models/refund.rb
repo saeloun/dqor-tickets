@@ -1,4 +1,8 @@
 class Refund < ApplicationRecord
+  class AlreadyRefunded < StandardError; end
+
+  OPEN_STATUSES = %w[pending initiated processed].freeze
+
   belongs_to :order
 
   validates :status, presence: true
@@ -11,7 +15,10 @@ class Refund < ApplicationRecord
     with_lock do
       return order.invoices.credit_note.find_by!(number: credit_note_number) if status == "processed"
 
-      invoice = order.invoices.invoice.sole
+      invoice = order.invoices.invoice.first or raise AlreadyRefunded, "order #{order.code} has no invoice to credit"
+      owned = order.tickets.where(id: ticket_ids)
+      raise AlreadyRefunded, "tickets on order #{order.code} were already refunded" if owned.any? && owned.where(canceled_at: nil).count != owned.count
+
       line_items = invoice.line_items.select { |line_item| ticket_ids.include?(line_item.fetch("ticket_id")) }
       raise ArgumentError, "refund has no selected tickets" if line_items.empty?
       raise ArgumentError, "refund amount does not match selected tickets" unless line_items.sum { |line_item| line_item.fetch("total_paise") } == amount_paise

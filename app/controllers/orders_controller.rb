@@ -40,7 +40,10 @@ class OrdersController < ApplicationController
 
   private
     def regenerate_documents
-      @order.attach_documents! if @order.paid?
+      return unless @order.paid?
+
+      @order.attach_documents!
+      @order.deliver_confirmation! if @order.metadata["confirmation_documents_pending"]
     rescue *ApplicationJob::DOCUMENT_ERRORS
       GenerateOrderDocumentsJob.perform_later(@order)
     end

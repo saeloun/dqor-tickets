@@ -388,8 +388,8 @@ RSpec.describe Refund, type: :model do
     end
   end
 
-  describe "known gaps" do
-    it "BUG: re-refunds an already cancelled ticket, taking the order past a full refund" do
+  describe "guard rails" do
+    it "refuses to re-refund an already cancelled ticket" do
       order, tickets, = paid_order
       Invoice.issue_for!(order)
       ticket = tickets.first
@@ -398,20 +398,19 @@ RSpec.describe Refund, type: :model do
       first.process!(refund_event(first))
 
       second = refund_for(order, ticket)
-      second_note = second.process!(refund_event(second))
 
-      expect(second_note.number).to eq("DQOR-CN/#{Invoice.financial_year(Date.current)}/0002")
-      expect(order.invoices.credit_note.count).to eq(2)
-      expect(described_class.where(status: "processed").sum(:amount_paise)).to eq(700_000)
+      expect { second.process!(refund_event(second)) }.to raise_error(Refund::AlreadyRefunded, /already refunded/)
+      expect(order.invoices.credit_note.count).to eq(1)
+      expect(described_class.where(status: "processed").sum(:amount_paise)).to eq(350_000)
       expect(order.total_paise).to eq(350_000)
     end
 
-    it "BUG: raises a bare RecordNotFound when the order was never invoiced" do
+    it "reports a missing invoice instead of a bare RecordNotFound" do
       order = create(:order)
       ticket = create(:ticket, order:)
       refund = create(:refund, order:, status: "initiated", ticket_ids: [ ticket.id ], amount_paise: order.total_paise)
 
-      expect { refund.process!(refund_event(refund)) }.to raise_error(ActiveRecord::RecordNotFound, /Invoice/)
+      expect { refund.process!(refund_event(refund)) }.to raise_error(Refund::AlreadyRefunded, /no invoice/)
       expect(ticket.reload.canceled_at).to be_nil
     end
 
