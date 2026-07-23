@@ -1,9 +1,17 @@
-Your Deccan Queen on Rails ticket
+Your ticket is ready
 
 Hello <%= @ticket.attendee_name %>,
 
-Welcome to Deccan Queen on Rails. Your <%= @ticket.ticket_type.name %> ticket is attached.
+Welcome to Deccan Queen on Rails. Your ticket is attached to this email -
+keep the QR code handy when you arrive.
 
-Keep the QR code handy when you arrive.
+  <%= @ticket.ticket_type.name %> (DQOR-<%= @ticket.id %>)
+  Attendee: <%= @ticket.attendee_name %>
+  Email: <%= @ticket.attendee_email %>
+  T-shirt size: <%= @ticket.tshirt_size.presence || "-" %>
+  Dietary restrictions: <%= @ticket.dietary_preference.presence || "-" %>
+  Childcare: <%= @ticket.childcare_needed? ? "Needed" : "Not needed" %>
+
+Change details: <%= ticket_claim_url(@ticket.claim_token) %>
 
 See you in Pune.

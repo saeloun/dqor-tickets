@@ -1,4 +1,4 @@
-<h1>Your credit note is ready</h1>
-<p>Hello <%= @order.buyer_name %>,</p>
-<p>Refund <strong><%= @refund.razorpay_refund_id %></strong> has been processed. Credit note <strong><%= @credit_note.number %></strong> is attached.</p>
-<p><%= link_to "View your order", order_url(@order.code) %></p>
+<%= mail_heading "Your credit note" %>
+<%= mail_text "Hello #{@order.buyer_name}," %>
+<%= mail_text do %>Refund <strong><%= @refund.razorpay_refund_id %></strong> has been processed. Credit note <strong><%= @credit_note.number %></strong> is attached.<% end %>
+<p style="margin:0 0 20px;"><%= mail_button "View your order", order_url(@order.code) %></p>

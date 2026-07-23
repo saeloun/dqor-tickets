@@ -2,12 +2,44 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
     <style>
-      /* Email styles need to be inline */
+      @media only screen and (max-width: 620px) {
+        .dq-container { width: 100% !important; }
+        .dq-card { padding: 22px 18px !important; }
+      }
     </style>
   </head>
 
-  <body>
-    <%= yield %>
+  <body style="margin:0;padding:0;background:#efe7d6;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#efe7d6;">
+      <tr><td align="center" style="padding:26px 12px;">
+        <table role="presentation" class="dq-container" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;">
+
+          <tr><td align="center" style="padding:0 0 18px;">
+            <div style="font-family:<%= MailerHelper::BODY_FONT %>;color:#7a1220;font-size:13px;letter-spacing:0.14em;">डेक्कन क्वीन</div>
+            <div style="font-family:<%= MailerHelper::DISPLAY_FONT %>;color:#33302c;font-size:22px;font-weight:bold;margin-top:4px;">Deccan Queen on Rails</div>
+            <div style="font-family:<%= MailerHelper::BODY_FONT %>;color:#5f574d;font-size:13px;margin-top:5px;">Hyatt Regency Pune <span aria-hidden="true">·</span> October 8–11, 2026</div>
+          </td></tr>
+
+          <tr><td class="dq-card" style="background:#faf6ec;border:1px solid #e0d2b2;border-radius:8px;padding:30px 32px;">
+            <%= yield %>
+          </td></tr>
+
+          <tr><td align="center" style="padding:18px 10px 0;">
+            <div style="font-family:<%= MailerHelper::BODY_FONT %>;font-size:13px;color:#554d42;line-height:1.7;">
+              <a href="mailto:hello@deccanqueenonrails.com" style="color:#554d42;">Email the organisers</a>
+              <span aria-hidden="true">·</span>
+              <a href="https://deccanqueenonrails.com" style="color:#554d42;">View event page</a>
+              <span aria-hidden="true">·</span>
+              <a href="https://tickets.deccanqueenonrails.com" style="color:#554d42;">Your tickets</a>
+            </div>
+            <div style="font-family:<%= MailerHelper::BODY_FONT %>;font-size:13px;color:#554d42;letter-spacing:0.09em;text-transform:uppercase;margin-top:10px;">In association with the Rails Foundation</div>
+          </td></tr>
+
+        </table>
+      </td></tr>
+    </table>
   </body>
 </html>

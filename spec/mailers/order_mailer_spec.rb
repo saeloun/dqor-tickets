@@ -34,7 +34,7 @@ RSpec.describe OrderMailer, type: :mailer do
       expect(body).to include(ticket_claim_url(assigned.claim_token))
       expect(body).not_to include(ticket_claim_url(canceled.claim_token))
     end
-    expect(html).to include("Grace Hopper", "update details")
+    expect(html).to include("Grace Hopper", "Change details", "Claim this ticket")
   end
 
   it "sends the order permalink with a claim link per ticket" do

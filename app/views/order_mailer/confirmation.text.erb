@@ -1,22 +1,24 @@
-Your Deccan Queen on Rails tickets are confirmed
+Your tickets are confirmed
 
 Hello <%= @order.buyer_name %>,
-
 <% if @documents_pending %>
 Payment for order <%= @order.code %> is confirmed. Your tax invoice is being prepared and will be available from your order page.
 <% else %>
 Payment for order <%= @order.code %> is confirmed. Your tax invoice is attached.
 <% end %>
-
-You've got <%= pluralize(@order.tickets.count, "ticket") %> — assign them to your attendees here: <%= order_url(@order.code) %>
-
-You can also send an attendee their own private link. They fill in their name,
-dietary needs, T-shirt size and childcare, and their ticket is emailed to them:
-<% @order.tickets.reject(&:canceled_at?).each do |ticket| %>
-- <%= ticket.ticket_type.name %><%= " — #{ticket.attendee_name}" if ticket.assigned? %>
-  <%= ticket_claim_url(ticket.claim_token) %>
+<% unassigned = @order.tickets.reject(&:canceled_at?).reject(&:assigned?) %><% if unassigned.any? %>
+You've got <%= pluralize(@order.tickets.count, "ticket") %>, and <%= unassigned.size == @order.tickets.count ? "nobody is named on them yet" : "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}" %>.
+That is fine - assign them whenever you are ready:
+<% else %>
+You've got <%= pluralize(@order.tickets.count, "ticket") %>, and every one already has an
+attendee named on it. Manage them here:
 <% end %>
 
-Keep this email — these links are how you and your attendees manage the tickets.
+<%= order_url(@order.code) %>
+
+Send an attendee their own link and they fill in their own name, dietary needs,
+T-shirt size and childcare:
+<%= render "order_mailer/claim_links", order: @order, formats: [ :text ] %>
+Keep this email - these links are how you and your attendees manage the tickets.
 
 See you in Pune.

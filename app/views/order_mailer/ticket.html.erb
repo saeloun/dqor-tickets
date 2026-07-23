@@ -1,5 +1,9 @@
-<h1>Your Deccan Queen on Rails ticket</h1>
-<p>Hello <%= @ticket.attendee_name %>,</p>
-<p>Welcome to Deccan Queen on Rails. Your <strong><%= @ticket.ticket_type.name %></strong> ticket is attached.</p>
-<p>Keep the QR code handy when you arrive.</p>
-<p>See you in Pune.</p>
+<%= mail_heading "Your ticket is ready" %>
+<%= mail_text "Hello #{@ticket.attendee_name}," %>
+<%= mail_text "Welcome to Deccan Queen on Rails. Your ticket is attached to this email — keep the QR code handy when you arrive." %>
+
+<%= render "order_mailer/ticket_card", ticket: @ticket %>
+
+<p style="margin:0 0 18px;"><%= mail_button "Change details", ticket_claim_url(@ticket.claim_token) %></p>
+<%= mail_note "Wrong name, or need to add a dietary requirement or T-shirt size? Use the button above — it always works." %>
+<%= mail_text "See you in Pune." %>

@@ -1,6 +1,4 @@
-<p>
-  You can reset your password on
-  <%= link_to "this password reset page", edit_password_url(@admin_user.password_reset_token) %>.
-
-  This link will expire in <%= distance_of_time_in_words(0, @admin_user.password_reset_token_expires_in) %>.
-</p>
+<%= mail_heading "Reset your password" %>
+<%= mail_text "Use the button below to choose a new password for the Deccan Queen on Rails admin." %>
+<p style="margin:0 0 20px;"><%= mail_button "Reset my password", edit_password_url(@admin_user.password_reset_token) %></p>
+<%= mail_note "This link expires in #{distance_of_time_in_words(0, @admin_user.password_reset_token_expires_in)}. If you did not ask for a reset, ignore this email and nothing will change." %>

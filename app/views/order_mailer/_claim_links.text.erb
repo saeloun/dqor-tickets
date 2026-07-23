@@ -1,0 +1,4 @@
+<% order.tickets.reject(&:canceled_at?).each do |ticket| %>
+- <%= ticket.ticket_type.name %><%= " - #{ticket.attendee_name}" if ticket.assigned? %>
+  <%= ticket.assigned? ? "Change details" : "Claim this ticket" %>: <%= ticket_claim_url(ticket.claim_token) %>
+<% end %>

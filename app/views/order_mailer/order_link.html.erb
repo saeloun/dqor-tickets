@@ -1,30 +1,22 @@
 <% tickets = @order.tickets.reject(&:canceled_at?) %>
 <% unassigned = tickets.reject(&:assigned?) %>
+<%= mail_heading "Your order #{@order.code}" %>
+<%= mail_text "Hello #{@order.buyer_name}," %>
+<%= mail_text "Here is the permanent link to your order. Bookmark it — it is where you download your tickets and tax invoice, and where you name your attendees." %>
 
-<h1>Your Deccan Queen on Rails order</h1>
-<p>Hello <%= @order.buyer_name %>,</p>
-
-<p>Here is the permanent link to order <strong><%= @order.code %></strong>. Bookmark it — it is where you download your tickets and tax invoice, and where you name your attendees:</p>
-
-<p><%= link_to order_url(@order.code), order_url(@order.code) %></p>
+<p style="margin:0 0 20px;"><%= mail_button "Open my order", order_url(@order.code) %></p>
 
 <% if unassigned.any? %>
-  <p><strong><%= pluralize(unassigned.size, "ticket") %> still <%= unassigned.one? ? "has" : "have" %> nobody named on <%= unassigned.one? ? "it" : "them" %>.</strong> You can assign them from the link above, or send an attendee their own private link so they fill in their own name, dietary needs, T-shirt size and childcare:</p>
+  <%= mail_text "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}." %>
 <% else %>
-  <p>All <%= pluralize(tickets.size, "ticket") %> already have an attendee. If anything needs correcting — a T-shirt size, a dietary note — use the links below:</p>
+  <%= mail_text "All #{pluralize(tickets.size, "ticket")} already have an attendee. If anything needs correcting, use the links below." %>
 <% end %>
 
-<ul>
-  <% tickets.each do |ticket| %>
-    <li>
-      <%= ticket.ticket_type.name %> —
-      <% if ticket.assigned? %>
-        <%= ticket.attendee_name %> (<%= link_to "update details", ticket_claim_url(ticket.claim_token) %>)
-      <% else %>
-        <%= link_to "claim this ticket", ticket_claim_url(ticket.claim_token) %>
-      <% end %>
-    </li>
-  <% end %>
-</ul>
+<%= mail_divider %>
 
-<p>See you in Pune.</p>
+<%= mail_label "One link per ticket" %>
+<%= mail_note "Send an attendee their own link and they fill in their own name, dietary needs, T-shirt size and childcare." %>
+
+<%= render "order_mailer/claim_links", order: @order %>
+
+<%= mail_text "See you in Pune." %>
