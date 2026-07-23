@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe TicketAccessMailer, type: :mailer do
   def access_token(email = "buyer@example.com")
-    Rails.application.message_verifier(:ticket_access).generate(
+    TicketAccessController.new.send(:verifier).generate(
       email,
       purpose: TicketAccessController::TOKEN_PURPOSE,
       expires_in: TicketAccessController::TOKEN_EXPIRY

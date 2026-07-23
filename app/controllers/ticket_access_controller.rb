@@ -54,7 +54,12 @@ class TicketAccessController < ApplicationController
     end
 
     def verifier
-      Rails.application.message_verifier(:ticket_access)
+      @verifier ||= ActiveSupport::MessageVerifier.new(
+        Rails.application.key_generator.generate_key("ticket_access"),
+        digest: "SHA256",
+        serializer: JSON,
+        url_safe: true
+      )
     end
 
     def discourage_indexing

@@ -1,11 +1,13 @@
 class Refund < ApplicationRecord
   class AlreadyRefunded < StandardError; end
+  class InvalidTransition < StandardError; end
 
   OPEN_STATUSES = %w[pending initiated processed].freeze
 
   belongs_to :order
 
-  validates :status, presence: true
+  enum :status, { pending: "pending", initiated: "initiated", processed: "processed", failed: "failed" }, validate: true
+
   validates :amount_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   def process!(payment_event)
@@ -13,7 +15,8 @@ class Refund < ApplicationRecord
     raise ArgumentError, "payment event amount does not match refund" unless payment_event.amount_paise == amount_paise
 
     with_lock do
-      return order.invoices.credit_note.find_by!(number: credit_note_number) if status == "processed"
+      return order.invoices.credit_note.find_by!(number: credit_note_number) if processed?
+      raise InvalidTransition, "a failed refund cannot be processed" if failed?
 
       invoice = order.invoices.invoice.first or raise AlreadyRefunded, "order #{order.code} has no invoice to credit"
       owned = order.tickets.where(id: ticket_ids)

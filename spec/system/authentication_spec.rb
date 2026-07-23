@@ -130,7 +130,8 @@ RSpec.describe "Authentication", type: :system do
 
     def reset_token_from_last_email
       body = ActionMailer::Base.deliveries.last.body.encoded
-      body[%r{/passwords/([^/"\s]+)/edit}, 1]
+      raw = body[%r{/passwords/([^"\s]+)/edit}, 1]
+      raw && URI::DEFAULT_PARSER.unescape(raw)
     end
 
     it "enqueues a reset email for a known address" do

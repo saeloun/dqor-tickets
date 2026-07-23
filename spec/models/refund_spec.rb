@@ -41,7 +41,7 @@ RSpec.describe Refund, type: :model do
       refund = build(:refund, status: nil)
 
       expect(refund).not_to be_valid
-      expect(refund.errors[:status]).to include("can't be blank")
+      expect(refund.errors[:status]).to be_present
     end
 
     it "rejects a negative amount" do
@@ -414,10 +414,21 @@ RSpec.describe Refund, type: :model do
       expect(ticket.reload.canceled_at).to be_nil
     end
 
-    it "accepts any status string because there is no state machine" do
-      refund = create(:refund, status: "banana")
+    it "rejects a status outside the known set" do
+      refund = build(:refund, status: "banana")
 
-      expect(refund.reload.status).to eq("banana")
+      expect(refund).not_to be_valid
+      expect(refund.errors[:status]).to be_present
+    end
+
+    it "refuses to process a refund that already failed" do
+      order, tickets, = paid_order
+      Invoice.issue_for!(order)
+      refund = refund_for(order, tickets.first)
+      refund.update!(status: "failed")
+
+      expect { refund.process!(refund_event(refund)) }.to raise_error(Refund::InvalidTransition, /failed refund/)
+      expect(order.invoices.credit_note).to be_empty
     end
   end
 end
