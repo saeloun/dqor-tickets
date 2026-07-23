@@ -10,4 +10,13 @@ Payment for order <%= @order.code %> is confirmed. Your tax invoice is attached.
 
 You've got <%= pluralize(@order.tickets.count, "ticket") %> — assign them to your attendees here: <%= order_url(@order.code) %>
 
+You can also send an attendee their own private link. They fill in their name,
+dietary needs, T-shirt size and childcare, and their ticket is emailed to them:
+<% @order.tickets.reject(&:canceled_at?).each do |ticket| %>
+- <%= ticket.ticket_type.name %><%= " — #{ticket.attendee_name}" if ticket.assigned? %>
+  <%= ticket_claim_url(ticket.claim_token) %>
+<% end %>
+
+Keep this email — these links are how you and your attendees manage the tickets.
+
 See you in Pune.

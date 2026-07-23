@@ -1,4 +1,6 @@
 class Ticket < ApplicationRecord
+  TSHIRT_SIZES = %w[XS S M L XL XXL 3XL].freeze
+
   class AlreadyCheckedIn < StandardError
     attr_reader :checked_in_at
 
@@ -30,10 +32,10 @@ class Ticket < ApplicationRecord
     attendee_name.present? && attendee_email.present?
   end
 
-  def assign!(attendee_name:, attendee_email:, dietary_preference: nil, childcare_needed: false)
+  def assign!(attendee_name:, attendee_email:, dietary_preference: nil, childcare_needed: false, tshirt_size: nil)
     raise Canceled, "canceled ticket cannot be assigned" if canceled_at?
 
-    update!(attendee_name:, attendee_email:, dietary_preference:, childcare_needed:, assigned_at: Time.current)
+    update!(attendee_name:, attendee_email:, dietary_preference:, childcare_needed:, tshirt_size:, assigned_at: Time.current)
     attach_pdf!
     OrderMailer.ticket(self).deliver_later
   end

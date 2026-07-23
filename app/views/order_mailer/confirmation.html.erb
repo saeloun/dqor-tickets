@@ -6,4 +6,21 @@
   <p>Payment for order <strong><%= @order.code %></strong> is confirmed. Your tax invoice is attached.</p>
 <% end %>
 <p>You’ve got <%= pluralize(@order.tickets.count, "ticket") %> — <%= link_to "assign them to your attendees here", order_url(@order.code) %>.</p>
+
+<p>You can also send an attendee their own private link. They fill in their name, dietary needs, T-shirt size and childcare, and their ticket is emailed straight to them:</p>
+
+<ul>
+  <% @order.tickets.reject(&:canceled_at?).each do |ticket| %>
+    <li>
+      <%= ticket.ticket_type.name %> —
+      <% if ticket.assigned? %>
+        <%= ticket.attendee_name %> (<%= link_to "update details", ticket_claim_url(ticket.claim_token) %>)
+      <% else %>
+        <%= link_to "claim this ticket", ticket_claim_url(ticket.claim_token) %>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<p>Keep this email — these links are how you and your attendees manage the tickets.</p>
 <p>See you in Pune.</p>

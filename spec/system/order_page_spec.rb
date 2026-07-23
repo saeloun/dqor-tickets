@@ -36,7 +36,7 @@ RSpec.describe "Order page", type: :system do
       expect(page).to have_content("Grace Hopper")
       expect(page).to have_content("grace@example.com")
       expect(page).to have_link("Download ticket", href: rails_blob_path(ticket.pdf, disposition: "attachment"))
-      expect(page).to have_no_field("claim_link_#{ticket.id}")
+      expect(page).to have_field("claim_link_#{ticket.id}", readonly: true)
     end
 
     it "renders a claim link and no attendee for an unassigned ticket" do

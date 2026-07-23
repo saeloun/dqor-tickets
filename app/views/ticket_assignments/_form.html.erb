@@ -12,6 +12,10 @@
       <%= form.label :dietary_preference, "Dietary restrictions" %>
       <%= form.text_field :dietary_preference, placeholder: "Optional" %>
     </div>
+    <div class="field">
+      <%= form.label :tshirt_size, "T-shirt size" %>
+      <%= form.select :tshirt_size, Ticket::TSHIRT_SIZES, { include_blank: "Prefer not to say" } %>
+    </div>
   </div>
   <div class="assignment-checkbox">
     <%= form.check_box :childcare_needed %>

@@ -49,17 +49,23 @@
               <h3><%= ticket.ticket_type.name %></h3>
               <% if ticket.assigned? %>
                 <p><strong><%= ticket.attendee_name %></strong><br><%= ticket.attendee_email %></p>
+                <p class="assignment-summary">
+                  <%= ticket.tshirt_size.presence || "No T-shirt size" %>
+                  <span aria-hidden="true">·</span>
+                  <%= ticket.dietary_preference.presence || "No dietary notes" %>
+                  <% if ticket.childcare_needed? %><span aria-hidden="true">·</span> Needs childcare<% end %>
+                </p>
                 <%= link_to "Download ticket", rails_blob_path(ticket.pdf, disposition: "attachment"), class: "btn btn-gold" if ticket.pdf.attached? %>
-              <% else %>
-                <%= render "ticket_assignments/form", ticket:, url: assign_order_ticket_path(@order.code, ticket) %>
-                <div class="claim-link field" data-controller="clipboard">
-                  <%= label_tag "claim_link_#{ticket.id}", "Private claim link" %>
-                  <div class="claim-link__row">
-                    <%= text_field_tag "claim_link_#{ticket.id}", ticket_claim_url(ticket.claim_token), readonly: true, data: { clipboard_target: "source" } %>
-                    <button type="button" class="claim-link__copy" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
-                  </div>
-                </div>
               <% end %>
+
+              <%= render "ticket_assignments/form", ticket:, url: assign_order_ticket_path(@order.code, ticket) %>
+              <div class="claim-link field" data-controller="clipboard">
+                <%= label_tag "claim_link_#{ticket.id}", ticket.assigned? ? "Private link for the attendee to update their details" : "Private claim link" %>
+                <div class="claim-link__row">
+                  <%= text_field_tag "claim_link_#{ticket.id}", ticket_claim_url(ticket.claim_token), readonly: true, data: { clipboard_target: "source" } %>
+                  <button type="button" class="claim-link__copy" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+                </div>
+              </div>
             </article>
           <% end %>
         </div>

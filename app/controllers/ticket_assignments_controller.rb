@@ -25,7 +25,7 @@ class TicketAssignmentsController < ApplicationController
     end
 
     def assignment_params
-      params.expect(ticket: [ :attendee_name, :attendee_email, :dietary_preference, :childcare_needed ]).to_h.symbolize_keys
+      params.expect(ticket: [ :attendee_name, :attendee_email, :dietary_preference, :childcare_needed, :tshirt_size ]).to_h.symbolize_keys
     end
 
     def claim_request?

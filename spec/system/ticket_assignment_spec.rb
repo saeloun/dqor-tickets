@@ -91,7 +91,33 @@ RSpec.describe "Ticket assignment", type: :system do
       expect(first_ticket.claim_token).not_to eq(second_ticket.claim_token)
     end
 
-    it "hides the claim link once the ticket is assigned" do
+    it "captures the T-shirt size and shows the details back for a refill" do
+      ticket = unassigned_ticket
+
+      visit order_path(order.code)
+      within order_form_for(ticket) do
+        fill_in "Attendee name", with: "Grace Hopper"
+        fill_in "Attendee email", with: "grace@example.com"
+        fill_in "Dietary restrictions", with: "Vegetarian"
+        select "L", from: "T-shirt size"
+        check "Needs childcare / day care"
+        click_button "Assign this ticket"
+      end
+
+      expect(ticket.reload).to have_attributes(tshirt_size: "L", dietary_preference: "Vegetarian", childcare_needed: true)
+      expect(page).to have_content("L")
+      expect(page).to have_content("Vegetarian")
+      expect(page).to have_content("Needs childcare")
+
+      within order_form_for(ticket) do
+        select "XXL", from: "T-shirt size"
+        click_button "Update ticket"
+      end
+
+      expect(ticket.reload.tshirt_size).to eq("XXL")
+    end
+
+    it "keeps the claim link after assignment so the attendee can update their details" do
       ticket = unassigned_ticket
 
       visit order_path(order.code)
@@ -104,7 +130,9 @@ RSpec.describe "Ticket assignment", type: :system do
       end
 
       expect(page).to have_content("1 of 1 tickets assigned")
-      expect(page).to have_no_selector("#claim_link_#{ticket.id}")
+      expect(page).to have_selector("#claim_link_#{ticket.id}")
+      expect(find("#claim_link_#{ticket.id}").value).to end_with(ticket_claim_path(ticket.claim_token))
+      expect(page).to have_button("Update ticket")
     end
   end
 
