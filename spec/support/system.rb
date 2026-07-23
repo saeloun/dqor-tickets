@@ -7,7 +7,7 @@ Capybara.register_driver(:cuprite) do |app|
     process_timeout: 30,
     timeout: 20,
     headless: true,
-    js_errors: false
+    js_errors: true
   }
   options[:browser_path] = ENV["CHROME_PATH"] if ENV["CHROME_PATH"].present?
   options[:browser_options] = { "no-sandbox": nil, "disable-dev-shm-usage": nil } if ENV["CHROME_NO_SANDBOX"].present?

@@ -6,7 +6,7 @@ Capybara.register_driver(:cuprite_camera) do |app|
     process_timeout: 30,
     timeout: 20,
     headless: true,
-    js_errors: false,
+    js_errors: true,
     browser_options: {
       "use-fake-ui-for-media-stream": nil,
       "use-fake-device-for-media-stream": nil
