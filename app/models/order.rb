@@ -67,7 +67,7 @@ class Order < ApplicationRecord
 
   def self.orders_csv(relation = all)
     CSV.generate(headers: true) do |csv|
-      csv << %w[code status buyer_name email buyer_phone tickets subtotal_paise discount_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon gstin gst_legal_name billing_state_code tshirt_sizes dietary_preferences]
+      csv << %w[code status buyer_name email buyer_phone tickets subtotal_paise discount_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon gstin gst_legal_name billing_state_code tshirt_sizes dietary_preferences childcare_count]
       relation.includes(:coupon, tickets: :ticket_type).find_each do |order|
         lines = Invoice.line_item_snapshot(order)
         csv << [
@@ -89,7 +89,8 @@ class Order < ApplicationRecord
           order.gst_legal_name,
           order.billing_state_code,
           order.tickets.filter_map(&:tshirt_size).join(" | "),
-          order.tickets.filter_map(&:dietary_preference).join(" | ")
+          order.tickets.filter_map(&:dietary_preference).join(" | "),
+          order.tickets.count(&:childcare_needed?)
         ]
       end
     end
@@ -97,7 +98,7 @@ class Order < ApplicationRecord
 
   def self.attendees_csv(relation = all)
     CSV.generate(headers: true) do |csv|
-      csv << %w[order_code order_status buyer_name buyer_email ticket_id ticket_type attendee_name attendee_email price_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon tshirt_size dietary_preference]
+      csv << %w[order_code order_status buyer_name buyer_email ticket_id ticket_type attendee_name attendee_email price_paise total_paise taxable_paise cgst_paise sgst_paise igst_paise coupon tshirt_size dietary_preference childcare_needed]
       relation.includes(:coupon, tickets: :ticket_type).find_each do |order|
         lines = Invoice.line_item_snapshot(order).index_by { |line| line.fetch("ticket_id") }
         order.tickets.each do |ticket|
@@ -119,7 +120,8 @@ class Order < ApplicationRecord
             line.fetch("igst"),
             order.coupon&.code,
             ticket.tshirt_size,
-            ticket.dietary_preference
+            ticket.dietary_preference,
+            ticket.childcare_needed?
           ]
         end
       end

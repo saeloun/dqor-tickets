@@ -123,6 +123,20 @@ RSpec.describe Order, type: :model do
       expect(described_class.orders_csv(described_class.where(id: order.id))).to include("TEAM10", "Vegan", "cgst_paise")
       expect(described_class.attendees_csv(described_class.where(id: order.id))).to include("Regular", "M", "attendee_email")
     end
+
+    it "exports who needs childcare so the day care can be planned" do
+      order = create(:order, :paid)
+      create(:ticket, order:, attendee_name: "Needs care", childcare_needed: true)
+      create(:ticket, order:, attendee_name: "No care", childcare_needed: false)
+
+      attendees = CSV.parse(described_class.attendees_csv(described_class.where(id: order.id)), headers: true)
+      expect(attendees.headers).to include("childcare_needed")
+      expect(attendees.map { |row| [ row["attendee_name"], row["childcare_needed"] ] })
+        .to match_array([ [ "Needs care", "true" ], [ "No care", "false" ] ])
+
+      orders = CSV.parse(described_class.orders_csv(described_class.where(id: order.id)), headers: true)
+      expect(orders.first.fetch("childcare_count")).to eq("1")
+    end
   end
 
   describe "#resend_confirmation!" do

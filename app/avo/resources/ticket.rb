@@ -10,6 +10,8 @@ class Avo::Resources::Ticket < Avo::BaseResource
     field :attendee_email, as: :text
     field :tshirt_size, as: :text
     field :dietary_preference, as: :text
+    field :childcare_needed, as: :boolean
+    field :assigned_at, as: :date_time, readonly: true
     field :price_paise, as: :number, readonly: true
     field :secret, as: :text, readonly: true
     field :checked_in_at, as: :code, readonly: true
