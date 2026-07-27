@@ -22,6 +22,12 @@ class Ticket < ApplicationRecord
 
   normalizes :attendee_email, with: ->(email) { email.strip.downcase }
 
+  scope :awaiting_details, -> {
+    where(canceled_at: nil)
+      .where.not(attendee_email: [ nil, "" ])
+      .where("tshirt_size IS NULL OR tshirt_size = ''")
+  }
+
   validates :price_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :secret, presence: true, uniqueness: true
   validates :claim_token, presence: true
@@ -30,6 +36,17 @@ class Ticket < ApplicationRecord
 
   def assigned?
     attendee_name.present? && attendee_email.present?
+  end
+
+  def details_pending?
+    assigned? && !canceled_at? && tshirt_size.blank?
+  end
+
+  def request_details!
+    raise Canceled, "canceled ticket cannot be nudged" if canceled_at?
+    raise ArgumentError, "ticket is not assigned to an attendee yet" unless assigned?
+
+    OrderMailer.complete_details(self).deliver_later
   end
 
   def assign!(attendee_name:, attendee_email:, dietary_preference: nil, childcare_needed: false, tshirt_size: nil)

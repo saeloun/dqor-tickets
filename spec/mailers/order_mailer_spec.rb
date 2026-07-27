@@ -78,4 +78,21 @@ RSpec.describe OrderMailer, type: :mailer do
     expect(mail.attachments.map(&:filename)).to contain_exactly("ticket.pdf")
     expect(mail.html_part.body.to_s).to include("Grace Hopper", ticket.ticket_type.name)
   end
+
+  it "asks an assigned attendee to complete their details, without an attachment" do
+    order = create(:order, :paid, buyer_name: "Ada Lovelace")
+    ticket_type = create(:ticket_type, name: "Conference Pass")
+    ticket = create(:ticket, order:, ticket_type:, attendee_name: "Grace Hopper", attendee_email: "grace@example.com", tshirt_size: nil)
+
+    mail = described_class.complete_details(ticket)
+
+    expect(mail.to).to eq([ "grace@example.com" ])
+    expect(mail.subject).to eq("One quick thing for your Deccan Queen on Rails ticket")
+    expect(mail.attachments).to be_empty
+    [ mail.html_part.body.to_s, mail.text_part.body.to_s ].each do |body|
+      expect(body).to include("Ada Lovelace", "Conference Pass", "T-shirt size")
+      expect(body).to include(ticket_claim_url(ticket.claim_token))
+    end
+    expect(mail.html_part.body.to_s).not_to include("#9a7b3a")
+  end
 end

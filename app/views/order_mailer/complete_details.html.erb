@@ -1,0 +1,13 @@
+<%= mail_heading "One quick thing" %>
+<%= mail_text "Hello #{@ticket.attendee_name}," %>
+<%= mail_text do %><strong><%= @order.buyer_name %></strong> has you down for a <strong><%= @ticket.ticket_type.name %></strong> at Deccan Queen on Rails. You are all set to attend — we just need a couple of details from you so we can plan.<% end %>
+
+<%= mail_label "Still needed" %>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:2px 0 18px;">
+  <tr><td style="padding:6px 0;border-bottom:1px solid #e4d6b6;font-family:<%= MailerHelper::BODY_FONT %>;color:#33302c;font-size:15px;">T-shirt size<% if @ticket.tshirt_size.present? %> <span style="color:#5f574d;">— <%= @ticket.tshirt_size %></span><% end %></td></tr>
+  <tr><td style="padding:6px 0;font-family:<%= MailerHelper::BODY_FONT %>;color:#33302c;font-size:15px;">Dietary needs<% if @ticket.dietary_preference.present? %> <span style="color:#5f574d;">— <%= @ticket.dietary_preference %></span><% end %></td></tr>
+</table>
+
+<p style="margin:0 0 18px;"><%= mail_button "Complete my details", ticket_claim_url(@ticket.claim_token) %></p>
+<%= mail_note "It takes about 30 seconds, and your ticket is emailed to you as soon as you are done. This link is private to you." %>
+<%= mail_text "See you in Pune." %>

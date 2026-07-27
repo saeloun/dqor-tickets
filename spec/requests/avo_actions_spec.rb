@@ -528,4 +528,28 @@ RSpec.describe "Avo admin actions", type: :request do
 
     Base64.decode64(CGI.unescapeHTML(payload))
   end
+
+  describe "Ask attendee for details" do
+    it "emails assigned attendees and skips unassigned ones" do
+      sign_in_admin
+      assigned = create(:ticket, order: create(:order, :paid), attendee_name: "Grace", attendee_email: "grace@example.com", tshirt_size: nil)
+      unassigned = create(:ticket, order: create(:order, :paid), attendee_name: nil, attendee_email: nil)
+
+      expect {
+        run_action(Avo::Actions::RequestAttendeeDetails, records: [ assigned, unassigned ], resource: "tickets")
+      }.to have_enqueued_mail(OrderMailer, :complete_details).with(assigned).once
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "is blocked for an unauthenticated visitor" do
+      ticket = create(:ticket, order: create(:order, :paid))
+
+      expect {
+        run_action(Avo::Actions::RequestAttendeeDetails, records: [ ticket ], resource: "tickets")
+      }.not_to have_enqueued_mail(OrderMailer, :complete_details)
+
+      expect(response).to have_http_status(:redirect)
+    end
+  end
 end

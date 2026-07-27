@@ -18,4 +18,8 @@ class Avo::Resources::Ticket < Avo::BaseResource
     field :canceled_at, as: :date_time, readonly: true
     field :pdf, as: :file, readonly: true
   end
+
+  def actions
+    action Avo::Actions::RequestAttendeeDetails
+  end
 end

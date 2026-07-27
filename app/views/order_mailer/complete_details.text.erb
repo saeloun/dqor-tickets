@@ -1,0 +1,18 @@
+One quick thing
+
+Hello <%= @ticket.attendee_name %>,
+
+<%= @order.buyer_name %> has you down for a <%= @ticket.ticket_type.name %> at Deccan Queen
+on Rails. You are all set to attend - we just need a couple of details from you
+so we can plan.
+
+Still needed:
+- T-shirt size<%= " - #{@ticket.tshirt_size}" if @ticket.tshirt_size.present? %>
+- Dietary needs<%= " - #{@ticket.dietary_preference}" if @ticket.dietary_preference.present? %>
+
+Complete my details (about 30 seconds, and your ticket is emailed to you as soon
+as you are done - this link is private to you):
+
+<%= ticket_claim_url(@ticket.claim_token) %>
+
+See you in Pune.

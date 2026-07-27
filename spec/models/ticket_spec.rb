@@ -82,4 +82,42 @@ RSpec.describe Ticket, type: :model do
 
     expect { ticket.check_in!(Date.new(2026, 10, 8)) }.to raise_error(described_class::Canceled)
   end
+
+  describe "attendee detail nudges" do
+    it "is details_pending when assigned without a T-shirt size" do
+      expect(create(:ticket, tshirt_size: nil)).to be_details_pending
+      expect(create(:ticket, tshirt_size: "")).to be_details_pending
+      expect(create(:ticket, tshirt_size: "L")).not_to be_details_pending
+      expect(create(:ticket, attendee_name: nil, attendee_email: nil, tshirt_size: nil)).not_to be_details_pending
+      expect(create(:ticket, tshirt_size: nil, canceled_at: Time.current)).not_to be_details_pending
+    end
+
+    it "awaiting_details lists only assigned, uncanceled tickets missing a size" do
+      pending_ticket = create(:ticket, tshirt_size: nil)
+      create(:ticket, tshirt_size: "M")
+      create(:ticket, attendee_name: nil, attendee_email: nil, tshirt_size: nil)
+      create(:ticket, tshirt_size: nil, canceled_at: Time.current)
+
+      expect(described_class.awaiting_details).to contain_exactly(pending_ticket)
+    end
+
+    it "request_details! emails the attendee their private link" do
+      ticket = create(:ticket, attendee_email: "grace@example.com", tshirt_size: nil)
+
+      expect { ticket.request_details! }.to have_enqueued_mail(OrderMailer, :complete_details).with(ticket)
+    end
+
+    it "request_details! refuses an unassigned ticket" do
+      ticket = create(:ticket, attendee_name: nil, attendee_email: nil)
+
+      expect { ticket.request_details! }.to raise_error(ArgumentError, /not assigned/)
+      expect { OrderMailer.deliveries }.not_to change { ActionMailer::Base.deliveries.size }
+    end
+
+    it "request_details! refuses a canceled ticket" do
+      ticket = create(:ticket, canceled_at: Time.current)
+
+      expect { ticket.request_details! }.to raise_error(described_class::Canceled)
+    end
+  end
 end

@@ -22,6 +22,12 @@ class OrderMailer < ApplicationMailer
     mail(to: @ticket.attendee_email, subject: "Your Deccan Queen on Rails ticket")
   end
 
+  def complete_details(ticket)
+    @ticket = ticket
+    @order = ticket.order
+    mail(to: @ticket.attendee_email, subject: "One quick thing for your Deccan Queen on Rails ticket")
+  end
+
   def refund_note(refund)
     @refund = refund
     @order = refund.order
