@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -162,11 +162,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
     t.string "buyer_name", null: false
     t.string "buyer_phone"
     t.string "code", null: false
+    t.string "country", default: "IN"
     t.integer "coupon_id"
     t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
     t.string "email", null: false
     t.bigint "event_id"
     t.datetime "expires_at"
+    t.string "gateway", default: "razorpay", null: false
+    t.string "gateway_reference"
     t.string "gst_legal_name"
     t.string "gstin"
     t.json "metadata", default: {}, null: false
@@ -178,6 +182,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
     t.index ["code"], name: "index_orders_on_code", unique: true
     t.index ["coupon_id"], name: "index_orders_on_coupon_id"
     t.index ["event_id", "code"], name: "index_orders_on_event_id_and_code", unique: true
+    t.index ["gateway", "gateway_reference"], name: "index_orders_on_gateway_and_gateway_reference", unique: true
     t.index ["organizer_id"], name: "index_orders_on_organizer_id"
     t.index ["razorpay_order_id"], name: "index_orders_on_razorpay_order_id", unique: true
   end
@@ -205,6 +210,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
     t.integer "amount_paise", null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
+    t.string "gateway", default: "razorpay", null: false
+    t.string "gateway_event_id"
+    t.string "gateway_payment_id"
     t.string "kind", null: false
     t.string "level", default: "info", null: false
     t.string "mode"
@@ -214,9 +222,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
     t.string "razorpay_payment_id"
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_payment_events_on_event_id"
+    t.index ["gateway", "gateway_event_id"], name: "index_payment_events_on_gateway_and_gateway_event_id", unique: true, where: "(gateway_event_id IS NOT NULL)"
+    t.index ["gateway", "gateway_payment_id"], name: "index_payment_events_on_gateway_and_gateway_payment_id", unique: true, where: "(gateway_payment_id IS NOT NULL)"
     t.index ["order_id"], name: "index_payment_events_on_order_id"
     t.index ["razorpay_event_id"], name: "index_payment_events_on_razorpay_event_id", unique: true
     t.index ["razorpay_payment_id"], name: "index_payment_events_on_razorpay_payment_id", unique: true, where: "(razorpay_payment_id IS NOT NULL)"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.integer "amount_minor"
+    t.datetime "created_at", null: false
+    t.string "currency"
+    t.string "gateway", null: false
+    t.string "gateway_payment_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "order_id", null: false
+    t.string "status", default: "created", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_payments_on_order_id"
   end
 
   create_table "refunds", force: :cascade do |t|
@@ -224,12 +247,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
     t.datetime "created_at", null: false
     t.string "credit_note_number"
     t.bigint "event_id"
+    t.string "gateway", default: "razorpay", null: false
+    t.string "gateway_refund_id"
     t.integer "order_id", null: false
     t.string "razorpay_refund_id"
     t.string "status", null: false
     t.json "ticket_ids", default: [], null: false
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_refunds_on_event_id"
+    t.index ["gateway", "gateway_refund_id"], name: "index_refunds_on_gateway_and_gateway_refund_id", unique: true, where: "(gateway_refund_id IS NOT NULL)"
     t.index ["order_id"], name: "index_refunds_on_order_id"
     t.index ["razorpay_refund_id"], name: "index_refunds_on_razorpay_refund_id", unique: true, where: "(razorpay_refund_id IS NOT NULL)"
   end
@@ -435,6 +461,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
     t.integer "position", default: 0, null: false
     t.bigint "prerequisite_ticket_type_id"
     t.integer "price_paise", null: false
+    t.jsonb "prices_minor", default: {}, null: false
     t.boolean "requires_conference_pass", default: false, null: false
     t.datetime "sales_end_at"
     t.datetime "sales_start_at"
@@ -499,6 +526,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
   add_foreign_key "organizers", "accounts", validate: false
   add_foreign_key "payment_events", "events", validate: false
   add_foreign_key "payment_events", "orders"
+  add_foreign_key "payments", "orders"
   add_foreign_key "refunds", "events", validate: false
   add_foreign_key "refunds", "orders"
   add_foreign_key "registrations", "events", validate: false
