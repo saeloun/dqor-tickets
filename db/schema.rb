@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -242,6 +242,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
     t.index ["order_id"], name: "index_payments_on_order_id"
   end
 
+  create_table "program_session_speakers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "program_session_id", null: false
+    t.string "role", default: "speaker", null: false
+    t.bigint "speaker_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["program_session_id", "speaker_id"], name: "index_pss_on_session_and_speaker", unique: true
+    t.index ["program_session_id"], name: "index_program_session_speakers_on_program_session_id"
+    t.index ["speaker_id"], name: "index_program_session_speakers_on_speaker_id"
+  end
+
+  create_table "program_sessions", force: :cascade do |t|
+    t.text "abstract"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.datetime "ends_at"
+    t.bigint "event_id", null: false
+    t.string "kind", default: "talk", null: false
+    t.string "language"
+    t.string "level"
+    t.integer "max_attendees"
+    t.integer "position", default: 0, null: false
+    t.bigint "room_id"
+    t.string "slides_url"
+    t.datetime "starts_at"
+    t.string "state", default: "confirmed", null: false
+    t.string "title", null: false
+    t.bigint "track_id"
+    t.datetime "updated_at", null: false
+    t.string "video_provider"
+    t.string "video_url"
+    t.index ["event_id"], name: "index_program_sessions_on_event_id"
+    t.index ["room_id"], name: "index_program_sessions_on_room_id"
+    t.index ["track_id"], name: "index_program_sessions_on_track_id"
+  end
+
   create_table "refunds", force: :cascade do |t|
     t.integer "amount_paise", null: false
     t.datetime "created_at", null: false
@@ -272,6 +309,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
     t.index ["event_id", "user_id"], name: "index_registrations_on_event_id_and_user_id", unique: true
     t.index ["ticket_id"], name: "index_registrations_on_ticket_id"
     t.index ["user_id"], name: "index_registrations_on_user_id"
+  end
+
+  create_table "rooms", force: :cascade do |t|
+    t.text "accessibility_notes"
+    t.integer "capacity"
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "floor"
+    t.boolean "is_virtual", default: false, null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "stream_url"
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_rooms_on_event_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -427,6 +478,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "speakers", force: :cascade do |t|
+    t.text "bio"
+    t.string "bluesky"
+    t.string "company"
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "github"
+    t.string "linkedin"
+    t.string "mastodon"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "pronouns"
+    t.string "speakerdeck"
+    t.string "title"
+    t.string "twitter"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.string "website"
+    t.index ["event_id"], name: "index_speakers_on_event_id"
+    t.index ["user_id"], name: "index_speakers_on_user_id"
+  end
+
   create_table "tax_profiles", force: :cascade do |t|
     t.text "address", null: false
     t.string "cn_prefix", null: false
@@ -496,6 +569,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
     t.index ["ticket_type_id"], name: "index_tickets_on_ticket_type_id"
   end
 
+  create_table "tracks", force: :cascade do |t|
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "text_color"
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_tracks_on_event_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.citext "email", null: false
@@ -527,11 +611,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
   add_foreign_key "payment_events", "events", validate: false
   add_foreign_key "payment_events", "orders"
   add_foreign_key "payments", "orders"
+  add_foreign_key "program_session_speakers", "program_sessions"
+  add_foreign_key "program_session_speakers", "speakers"
+  add_foreign_key "program_sessions", "events"
+  add_foreign_key "program_sessions", "rooms"
+  add_foreign_key "program_sessions", "tracks"
   add_foreign_key "refunds", "events", validate: false
   add_foreign_key "refunds", "orders"
   add_foreign_key "registrations", "events", validate: false
   add_foreign_key "registrations", "tickets", validate: false
   add_foreign_key "registrations", "users", validate: false
+  add_foreign_key "rooms", "events"
   add_foreign_key "sessions", "admin_users"
   add_foreign_key "sessions", "users", validate: false
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -540,6 +630,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "speakers", "events"
+  add_foreign_key "speakers", "users"
   add_foreign_key "tax_profiles", "events", validate: false
   add_foreign_key "tax_profiles", "organizers", validate: false
   add_foreign_key "ticket_types", "events", validate: false
@@ -547,4 +639,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_163000) do
   add_foreign_key "tickets", "events", validate: false
   add_foreign_key "tickets", "orders"
   add_foreign_key "tickets", "ticket_types"
+  add_foreign_key "tracks", "events"
 end

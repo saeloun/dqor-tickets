@@ -12,6 +12,10 @@ class Event < ApplicationRecord
   has_many :refunds, dependent: :restrict_with_exception
   has_many :payment_events, dependent: :restrict_with_exception
   has_many :registrations, dependent: :restrict_with_exception
+  has_many :tracks, dependent: :destroy
+  has_many :rooms, dependent: :destroy
+  has_many :speakers, dependent: :destroy
+  has_many :program_sessions, dependent: :destroy
 
   enum :status, { draft: "draft", published: "published", archived: "archived", cancelled: "cancelled" }, validate: true
   enum :format, { in_person: "in_person", online: "online", hybrid: "hybrid" }, validate: true
@@ -27,6 +31,10 @@ class Event < ApplicationRecord
   validates :latitude, numericality: { in: -90..90 }, allow_nil: true
   validates :longitude, numericality: { in: -180..180 }, allow_nil: true
   validate :dates_are_ordered
+
+  def conference_module?
+    !!settings&.dig("conference_module")
+  end
 
   private
     def dates_are_ordered
