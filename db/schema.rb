@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_175000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -111,6 +111,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_175000) do
     t.index "lower((code)::text)", name: "index_coupons_on_lower_code", unique: true
     t.index ["event_id", "code"], name: "index_coupons_on_event_id_and_code", unique: true
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
+  end
+
+  create_table "email_sequence_sends", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "email_sequence_step_id", null: false
+    t.bigint "registration_id", null: false
+    t.datetime "sent_at"
+    t.datetime "updated_at", null: false
+    t.index ["email_sequence_step_id", "registration_id"], name: "index_sequence_sends_on_step_and_registration", unique: true
+    t.index ["email_sequence_step_id"], name: "index_email_sequence_sends_on_email_sequence_step_id"
+    t.index ["registration_id"], name: "index_email_sequence_sends_on_registration_id"
+  end
+
+  create_table "email_sequence_steps", force: :cascade do |t|
+    t.jsonb "audience_filter", default: {}, null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: false, null: false
+    t.bigint "event_id", null: false
+    t.integer "offset_seconds", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.string "subject", null: false
+    t.string "trigger_type", default: "on_registration", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_email_sequence_steps_on_event_id"
   end
 
   create_table "events", force: :cascade do |t|
@@ -739,6 +764,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_175000) do
   add_foreign_key "checkin_records", "users", column: "operator_user_id"
   add_foreign_key "coupons", "events", validate: false
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "email_sequence_sends", "email_sequence_steps"
+  add_foreign_key "email_sequence_sends", "registrations"
+  add_foreign_key "email_sequence_steps", "events"
   add_foreign_key "events", "organizers", validate: false
   add_foreign_key "identities", "users", validate: false
   add_foreign_key "invoice_sequences", "organizers", validate: false
