@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -95,6 +95,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
     t.index ["ticket_id"], name: "index_checkin_records_on_ticket_id"
   end
 
+  create_table "comments", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "post_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["post_id"], name: "index_comments_on_post_id"
+    t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
   create_table "coupons", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "code", null: false
@@ -163,6 +173,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
     t.string "visibility", default: "public", null: false
     t.index ["organizer_id", "slug"], name: "index_events_on_organizer_id_and_slug", unique: true
     t.index ["organizer_id"], name: "index_events_on_organizer_id"
+  end
+
+  create_table "follows", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "followable_id", null: false
+    t.string "followable_type", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["followable_type", "followable_id"], name: "index_follows_on_followable"
+    t.index ["user_id", "followable_type", "followable_id"], name: "index_follows_uniqueness", unique: true
+    t.index ["user_id"], name: "index_follows_on_user_id"
   end
 
   create_table "identities", force: :cascade do |t|
@@ -312,6 +333,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
     t.index ["registration_id"], name: "index_personal_schedule_entries_on_registration_id"
   end
 
+  create_table "posts", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.boolean "pinned", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["event_id"], name: "index_posts_on_event_id"
+    t.index ["user_id"], name: "index_posts_on_user_id"
+  end
+
   create_table "program_session_speakers", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "position", default: 0, null: false
@@ -369,6 +401,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
     t.index ["event_id"], name: "index_questions_on_event_id"
   end
 
+  create_table "reactions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "kind", default: "like", null: false
+    t.bigint "reactable_id", null: false
+    t.string "reactable_type", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["reactable_type", "reactable_id"], name: "index_reactions_on_reactable"
+    t.index ["user_id", "reactable_type", "reactable_id", "kind"], name: "index_reactions_uniqueness", unique: true
+    t.index ["user_id"], name: "index_reactions_on_user_id"
+  end
+
   create_table "refunds", force: :cascade do |t|
     t.integer "amount_paise", null: false
     t.datetime "created_at", null: false
@@ -399,6 +443,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
     t.index ["event_id", "user_id"], name: "index_registrations_on_event_id_and_user_id", unique: true
     t.index ["ticket_id"], name: "index_registrations_on_ticket_id"
     t.index ["user_id"], name: "index_registrations_on_user_id"
+  end
+
+  create_table "reports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.string "reason", null: false
+    t.bigint "reportable_id", null: false
+    t.string "reportable_type", null: false
+    t.bigint "reporter_id", null: false
+    t.string "status", default: "open", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reportable_type", "reportable_id"], name: "index_reports_on_reportable"
+    t.index ["reporter_id"], name: "index_reports_on_reporter_id"
   end
 
   create_table "rooms", force: :cascade do |t|
@@ -762,12 +819,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
   add_foreign_key "checkin_records", "program_sessions"
   add_foreign_key "checkin_records", "tickets"
   add_foreign_key "checkin_records", "users", column: "operator_user_id"
+  add_foreign_key "comments", "posts"
+  add_foreign_key "comments", "users"
   add_foreign_key "coupons", "events", validate: false
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "email_sequence_sends", "email_sequence_steps"
   add_foreign_key "email_sequence_sends", "registrations"
   add_foreign_key "email_sequence_steps", "events"
   add_foreign_key "events", "organizers", validate: false
+  add_foreign_key "follows", "users"
   add_foreign_key "identities", "users", validate: false
   add_foreign_key "invoice_sequences", "organizers", validate: false
   add_foreign_key "invoices", "events", validate: false
@@ -785,6 +845,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
   add_foreign_key "payments", "orders"
   add_foreign_key "personal_schedule_entries", "program_sessions"
   add_foreign_key "personal_schedule_entries", "registrations"
+  add_foreign_key "posts", "events"
+  add_foreign_key "posts", "users"
   add_foreign_key "program_session_speakers", "program_sessions"
   add_foreign_key "program_session_speakers", "speakers"
   add_foreign_key "program_sessions", "events"
@@ -792,11 +854,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_176000) do
   add_foreign_key "program_sessions", "tracks"
   add_foreign_key "questions", "events"
   add_foreign_key "questions", "questions", column: "dependency_question_id"
+  add_foreign_key "reactions", "users"
   add_foreign_key "refunds", "events", validate: false
   add_foreign_key "refunds", "orders"
   add_foreign_key "registrations", "events", validate: false
   add_foreign_key "registrations", "tickets", validate: false
   add_foreign_key "registrations", "users", validate: false
+  add_foreign_key "reports", "users", column: "reporter_id"
   add_foreign_key "rooms", "events"
   add_foreign_key "sessions", "admin_users"
   add_foreign_key "sessions", "users", validate: false

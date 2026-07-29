@@ -8,6 +8,10 @@ class User < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :registrations, dependent: :destroy
   has_many :organized_organizers, through: :memberships, source: :organizer
+  has_many :posts, dependent: :destroy
+  has_many :comments, dependent: :destroy
+  has_many :follows, dependent: :destroy
+  has_many :reactions, dependent: :destroy
 
   normalizes :email, with: ->(email) { email.strip.downcase }
   normalizes :name, with: ->(name) { name.strip }
