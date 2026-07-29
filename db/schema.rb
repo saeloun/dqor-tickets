@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_172000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_173000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -58,6 +58,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_172000) do
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_admin_users_on_lower_email", unique: true
+  end
+
+  create_table "answers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "order_id"
+    t.bigint "question_id", null: false
+    t.bigint "ticket_id"
+    t.datetime "updated_at", null: false
+    t.text "value"
+    t.jsonb "value_json"
+    t.index ["order_id"], name: "index_answers_on_order_id"
+    t.index ["question_id", "order_id"], name: "index_answers_on_question_and_order", unique: true, where: "(order_id IS NOT NULL)"
+    t.index ["question_id", "ticket_id"], name: "index_answers_on_question_and_ticket", unique: true, where: "(ticket_id IS NOT NULL)"
+    t.index ["question_id"], name: "index_answers_on_question_id"
+    t.index ["ticket_id"], name: "index_answers_on_ticket_id"
   end
 
   create_table "coupons", force: :cascade do |t|
@@ -287,6 +302,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_172000) do
     t.index ["event_id"], name: "index_program_sessions_on_event_id"
     t.index ["room_id"], name: "index_program_sessions_on_room_id"
     t.index ["track_id"], name: "index_program_sessions_on_track_id"
+  end
+
+  create_table "questions", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "answer_scope", default: "attendee", null: false
+    t.integer "applies_to_ticket_type_ids", default: [], null: false, array: true
+    t.string "ask_at", default: "checkout", null: false
+    t.datetime "created_at", null: false
+    t.bigint "dependency_question_id"
+    t.jsonb "dependency_values", default: [], null: false
+    t.bigint "event_id", null: false
+    t.string "help_text"
+    t.string "kind", default: "short_text", null: false
+    t.string "label", null: false
+    t.jsonb "options", default: [], null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "required", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["dependency_question_id"], name: "index_questions_on_dependency_question_id"
+    t.index ["event_id"], name: "index_questions_on_event_id"
   end
 
   create_table "refunds", force: :cascade do |t|
@@ -651,6 +686,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_172000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "answers", "orders"
+  add_foreign_key "answers", "questions"
+  add_foreign_key "answers", "tickets"
   add_foreign_key "coupons", "events", validate: false
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "events", "organizers", validate: false
@@ -676,6 +714,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_172000) do
   add_foreign_key "program_sessions", "events"
   add_foreign_key "program_sessions", "rooms"
   add_foreign_key "program_sessions", "tracks"
+  add_foreign_key "questions", "events"
+  add_foreign_key "questions", "questions", column: "dependency_question_id"
   add_foreign_key "refunds", "events", validate: false
   add_foreign_key "refunds", "orders"
   add_foreign_key "registrations", "events", validate: false
