@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_171000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_172000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -510,6 +510,54 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_171000) do
     t.index ["user_id"], name: "index_speakers_on_user_id"
   end
 
+  create_table "sponsor_orders", force: :cascade do |t|
+    t.integer "amount_minor", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.text "notes"
+    t.datetime "signed_at"
+    t.bigint "sponsor_id", null: false
+    t.bigint "sponsorship_tier_id"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sponsor_id"], name: "index_sponsor_orders_on_sponsor_id"
+    t.index ["sponsorship_tier_id"], name: "index_sponsor_orders_on_sponsorship_tier_id"
+  end
+
+  create_table "sponsors", force: :cascade do |t|
+    t.string "badge"
+    t.string "contact_email"
+    t.string "contact_name"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "entity_type", default: "other", null: false
+    t.bigint "event_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "slug", null: false
+    t.bigint "sponsorship_tier_id"
+    t.datetime "updated_at", null: false
+    t.string "website"
+    t.index ["event_id", "slug"], name: "index_sponsors_on_event_id_and_slug", unique: true
+    t.index ["event_id"], name: "index_sponsors_on_event_id"
+    t.index ["sponsorship_tier_id"], name: "index_sponsors_on_sponsorship_tier_id"
+  end
+
+  create_table "sponsorship_tiers", force: :cascade do |t|
+    t.jsonb "benefits", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.string "currency"
+    t.text "description"
+    t.bigint "event_id", null: false
+    t.integer "level", default: 0, null: false
+    t.integer "max_slots"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "price_minor"
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_sponsorship_tiers_on_event_id"
+  end
+
   create_table "tax_profiles", force: :cascade do |t|
     t.text "address", null: false
     t.string "cn_prefix", null: false
@@ -644,6 +692,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_171000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "speakers", "events"
   add_foreign_key "speakers", "users"
+  add_foreign_key "sponsor_orders", "sponsors"
+  add_foreign_key "sponsor_orders", "sponsorship_tiers"
+  add_foreign_key "sponsors", "events"
+  add_foreign_key "sponsors", "sponsorship_tiers"
+  add_foreign_key "sponsorship_tiers", "events"
   add_foreign_key "tax_profiles", "events", validate: false
   add_foreign_key "tax_profiles", "organizers", validate: false
   add_foreign_key "ticket_types", "events", validate: false
