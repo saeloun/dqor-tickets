@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_173000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_174000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -73,6 +73,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_173000) do
     t.index ["question_id", "ticket_id"], name: "index_answers_on_question_and_ticket", unique: true, where: "(ticket_id IS NOT NULL)"
     t.index ["question_id"], name: "index_answers_on_question_id"
     t.index ["ticket_id"], name: "index_answers_on_ticket_id"
+  end
+
+  create_table "checkin_records", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "device_id"
+    t.string "direction", default: "entry", null: false
+    t.bigint "event_id", null: false
+    t.string "failure_reason"
+    t.bigint "operator_user_id"
+    t.bigint "program_session_id"
+    t.datetime "recorded_at"
+    t.datetime "scanned_at"
+    t.boolean "successful", default: true, null: false
+    t.bigint "ticket_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_checkin_records_on_event_id"
+    t.index ["operator_user_id"], name: "index_checkin_records_on_operator_user_id"
+    t.index ["program_session_id"], name: "index_checkin_records_on_program_session_id"
+    t.index ["ticket_id", "recorded_at"], name: "index_checkin_records_on_ticket_id_and_recorded_at"
+    t.index ["ticket_id"], name: "index_checkin_records_on_ticket_id"
   end
 
   create_table "coupons", force: :cascade do |t|
@@ -689,6 +709,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_173000) do
   add_foreign_key "answers", "orders"
   add_foreign_key "answers", "questions"
   add_foreign_key "answers", "tickets"
+  add_foreign_key "checkin_records", "events"
+  add_foreign_key "checkin_records", "program_sessions"
+  add_foreign_key "checkin_records", "tickets"
+  add_foreign_key "checkin_records", "users", column: "operator_user_id"
   add_foreign_key "coupons", "events", validate: false
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "events", "organizers", validate: false

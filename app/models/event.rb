@@ -19,6 +19,7 @@ class Event < ApplicationRecord
   has_many :sponsorship_tiers, dependent: :destroy
   has_many :sponsors, dependent: :destroy
   has_many :questions, dependent: :destroy
+  has_many :checkin_records, dependent: :destroy
 
   enum :status, { draft: "draft", published: "published", archived: "archived", cancelled: "cancelled" }, validate: true
   enum :format, { in_person: "in_person", online: "online", hybrid: "hybrid" }, validate: true
