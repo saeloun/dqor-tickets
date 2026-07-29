@@ -1,0 +1,44 @@
+<% content_for :title, "My events · Deccan Queen on Rails" %>
+
+<main class="me-page">
+  <h1>My events</h1>
+
+  <section class="event-list">
+    <h2>Going</h2>
+    <% if @going.any? %>
+      <ul>
+        <% @going.each do |registration| %>
+          <li><%= link_to registration.event.title, event_path(registration.event.organizer.slug, registration.event.slug) %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>You are not marked as going to any events yet.</p>
+    <% end %>
+  </section>
+
+  <section class="event-list">
+    <h2>Interested</h2>
+    <% if @interested.any? %>
+      <ul>
+        <% @interested.each do |registration| %>
+          <li><%= link_to registration.event.title, event_path(registration.event.organizer.slug, registration.event.slug) %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No interested events.</p>
+    <% end %>
+  </section>
+
+  <section class="event-list">
+    <h2>Past</h2>
+    <% if @past.any? %>
+      <ul>
+        <% @past.each do |registration| %>
+          <li><%= link_to registration.event.title, event_path(registration.event.organizer.slug, registration.event.slug) %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No past events.</p>
+    <% end %>
+  </section>
+</main>

@@ -1,0 +1,20 @@
+<% content_for :title, "Sign in · Deccan Queen on Rails" %>
+
+<main class="auth-page">
+  <section class="auth-card">
+    <h1>Sign in</h1>
+    <p>RSVP, save your schedule, and connect with other attendees.</p>
+
+    <%= form_tag "/auth/github", method: :post, data: { turbo: false } do %>
+      <%= button_tag type: :submit, class: "btn btn-github" do %>
+        Continue with GitHub
+      <% end %>
+    <% end %>
+
+    <div class="auth-separator">
+      <span>or</span>
+    </div>
+
+    <%= link_to "Email me a magic link", new_user_magic_link_path, class: "btn btn-secondary" %>
+  </section>
+</main>

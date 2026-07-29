@@ -11,6 +11,7 @@ class Event < ApplicationRecord
   has_many :invoices, dependent: :restrict_with_exception
   has_many :refunds, dependent: :restrict_with_exception
   has_many :payment_events, dependent: :restrict_with_exception
+  has_many :registrations, dependent: :restrict_with_exception
 
   enum :status, { draft: "draft", published: "published", archived: "archived", cancelled: "cancelled" }, validate: true
   enum :format, { in_person: "in_person", online: "online", hybrid: "hybrid" }, validate: true

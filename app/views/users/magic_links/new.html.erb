@@ -1,0 +1,17 @@
+<% content_for :title, "Magic link · Deccan Queen on Rails" %>
+
+<main class="auth-page">
+  <section class="auth-card">
+    <h1>Sign in with email</h1>
+    <p>We will send you a one-time link that signs you in instantly. No password needed.</p>
+
+    <%= form_with url: user_magic_links_path, method: :post, class: "auth-form" do |form| %>
+      <div class="field">
+        <%= form.label :email, "Email address" %>
+        <%= form.email_field :email, required: true, autocomplete: "email", placeholder: "you@example.com" %>
+      </div>
+
+      <%= form.button "Send sign-in link", class: "btn btn-primary" %>
+    <% end %>
+  </section>
+</main>

@@ -6,7 +6,6 @@ FactoryBot.define do
   sequence(:invoice_number) { |number| "DQOR/2026-27/#{format('%04d', number)}" }
   sequence(:organizer_slug) { |number| "organizer-#{number}" }
   sequence(:event_slug) { |number| "event-#{number}" }
-  sequence(:user_id)
 
   factory :admin_user do
     email { generate(:email) }
@@ -59,9 +58,31 @@ FactoryBot.define do
     invoice_timing { "immediate" }
   end
 
+  factory :user do
+    email { generate(:email) }
+    name { "Ada Lovelace" }
+    timezone { "Asia/Kolkata" }
+    preferences { {} }
+  end
+
+  factory :identity do
+    association :user
+    provider { "github" }
+    sequence(:uid) { |number| "github-#{number}" }
+    auth { {} }
+  end
+
+  factory :registration do
+    association :event
+    association :user
+    attendance_state { "interested" }
+    payment_state { "not_required" }
+    source { "self" }
+  end
+
   factory :membership do
     association :organizer
-    user_id
+    association :user
     role { "viewer" }
   end
 
@@ -70,6 +91,12 @@ FactoryBot.define do
     series { "invoice" }
     fiscal_year { "2026-27" }
     last_number { 0 }
+  end
+
+  factory :session do
+    association :admin_user
+    user_agent { "test" }
+    ip_address { "127.0.0.1" }
   end
 
   factory :ticket_type do

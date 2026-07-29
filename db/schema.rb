@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_160400) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
 
   create_table "accounts", force: :cascade do |t|
@@ -102,6 +103,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_000200) do
     t.string "visibility", default: "public", null: false
     t.index ["organizer_id", "slug"], name: "index_events_on_organizer_id_and_slug", unique: true
     t.index ["organizer_id"], name: "index_events_on_organizer_id"
+  end
+
+  create_table "identities", force: :cascade do |t|
+    t.jsonb "auth", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.string "provider", null: false
+    t.string "uid", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["provider", "uid"], name: "index_identities_on_provider_and_uid", unique: true
+    t.index ["user_id"], name: "index_identities_on_user_id"
   end
 
   create_table "invoice_sequences", force: :cascade do |t|
@@ -222,13 +234,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_000200) do
     t.index ["razorpay_refund_id"], name: "index_refunds_on_razorpay_refund_id", unique: true, where: "(razorpay_refund_id IS NOT NULL)"
   end
 
+  create_table "registrations", force: :cascade do |t|
+    t.string "attendance_state", default: "interested", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "payment_state", default: "not_required", null: false
+    t.string "source", default: "self", null: false
+    t.bigint "ticket_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["event_id", "user_id"], name: "index_registrations_on_event_id_and_user_id", unique: true
+    t.index ["ticket_id"], name: "index_registrations_on_ticket_id"
+    t.index ["user_id"], name: "index_registrations_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
-    t.integer "admin_user_id", null: false
+    t.integer "admin_user_id"
     t.datetime "created_at", null: false
     t.string "ip_address"
     t.datetime "updated_at", null: false
     t.string "user_agent"
+    t.bigint "user_id"
     t.index ["admin_user_id"], name: "index_sessions_on_admin_user_id"
+    t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|
@@ -441,17 +469,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_000200) do
     t.index ["ticket_type_id"], name: "index_tickets_on_ticket_type_id"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.citext "email", null: false
+    t.string "github_login"
+    t.string "name", null: false
+    t.jsonb "preferences", default: {}, null: false
+    t.string "timezone", default: "Asia/Kolkata", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "coupons", "events", validate: false
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "events", "organizers", validate: false
+  add_foreign_key "identities", "users", validate: false
   add_foreign_key "invoice_sequences", "organizers", validate: false
   add_foreign_key "invoices", "events", validate: false
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "invoices", "organizers", validate: false
   add_foreign_key "memberships", "organizers", validate: false
+  add_foreign_key "memberships", "users", validate: false
   add_foreign_key "orders", "coupons"
   add_foreign_key "orders", "events", validate: false
   add_foreign_key "orders", "organizers", validate: false
@@ -460,7 +501,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_000200) do
   add_foreign_key "payment_events", "orders"
   add_foreign_key "refunds", "events", validate: false
   add_foreign_key "refunds", "orders"
+  add_foreign_key "registrations", "events", validate: false
+  add_foreign_key "registrations", "tickets", validate: false
+  add_foreign_key "registrations", "users", validate: false
   add_foreign_key "sessions", "admin_users"
+  add_foreign_key "sessions", "users", validate: false
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

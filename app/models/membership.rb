@@ -1,6 +1,6 @@
 class Membership < ApplicationRecord
   belongs_to :organizer
-  belongs_to :user, optional: true
+  belongs_to :user
 
   enum :role, {
     owner: "owner",

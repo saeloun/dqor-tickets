@@ -22,7 +22,24 @@ Rails.application.routes.draw do
 
   resource :session, only: %i[new create destroy]
   resources :passwords, param: :token
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+
+  get "/login", to: "logins#show", as: :login
+  get "/me", to: "me#show", as: :me
+
+  get "/auth/github/callback", to: "users/omniauth_callbacks#github", as: :github_callback
+  get "/auth/failure", to: "users/omniauth_callbacks#failure", as: :auth_failure
+
+  get "/user/magic-link", to: "users/magic_links#new", as: :new_user_magic_link
+  post "/user/magic-link", to: "users/magic_links#create", as: :user_magic_links
+  get "/user/magic-link/:token", to: "users/magic_links#show", as: :user_magic_link
+  delete "/user/session", to: "users/sessions#destroy", as: :user_session
+
+  get "/:organizer_slug/:event_slug", to: "events#show", as: :event
+  post "/:organizer_slug/:event_slug/register", to: "registrations#create", as: :event_registrations
+  delete "/:organizer_slug/:event_slug/register", to: "registrations#destroy"
+  get "/:organizer_slug/:event_slug/guests", to: "registrations#index", as: :event_guests
+
+  # Define your application routes per the DSL in https://guides.ruby-rails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
