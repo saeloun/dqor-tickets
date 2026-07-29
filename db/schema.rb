@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_174000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_175000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -704,6 +704,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_174000) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  create_table "waitlist_entries", force: :cascade do |t|
+    t.string "cancel_token"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.bigint "event_id", null: false
+    t.string "name"
+    t.datetime "offer_expires_at"
+    t.string "offer_token"
+    t.datetime "offered_at"
+    t.bigint "order_id"
+    t.integer "position"
+    t.string "status", default: "waiting", null: false
+    t.bigint "ticket_type_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["cancel_token"], name: "index_waitlist_entries_on_cancel_token", unique: true
+    t.index ["event_id", "ticket_type_id", "email"], name: "index_waitlist_on_event_type_email", unique: true
+    t.index ["event_id"], name: "index_waitlist_entries_on_event_id"
+    t.index ["offer_token"], name: "index_waitlist_entries_on_offer_token", unique: true
+    t.index ["order_id"], name: "index_waitlist_entries_on_order_id"
+    t.index ["ticket_type_id"], name: "index_waitlist_entries_on_ticket_type_id"
+    t.index ["user_id"], name: "index_waitlist_entries_on_user_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "answers", "orders"
@@ -769,4 +793,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_174000) do
   add_foreign_key "tickets", "orders"
   add_foreign_key "tickets", "ticket_types"
   add_foreign_key "tracks", "events"
+  add_foreign_key "waitlist_entries", "events"
+  add_foreign_key "waitlist_entries", "orders"
+  add_foreign_key "waitlist_entries", "ticket_types"
+  add_foreign_key "waitlist_entries", "users"
 end
