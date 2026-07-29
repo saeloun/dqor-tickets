@@ -23,6 +23,8 @@ class OrdersController < ApplicationController
     render :checkout, status: :created
   rescue Orders::Checkout::SoldOut, Orders::Checkout::InvalidSelection, Orders::Checkout::ConferencePassRequired, Coupon::Invalid => error
     render_checkout_error(error.message)
+  rescue ActionController::UnfilteredParameters
+    render_checkout_error("Please review your ticket selection and try again.")
   rescue ActiveRecord::RecordInvalid => error
     render_checkout_error(error.record.errors.full_messages.to_sentence)
   rescue Razorpay::Error, Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET, SocketError, Ferrum::Error

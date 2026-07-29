@@ -65,6 +65,13 @@ RSpec.describe Orders::Checkout, type: :model do
     expect { checkout(quantity: 4) }.to raise_error(described_class::InvalidSelection, /maximum/)
   end
 
+  it "rejects a quantity above the hard maximum on an uncapped type" do
+    uncapped = create(:ticket_type, capacity: nil, max_per_order: nil, price_paise: 1_000_000)
+
+    expect { checkout(uncapped, quantity: described_class::MAX_ITEM_QUANTITY + 1) }
+      .to raise_error(described_class::InvalidSelection, /exceeds the maximum/)
+  end
+
   it "allows an add-on with a conference pass in the same order" do
     conference = create(:ticket_type, slug: "conference-pass-regular")
     add_on = create(:ticket_type, slug: "explore-pune-day", price_paise: 200_000, requires_conference_pass: true)

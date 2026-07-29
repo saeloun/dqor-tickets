@@ -197,7 +197,7 @@ RSpec.describe TicketType, type: :model do
     end
 
     it "is false before the window opens and true from the opening instant" do
-      opens_at = Time.current
+      opens_at = Time.current.change(usec: 0)
       ticket_type.update!(sales_start_at: opens_at)
 
       expect(ticket_type.purchasable?(at: opens_at - 1.second)).to be(false)
@@ -206,7 +206,7 @@ RSpec.describe TicketType, type: :model do
     end
 
     it "is true up to and including the closing instant" do
-      closes_at = Time.current
+      closes_at = Time.current.change(usec: 0)
       ticket_type.update!(sales_end_at: closes_at)
 
       expect(ticket_type.purchasable?(at: closes_at - 1.second)).to be(true)
