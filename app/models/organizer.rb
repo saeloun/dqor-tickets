@@ -9,6 +9,7 @@ class Organizer < ApplicationRecord
   has_many :invoice_sequences, dependent: :restrict_with_exception
   has_many :orders, dependent: :restrict_with_exception
   has_many :invoices, dependent: :restrict_with_exception
+  has_many :payouts, dependent: :restrict_with_exception
 
   enum :payout_mode, { direct: "direct", route: "route" }, validate: true
 

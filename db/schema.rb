@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_178000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_179000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -351,6 +351,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_178000) do
     t.string "status", default: "created", null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_payments_on_order_id"
+  end
+
+  create_table "payout_lines", force: :cascade do |t|
+    t.integer "amount_minor", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "kind", default: "sale", null: false
+    t.bigint "order_id"
+    t.bigint "payout_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_payout_lines_on_order_id"
+    t.index ["payout_id"], name: "index_payout_lines_on_payout_id"
+  end
+
+  create_table "payouts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.bigint "event_id"
+    t.integer "fee_gst_minor", default: 0, null: false
+    t.integer "gross_minor", default: 0, null: false
+    t.integer "net_minor", default: 0, null: false
+    t.bigint "organizer_id", null: false
+    t.date "period_end"
+    t.date "period_start"
+    t.integer "platform_fee_minor", default: 0, null: false
+    t.string "provider_payout_ref"
+    t.jsonb "route_transfer_ids", default: [], null: false
+    t.string "status", default: "pending", null: false
+    t.integer "tcs_minor", default: 0, null: false
+    t.integer "tds_minor", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_payouts_on_event_id"
+    t.index ["organizer_id"], name: "index_payouts_on_organizer_id"
   end
 
   create_table "personal_schedule_entries", force: :cascade do |t|
@@ -900,6 +932,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_178000) do
   add_foreign_key "payment_events", "events", validate: false
   add_foreign_key "payment_events", "orders"
   add_foreign_key "payments", "orders"
+  add_foreign_key "payout_lines", "orders"
+  add_foreign_key "payout_lines", "payouts"
+  add_foreign_key "payouts", "events"
+  add_foreign_key "payouts", "organizers"
   add_foreign_key "personal_schedule_entries", "program_sessions"
   add_foreign_key "personal_schedule_entries", "registrations"
   add_foreign_key "posts", "events"
