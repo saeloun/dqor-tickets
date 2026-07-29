@@ -6,6 +6,8 @@ class Order < ApplicationRecord
   class InsufficientAvailability < StandardError; end
   class InvalidTransition < StandardError; end
 
+  belongs_to :event, optional: true
+  belongs_to :organizer, optional: true
   belongs_to :coupon, optional: true
   has_many :tickets, dependent: :restrict_with_exception
   has_many :payment_events, dependent: :restrict_with_exception

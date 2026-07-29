@@ -1,4 +1,5 @@
 class PaymentEvent < ApplicationRecord
+  belongs_to :event, optional: true
   belongs_to :order
 
   before_validation :stamp_mode, on: :create

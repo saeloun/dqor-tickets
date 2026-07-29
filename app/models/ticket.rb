@@ -12,6 +12,7 @@ class Ticket < ApplicationRecord
 
   class Canceled < StandardError; end
 
+  belongs_to :event, optional: true
   belongs_to :order
   belongs_to :ticket_type
 

@@ -1,6 +1,8 @@
 class Invoice < ApplicationRecord
   has_one_attached :pdf
 
+  belongs_to :event, optional: true
+  belongs_to :organizer, optional: true
   belongs_to :order
   belongs_to :refers_to, class_name: "Invoice", optional: true
   has_many :credit_notes, class_name: "Invoice", foreign_key: :refers_to_id, dependent: :restrict_with_exception, inverse_of: :refers_to
