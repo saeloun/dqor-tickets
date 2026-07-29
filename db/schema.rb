@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_178000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -186,6 +186,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
     t.index ["user_id"], name: "index_follows_on_user_id"
   end
 
+  create_table "gallery_sources", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.jsonb "config", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.datetime "last_synced_at"
+    t.string "provider", default: "instagram", null: false
+    t.string "query", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_gallery_sources_on_event_id"
+  end
+
   create_table "identities", force: :cascade do |t|
     t.jsonb "auth", default: {}, null: false
     t.datetime "created_at", null: false
@@ -226,6 +238,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
     t.index ["order_id"], name: "index_invoices_one_invoice_per_order", unique: true, where: "((kind)::text = 'invoice'::text)"
     t.index ["organizer_id"], name: "index_invoices_on_organizer_id"
     t.index ["refers_to_id"], name: "index_invoices_on_refers_to_id"
+  end
+
+  create_table "media_items", force: :cascade do |t|
+    t.string "attribution"
+    t.text "caption"
+    t.boolean "consent_given", default: false, null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "external_ref"
+    t.string "external_url"
+    t.string "kind", default: "image", null: false
+    t.string "moderation_state", default: "pending", null: false
+    t.integer "position", default: 0, null: false
+    t.string "source", default: "upload", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["event_id"], name: "index_media_items_on_event_id"
+    t.index ["user_id"], name: "index_media_items_on_user_id"
   end
 
   create_table "memberships", force: :cascade do |t|
@@ -379,6 +409,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
     t.index ["event_id"], name: "index_program_sessions_on_event_id"
     t.index ["room_id"], name: "index_program_sessions_on_room_id"
     t.index ["track_id"], name: "index_program_sessions_on_track_id"
+  end
+
+  create_table "push_devices", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "last_seen_at"
+    t.string "platform", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["platform", "token"], name: "index_push_devices_on_platform_and_token", unique: true
+    t.index ["user_id"], name: "index_push_devices_on_user_id"
   end
 
   create_table "questions", force: :cascade do |t|
@@ -786,6 +828,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  create_table "video_assets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "program_session_id", null: false
+    t.datetime "published_at"
+    t.string "status", default: "pending", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.string "youtube_id"
+    t.index ["program_session_id"], name: "index_video_assets_on_program_session_id"
+  end
+
   create_table "waitlist_entries", force: :cascade do |t|
     t.string "cancel_token"
     t.datetime "created_at", null: false
@@ -828,12 +882,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
   add_foreign_key "email_sequence_steps", "events"
   add_foreign_key "events", "organizers", validate: false
   add_foreign_key "follows", "users"
+  add_foreign_key "gallery_sources", "events"
   add_foreign_key "identities", "users", validate: false
   add_foreign_key "invoice_sequences", "organizers", validate: false
   add_foreign_key "invoices", "events", validate: false
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "invoices", "organizers", validate: false
+  add_foreign_key "media_items", "events"
+  add_foreign_key "media_items", "users"
   add_foreign_key "memberships", "organizers", validate: false
   add_foreign_key "memberships", "users", validate: false
   add_foreign_key "orders", "coupons"
@@ -852,6 +909,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
   add_foreign_key "program_sessions", "events"
   add_foreign_key "program_sessions", "rooms"
   add_foreign_key "program_sessions", "tracks"
+  add_foreign_key "push_devices", "users"
   add_foreign_key "questions", "events"
   add_foreign_key "questions", "questions", column: "dependency_question_id"
   add_foreign_key "reactions", "users"
@@ -885,6 +943,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_177000) do
   add_foreign_key "tickets", "orders"
   add_foreign_key "tickets", "ticket_types"
   add_foreign_key "tracks", "events"
+  add_foreign_key "video_assets", "program_sessions"
   add_foreign_key "waitlist_entries", "events"
   add_foreign_key "waitlist_entries", "orders"
   add_foreign_key "waitlist_entries", "ticket_types"

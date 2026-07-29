@@ -5,6 +5,7 @@ class ProgramSession < ApplicationRecord
 
   has_many :program_session_speakers, dependent: :destroy
   has_many :speakers, through: :program_session_speakers
+  has_many :video_assets, dependent: :destroy
 
   enum :kind, {
     talk: "talk",

@@ -12,6 +12,8 @@ class User < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :follows, dependent: :destroy
   has_many :reactions, dependent: :destroy
+  has_many :push_devices, dependent: :destroy
+  has_many :media_items, dependent: :destroy
 
   normalizes :email, with: ->(email) { email.strip.downcase }
   normalizes :name, with: ->(name) { name.strip }
