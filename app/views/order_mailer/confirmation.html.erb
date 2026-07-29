@@ -7,6 +7,10 @@
   <%= mail_text do %>Payment for order <strong><%= @order.code %></strong> is confirmed. Your tax invoice is attached.<% end %>
 <% end %>
 
+<%= mail_label "When and where" %>
+<%= mail_text do %><strong>October 8&ndash;11, 2026</strong> at <strong>Hyatt Regency Pune</strong> &middot; Nagar Road, Pune, Maharashtra.<% end %>
+<%= mail_note "More on the venue, travel and schedule is at deccanqueenonrails.com." %>
+
 <% unassigned = @order.tickets.reject(&:canceled_at?).reject(&:assigned?) %>
 <% if unassigned.any? %>
   <%= mail_text "You've got #{pluralize(@order.tickets.count, "ticket")}, and #{unassigned.size == @order.tickets.count ? "nobody is named on them yet" : "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}"}. That is fine — assign them whenever you are ready." %>

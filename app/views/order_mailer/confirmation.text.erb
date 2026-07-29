@@ -6,6 +6,10 @@ Payment for order <%= @order.code %> is confirmed. Your tax invoice is being pre
 <% else %>
 Payment for order <%= @order.code %> is confirmed. Your tax invoice is attached.
 <% end %>
+When and where:
+October 8-11, 2026 at Hyatt Regency Pune, Nagar Road, Pune, Maharashtra.
+More on the venue, travel and schedule: https://deccanqueenonrails.com
+
 <% unassigned = @order.tickets.reject(&:canceled_at?).reject(&:assigned?) %><% if unassigned.any? %>
 You've got <%= pluralize(@order.tickets.count, "ticket") %>, and <%= unassigned.size == @order.tickets.count ? "nobody is named on them yet" : "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}" %>.
 That is fine - assign them whenever you are ready:
