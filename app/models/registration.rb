@@ -3,6 +3,9 @@ class Registration < ApplicationRecord
   belongs_to :user
   belongs_to :ticket, optional: true
 
+  has_many :personal_schedule_entries, dependent: :destroy
+  has_many :program_sessions, through: :personal_schedule_entries
+
   after_create_commit -> { broadcast_replace_to(event, target: "guest_list", partial: "registrations/guest_list", locals: { event: event }) }, if: -> { event.guest_list_public? }
 
   enum :attendance_state, {
@@ -31,5 +34,10 @@ class Registration < ApplicationRecord
 
   def attending?
     going? && (not_required? || captured?)
+  end
+
+  def agenda_conflicts
+    scheduled = program_sessions.where.not(starts_at: nil, ends_at: nil).to_a
+    scheduled.combination(2).select { |a, b| a.starts_at < b.ends_at && b.starts_at < a.ends_at }
   end
 end

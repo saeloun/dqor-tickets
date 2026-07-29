@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_171000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -240,6 +240,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_170000) do
     t.string "status", default: "created", null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_payments_on_order_id"
+  end
+
+  create_table "personal_schedule_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "program_session_id", null: false
+    t.bigint "registration_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["program_session_id"], name: "index_personal_schedule_entries_on_program_session_id"
+    t.index ["registration_id", "program_session_id"], name: "index_pse_on_registration_and_session", unique: true
+    t.index ["registration_id"], name: "index_personal_schedule_entries_on_registration_id"
   end
 
   create_table "program_session_speakers", force: :cascade do |t|
@@ -611,6 +621,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_170000) do
   add_foreign_key "payment_events", "events", validate: false
   add_foreign_key "payment_events", "orders"
   add_foreign_key "payments", "orders"
+  add_foreign_key "personal_schedule_entries", "program_sessions"
+  add_foreign_key "personal_schedule_entries", "registrations"
   add_foreign_key "program_session_speakers", "program_sessions"
   add_foreign_key "program_session_speakers", "speakers"
   add_foreign_key "program_sessions", "events"
