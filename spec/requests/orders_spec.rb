@@ -147,6 +147,29 @@ RSpec.describe "Orders", type: :request do
     expect(Order.last).to be_expired
   end
 
+  it "rejects an overflowing quantity on an uncapped ticket type without a 500" do
+    uncapped = create(:ticket_type, name: "Supporter Pass", price_paise: 1_000_000, capacity: nil, max_per_order: nil)
+
+    expect { post orders_path, params: checkout_params(quantities: { uncapped.id.to_s => "100000000000" }) }
+      .not_to change(Order, :count)
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("exceeds the maximum")
+    expect(a_request(:post, razorpay_url)).not_to have_been_made
+  end
+
+  it "rejects malformed nested quantities without a 500" do
+    post orders_path, params: {
+      checkout: {
+        email: "buyer@example.com", buyer_name: "Buyer", buyer_phone: "9999999999",
+        quantities: { ticket_type.id.to_s => { "sneaky" => "1" } }
+      }
+    }
+
+    expect(response.status).to be_in([ 400, 422 ])
+    expect(a_request(:post, razorpay_url)).not_to have_been_made
+  end
+
   it "returns a friendly 404 for an unknown order code" do
     get order_path("UNKNOWN3")
 

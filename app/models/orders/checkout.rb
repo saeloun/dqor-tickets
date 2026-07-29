@@ -4,6 +4,8 @@ module Orders
     class InvalidSelection < StandardError; end
     class ConferencePassRequired < StandardError; end
 
+    MAX_ITEM_QUANTITY = 1000
+
     def self.call(...)
       new(...).call
     end
@@ -66,6 +68,7 @@ module Orders
           raise InvalidSelection, "ticket type not found" if type.hidden?
           raise InvalidSelection, "#{type.name} is not on sale" unless type.purchasable?(at: now)
           raise InvalidSelection, "#{type.name} quantity is below its minimum" if quantity < type.min_per_order
+          raise InvalidSelection, "#{type.name} quantity exceeds the maximum of #{MAX_ITEM_QUANTITY}" if quantity > MAX_ITEM_QUANTITY
           raise InvalidSelection, "#{type.name} quantity exceeds its maximum" if type.max_per_order && quantity > type.max_per_order
           raise SoldOut, "#{type.name} does not have #{quantity} tickets available" if type.available_quantity(at: now) < quantity
         end

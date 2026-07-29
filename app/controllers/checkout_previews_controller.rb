@@ -18,7 +18,7 @@ class CheckoutPreviewsController < ApplicationController
       quantities = items.each_with_object(Hash.new(0)) do |item, result|
         ticket_type_id = Integer(item[:ticket_type_id], exception: false)
         quantity = Integer(item[:quantity], exception: false)
-        next unless ticket_type_id&.positive? && ticket_type_id.bit_length <= 63 && quantity&.positive?
+        next unless ticket_type_id&.positive? && ticket_type_id.bit_length <= 63 && quantity&.positive? && quantity <= Orders::Checkout::MAX_ITEM_QUANTITY
 
         result[ticket_type_id] += quantity
       end
