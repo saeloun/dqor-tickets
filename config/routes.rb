@@ -43,6 +43,7 @@ Rails.application.routes.draw do
   post "concierge", to: "concierge#create"
 
   get  "schedule", to: "schedule#show", as: :schedule
+  get  "sponsors", to: "sponsors#index", as: :sponsors
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

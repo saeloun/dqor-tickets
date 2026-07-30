@@ -1,0 +1,34 @@
+<% content_for :title, "Sponsors · Deccan Queen on Rails" %>
+<% content_for :meta_description, "The organisations that make Deccan Queen on Rails possible." %>
+
+<main class="schedule-page">
+  <section class="storefront-hero">
+    <p class="section-label">Sponsors</p>
+    <h1>Our sponsors</h1>
+    <p>Deccan Queen on Rails is made possible by these wonderful organisations.</p>
+  </section>
+
+  <% if @sponsors_by_tier.any? %>
+    <% @sponsors_by_tier.each do |tier, sponsors| %>
+      <section class="sponsor-tier">
+        <h2><%= tier.titleize %></h2>
+        <ul class="sponsor-grid">
+          <% sponsors.each do |sponsor| %>
+            <li class="sponsor-card">
+              <%= link_to (sponsor.url.presence || "#"), target: "_blank", rel: "noopener", class: "sponsor-card__link" do %>
+                <% if sponsor.logo.attached? %>
+                  <%= image_tag sponsor.logo, alt: sponsor.name, class: "sponsor-card__logo" %>
+                <% else %>
+                  <span class="sponsor-card__name"><%= sponsor.name %></span>
+                <% end %>
+              <% end %>
+              <% if sponsor.blurb.present? %><p class="sponsor-card__blurb"><%= sponsor.blurb %></p><% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  <% else %>
+    <p class="schedule-empty">Sponsor announcements are coming soon. Interested in sponsoring? Visit <%= link_to "deccanqueenonrails.com", "https://deccanqueenonrails.com" %>.</p>
+  <% end %>
+</main>
