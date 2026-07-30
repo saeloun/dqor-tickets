@@ -9,7 +9,7 @@
 
     <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
 
-    <%= form_with url: concierge_path, method: :post, class: "assignment-form" do |form| %>
+    <%= form_with url: concierge_path, method: :post, class: "assignment-form", data: { turbo: false } do |form| %>
       <div class="field">
         <%= form.label :question, "Your question" %>
         <%= form.text_field :question, value: @question, required: true, autocomplete: "off", placeholder: "When does the conference start?" %>
