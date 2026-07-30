@@ -1,16 +1,26 @@
-<% content_for :title, "Claim your ticket · Deccan Queen on Rails" %>
+<% content_for :title, "Your ticket · Deccan Queen on Rails" %>
 
 <main class="status-page">
   <section class="status-card">
     <p class="section-label"><%= @ticket.ticket_type.name %></p>
-    <h1>Claim your ticket</h1>
-    <p>Tell us who will use this ticket. We’ll email the ticket PDF when it’s ready.</p>
+    <h1><%= @ticket.assigned? ? "Your entry pass" : "Claim your ticket" %></h1>
+    <p>
+      <% if @ticket.assigned? %>
+        Show this QR at the door. You can update the attendee details below any time.
+      <% else %>
+        Tell us who will use this ticket. We’ll email the ticket PDF when it’s ready.
+      <% end %>
+    </p>
 
     <% if flash[:notice] %>
       <p class="notice" role="status"><%= flash[:notice] %></p>
     <% end %>
     <% if flash[:alert] %>
       <p class="alert" role="alert"><%= flash[:alert] %></p>
+    <% end %>
+
+    <% if @ticket.assigned? %>
+      <%= render "tickets/entry_pass", ticket: @ticket %>
     <% end %>
 
     <%= render "form", ticket: @ticket, url: ticket_claim_path(@ticket.claim_token) %>

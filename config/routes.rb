@@ -22,15 +22,34 @@ Rails.application.routes.draw do
 
   resource :session, only: %i[new create destroy]
   resources :passwords, param: :token
+
+  namespace :account do
+    get    "sign_in",      to: "sessions#new",     as: :sign_in
+    post   "sign_in",      to: "sessions#create"
+    get    "magic/:token", to: "sessions#magic",   as: :magic
+    delete "sign_out",     to: "sessions#destroy", as: :sign_out
+    resource :settings, only: %i[show update]
+    root "dashboard#show"
+  end
+
+  get    "community",             to: "community#index",     as: :community
+  get    "community/:id",         to: "community#show",      as: :attendee
+  post   "community/:id/connect", to: "connections#create",  as: :connect_attendee
+  delete "community/:id/connect", to: "connections#destroy", as: :disconnect_attendee
+
+  get "/hotwire-native/path-configuration", to: "hotwire_native/path_configurations#show", as: :hotwire_native_path_configuration, defaults: { format: :json }
+
+  get  "concierge", to: "concierge#show", as: :concierge
+  post "concierge", to: "concierge#create"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  # Render dynamic PWA files from app/views/pwa/*
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 end
 
 if defined? ::Avo

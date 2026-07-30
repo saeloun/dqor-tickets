@@ -1,0 +1,8 @@
+<section class="entry-pass">
+  <p class="section-label">Entry pass</p>
+  <div class="entry-pass__qr"><%= entry_qr_svg(ticket) %></div>
+  <p class="entry-pass__name"><%= ticket.attendee_name.presence || ticket.ticket_type.name %></p>
+  <p class="entry-pass__type"><%= ticket.ticket_type.name %></p>
+  <p class="entry-pass__hint">Show this QR at the entrance. It stays on your phone once this page has loaded.</p>
+  <p class="entry-pass__secret"><%= ticket.secret %></p>
+</section>

@@ -1,0 +1,47 @@
+<% content_for :title, "Your account · Deccan Queen on Rails" %>
+
+<main class="account-page">
+  <section class="account-header">
+    <%= avatar_image_tag current_user, size: 80, alt: "", class: "account-avatar" %>
+    <div class="account-identity">
+      <h1><%= current_user.name.presence || "Your account" %></h1>
+      <p class="account-email"><%= current_user.email %></p>
+    </div>
+    <div class="account-actions">
+      <%= link_to "Settings", account_settings_path, class: "btn btn-secondary" %>
+      <%= button_to "Sign out", account_sign_out_path, method: :delete, class: "btn btn-secondary account-signout" %>
+    </div>
+  </section>
+
+  <section class="account-section">
+    <h2>Your tickets</h2>
+    <% if @tickets.any? %>
+      <ul class="account-tickets">
+        <% @tickets.each do |ticket| %>
+          <li class="account-ticket">
+            <div class="account-ticket__row">
+              <span class="account-ticket__type"><%= ticket.ticket_type.name %></span>
+              <span class="account-ticket__meta"><%= ticket.assigned? ? ticket.attendee_name : "Unassigned" %></span>
+              <%= link_to "View order", order_path(ticket.order.code), class: "account-ticket__link" %>
+            </div>
+            <details class="account-ticket__pass">
+              <summary>Show entry pass</summary>
+              <%= render "tickets/entry_pass", ticket: ticket %>
+            </details>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No tickets found for <strong><%= current_user.email %></strong> yet. <%= link_to "Browse passes", root_path %>.</p>
+    <% end %>
+  </section>
+
+  <section class="account-section">
+    <h2>Community</h2>
+    <% unless current_user.discoverable? %>
+      <p class="gst-hint">You’re not listed in the attendee directory yet. <%= link_to "Turn it on in settings", account_settings_path %> so others can connect with you.</p>
+    <% end %>
+    <p>You have <%= pluralize(current_user.connections.count, "connection") %>. <%= link_to "Browse attendees", community_path %>.</p>
+    <p>Have a question about the conference? <%= link_to "Ask the concierge", concierge_path %>.</p>
+  </section>
+</main>
