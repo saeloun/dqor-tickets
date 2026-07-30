@@ -512,3 +512,11 @@ button { cursor: pointer; }
 .attendee-card__avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; }
 .attendee-card__name { font-weight: 700; }
 .attendee-card__bio { font-size: 0.8rem; color: var(--color-muted-foreground); }
+
+.entry-pass { margin: 1.5rem auto 0; padding: 1.5rem; max-width: 20rem; border-radius: 16px; background: var(--color-card); border: 1px solid var(--color-border); text-align: center; }
+.entry-pass__qr { width: min(60vw, 240px); margin: 0.75rem auto; padding: 0.75rem; background: #fff; border-radius: 12px; }
+.entry-pass__qr svg { display: block; width: 100%; height: auto; }
+.entry-pass__name { margin: 0.5rem 0 0; font-weight: 700; font-size: 1.1rem; }
+.entry-pass__type { margin: 0.15rem 0 0; color: var(--color-muted-foreground); }
+.entry-pass__hint { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--color-muted-foreground); }
+.entry-pass__secret { margin: 0.6rem 0 0; font-family: ui-monospace, "SFMono-Regular", monospace; font-size: 0.7rem; letter-spacing: 0.05em; word-break: break-all; color: var(--color-muted-foreground); }

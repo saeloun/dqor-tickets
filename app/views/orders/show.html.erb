@@ -56,6 +56,7 @@
                   <% if ticket.childcare_needed? %><span aria-hidden="true">·</span> Needs childcare<% end %>
                 </p>
                 <%= link_to "Download ticket", rails_blob_path(ticket.pdf, disposition: "attachment"), class: "btn btn-gold" if ticket.pdf.attached? %>
+                <%= render "tickets/entry_pass", ticket: ticket %>
               <% end %>
 
               <%= render "ticket_assignments/form", ticket:, url: assign_order_ticket_path(@order.code, ticket) %>
