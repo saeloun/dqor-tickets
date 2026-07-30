@@ -31,6 +31,11 @@ Rails.application.routes.draw do
     resource :settings, only: %i[show update]
     root "dashboard#show"
   end
+
+  get    "community",             to: "community#index",     as: :community
+  get    "community/:id",         to: "community#show",      as: :attendee
+  post   "community/:id/connect", to: "connections#create",  as: :connect_attendee
+  delete "community/:id/connect", to: "connections#destroy", as: :disconnect_attendee
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

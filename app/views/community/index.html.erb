@@ -1,0 +1,26 @@
+<% content_for :title, "Attendees · Deccan Queen on Rails" %>
+
+<main class="account-page">
+  <section class="account-section">
+    <h1>Attendees</h1>
+    <p>People coming to Deccan Queen on Rails who’ve chosen to be listed. <%= link_to "Manage your listing", account_settings_path %>.</p>
+
+    <% if @attendees.any? %>
+      <ul class="attendee-grid">
+        <% @attendees.each do |attendee| %>
+          <li>
+            <%= link_to attendee_path(attendee), class: "attendee-card__link" do %>
+              <%= avatar_image_tag attendee, size: 64, alt: "", class: "attendee-card__avatar" %>
+              <span class="attendee-card__name"><%= attendee.display_name %></span>
+              <% if attendee.bio.present? %>
+                <span class="attendee-card__bio"><%= truncate(attendee.bio, length: 80) %></span>
+              <% end %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No attendees have opted in yet. Be the first — <%= link_to "list yourself", account_settings_path %>.</p>
+    <% end %>
+  </section>
+</main>

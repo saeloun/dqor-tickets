@@ -29,4 +29,12 @@
       <p>No tickets found for <strong><%= current_user.email %></strong> yet. <%= link_to "Browse passes", root_path %>.</p>
     <% end %>
   </section>
+
+  <section class="account-section">
+    <h2>Community</h2>
+    <% unless current_user.discoverable? %>
+      <p class="gst-hint">You’re not listed in the attendee directory yet. <%= link_to "Turn it on in settings", account_settings_path %> so others can connect with you.</p>
+    <% end %>
+    <p>You have <%= pluralize(current_user.connections.count, "connection") %>. <%= link_to "Browse attendees", community_path %>.</p>
+  </section>
 </main>

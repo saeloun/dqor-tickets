@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_30_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_130000) do
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_admin_users_on_lower_email", unique: true
+  end
+
+  create_table "connections", force: :cascade do |t|
+    t.bigint "connected_user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["connected_user_id"], name: "index_connections_on_connected_user_id"
+    t.index ["user_id", "connected_user_id"], name: "index_connections_on_user_id_and_connected_user_id", unique: true
+    t.index ["user_id"], name: "index_connections_on_user_id"
   end
 
   create_table "coupons", force: :cascade do |t|
@@ -337,6 +347,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_130000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "connections", "users"
+  add_foreign_key "connections", "users", column: "connected_user_id"
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"

@@ -1,0 +1,24 @@
+<% content_for :title, "#{@attendee.display_name} · Deccan Queen on Rails" %>
+
+<main class="account-page">
+  <section class="account-header">
+    <%= avatar_image_tag @attendee, size: 96, alt: "", class: "account-avatar" %>
+    <div class="account-identity">
+      <h1><%= @attendee.display_name %></h1>
+      <% if @attendee.bio.present? %><p class="account-email"><%= @attendee.bio %></p><% end %>
+    </div>
+  </section>
+
+  <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
+  <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
+
+  <div class="account-actions">
+    <% if @connected %>
+      <%= button_to "Connected ✓ · Remove", disconnect_attendee_path(@attendee), method: :delete, class: "btn btn-secondary" %>
+    <% else %>
+      <%= button_to "Connect", connect_attendee_path(@attendee), method: :post, class: "btn btn-primary" %>
+    <% end %>
+  </div>
+
+  <p class="account-back"><%= link_to "← All attendees", community_path %></p>
+</main>
