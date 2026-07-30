@@ -1,0 +1,29 @@
+<% content_for :title, "Your account · Deccan Queen on Rails" %>
+
+<main class="account-page">
+  <section class="account-header">
+    <%= image_tag current_user.gravatar_url(size: 160), alt: "", class: "account-avatar" %>
+    <div class="account-identity">
+      <h1><%= current_user.name.presence || "Your account" %></h1>
+      <p class="account-email"><%= current_user.email %></p>
+    </div>
+    <%= button_to "Sign out", account_sign_out_path, method: :delete, class: "btn btn-secondary account-signout" %>
+  </section>
+
+  <section class="account-section">
+    <h2>Your tickets</h2>
+    <% if @tickets.any? %>
+      <ul class="account-tickets">
+        <% @tickets.each do |ticket| %>
+          <li class="account-ticket">
+            <span class="account-ticket__type"><%= ticket.ticket_type.name %></span>
+            <span class="account-ticket__meta"><%= ticket.assigned? ? ticket.attendee_name : "Unassigned" %></span>
+            <%= link_to "View order", order_path(ticket.order.code), class: "account-ticket__link" %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No tickets found for <strong><%= current_user.email %></strong> yet. <%= link_to "Browse passes", root_path %>.</p>
+    <% end %>
+  </section>
+</main>

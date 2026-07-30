@@ -22,6 +22,14 @@ Rails.application.routes.draw do
 
   resource :session, only: %i[new create destroy]
   resources :passwords, param: :token
+
+  namespace :account do
+    get    "sign_in",      to: "sessions#new",     as: :sign_in
+    post   "sign_in",      to: "sessions#create"
+    get    "magic/:token", to: "sessions#magic",   as: :magic
+    delete "sign_out",     to: "sessions#destroy", as: :sign_out
+    root "dashboard#show"
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
