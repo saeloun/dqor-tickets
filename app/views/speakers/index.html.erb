@@ -18,6 +18,12 @@
           <h3 class="speaker-card__name"><%= speaker.name %></h3>
           <% if speaker.title.present? %><p class="speaker-card__title"><%= speaker.title %></p><% end %>
           <% if speaker.bio.present? %><p class="speaker-card__bio"><%= speaker.bio %></p><% end %>
+          <% talks = speaker.published_talks %>
+          <% if talks.any? %>
+            <ul class="speaker-card__talks">
+              <% talks.each do |talk| %><li><%= talk.title %></li><% end %>
+            </ul>
+          <% end %>
           <p class="speaker-card__links">
             <% if speaker.twitter_url %><%= link_to "Twitter/X", speaker.twitter_url, target: "_blank", rel: "noopener" %><% end %>
             <% if speaker.github_url %><%= link_to "GitHub", speaker.github_url, target: "_blank", rel: "noopener" %><% end %>
