@@ -20,4 +20,11 @@ RSpec.describe "PWA", type: :request do
     expect(response.body).to include("addEventListener")
     expect(response.body).to include("push")
   end
+
+  it "sets the iOS installed-app title and status bar style" do
+    get "/login"
+
+    expect(response.body).to include('name="apple-mobile-web-app-title"')
+    expect(response.body).to include('name="apple-mobile-web-app-status-bar-style"')
+  end
 end
