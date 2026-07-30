@@ -55,7 +55,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="<%= "hotwire-native" if turbo_native_app? %>">
+    <% unless turbo_native_app? %>
     <header class="site-header" data-controller="theme">
       <div class="site-header__inner">
         <a class="wordmark" href="https://deccanqueenonrails.com">
@@ -73,9 +74,11 @@
         <% end %>
       </div>
     </header>
+    <% end %>
 
     <%= yield %>
 
+    <% unless turbo_native_app? %>
     <footer class="site-footer">
       <div class="site-footer__inner">
         <a class="site-footer__brand" href="https://deccanqueenonrails.com">Deccan Queen on Rails</a>
@@ -95,5 +98,6 @@
         <p>Made with <span aria-label="Ruby on Rails">Rails</span> in Pune</p>
       </div>
     </footer>
+    <% end %>
   </body>
 </html>

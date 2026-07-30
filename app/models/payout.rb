@@ -11,7 +11,6 @@ class Payout < ApplicationRecord
     on_hold: "on_hold"
   }, validate: true
 
-  # gross -> platform fee (+GST) -> TCS -> TDS -> net (research doc 02 settlement waterfall)
   def compute_net!
     self.net_minor = gross_minor - platform_fee_minor - fee_gst_minor - tcs_minor - tds_minor
   end

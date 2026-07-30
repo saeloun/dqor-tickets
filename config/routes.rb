@@ -34,6 +34,8 @@ Rails.application.routes.draw do
   get "/user/magic-link/:token", to: "users/magic_links#show", as: :user_magic_link
   delete "/user/session", to: "users/sessions#destroy", as: :user_session
 
+  get "/hotwire-native/path-configuration", to: "hotwire_native/path_configurations#show", as: :hotwire_native_path_configuration, defaults: { format: :json }
+
   get "/:organizer_slug/:event_slug", to: "events#show", as: :event
   post "/:organizer_slug/:event_slug/register", to: "registrations#create", as: :event_registrations
   delete "/:organizer_slug/:event_slug/register", to: "registrations#destroy"
