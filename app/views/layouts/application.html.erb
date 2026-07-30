@@ -2,12 +2,33 @@
 <html lang="en">
   <head>
     <title><%= content_for(:title) || "Deccan Queen on Rails Tickets" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Deccan Queen on Rails Tickets">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DQoR">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#981B34">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141110">
+    <link rel="manifest" href="<%= pwa_manifest_path(format: :json) %>">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <% meta_title = content_for(:title).presence || "Deccan Queen on Rails 2026" %>
+    <% meta_description = content_for(:meta_description).presence || "India’s Ruby and Rails conference — October 8–11, 2026 at Hyatt Regency, Pune. Book your pass." %>
+    <meta name="description" content="<%= meta_description %>">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Deccan Queen on Rails">
+    <meta property="og:title" content="<%= meta_title %>">
+    <meta property="og:description" content="<%= meta_description %>">
+    <meta property="og:url" content="<%= request.original_url %>">
+    <meta property="og:image" content="<%= image_url("deccan-logo.png") %>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= meta_title %>">
+    <meta name="twitter:description" content="<%= meta_description %>">
+    <meta name="twitter:image" content="<%= image_url("deccan-logo.png") %>">
 
     <%= javascript_tag nonce: true do %>
       (function () {
@@ -47,6 +68,16 @@
       })();
     <% end %>
 
+    <% unless Rails.env.test? %>
+      <%= javascript_tag nonce: true do %>
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", function () {
+            navigator.serviceWorker.register("<%= j pwa_service_worker_path(format: :js) %>").catch(function () {});
+          });
+        }
+      <% end %>
+    <% end %>
+
     <%= yield :head %>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
@@ -55,7 +86,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="<%= "hotwire-native" if turbo_native_app? %>">
+    <% unless turbo_native_app? %>
     <header class="site-header" data-controller="theme">
       <div class="site-header__inner">
         <a class="wordmark" href="https://deccanqueenonrails.com">
@@ -80,9 +112,11 @@
         <% end %>
       </div>
     </header>
+    <% end %>
 
     <%= yield %>
 
+    <% unless turbo_native_app? %>
     <footer class="site-footer">
       <div class="site-footer__inner">
         <a class="site-footer__brand" href="https://deccanqueenonrails.com">Deccan Queen on Rails</a>
@@ -102,5 +136,11 @@
         <p>Made with <span aria-label="Ruby on Rails">Rails</span> in Pune</p>
       </div>
     </footer>
+    <% end %>
+
+    <% unless turbo_native_app? %>
+      <%= render "shared/install_prompt" %>
+      <%= render "shared/app_tabbar" %>
+    <% end %>
   </body>
 </html>
