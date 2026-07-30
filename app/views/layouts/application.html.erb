@@ -70,7 +70,7 @@
         </button>
         <% if user_signed_in? %>
           <%= link_to account_root_path, class: "site-header__account", aria: { label: "Your account" } do %>
-            <%= image_tag current_user.gravatar_url(size: 64), alt: "", class: "site-header__avatar" %>
+            <%= avatar_image_tag current_user, size: 32, alt: "", class: "site-header__avatar" %>
           <% end %>
         <% else %>
           <%= link_to "Log in", account_sign_in_path, class: "site-header__signin" %>

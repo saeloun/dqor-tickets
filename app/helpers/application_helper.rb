@@ -5,4 +5,12 @@ module ApplicationHelper
     grouped = digits.length > 3 ? "#{digits[0...-3].reverse.scan(/.{1,2}/).join(",").reverse},#{digits[-3..]}" : digits
     "₹#{grouped}#{format(".%02d", cents) unless cents.zero?}"
   end
+
+  def avatar_image_tag(user, size:, **options)
+    if user.avatar.attached?
+      image_tag user.avatar, **options
+    else
+      image_tag user.gravatar_url(size: size * 2), **options
+    end
+  end
 end

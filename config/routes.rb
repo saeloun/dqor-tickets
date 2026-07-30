@@ -28,6 +28,7 @@ Rails.application.routes.draw do
     post   "sign_in",      to: "sessions#create"
     get    "magic/:token", to: "sessions#magic",   as: :magic
     delete "sign_out",     to: "sessions#destroy", as: :sign_out
+    resource :settings, only: %i[show update]
     root "dashboard#show"
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
