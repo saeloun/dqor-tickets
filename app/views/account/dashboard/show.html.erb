@@ -42,6 +42,9 @@
       <p class="gst-hint">You’re not listed in the attendee directory yet. <%= link_to "Turn it on in settings", account_settings_path %> so others can connect with you.</p>
     <% end %>
     <p>You have <%= pluralize(current_user.connections.count, "connection") %>. <%= link_to "Browse attendees", community_path %>.</p>
+    <% if (inbound = current_user.connectors.count).positive? %>
+      <p><strong><%= pluralize(inbound, "person") %></strong> connected with you.</p>
+    <% end %>
     <p>Have a question about the conference? <%= link_to "Ask the concierge", concierge_path %>.</p>
   </section>
 </main>

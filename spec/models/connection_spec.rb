@@ -17,4 +17,18 @@ RSpec.describe Connection do
   it "prevents connecting to yourself" do
     expect(person.connections.build(connected_user: person)).not_to be_valid
   end
+
+  it "exposes inbound connections and connectors" do
+    person.connections.create!(connected_user: other)
+
+    expect(other.connectors).to include(person)
+    expect(other.inbound_connections.count).to eq(1)
+    expect(person.connectors).to be_empty
+  end
+
+  it "removes inbound connections when the connected-to user is destroyed" do
+    person.connections.create!(connected_user: other)
+
+    expect { other.destroy }.to change(Connection, :count).by(-1)
+  end
 end

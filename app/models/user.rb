@@ -4,6 +4,8 @@ class User < ApplicationRecord
 
   has_many :connections, dependent: :destroy
   has_many :connected_users, through: :connections, source: :connected_user
+  has_many :inbound_connections, class_name: "Connection", foreign_key: :connected_user_id, dependent: :destroy
+  has_many :connectors, through: :inbound_connections, source: :user
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
 
