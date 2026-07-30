@@ -1,0 +1,35 @@
+<% content_for :title, "Schedule · Deccan Queen on Rails" %>
+<% content_for :meta_description, "The Deccan Queen on Rails conference schedule — talks, speakers, and timings in Pune." %>
+
+<main class="schedule-page">
+  <section class="storefront-hero">
+    <p class="section-label">Schedule</p>
+    <h1>Conference schedule</h1>
+    <p>Talks and sessions for Deccan Queen on Rails, Pune.</p>
+  </section>
+
+  <% if @talks_by_day.any? %>
+    <% @talks_by_day.each do |day, talks| %>
+      <section class="schedule-day">
+        <h2><%= day ? day.strftime("%A, %-d %B %Y") : "To be scheduled" %></h2>
+        <ul class="schedule-list">
+          <% talks.each do |talk| %>
+            <li class="schedule-talk">
+              <div class="schedule-talk__time">
+                <%= talk.time_range %>
+                <% if talk.room.present? %><span class="schedule-talk__room"><%= talk.room %></span><% end %>
+              </div>
+              <div class="schedule-talk__body">
+                <h3><%= talk.title %></h3>
+                <% if talk.speaker_name.present? %><p class="schedule-talk__speaker"><%= talk.speaker_name %></p><% end %>
+                <% if talk.abstract.present? %><p class="schedule-talk__abstract"><%= talk.abstract %></p><% end %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  <% else %>
+    <p class="schedule-empty">The schedule is being finalised — check back soon. Meanwhile, <%= link_to "grab your pass", root_path %> or <%= link_to "ask the concierge", concierge_path %>.</p>
+  <% end %>
+</main>
