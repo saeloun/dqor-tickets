@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_31_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_31_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_120000) do
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_admin_users_on_lower_email", unique: true
+  end
+
+  create_table "announcements", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.boolean "published", default: false, null: false
+    t.datetime "published_at"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["published", "published_at"], name: "index_announcements_on_published_and_published_at"
   end
 
   create_table "connections", force: :cascade do |t|

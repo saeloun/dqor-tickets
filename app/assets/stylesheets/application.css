@@ -577,3 +577,9 @@ button { cursor: pointer; }
 .speaker-card__title { margin: 0.15rem 0 0; color: var(--color-primary); font-weight: 600; font-size: 0.9rem; }
 .speaker-card__bio { margin: 0.5rem 0 0; color: var(--color-muted-foreground); font-size: 0.9rem; }
 .speaker-card__links { margin: 0.75rem 0 0; display: flex; gap: 0.75rem; font-size: 0.85rem; font-weight: 600; }
+
+.update-list { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+.update { padding: 1.25rem 1.5rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; }
+.update__date { margin: 0; font-size: 0.8rem; font-weight: 600; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.05em; }
+.update__title { margin: 0.25rem 0 0; font-size: 1.15rem; }
+.update__body { margin: 0.5rem 0 0; color: var(--color-muted-foreground); }

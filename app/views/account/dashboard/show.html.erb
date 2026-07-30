@@ -13,6 +13,23 @@
     </div>
   </section>
 
+  <% if @announcements.any? %>
+    <section class="account-section">
+      <h2>Latest updates</h2>
+      <ul class="account-tickets">
+        <% @announcements.each do |announcement| %>
+          <li class="account-ticket">
+            <div class="account-ticket__row">
+              <span class="account-ticket__type"><%= announcement.title %></span>
+              <span class="account-ticket__meta"><%= announcement.shown_at.strftime("%-d %b") %></span>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+      <p><%= link_to "All updates", updates_path %>.</p>
+    </section>
+  <% end %>
+
   <section class="account-section">
     <h2>Your tickets</h2>
     <% if @tickets.any? %>
