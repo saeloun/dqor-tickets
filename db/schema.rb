@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_31_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_31_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -84,6 +84,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_140000) do
     t.datetime "valid_until"
     t.index "lower((code)::text)", name: "index_coupons_on_lower_code", unique: true
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
+  end
+
+  create_table "faqs", force: :cascade do |t|
+    t.text "answer"
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "published", default: false, null: false
+    t.string "question", null: false
+    t.datetime "updated_at", null: false
+    t.index ["published", "position"], name: "index_faqs_on_published_and_position"
   end
 
   create_table "invoices", force: :cascade do |t|

@@ -1,0 +1,23 @@
+<% content_for :title, "FAQ · Deccan Queen on Rails" %>
+<% content_for :meta_description, "Frequently asked questions about Deccan Queen on Rails." %>
+
+<main class="schedule-page">
+  <section class="storefront-hero">
+    <p class="section-label">FAQ</p>
+    <h1>Frequently asked questions</h1>
+    <p>Common questions about Deccan Queen on Rails, Pune.</p>
+  </section>
+
+  <% if @faqs.any? %>
+    <div class="faq-list">
+      <% @faqs.each do |faq| %>
+        <details class="faq">
+          <summary class="faq__q"><%= faq.question %></summary>
+          <% if faq.answer.present? %><div class="faq__a"><%= simple_format(faq.answer) %></div><% end %>
+        </details>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="schedule-empty">FAQs are coming soon. Meanwhile, <%= link_to "ask the concierge", concierge_path %>.</p>
+  <% end %>
+</main>
