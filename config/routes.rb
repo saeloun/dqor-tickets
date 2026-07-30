@@ -45,6 +45,7 @@ Rails.application.routes.draw do
   get  "schedule", to: "schedule#show", as: :schedule
   get  "sponsors", to: "sponsors#index", as: :sponsors
   get  "speakers", to: "speakers#index", as: :speakers
+  get  "updates",  to: "announcements#index", as: :updates
   post   "talks/:talk_id/bookmark", to: "talk_bookmarks#create", as: :talk_bookmark
   delete "talks/:talk_id/bookmark", to: "talk_bookmarks#destroy"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
