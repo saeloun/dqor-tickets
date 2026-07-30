@@ -36,6 +36,23 @@
     <% end %>
   </section>
 
+  <% if @saved_talks.any? %>
+    <section class="account-section">
+      <h2>My schedule</h2>
+      <ul class="account-tickets">
+        <% @saved_talks.each do |talk| %>
+          <li class="account-ticket">
+            <div class="account-ticket__row">
+              <span class="account-ticket__type"><%= talk.title %></span>
+              <span class="account-ticket__meta"><%= talk.time_range %><%= " · #{talk.room}" if talk.room.present? %></span>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+      <p><%= link_to "Browse the full schedule", schedule_path %>.</p>
+    </section>
+  <% end %>
+
   <section class="account-section">
     <h2>Community</h2>
     <% unless current_user.discoverable? %>

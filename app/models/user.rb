@@ -6,6 +6,8 @@ class User < ApplicationRecord
   has_many :connected_users, through: :connections, source: :connected_user
   has_many :inbound_connections, class_name: "Connection", foreign_key: :connected_user_id, dependent: :destroy
   has_many :connectors, through: :inbound_connections, source: :user
+  has_many :talk_bookmarks, dependent: :destroy
+  has_many :bookmarked_talks, through: :talk_bookmarks, source: :talk
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
 
@@ -27,6 +29,10 @@ class User < ApplicationRecord
 
   def connected_to?(other)
     connections.exists?(connected_user_id: other.id)
+  end
+
+  def bookmarked?(talk)
+    talk_bookmarks.exists?(talk_id: talk.id)
   end
 
   def display_name
