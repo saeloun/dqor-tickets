@@ -21,7 +21,7 @@
               </div>
               <div class="schedule-talk__body">
                 <h3><%= talk.title %></h3>
-                <% if talk.speaker_display.present? %><p class="schedule-talk__speaker"><%= talk.speaker_display %></p><% end %>
+                <% if talk.speaker_display.present? %><p class="schedule-talk__speaker"><%= talk.speaker ? link_to(talk.speaker_display, speaker_path(talk.speaker)) : talk.speaker_display %></p><% end %>
                 <% if talk.abstract.present? %><p class="schedule-talk__abstract"><%= talk.abstract %></p><% end %>
                 <% if user_signed_in? %>
                   <% if @bookmarked_ids.include?(talk.id) %>

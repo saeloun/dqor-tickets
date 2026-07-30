@@ -15,7 +15,7 @@
           <% if speaker.photo.attached? %>
             <%= image_tag speaker.photo, alt: speaker.name, class: "speaker-card__photo" %>
           <% end %>
-          <h3 class="speaker-card__name"><%= speaker.name %></h3>
+          <h3 class="speaker-card__name"><%= link_to speaker.name, speaker_path(speaker) %></h3>
           <% if speaker.title.present? %><p class="speaker-card__title"><%= speaker.title %></p><% end %>
           <% if speaker.bio.present? %><p class="speaker-card__bio"><%= speaker.bio %></p><% end %>
           <% talks = speaker.published_talks %>

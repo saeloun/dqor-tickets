@@ -18,4 +18,15 @@ RSpec.describe "Speakers", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("coming soon")
   end
+
+  it "shows a published speaker profile with their talks" do
+    speaker = Speaker.create!(name: "Ada Lovelace", title: "Programmer", bio: "The first programmer.", published: true)
+    Talk.create!(title: "Analytical Engines", speaker: speaker, published: true)
+
+    get speaker_path(speaker)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Ada Lovelace")
+    expect(response.body).to include("Analytical Engines")
+  end
 end

@@ -1,0 +1,40 @@
+<% content_for :title, "#{@speaker.name} · Deccan Queen on Rails" %>
+<% content_for :meta_description, @speaker.title.presence || "Speaker at Deccan Queen on Rails." %>
+
+<main class="schedule-page">
+  <section class="account-header">
+    <% if @speaker.photo.attached? %>
+      <%= image_tag @speaker.photo, alt: @speaker.name, class: "account-avatar" %>
+    <% end %>
+    <div class="account-identity">
+      <h1><%= @speaker.name %></h1>
+      <% if @speaker.title.present? %><p class="account-email"><%= @speaker.title %></p><% end %>
+    </div>
+  </section>
+
+  <% if @speaker.bio.present? %><div class="update__body"><%= simple_format(@speaker.bio) %></div><% end %>
+
+  <p class="speaker-card__links">
+    <% if @speaker.twitter_url %><%= link_to "Twitter/X", @speaker.twitter_url, target: "_blank", rel: "noopener" %><% end %>
+    <% if @speaker.github_url %><%= link_to "GitHub", @speaker.github_url, target: "_blank", rel: "noopener" %><% end %>
+  </p>
+
+  <% talks = @speaker.published_talks %>
+  <% if talks.any? %>
+    <section class="account-section">
+      <h2>Talks</h2>
+      <ul class="account-tickets">
+        <% talks.each do |talk| %>
+          <li class="account-ticket">
+            <div class="account-ticket__row">
+              <span class="account-ticket__type"><%= talk.title %></span>
+              <span class="account-ticket__meta"><%= talk.time_range %><%= " · #{talk.room}" if talk.room.present? %></span>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <p class="account-back"><%= link_to "← All speakers", speakers_path %></p>
+</main>
