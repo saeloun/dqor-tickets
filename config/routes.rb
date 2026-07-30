@@ -47,6 +47,7 @@ Rails.application.routes.draw do
   get  "speakers", to: "speakers#index", as: :speakers
   get  "speakers/:id", to: "speakers#show", as: :speaker
   get  "updates",  to: "announcements#index", as: :updates
+  get  "faq",      to: "faqs#index", as: :faq
   post   "talks/:talk_id/bookmark", to: "talk_bookmarks#create", as: :talk_bookmark
   delete "talks/:talk_id/bookmark", to: "talk_bookmarks#destroy"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
