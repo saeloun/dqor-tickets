@@ -558,3 +558,12 @@ button { cursor: pointer; }
 .schedule-talk__abstract { margin: 0.5rem 0 0; color: var(--color-muted-foreground); font-size: 0.9rem; }
 .schedule-empty { max-width: 48rem; margin: 2rem auto; padding: 0 1.25rem; color: var(--color-muted-foreground); text-align: center; }
 @media (max-width: 640px) { .schedule-talk { flex-direction: column; gap: 0.35rem; } .schedule-talk__time { width: auto; } }
+
+.sponsor-tier { margin-top: 2rem; }
+.sponsor-tier h2 { font-size: 1.15rem; margin: 0 0 1rem; text-transform: capitalize; }
+.sponsor-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+.sponsor-card { text-align: center; }
+.sponsor-card__link { display: flex; align-items: center; justify-content: center; min-height: 90px; padding: 1rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: inherit; }
+.sponsor-card__logo { max-width: 100%; max-height: 60px; object-fit: contain; }
+.sponsor-card__name { font-weight: 700; }
+.sponsor-card__blurb { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--color-muted-foreground); }
