@@ -1,0 +1,32 @@
+<section class="guest-list" aria-label="Guest list">
+  <h2>Going <span class="guest-count"><%= event.registrations.public_guests.count %></span></h2>
+
+  <% registrations = event.registrations.public_guests.includes(:user) %>
+  <% if registrations.any? %>
+    <div class="avatar-stack">
+      <% registrations.first(8).each do |registration| %>
+        <div class="avatar" title="<%= registration.user.name %>">
+          <% url = registration.user.avatar_image_url(fallback: false) %>
+          <% if url.present? && !url.start_with?("<svg") %>
+            <%= image_tag url, alt: registration.user.name, loading: "lazy", onerror: "this.style.display='none';this.nextElementSibling.style.display='flex'" %>
+            <span class="avatar-fallback" style="display:none"><%= registration.user.initials %></span>
+          <% else %>
+            <%= registration.user.initials_svg.html_safe %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if registrations.size > 8 %>
+        <div class="avatar avatar--more">+<%= registrations.size - 8 %></div>
+      <% end %>
+    </div>
+
+    <ul class="guest-names">
+      <% registrations.each do |registration| %>
+        <li><%= registration.user.name %></li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="guest-list-empty">Be the first to RSVP.</p>
+  <% end %>
+</section>

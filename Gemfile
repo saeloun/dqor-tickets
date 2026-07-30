@@ -17,9 +17,12 @@ gem "stimulus-rails"
 
 gem "avo"
 gem "aws-sdk-s3", require: false
+gem "omniauth-github"
+gem "omniauth-rails_csrf_protection"
 gem "ferrum"
 gem "razorpay"
 gem "rqrcode"
+gem "web-push"
 gem "sentry-rails"
 gem "sentry-ruby"
 

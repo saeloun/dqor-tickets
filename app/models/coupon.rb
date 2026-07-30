@@ -8,6 +8,7 @@ class Coupon < ApplicationRecord
     find_by("lower(code) = ?", code.downcase) || raise(Invalid, "Coupon not valid")
   end
 
+  belongs_to :event, optional: true
   belongs_to :ticket_type, optional: true
   has_many :orders, dependent: :restrict_with_exception
 

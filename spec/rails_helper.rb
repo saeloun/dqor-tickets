@@ -5,12 +5,15 @@ ENV["RAZORPAY_WEBHOOK_SECRET"] = "test_webhook_secret"
 ENV["SELLER_NAME"] = "Saeloun Software Pvt Ltd"
 ENV["SELLER_GSTIN"] = "27AAAAA0000A1Z5"
 ENV["SELLER_ADDRESS"] = "Pune, Maharashtra"
+ENV["GITHUB_CLIENT_ID"] = "test_github_client_id"
+ENV["GITHUB_CLIENT_SECRET"] = "test_github_client_secret"
 require_relative "../config/environment"
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require "rspec/rails"
 require "webmock/rspec"
 
 WebMock.disable_net_connect!(allow_localhost: true)
+OmniAuth.config.test_mode = true
 
 begin
   ActiveRecord::Migration.maintain_test_schema!

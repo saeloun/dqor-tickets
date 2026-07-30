@@ -1,0 +1,45 @@
+<% content_for :title, "#{@event.title} · Deccan Queen on Rails" %>
+
+<main class="event-page">
+  <%= turbo_stream_from @event %>
+
+  <header class="event-hero">
+    <p class="event-meta"><%= @event.venue_name %> · <%= @event.starts_at&.strftime("%b %-d") %>–<%= @event.ends_at&.strftime("%-d, %Y") %></p>
+    <h1><%= @event.title %></h1>
+  </header>
+
+  <%= turbo_frame_tag "register_card" do %>
+    <section class="register-card">
+      <% if @registration&.attending? %>
+        <div class="register-state register-state--going">
+          <p>You are going.</p>
+          <%= button_to "Cancel registration", event_registrations_path(@event.organizer.slug, @event.slug), method: :delete, class: "btn btn-text" %>
+        </div>
+      <% elsif @registration&.interested? %>
+        <div class="register-state register-state--interested">
+          <p>You are interested.</p>
+          <%= button_to "RSVP to attend", event_registrations_path(@event.organizer.slug, @event.slug), method: :post, class: "btn btn-primary" %>
+        </div>
+      <% elsif current_user %>
+        <div class="register-state">
+          <p>Join <%= @event.registrations.going.count %> others attending.</p>
+          <%= button_to "RSVP", event_registrations_path(@event.organizer.slug, @event.slug), method: :post, class: "btn btn-primary" %>
+          <%= button_to "Interested", event_registrations_path(@event.organizer.slug, @event.slug, state: "interested"), method: :post, class: "btn btn-secondary" %>
+        </div>
+      <% else %>
+        <div class="register-state">
+          <p>Join <%= @event.registrations.going.count %> others attending.</p>
+          <%= link_to "Sign in to RSVP", login_path(return_to: request.url), class: "btn btn-primary", data: { turbo_frame: "_top" } %>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
+  <% if @event.guest_list_public? %>
+    <%= turbo_frame_tag "guest_list", src: event_guests_path(@event.organizer.slug, @event.slug), loading: :lazy do %>
+      <section class="guest-list guest-list--loading" aria-label="Guest list">
+        <p>Loading guests…</p>
+      </section>
+    <% end %>
+  <% end %>
+</main>

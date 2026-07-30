@@ -8,7 +8,7 @@ Avo.configure do |config|
   end
   config.authenticate_with do
     Current.session ||= Session.find_by(id: cookies.signed[:session_id]) if cookies.signed[:session_id]
-    unless Current.session
+    unless Current.session&.admin_user
       session[:return_to_after_authenticating] = request.url
       redirect_to main_app.new_session_path
     end

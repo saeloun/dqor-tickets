@@ -9,6 +9,11 @@
       <p>Open an order to download tickets, assign attendees, or get the tax invoice.</p>
       <p class="status-hint">This page stays open in this browser. The emailed link itself works for 24 hours &mdash; request a new one any time.</p>
 
+      <div class="notify-optin" data-controller="push" data-push-key-value="<%= Vapid.public_key %>" hidden>
+        <button type="button" class="btn btn-secondary" data-action="push#subscribe" data-push-target="button">Get conference updates</button>
+        <p class="notify-optin__status" data-push-target="status" role="status" hidden></p>
+      </div>
+
       <ul class="order-list">
         <% @orders.each do |order| %>
           <% tickets = order.tickets.reject(&:canceled_at?) %>

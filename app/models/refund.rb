@@ -4,6 +4,7 @@ class Refund < ApplicationRecord
 
   OPEN_STATUSES = %w[pending initiated processed].freeze
 
+  belongs_to :event, optional: true
   belongs_to :order
 
   enum :status, { pending: "pending", initiated: "initiated", processed: "processed", failed: "failed" }, validate: true

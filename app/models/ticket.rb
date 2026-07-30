@@ -12,6 +12,9 @@ class Ticket < ApplicationRecord
 
   class Canceled < StandardError; end
 
+  belongs_to :event, optional: true
+
+  has_many :checkin_records, dependent: :destroy
   belongs_to :order
   belongs_to :ticket_type
 

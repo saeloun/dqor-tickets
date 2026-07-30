@@ -1,4 +1,8 @@
 class TicketType < ApplicationRecord
+  belongs_to :event, optional: true
+  belongs_to :prerequisite_ticket_type, class_name: "TicketType", optional: true
+
+  has_many :dependent_ticket_types, class_name: "TicketType", foreign_key: :prerequisite_ticket_type_id, dependent: :nullify, inverse_of: :prerequisite_ticket_type
   has_many :tickets, dependent: :restrict_with_exception
   has_many :coupons, dependent: :nullify
 
