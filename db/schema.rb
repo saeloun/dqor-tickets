@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_179000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_30_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -453,6 +453,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_179000) do
     t.bigint "user_id", null: false
     t.index ["platform", "token"], name: "index_push_devices_on_platform_and_token", unique: true
     t.index ["user_id"], name: "index_push_devices_on_user_id"
+  end
+
+  create_table "push_subscriptions", force: :cascade do |t|
+    t.string "auth_key", null: false
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "endpoint", null: false
+    t.string "p256dh_key", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.index ["endpoint"], name: "index_push_subscriptions_on_endpoint", unique: true
   end
 
   create_table "questions", force: :cascade do |t|

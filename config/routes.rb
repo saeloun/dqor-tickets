@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resource :checkin, only: %i[show create]
 
   resource :checkout_preview, only: :create
+  resources :push_subscriptions, only: :create
   resources :orders, param: :code, only: [ :create, :show ]
   get "tickets/find", to: "ticket_access#new", as: :find_tickets
   post "tickets/find", to: "ticket_access#create"
