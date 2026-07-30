@@ -1,0 +1,31 @@
+<% content_for :title, "Speakers · Deccan Queen on Rails" %>
+<% content_for :meta_description, "The people sharing their work at Deccan Queen on Rails." %>
+
+<main class="schedule-page">
+  <section class="storefront-hero">
+    <p class="section-label">Speakers</p>
+    <h1>Speakers</h1>
+    <p>The people sharing their work at Deccan Queen on Rails, Pune.</p>
+  </section>
+
+  <% if @speakers.any? %>
+    <ul class="speaker-grid">
+      <% @speakers.each do |speaker| %>
+        <li class="speaker-card">
+          <% if speaker.photo.attached? %>
+            <%= image_tag speaker.photo, alt: speaker.name, class: "speaker-card__photo" %>
+          <% end %>
+          <h3 class="speaker-card__name"><%= speaker.name %></h3>
+          <% if speaker.title.present? %><p class="speaker-card__title"><%= speaker.title %></p><% end %>
+          <% if speaker.bio.present? %><p class="speaker-card__bio"><%= speaker.bio %></p><% end %>
+          <p class="speaker-card__links">
+            <% if speaker.twitter_url %><%= link_to "Twitter/X", speaker.twitter_url, target: "_blank", rel: "noopener" %><% end %>
+            <% if speaker.github_url %><%= link_to "GitHub", speaker.github_url, target: "_blank", rel: "noopener" %><% end %>
+          </p>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="schedule-empty">Speaker announcements are coming soon.</p>
+  <% end %>
+</main>
