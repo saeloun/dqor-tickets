@@ -23,6 +23,13 @@
                 <h3><%= talk.title %></h3>
                 <% if talk.speaker_name.present? %><p class="schedule-talk__speaker"><%= talk.speaker_name %></p><% end %>
                 <% if talk.abstract.present? %><p class="schedule-talk__abstract"><%= talk.abstract %></p><% end %>
+                <% if user_signed_in? %>
+                  <% if @bookmarked_ids.include?(talk.id) %>
+                    <%= button_to "★ Saved", talk_bookmark_path(talk), method: :delete, class: "schedule-talk__save schedule-talk__save--on" %>
+                  <% else %>
+                    <%= button_to "☆ Save to my schedule", talk_bookmark_path(talk), method: :post, class: "schedule-talk__save" %>
+                  <% end %>
+                <% end %>
               </div>
             </li>
           <% end %>

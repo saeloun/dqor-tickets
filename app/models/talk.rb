@@ -1,6 +1,8 @@
 class Talk < ApplicationRecord
   EVENT_ZONE = "Asia/Kolkata".freeze
 
+  has_many :talk_bookmarks, dependent: :destroy
+
   scope :published, -> { where(published: true) }
   scope :scheduled, -> { order(Arel.sql("starts_at IS NULL"), :starts_at, :position, :title) }
 
