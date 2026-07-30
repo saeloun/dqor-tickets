@@ -544,3 +544,17 @@ button { cursor: pointer; }
 .concierge-answer { margin: 1.5rem 0 0; text-align: left; padding: 1rem 1.25rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; }
 .concierge-answer__q { margin: 0 0 0.5rem; font-weight: 700; }
 .concierge-answer__a { color: var(--color-foreground); }
+
+.storefront-hero__link { display: inline-block; margin-top: 0.5rem; font-weight: 600; color: var(--color-primary); text-decoration: none; }
+.schedule-page { max-width: 48rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
+.schedule-day { margin-top: 2rem; }
+.schedule-day h2 { font-size: 1.25rem; margin: 0 0 1rem; }
+.schedule-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.schedule-talk { display: flex; gap: 1rem; padding: 1rem 1.25rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; }
+.schedule-talk__time { flex: none; width: 8.5rem; font-weight: 600; font-size: 0.9rem; color: var(--color-primary); }
+.schedule-talk__room { display: block; font-weight: 400; color: var(--color-muted-foreground); font-size: 0.8rem; margin-top: 0.15rem; }
+.schedule-talk__body h3 { margin: 0; font-size: 1.05rem; }
+.schedule-talk__speaker { margin: 0.15rem 0 0; color: var(--color-muted-foreground); font-weight: 600; }
+.schedule-talk__abstract { margin: 0.5rem 0 0; color: var(--color-muted-foreground); font-size: 0.9rem; }
+.schedule-empty { max-width: 48rem; margin: 2rem auto; padding: 0 1.25rem; color: var(--color-muted-foreground); text-align: center; }
+@media (max-width: 640px) { .schedule-talk { flex-direction: column; gap: 0.35rem; } .schedule-talk__time { width: auto; } }
