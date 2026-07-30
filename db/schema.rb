@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_31_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_31_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -346,12 +346,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_130000) do
     t.boolean "published", default: false, null: false
     t.string "room"
     t.text "speaker_bio"
+    t.bigint "speaker_id"
     t.string "speaker_name"
     t.datetime "starts_at"
     t.string "title", null: false
     t.string "track"
     t.datetime "updated_at", null: false
     t.index ["published", "starts_at"], name: "index_talks_on_published_and_starts_at"
+    t.index ["speaker_id"], name: "index_talks_on_speaker_id"
   end
 
   create_table "ticket_types", force: :cascade do |t|
@@ -425,6 +427,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_130000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "talk_bookmarks", "talks"
   add_foreign_key "talk_bookmarks", "users"
+  add_foreign_key "talks", "speakers"
   add_foreign_key "tickets", "orders"
   add_foreign_key "tickets", "ticket_types"
 end

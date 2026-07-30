@@ -5,6 +5,7 @@ class Avo::Resources::Talk < Avo::BaseResource
     field :id, as: :id
     field :title, as: :text, sortable: true
     field :speaker_name, as: :text
+    field :speaker, as: :belongs_to
     field :speaker_bio, as: :textarea
     field :abstract, as: :textarea
     field :starts_at, as: :date_time
