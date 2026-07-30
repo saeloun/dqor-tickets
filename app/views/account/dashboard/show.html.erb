@@ -19,9 +19,15 @@
       <ul class="account-tickets">
         <% @tickets.each do |ticket| %>
           <li class="account-ticket">
-            <span class="account-ticket__type"><%= ticket.ticket_type.name %></span>
-            <span class="account-ticket__meta"><%= ticket.assigned? ? ticket.attendee_name : "Unassigned" %></span>
-            <%= link_to "View order", order_path(ticket.order.code), class: "account-ticket__link" %>
+            <div class="account-ticket__row">
+              <span class="account-ticket__type"><%= ticket.ticket_type.name %></span>
+              <span class="account-ticket__meta"><%= ticket.assigned? ? ticket.attendee_name : "Unassigned" %></span>
+              <%= link_to "View order", order_path(ticket.order.code), class: "account-ticket__link" %>
+            </div>
+            <details class="account-ticket__pass">
+              <summary>Show entry pass</summary>
+              <%= render "tickets/entry_pass", ticket: ticket %>
+            </details>
           </li>
         <% end %>
       </ul>
