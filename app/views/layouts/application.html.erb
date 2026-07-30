@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <title><%= content_for(:title) || "Deccan Queen on Rails Tickets" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Deccan Queen on Rails Tickets">
     <meta name="mobile-web-app-capable" content="yes">
@@ -117,6 +117,7 @@
 
     <% unless turbo_native_app? %>
       <%= render "shared/install_prompt" %>
+      <%= render "shared/app_tabbar" %>
     <% end %>
   </body>
 </html>
