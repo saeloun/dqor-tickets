@@ -642,3 +642,12 @@ button { cursor: pointer; }
 .entry-pass__type { margin: 0.15rem 0 0; color: var(--color-muted-foreground); }
 .entry-pass__hint { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--color-muted-foreground); }
 .entry-pass__secret { margin: 0.6rem 0 0; font-family: ui-monospace, "SFMono-Regular", monospace; font-size: 0.7rem; letter-spacing: 0.05em; word-break: break-all; color: var(--color-muted-foreground); }
+
+.install-prompt { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: 0.75rem; }
+.install-prompt__inner { display: flex; align-items: center; gap: 0.75rem; max-width: 32rem; margin: 0 auto; padding: 0.75rem 1rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 14px; box-shadow: var(--shadow-sm, 0 8px 24px rgb(0 0 0 / 0.18)); }
+.install-prompt__icon { width: 36px; height: 36px; border-radius: 8px; flex: none; object-fit: contain; }
+.install-prompt__body { flex: 1; min-width: 0; }
+.install-prompt__title { margin: 0; font-weight: 700; font-size: 0.95rem; }
+.install-prompt__text { margin: 0.1rem 0 0; font-size: 0.8rem; color: var(--color-muted-foreground); }
+.install-prompt__install { flex: none; padding: 0.5rem 1rem; font-size: 0.85rem; }
+.install-prompt__dismiss { flex: none; border: 0; background: transparent; font-size: 1.5rem; line-height: 1; color: var(--color-muted-foreground); cursor: pointer; padding: 0 0.25rem; }

@@ -114,5 +114,9 @@
       </div>
     </footer>
     <% end %>
+
+    <% unless turbo_native_app? %>
+      <%= render "shared/install_prompt" %>
+    <% end %>
   </body>
 </html>
