@@ -9,6 +9,11 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#981B34">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141110">
+    <link rel="manifest" href="<%= pwa_manifest_path(format: :json) %>">
+    <link rel="apple-touch-icon" href="/icon.png">
+
     <%= javascript_tag nonce: true do %>
       (function () {
         var STORAGE_KEY = 'dqor-theme';
@@ -45,6 +50,16 @@
 
         window.__dqorTheme = { applyTheme, storeTheme, getCurrentTheme };
       })();
+    <% end %>
+
+    <% unless Rails.env.test? %>
+      <%= javascript_tag nonce: true do %>
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", function () {
+            navigator.serviceWorker.register("<%= j pwa_service_worker_path(format: :js) %>").catch(function () {});
+          });
+        }
+      <% end %>
     <% end %>
 
     <%= yield :head %>
