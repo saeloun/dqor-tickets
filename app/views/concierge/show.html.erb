@@ -1,0 +1,31 @@
+<% content_for :title, "Conference concierge · Deccan Queen on Rails" %>
+<% content_for :meta_description, "Ask the Deccan Queen on Rails concierge about dates, venue, tickets, and getting around Pune." %>
+
+<main class="status-page">
+  <section class="status-card">
+    <p class="section-label">Concierge</p>
+    <h1>Ask about the conference</h1>
+    <p>Dates, venue, tickets, getting around Pune — ask anything about Deccan Queen on Rails.</p>
+
+    <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
+
+    <%= form_with url: concierge_path, method: :post, class: "assignment-form" do |form| %>
+      <div class="field">
+        <%= form.label :question, "Your question" %>
+        <%= form.text_field :question, value: @question, required: true, autocomplete: "off", placeholder: "When does the conference start?" %>
+      </div>
+      <%= form.submit "Ask", class: "btn btn-primary" %>
+    <% end %>
+
+    <% if @answer.present? %>
+      <div class="concierge-answer">
+        <p class="concierge-answer__q"><%= @question %></p>
+        <div class="concierge-answer__a"><%= simple_format(@answer) %></div>
+      </div>
+    <% end %>
+
+    <% unless Ai::Concierge.available? %>
+      <p class="status-hint">The concierge is still being set up, so answers may be limited right now.</p>
+    <% end %>
+  </section>
+</main>

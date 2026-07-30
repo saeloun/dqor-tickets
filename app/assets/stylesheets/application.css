@@ -538,3 +538,7 @@ button { cursor: pointer; }
   .app-tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; justify-content: space-around; align-items: stretch; padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom)); background: var(--color-card); border-top: 1px solid var(--color-border); }
   body { padding-bottom: 5rem; }
 }
+
+.concierge-answer { margin: 1.5rem 0 0; text-align: left; padding: 1rem 1.25rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; }
+.concierge-answer__q { margin: 0 0 0.5rem; font-weight: 700; }
+.concierge-answer__a { color: var(--color-foreground); }

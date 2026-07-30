@@ -38,6 +38,9 @@ Rails.application.routes.draw do
   delete "community/:id/connect", to: "connections#destroy", as: :disconnect_attendee
 
   get "/hotwire-native/path-configuration", to: "hotwire_native/path_configurations#show", as: :hotwire_native_path_configuration, defaults: { format: :json }
+
+  get  "concierge", to: "concierge#show", as: :concierge
+  post "concierge", to: "concierge#create"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
