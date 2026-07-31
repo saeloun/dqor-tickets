@@ -1,0 +1,22 @@
+<% content_for :title, "Info · Deccan Queen on Rails" %>
+<% content_for :meta_description, "Venue, travel, and everything you need to know for Deccan Queen on Rails." %>
+
+<main class="schedule-page">
+  <section class="storefront-hero">
+    <p class="section-label">Info</p>
+    <h1>Conference info</h1>
+    <p>Everything you need to know for Deccan Queen on Rails, Pune.</p>
+  </section>
+
+  <% if @pages.any? %>
+    <ul class="update-list">
+      <% @pages.each do |page| %>
+        <li class="update">
+          <h2 class="update__title"><%= link_to page.title, info_page_path(page) %></h2>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="schedule-empty">Info pages are coming soon.</p>
+  <% end %>
+</main>
