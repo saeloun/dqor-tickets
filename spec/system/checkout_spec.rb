@@ -41,7 +41,7 @@ RSpec.describe "Checkout storefront", type: :system do
     create_list(:ticket, 7, ticket_type: on_sale, order: create(:order, :paid))
     create(:ticket, ticket_type: sold_out, order: create(:order, :paid))
 
-    visit root_path
+    visit tickets_store_path
 
     expect(page).to have_css("h1", text: "Choose your conference pass")
 
@@ -87,7 +87,7 @@ RSpec.describe "Checkout storefront", type: :system do
     create_list(:ticket, 7, ticket_type: scarce, order: create(:order, :paid))
     capped = create(:ticket_type, name: "Capped Pass", slug: "conference-pass-capped", capacity: nil, max_per_order: 3, position: 2)
 
-    visit root_path
+    visit tickets_store_path
 
     expect(find_field(quantity_field_for(scarce))[:max]).to eq("23")
     expect(find_field(quantity_field_for(capped))[:max]).to eq("3")
@@ -99,7 +99,7 @@ RSpec.describe "Checkout storefront", type: :system do
     create_list(:ticket, 2, ticket_type:, order: create(:order, expires_at: 20.minutes.from_now))
     create(:ticket, ticket_type:, order: create(:order, expires_at: 5.minutes.ago))
 
-    visit root_path
+    visit tickets_store_path
 
     within card_for(ticket_type.name) do
       expect(page).to have_css(".ticket-availability", text: "8 of 10 left")
@@ -109,7 +109,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "adds up the selected tickets in the order total as the stepper is used" do
     ticket_type = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", price_paise: 350_000, capacity: 2, position: 1)
 
-    visit root_path
+    visit tickets_store_path
 
     expect(page).to have_css("[data-cart-target='total']", text: "₹0")
 
@@ -136,7 +136,7 @@ RSpec.describe "Checkout storefront", type: :system do
     conference = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", price_paise: 350_000, capacity: 10, position: 1)
     add_on = create(:ticket_type, name: "Explore Pune Day", slug: "explore-pune-day", price_paise: 250_000, capacity: 50, requires_conference_pass: true, position: 2)
 
-    visit root_path
+    visit tickets_store_path
 
     add_one(conference)
     check quantity_field_for(add_on), allow_label_click: true
@@ -148,7 +148,7 @@ RSpec.describe "Checkout storefront", type: :system do
     conference = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", price_paise: 350_000, capacity: 10, position: 1)
     add_on = create(:ticket_type, name: "Explore Pune Day", slug: "explore-pune-day", price_paise: 250_000, capacity: 50, requires_conference_pass: true, position: 2)
 
-    visit root_path
+    visit tickets_store_path
 
     expect(page).to have_css(".add-on-gate", visible: :hidden)
     expect(page).to have_no_css(".add-on-gate", visible: :visible)
@@ -177,7 +177,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "labels the add-on card and disables its checkbox before sales open" do
     add_on = create(:ticket_type, name: "Explore Pune Day", slug: "explore-pune-day", active: false, requires_conference_pass: true, position: 1)
 
-    visit root_path
+    visit tickets_store_path
 
     within card_for(add_on.name) do
       expect(page).to have_css(".ticket-type-badge--retreat", text: "EXPLORE PUNE DAY")
@@ -192,7 +192,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "offers a coupon code field that starts without a message" do
     create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", position: 1)
 
-    visit root_path
+    visit tickets_store_path
 
     expect(page).to have_field("Coupon code", with: "", type: "text")
     expect(find_field("Coupon code")[:placeholder]).to eq("Optional")
@@ -204,7 +204,7 @@ RSpec.describe "Checkout storefront", type: :system do
     ticket_type = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", price_paise: 350_000, capacity: 5, position: 1)
     create(:coupon, code: "PUNE500", discount_paise: 50_000, ticket_type:)
 
-    visit root_path
+    visit tickets_store_path
     insert_csrf_meta_tag
     add_one(ticket_type)
     fill_in "Coupon code", with: "PUNE500"
@@ -216,7 +216,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "previews an unknown coupon as invalid and keeps the undiscounted total" do
     ticket_type = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", price_paise: 350_000, capacity: 5, position: 1)
 
-    visit root_path
+    visit tickets_store_path
     insert_csrf_meta_tag
     add_one(ticket_type)
     fill_in "Coupon code", with: "NOSUCHCODE"
@@ -228,7 +228,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "blocks submission client side until the required buyer fields are filled" do
     ticket_type = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", capacity: 5, position: 1)
 
-    visit root_path
+    visit tickets_store_path
     add_one(ticket_type)
     click_button "Continue to payment"
 
@@ -246,7 +246,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "re-renders the storefront with an alert when no tickets are selected" do
     ticket_type = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", capacity: 5, position: 1)
 
-    visit root_path
+    visit tickets_store_path
     fill_in_buyer
     click_button "Continue to payment"
 
@@ -258,7 +258,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "rejects a standalone Explore Pune Day add-on without a paid conference order" do
     add_on = create(:ticket_type, name: "Explore Pune Day", slug: "explore-pune-day", price_paise: 250_000, capacity: 50, requires_conference_pass: true, position: 1)
 
-    visit root_path
+    visit tickets_store_path
     check quantity_field_for(add_on), allow_label_click: true
     fill_in_buyer
     fill_in "Paid order code", with: "NOPE1234"
@@ -274,7 +274,7 @@ RSpec.describe "Checkout storefront", type: :system do
     other = create(:ticket_type, name: "Workshop Pass", slug: "conference-pass-workshop", capacity: 5, position: 2)
     create(:coupon, code: "WORKSHOP50", discount_paise: 50_000, ticket_type: other)
 
-    visit root_path
+    visit tickets_store_path
     add_one(ticket_type)
     fill_in_buyer
     fill_in "Coupon code", with: "WORKSHOP50"
@@ -287,7 +287,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "rejects an unknown coupon code" do
     ticket_type = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", capacity: 5, position: 1)
 
-    visit root_path
+    visit tickets_store_path
     add_one(ticket_type)
     fill_in_buyer
     fill_in "Coupon code", with: "NOSUCHCODE"
@@ -301,7 +301,7 @@ RSpec.describe "Checkout storefront", type: :system do
     ticket_type = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", price_paise: 350_000, capacity: 5, position: 1)
     create(:coupon, code: "ONTHEHOUSE", discount_paise: nil, percent: 100, ticket_type:)
 
-    visit root_path
+    visit tickets_store_path
     add_one(ticket_type)
     fill_in_buyer
     fill_in "Coupon code", with: "ONTHEHOUSE"
@@ -326,7 +326,7 @@ RSpec.describe "Checkout storefront", type: :system do
       create(:coupon, code: "FREEBOOK", percent: 100, discount_paise: nil, ticket_type: nil)
       allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
 
-      visit root_path
+      visit tickets_store_path
       3.times { find("[data-ticket-type-id='#{ticket_type.id}'] [data-action*='increment'], .ticket-card", match: :first) }
       fill_in "checkout[buyer_name]", with: "Ada Lovelace"
       fill_in "checkout[email]", with: "accounts@saeloun.test"

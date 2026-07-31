@@ -1,0 +1,78 @@
+<% content_for :title, "Deccan Queen on Rails 2026 · Pune" %>
+<% content_for :meta_description, "India's Ruby and Rails conference — 8 to 11 October 2026 at Hyatt Regency, Pune. Talks, speakers, and an optional Explore Pune Day." %>
+
+<main class="home">
+  <section class="home-hero">
+    <p class="section-label">India’s Ruby &amp; Rails conference</p>
+    <h1>Deccan Queen on Rails</h1>
+    <p class="home-hero__meta">8–11 October 2026 <span aria-hidden="true">·</span> Hyatt Regency, Pune</p>
+    <p class="home-hero__lede">Two days of Ruby, Rails, and good company in Pune — with an optional day out in the city.</p>
+    <div class="home-hero__cta">
+      <%= link_to "Get your pass", tickets_store_path, class: "btn btn-primary" %>
+      <%= link_to "See the schedule", schedule_path, class: "btn btn-secondary" %>
+    </div>
+  </section>
+
+  <nav class="home-links" aria-label="Sections">
+    <%= link_to "Schedule", schedule_path, class: "home-link" %>
+    <%= link_to "Speakers", speakers_path, class: "home-link" %>
+    <%= link_to "Sponsors", sponsors_path, class: "home-link" %>
+    <%= link_to "Community", community_path, class: "home-link" %>
+    <%= link_to "Concierge", concierge_path, class: "home-link" %>
+    <%= link_to "FAQ", faq_path, class: "home-link" %>
+    <%= link_to "Info", info_pages_path, class: "home-link" %>
+  </nav>
+
+  <% if @announcements.any? %>
+    <section class="home-section">
+      <h2>Latest updates</h2>
+      <ul class="update-list">
+        <% @announcements.each do |announcement| %>
+          <li class="update">
+            <p class="update__date"><%= announcement.shown_at.strftime("%-d %B %Y") %></p>
+            <h3 class="update__title"><%= link_to announcement.title, updates_path %></h3>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% if @speakers.any? %>
+    <section class="home-section">
+      <h2>Speakers</h2>
+      <ul class="attendee-grid">
+        <% @speakers.each do |speaker| %>
+          <li>
+            <%= link_to speaker_path(speaker), class: "attendee-card__link" do %>
+              <% if speaker.photo.attached? %><%= image_tag speaker.photo, alt: "", class: "attendee-card__avatar" %><% end %>
+              <span class="attendee-card__name"><%= speaker.name %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+      <p><%= link_to "All speakers", speakers_path %>.</p>
+    </section>
+  <% end %>
+
+  <% if @sponsors.any? %>
+    <section class="home-section">
+      <h2>Sponsors</h2>
+      <ul class="sponsor-grid">
+        <% @sponsors.each do |sponsor| %>
+          <li class="sponsor-card">
+            <%= link_to (sponsor.url.presence || sponsors_path), class: "sponsor-card__link" do %>
+              <% if sponsor.logo.attached? %><%= image_tag sponsor.logo, alt: sponsor.name, class: "sponsor-card__logo" %><% else %><span class="sponsor-card__name"><%= sponsor.name %></span><% end %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+      <p><%= link_to "All sponsors", sponsors_path %>.</p>
+    </section>
+  <% end %>
+
+  <section class="home-cta">
+    <h2>Join us in Pune</h2>
+    <p>8–11 October 2026 · Hyatt Regency, Pune.</p>
+    <%= link_to "Get your pass", tickets_store_path, class: "btn btn-primary" %>
+  </section>
+</main>

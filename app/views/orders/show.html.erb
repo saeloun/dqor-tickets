@@ -10,7 +10,7 @@
         <h1>Confirming your payment</h1>
         <% if @order.payment_events.exists?(kind: "payment.failed") %>
           <p>The payment failed. No charge was confirmed. You can return and try again.</p>
-          <%= link_to "Choose tickets", root_path, class: "btn btn-primary" %>
+          <%= link_to "Choose tickets", tickets_store_path, class: "btn btn-primary" %>
         <% else %>
           <p>Razorpay is confirming the payment. This page updates automatically.</p>
           <p class="status-hint" role="status">Please keep this page open.</p>
@@ -73,10 +73,10 @@
       <% elsif @order.expired? %>
         <h1>This order expired</h1>
         <p>The inventory hold ended before payment confirmation. No payment was captured.</p>
-        <%= link_to "Try again", root_path, class: "btn btn-secondary" %>
+        <%= link_to "Try again", tickets_store_path, class: "btn btn-secondary" %>
       <% else %>
         <h1>This order was canceled</h1>
-        <%= link_to "Return to tickets", root_path, class: "btn btn-secondary" %>
+        <%= link_to "Return to tickets", tickets_store_path, class: "btn btn-secondary" %>
       <% end %>
     </section>
   <% end %>

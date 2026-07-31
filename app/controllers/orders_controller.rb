@@ -1,7 +1,7 @@
 class OrdersController < ApplicationController
   allow_unauthenticated_access
-  rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to root_path, alert: "Please wait before trying again." }
-  rate_limit to: 10, within: 1.minute, only: :show, name: "show", with: -> { redirect_to root_path, alert: "Please wait before trying again." }
+  rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to tickets_store_path, alert: "Please wait before trying again." }
+  rate_limit to: 10, within: 1.minute, only: :show, name: "show", with: -> { redirect_to tickets_store_path, alert: "Please wait before trying again." }
 
   def create
     checkout = checkout_params

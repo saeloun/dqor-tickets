@@ -126,7 +126,7 @@ RSpec.describe "Order page", type: :system do
 
       expect(page).to have_css("h1", text: "Confirming your payment")
       expect(page).to have_content("The payment failed. No charge was confirmed.")
-      expect(page).to have_link("Choose tickets", href: root_path)
+      expect(page).to have_link("Choose tickets", href: tickets_store_path)
       expect(page).to have_no_content("Please keep this page open.")
     end
 
@@ -153,7 +153,7 @@ RSpec.describe "Order page", type: :system do
 
       expect(page).to have_css("h1", text: "This order expired")
       expect(page).to have_content("The inventory hold ended before payment confirmation. No payment was captured.")
-      expect(page).to have_link("Try again", href: root_path)
+      expect(page).to have_link("Try again", href: tickets_store_path)
       expect(page).to have_css("turbo-frame#order_status[data-poll-active-value='false']")
       expect(page).to have_no_link("Download tax invoice")
     end
@@ -166,7 +166,7 @@ RSpec.describe "Order page", type: :system do
       visit order_path(order.code)
 
       expect(page).to have_css("h1", text: "This order was canceled")
-      expect(page).to have_link("Return to tickets", href: root_path)
+      expect(page).to have_link("Return to tickets", href: tickets_store_path)
       expect(page).to have_no_content("Your tickets are confirmed")
       expect(page).to have_no_link("Download tax invoice")
     end

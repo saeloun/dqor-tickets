@@ -49,7 +49,7 @@
         <% end %>
       </ul>
     <% else %>
-      <p>No tickets found for <strong><%= current_user.email %></strong> yet. <%= link_to "Browse passes", root_path %>.</p>
+      <p>No tickets found for <strong><%= current_user.email %></strong> yet. <%= link_to "Browse passes", tickets_store_path %>.</p>
     <% end %>
   </section>
 
