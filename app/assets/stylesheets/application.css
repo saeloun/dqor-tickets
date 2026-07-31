@@ -590,3 +590,18 @@ button { cursor: pointer; }
 .faq__q { cursor: pointer; font-weight: 600; }
 .faq__a { margin: 0.6rem 0 0; color: var(--color-muted-foreground); }
 .info-body { max-width: 46rem; margin: 1.5rem 0; line-height: 1.7; color: var(--color-foreground); }
+
+.home { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
+.home-hero { text-align: center; padding: 3rem 0 1rem; }
+.home-hero h1 { font-size: clamp(2.5rem, 7vw, 4rem); margin: 0.5rem 0; }
+.home-hero__meta { font-weight: 600; color: var(--color-primary); margin: 0.25rem 0; }
+.home-hero__lede { max-width: 36rem; margin: 1rem auto; color: var(--color-muted-foreground); font-size: 1.1rem; }
+.home-hero__cta { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+.home-links { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin: 1.5rem 0 1rem; }
+.home-link { padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 999px; text-decoration: none; color: var(--color-foreground); font-weight: 600; font-size: 0.9rem; }
+.home-link:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.home-section { margin-top: 2.5rem; }
+.home-section h2 { font-size: 1.4rem; margin: 0 0 1rem; }
+.home-cta { text-align: center; margin-top: 3rem; padding: 2.5rem 1.5rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; }
+.home-cta h2 { margin: 0 0 0.5rem; }
+.home-cta p { color: var(--color-muted-foreground); margin: 0 0 1.25rem; }

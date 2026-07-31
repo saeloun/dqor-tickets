@@ -28,6 +28,6 @@ class PaymentsController < ApplicationController
     end
     head :unprocessable_content
   rescue ActionController::ParameterMissing, ActiveRecord::RecordNotFound
-    redirect_to root_path, alert: "We couldn't confirm that payment automatically. If you were charged, your tickets will arrive by email shortly — contact us if they don't."
+    redirect_to tickets_store_path, alert: "We couldn't confirm that payment automatically. If you were charged, your tickets will arrive by email shortly — contact us if they don't."
   end
 end

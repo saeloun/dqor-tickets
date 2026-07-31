@@ -18,7 +18,7 @@ RSpec.describe "Ticket access by email link", type: :system do
   it "is reachable from the storefront" do
     create(:ticket_type, name: "Early Bird", position: 1)
 
-    visit root_path
+    visit tickets_store_path
     click_link "Email me my tickets"
 
     expect(page).to have_content("Get your tickets by email")

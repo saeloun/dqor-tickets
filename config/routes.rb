@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
-  root "tickets#index"
+  root "home#index"
+  get "tickets", to: "tickets#index", as: :tickets_store
 
   mount_avo at: "/avo"
 

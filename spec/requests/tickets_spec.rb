@@ -11,7 +11,7 @@ RSpec.describe "Tickets", type: :request do
     create_list(:ticket, 7, ticket_type: on_sale, order: create(:order, :paid))
     create(:ticket, ticket_type: sold_out, order: create(:order, :paid))
 
-    get root_path
+    get tickets_store_path
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include(on_sale.name, "on sale", "₹3,500", "23 of 30 left", %(max="23"))
