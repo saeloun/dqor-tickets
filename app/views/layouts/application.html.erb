@@ -90,11 +90,11 @@
     <% unless turbo_native_app? %>
     <header class="site-header" data-controller="theme">
       <div class="site-header__inner">
-        <a class="wordmark" href="https://deccanqueenonrails.com">
+        <%= link_to root_path, class: "wordmark" do %>
           <%= image_tag "deccan-logo.png", alt: "Deccan Queen on Rails", class: "wordmark__logo" %>
           <span class="wordmark__eyebrow" lang="mr">डेक्कन क्वीन</span>
           <span class="wordmark__name">Deccan Queen on Rails</span>
-        </a>
+        <% end %>
         <p class="event-date">Oct 8–11, 2026 <span aria-hidden="true">·</span> Pune</p>
         <button class="theme-toggle" type="button" data-action="theme#toggle" data-theme-target="button" aria-label="Switch to dark theme">
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
@@ -119,7 +119,7 @@
     <% unless turbo_native_app? %>
     <footer class="site-footer">
       <div class="site-footer__inner">
-        <a class="site-footer__brand" href="https://deccanqueenonrails.com">Deccan Queen on Rails</a>
+        <%= link_to "Deccan Queen on Rails", root_path, class: "site-footer__brand" %>
         <nav class="site-footer__links" aria-label="Explore">
           <% if user_signed_in? %>
             <%= link_to "My account", account_root_path %>

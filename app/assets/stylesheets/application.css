@@ -218,6 +218,10 @@ button { cursor: pointer; }
 .storefront-hero { max-width: 42rem; margin: 0 auto 3rem; text-align: center; }
 .storefront-hero h1, .checkout-heading h1 { margin-bottom: 0.75rem; font-size: clamp(2.25rem, 5vw, 3.5rem); }
 .storefront-hero > p:last-child, .checkout-heading > p:last-child { color: var(--color-muted-foreground); font-size: 1.1rem; }
+.page-hero { max-width: 46rem; margin: 0 auto 2rem; padding-bottom: 1.5rem; text-align: center; border-bottom: 1px solid var(--color-border); }
+.page-hero .section-label { color: var(--color-primary); }
+.page-hero h1 { margin: 0.4rem 0 0.75rem; font-size: clamp(2rem, 5vw, 3rem); }
+.page-hero > p:last-child { color: var(--color-muted-foreground); font-size: 1.05rem; margin: 0; }
 
 .section-label {
   margin-bottom: 0.65rem;
@@ -437,7 +441,7 @@ button { cursor: pointer; }
 .site-footer { border-top: 1px solid var(--color-border); background: var(--color-background-alt); }
 .site-footer__inner { width: min(100% - 3rem, 1080px); min-height: 7rem; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; color: var(--color-muted-foreground); font-size: 0.82rem; }
 .site-footer__brand { color: var(--color-foreground); font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; text-decoration: none; }
-.site-footer__links { display: flex; gap: 1rem; margin-left: auto; }
+.site-footer__links { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-left: auto; }
 .site-footer__links a:hover { color: var(--color-ruby); }
 .site-footer__inner p { margin: 0; }
 .site-footer__inner p span { color: var(--color-ruby); }
@@ -454,7 +458,11 @@ button { cursor: pointer; }
 
 @media (max-width: 640px) {
   .site-header__inner, .storefront, .checkout-page, .status-page, .site-footer__inner { width: min(100% - 2rem, 1080px); }
+  .site-header__inner { gap: 0.75rem; }
   .event-date { display: none; }
+  .wordmark__eyebrow { display: none; }
+  .wordmark__name { font-size: 0.98rem; }
+  .site-header__signin { white-space: nowrap; }
   .theme-toggle { margin-left: auto; }
   .storefront, .checkout-page { padding-top: 3rem; }
   .tickets-grid, .field-grid { grid-template-columns: 1fr; }
