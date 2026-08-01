@@ -1,12 +1,12 @@
 <% content_for :title, "Deccan Queen on Rails 2026 · Pune" %>
-<% content_for :meta_description, "India's Ruby and Rails conference — 8 to 11 October 2026 at Hyatt Regency, Pune. Talks, speakers, and an optional Explore Pune Day." %>
+<% content_for :meta_description, "India's Ruby and Rails conference — 8 to 11 October 2026 at Hyatt Regency, Pune. Talks, speakers, Rails Girls, and an optional Explore Pune Day." %>
 
 <main class="home">
   <section class="home-hero">
     <p class="section-label">India’s Ruby &amp; Rails conference</p>
     <h1>Deccan Queen on Rails</h1>
     <p class="home-hero__meta">8–11 October 2026 <span aria-hidden="true">·</span> Hyatt Regency, Pune</p>
-    <p class="home-hero__lede">Two days of Ruby, Rails, and good company in Pune — with an optional day out in the city.</p>
+    <p class="home-hero__lede">A city that shaped empires, now shaping code. Two days of Ruby and Rails talks in Pune, an optional Explore Pune Day, and Rails Girls — with good company throughout.</p>
     <div class="home-hero__cta">
       <%= link_to "Get your pass", tickets_store_path, class: "btn btn-primary" %>
       <%= link_to "See the schedule", schedule_path, class: "btn btn-secondary" %>
@@ -23,9 +23,84 @@
     <%= link_to "Info", info_pages_path, class: "home-link" %>
   </nav>
 
+  <section class="home-feature">
+    <p class="section-label">About</p>
+    <h2>A city that shaped empires, now shaping code</h2>
+    <p>Pune has long been a city of scholars, builders, and makers. Deccan Queen on Rails brings that spirit to the Ruby and Rails community — two days of talks, hallway conversations, and a shared love of well-crafted software in one of India’s most welcoming tech cities.</p>
+    <p>Named after the legendary Deccan Queen express, the conference celebrates the journey as much as the destination.</p>
+  </section>
+
+  <% if @speakers.any? %>
+    <section class="home-section">
+      <p class="section-label">Speakers</p>
+      <h2>Voices from India &amp; the world</h2>
+      <ul class="attendee-grid">
+        <% @speakers.each do |speaker| %>
+          <li>
+            <%= link_to speaker_path(speaker), class: "attendee-card__link" do %>
+              <% if speaker.photo.attached? %><%= image_tag speaker.photo, alt: "", class: "attendee-card__avatar" %><% end %>
+              <span class="attendee-card__name"><%= speaker.name %></span>
+              <% if speaker.title.present? %><span class="attendee-card__bio"><%= speaker.title %></span><% end %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+      <p><%= link_to "All speakers →", speakers_path %></p>
+    </section>
+  <% end %>
+
+  <% if @talks.any? %>
+    <section class="home-section">
+      <p class="section-label">Schedule</p>
+      <h2>Four days in Pune</h2>
+      <ul class="home-talks">
+        <% @talks.each do |talk| %>
+          <li class="home-talk">
+            <span class="home-talk__time"><%= talk.day&.strftime("%-d %b") %> · <%= talk.time_range %></span>
+            <span class="home-talk__title"><%= talk.title %></span>
+            <% if talk.speaker_display.present? %><span class="home-talk__speaker"><%= talk.speaker_display %></span><% end %>
+          </li>
+        <% end %>
+      </ul>
+      <p><%= link_to "Full schedule →", schedule_path %></p>
+    </section>
+  <% end %>
+
+  <section class="home-duo">
+    <article class="home-card">
+      <p class="section-label">Rails Girls</p>
+      <h3>Rails Girls Pune</h3>
+      <p>A free, beginner-friendly day to get started with web development and Ruby on Rails — mentors, laptops, and a supportive room. Everyone is welcome.</p>
+    </article>
+    <article class="home-card">
+      <p class="section-label">Explore Pune Day</p>
+      <h3>The city beyond the conference</h3>
+      <p>An optional day out on 11 October — a guided tour, a local food trail, and time to see the city that inspired the conference. Add it to any pass.</p>
+      <%= link_to "Add to your pass", tickets_store_path, class: "btn btn-secondary" %>
+    </article>
+  </section>
+
+  <% if @sponsors.any? %>
+    <section class="home-section">
+      <p class="section-label">Sponsors</p>
+      <h2>The organisations making this possible</h2>
+      <ul class="sponsor-grid">
+        <% @sponsors.each do |sponsor| %>
+          <li class="sponsor-card">
+            <%= link_to (sponsor.url.presence || sponsors_path), class: "sponsor-card__link" do %>
+              <% if sponsor.logo.attached? %><%= image_tag sponsor.logo, alt: sponsor.name, class: "sponsor-card__logo" %><% else %><span class="sponsor-card__name"><%= sponsor.name %></span><% end %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+      <p><%= link_to "All sponsors →", sponsors_path %></p>
+    </section>
+  <% end %>
+
   <% if @announcements.any? %>
     <section class="home-section">
-      <h2>Latest updates</h2>
+      <p class="section-label">Updates</p>
+      <h2>Latest news</h2>
       <ul class="update-list">
         <% @announcements.each do |announcement| %>
           <li class="update">
@@ -37,42 +112,14 @@
     </section>
   <% end %>
 
-  <% if @speakers.any? %>
-    <section class="home-section">
-      <h2>Speakers</h2>
-      <ul class="attendee-grid">
-        <% @speakers.each do |speaker| %>
-          <li>
-            <%= link_to speaker_path(speaker), class: "attendee-card__link" do %>
-              <% if speaker.photo.attached? %><%= image_tag speaker.photo, alt: "", class: "attendee-card__avatar" %><% end %>
-              <span class="attendee-card__name"><%= speaker.name %></span>
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-      <p><%= link_to "All speakers", speakers_path %>.</p>
-    </section>
-  <% end %>
-
-  <% if @sponsors.any? %>
-    <section class="home-section">
-      <h2>Sponsors</h2>
-      <ul class="sponsor-grid">
-        <% @sponsors.each do |sponsor| %>
-          <li class="sponsor-card">
-            <%= link_to (sponsor.url.presence || sponsors_path), class: "sponsor-card__link" do %>
-              <% if sponsor.logo.attached? %><%= image_tag sponsor.logo, alt: sponsor.name, class: "sponsor-card__logo" %><% else %><span class="sponsor-card__name"><%= sponsor.name %></span><% end %>
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-      <p><%= link_to "All sponsors", sponsors_path %>.</p>
-    </section>
-  <% end %>
-
   <section class="home-cta">
-    <h2>Join us in Pune</h2>
-    <p>8–11 October 2026 · Hyatt Regency, Pune.</p>
+    <h2>Choose your experience</h2>
+    <p>Conference passes and an optional Explore Pune Day, priced in INR with GST included.</p>
     <%= link_to "Get your pass", tickets_store_path, class: "btn btn-primary" %>
+  </section>
+
+  <section class="home-contact">
+    <p class="section-label">Get in touch</p>
+    <p>Questions? <%= link_to "Ask the concierge", concierge_path %>, read the <%= link_to "FAQ", faq_path %>, or email <a href="mailto:hello@deccanqueenonrails.com">hello@deccanqueenonrails.com</a>.</p>
   </section>
 </main>
