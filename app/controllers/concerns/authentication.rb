@@ -35,7 +35,9 @@ module Authentication
     end
 
     def after_authentication_url
-      session.delete(:return_to_after_authenticating) || rails_health_check_url
+      return checkin_path if Current.admin_user&.desk?
+
+      session.delete(:return_to_after_authenticating) || Avo.configuration.root_path
     end
 
     def start_new_session_for(admin_user)

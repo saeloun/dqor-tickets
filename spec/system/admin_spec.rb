@@ -8,7 +8,7 @@ RSpec.describe "Avo admin", type: :system do
     fill_in "email", with: user.email
     fill_in "password", with: "password123"
     click_on "Sign in"
-    expect(page).to have_current_path(rails_health_check_path)
+    expect(page).to have_current_path("/avo/dashboard")
   end
 
   it "sends an unauthenticated visitor to the sign-in form" do

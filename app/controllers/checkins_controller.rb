@@ -1,4 +1,6 @@
 class CheckinsController < ApplicationController
+  layout "checkin"
+
   EVENT_DATES = (8..11).map { |day| Date.new(2026, 10, day) }.freeze
 
   def show
