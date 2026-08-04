@@ -40,7 +40,7 @@ RSpec.describe "Authentication", type: :system do
     it "lands an admin on an authenticated page and records a session" do
       sign_in(email: admin.email, password:)
 
-      expect(page).to have_current_path(rails_health_check_path)
+      expect(page).to have_current_path("/avo/dashboard")
       expect(admin.sessions.count).to eq(1)
 
       visit checkin_path
@@ -50,7 +50,7 @@ RSpec.describe "Authentication", type: :system do
     it "normalizes the email so casing and whitespace do not matter" do
       sign_in(email: "  ADMIN@Example.com  ", password:)
 
-      expect(page).to have_current_path(rails_health_check_path)
+      expect(page).to have_current_path("/avo/dashboard")
       expect(admin.sessions.count).to eq(1)
     end
 
@@ -170,7 +170,7 @@ RSpec.describe "Authentication", type: :system do
       expect(page).to have_content("Password has been reset.")
 
       sign_in(email: admin.email, password: "brand-new-secret")
-      expect(page).to have_current_path(rails_health_check_path)
+      expect(page).to have_current_path("/avo/dashboard")
     end
 
     it "rejects the old password once it has been reset" do

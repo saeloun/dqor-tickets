@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) || "Registration desk · Deccan Queen on Rails" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="robots" content="noindex">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= yield :head %>
+    <%= javascript_importmap_tags %>
+    <style>
+      body { margin: 0; background: #f6f3ee; color: #1a1a1a; font-family: system-ui, sans-serif; }
+      .desk-topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 1rem; background: #991b1b; color: #fff; }
+      .desk-topbar__brand { font-weight: 700; letter-spacing: 0.02em; }
+      .desk-topbar__who { margin-left: auto; font-size: 0.9rem; opacity: 0.95; }
+      .desk-topbar form { margin: 0; }
+      .desk-topbar button { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.45); border-radius: 0.4rem; padding: 0.4rem 0.85rem; font: inherit; font-weight: 600; cursor: pointer; }
+      .desk-topbar button:hover { background: rgba(255,255,255,0.28); }
+    </style>
+  </head>
+  <body>
+    <header class="desk-topbar">
+      <span class="desk-topbar__brand">Deccan Queen on Rails · Registration desk</span>
+      <% if Current.admin_user %>
+        <span class="desk-topbar__who"><%= Current.admin_user.display_name %> · <%= Current.admin_user.role.titleize %></span>
+        <%= button_to "Sign out", session_path, method: :delete %>
+      <% end %>
+    </header>
+
+    <%= yield %>
+  </body>
+</html>
