@@ -772,8 +772,8 @@
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount">From ₹3,500</span>
-              <span class="ticket-price-note">· Early Bird, incl. GST</span>
+              <span class="ticket-price-amount"><%= @conference_from ? "From #{inr(@conference_from.price_paise)}" : "Get your pass" %></span>
+              <span class="ticket-price-note">· incl. GST</span>
             </div>
             <a href="/tickets" class="btn btn-primary" style="justify-content:center">Buy Conference Pass</a>
           </div>
@@ -830,7 +830,7 @@
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount">₹2,000</span>
+              <span class="ticket-price-amount"><%= @explore_pass ? inr(@explore_pass.price_paise) : "₹2,000" %></span>
               <span class="ticket-price-note">· add on with your pass</span>
             </div>
             <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-gold);color:hsl(35,65%,35%)">Add to Conference Pass</a>
