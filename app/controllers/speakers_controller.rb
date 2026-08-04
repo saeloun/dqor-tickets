@@ -2,10 +2,10 @@ class SpeakersController < ApplicationController
   allow_unauthenticated_access
 
   def index
-    @speakers = Speaker.published.ordered.includes(:talks)
+    @speakers = Speaker.publicly_listed.ordered.includes(:talks)
   end
 
   def show
-    @speaker = Speaker.published.find(params[:id])
+    @speaker = Speaker.publicly_listed.find(params[:id])
   end
 end
