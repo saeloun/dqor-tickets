@@ -281,6 +281,10 @@
                 var closeIcon = document.getElementById('close-icon');
                 if (hamburger) hamburger.classList.toggle('hidden', isOpen);
                 if (closeIcon) closeIcon.classList.toggle('hidden', !isOpen);
+                if (isOpen) {
+                  var firstFocusable = menu.querySelector('a[href], button');
+                  if (firstFocusable) firstFocusable.focus();
+                }
                 return;
               }
 
@@ -310,7 +314,27 @@
             });
 
             document.addEventListener('keydown', function (e) {
-              if (e.key === 'Escape') { closeMobileMenu(); return; }
+              var menu = document.getElementById('nav-mobile-menu');
+              var menuOpen = menu && menu.classList.contains('open');
+
+              if (e.key === 'Escape' && menuOpen) {
+                closeMobileMenu();
+                var toggle = document.getElementById('nav-mobile-toggle');
+                if (toggle) toggle.focus();
+                return;
+              }
+
+              // Trap Tab focus within the open drawer.
+              if (e.key === 'Tab' && menuOpen) {
+                var focusables = menu.querySelectorAll('a[href], button');
+                if (focusables.length) {
+                  var first = focusables[0], last = focusables[focusables.length - 1];
+                  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                }
+                return;
+              }
+
               if (e.key === 'Enter' || e.key === ' ') {
                 var facade = e.target.closest('.venue-video-facade');
                 if (facade) { e.preventDefault(); activateVideo(facade, false); }
