@@ -78,5 +78,6 @@ Rails.application.configure do
 
   config.hosts << host
   config.hosts << ".onrender.com"
+  config.hosts << ".deccanqueenonrails.com"
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
