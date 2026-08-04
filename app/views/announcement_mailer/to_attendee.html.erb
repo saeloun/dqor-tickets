@@ -1,0 +1,11 @@
+<%= mail_heading @announcement.title %>
+
+<% @announcement.body.to_s.split(/\n{2,}/).map(&:strip).reject(&:blank?).each do |paragraph| %>
+  <%= mail_text paragraph %>
+<% end %>
+
+<%= mail_divider %>
+
+<%= mail_note "You’re receiving this because you have a ticket to Deccan Queen on Rails — October 8–11, 2026, Pune." %>
+
+<p style="margin:0 0 20px;"><%= mail_button "See all updates", updates_url %></p>

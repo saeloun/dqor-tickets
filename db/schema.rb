@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_102405) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_111610) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,6 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_102405) do
   create_table "announcements", force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
+    t.datetime "emailed_at"
     t.boolean "published", default: false, null: false
     t.datetime "published_at"
     t.string "title", null: false

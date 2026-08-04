@@ -28,6 +28,15 @@ class Ticket < ApplicationRecord
       .where("tshirt_size IS NULL OR tshirt_size = ''")
   }
 
+  # Distinct emails of attendees holding a paid, non-canceled ticket — used for broadcast emails.
+  def self.broadcast_recipients
+    joins(:order).merge(Order.paid)
+      .where(canceled_at: nil)
+      .where.not(attendee_email: [ nil, "" ])
+      .distinct
+      .pluck(:attendee_email)
+  end
+
   validates :price_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :secret, presence: true, uniqueness: true
   validates :claim_token, presence: true

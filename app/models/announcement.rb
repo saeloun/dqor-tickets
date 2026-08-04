@@ -7,4 +7,8 @@ class Announcement < ApplicationRecord
   def shown_at
     (published_at || created_at).in_time_zone("Asia/Kolkata")
   end
+
+  def emailed?
+    emailed_at.present?
+  end
 end
