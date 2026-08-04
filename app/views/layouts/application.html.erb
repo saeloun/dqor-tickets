@@ -124,7 +124,7 @@
           <%= link_to "Get Your Pass", tickets_store_path, class: "btn-nav" %>
         </div>
 
-        <button class="nav-mobile-toggle" id="nav-mobile-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <button class="nav-mobile-toggle" id="nav-mobile-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-menu">
           <svg id="hamburger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <svg id="close-icon" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -236,7 +236,7 @@
             var closeIcon = document.getElementById('close-icon');
             if (!menu) return;
             menu.classList.remove('open');
-            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            if (toggle) { toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-label', 'Open menu'); }
             if (hamburger) hamburger.classList.remove('hidden');
             if (closeIcon) closeIcon.classList.add('hidden');
           }
@@ -276,6 +276,7 @@
               if (mToggle && menu) {
                 var isOpen = menu.classList.toggle('open');
                 mToggle.setAttribute('aria-expanded', String(isOpen));
+                mToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
                 var hamburger = document.getElementById('hamburger-icon');
                 var closeIcon = document.getElementById('close-icon');
                 if (hamburger) hamburger.classList.toggle('hidden', isOpen);
@@ -309,6 +310,7 @@
             });
 
             document.addEventListener('keydown', function (e) {
+              if (e.key === 'Escape') { closeMobileMenu(); return; }
               if (e.key === 'Enter' || e.key === ' ') {
                 var facade = e.target.closest('.venue-video-facade');
                 if (facade) { e.preventDefault(); activateVideo(facade, false); }
@@ -340,6 +342,8 @@
           function refreshVideoAutoplay() {
             var facades = document.querySelectorAll('.venue-video-facade');
             if (!facades.length) return;
+            // Respect reduced-motion: don't auto-play on scroll; a click still plays it.
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             var observer = new IntersectionObserver(function (entries) {
               entries.forEach(function (entry) {
                 if (entry.isIntersecting) { activateVideo(entry.target, true); observer.unobserve(entry.target); }
