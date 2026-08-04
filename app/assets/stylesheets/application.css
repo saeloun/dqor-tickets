@@ -572,7 +572,10 @@ button { cursor: pointer; }
 .sponsor-tier { margin-top: 2rem; }
 .sponsor-tier h2 { font-size: 1.15rem; margin: 0 0 1rem; text-transform: capitalize; }
 .sponsor-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
-.sponsor-card { text-align: center; }
+/* Scoped so the marketing .sponsor-card (a logo-centering flex card on the home
+   page) does not flex the listing card's link+blurb side by side or double-border it. */
+.schedule-page .sponsor-card { display: block; text-align: center; background: none; border: none; border-radius: 0; box-shadow: none; }
+.schedule-page .sponsor-card:hover { transform: none; box-shadow: none; }
 .sponsor-card__link { display: flex; align-items: center; justify-content: center; min-height: 90px; padding: 1rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: inherit; }
 .sponsor-card__logo { max-width: 100%; max-height: 60px; object-fit: contain; }
 .sponsor-card__name { font-weight: 700; }
@@ -599,37 +602,31 @@ button { cursor: pointer; }
 .faq__a { margin: 0.6rem 0 0; color: var(--color-muted-foreground); }
 .info-body { max-width: 46rem; margin: 1.5rem 0; line-height: 1.7; color: var(--color-foreground); }
 
-.home { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
-.home-hero { text-align: center; padding: 3rem 0 1rem; }
-.home-hero h1 { font-size: clamp(2.5rem, 7vw, 4rem); margin: 0.5rem 0; }
-.home-hero__meta { font-weight: 600; color: var(--color-primary); margin: 0.25rem 0; }
-.home-hero__lede { max-width: 36rem; margin: 1rem auto; color: var(--color-muted-foreground); font-size: 1.1rem; }
-.home-hero__cta { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
-.home-links { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin: 1.5rem 0 1rem; }
-.home-link { padding: 0.5rem 1rem; border: 1px solid var(--color-border); border-radius: 999px; text-decoration: none; color: var(--color-foreground); font-weight: 600; font-size: 0.9rem; }
-.home-link:hover { border-color: var(--color-primary); color: var(--color-primary); }
-.home-section { margin-top: 2.5rem; }
-.home-section h2 { font-size: 1.4rem; margin: 0 0 1rem; }
-.home-cta { text-align: center; margin-top: 3rem; padding: 2.5rem 1.5rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; }
-.home-cta h2 { margin: 0 0 0.5rem; }
-.home-cta p { color: var(--color-muted-foreground); margin: 0 0 1.25rem; }
 
-.home-feature { max-width: 46rem; margin: 2.5rem auto 0; text-align: center; }
-.home-feature h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0.5rem 0 1rem; }
-.home-feature p { color: var(--color-muted-foreground); margin: 0 0 1rem; line-height: 1.7; }
-.home-section > .section-label { text-align: center; }
-.home-section > h2 { text-align: center; font-size: clamp(1.5rem, 4vw, 2rem); margin: 0.25rem 0 1.25rem; }
-.home-section > p:last-child { text-align: center; margin-top: 1rem; }
-.home-section > p:last-child a { font-weight: 600; text-decoration: none; color: var(--color-primary); }
-.home-talks { list-style: none; margin: 1rem auto 0; padding: 0; max-width: 44rem; display: flex; flex-direction: column; gap: 0.5rem; }
-.home-talk { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.9rem 1.25rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; }
-.home-talk__time { font-size: 0.8rem; font-weight: 600; color: var(--color-primary); }
-.home-talk__title { font-weight: 700; }
-.home-talk__speaker { font-size: 0.9rem; color: var(--color-muted-foreground); }
-.home-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 2.5rem; }
-.home-card { padding: 1.75rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; }
-.home-card h3 { margin: 0.4rem 0 0.6rem; font-size: 1.3rem; }
-.home-card p { color: var(--color-muted-foreground); line-height: 1.6; margin: 0 0 1rem; }
-.home-contact { text-align: center; margin-top: 2.5rem; color: var(--color-muted-foreground); }
-.home-contact a { color: var(--color-primary); font-weight: 600; }
-@media (max-width: 640px) { .home-duo { grid-template-columns: 1fr; } }
+/* ===== Nav auth control (app-specific; marketing CSS has no .nav-auth) ===== */
+html { scroll-padding-top: calc(var(--nav-height) + 12px); }
+
+/* Hotwire Native renders no fixed nav, so drop the nav-height offset global.css adds to body. */
+body.hotwire-native { padding-top: 0; }
+
+.nav-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-foreground);
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-card);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.nav-auth:hover { background: var(--color-muted); border-color: var(--color-border-strong); }
+.nav-auth__avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+
+@media (max-width: 900px) {
+  .nav-actions .nav-auth--desktop { display: none; }
+}

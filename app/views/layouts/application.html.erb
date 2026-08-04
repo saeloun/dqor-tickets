@@ -82,71 +82,143 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "global", "components", "styles", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body class="<%= "hotwire-native" if turbo_native_app? %>">
     <% unless turbo_native_app? %>
-    <header class="site-header" data-controller="theme">
-      <div class="site-header__inner">
-        <%= link_to root_path, class: "wordmark" do %>
-          <%= image_tag "deccan-logo.png", alt: "Deccan Queen on Rails", class: "wordmark__logo" %>
-          <span class="wordmark__eyebrow" lang="mr">डेक्कन क्वीन</span>
-          <span class="wordmark__name">Deccan Queen on Rails</span>
+    <nav class="nav" id="main-nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-inner">
+        <%= link_to root_path, class: "nav-logo", aria: { label: "Deccan Queen on Rails — home" } do %>
+          <%= image_tag "deccan-logo.png", alt: "Deccan Queen on Rails logo" %>
+          <span class="nav-logo-text">
+            Deccan Queen
+            <span class="nav-logo-sub">on Rails · Pune 2026</span>
+          </span>
         <% end %>
-        <p class="event-date">Oct 8–11, 2026 <span aria-hidden="true">·</span> Pune</p>
-        <button class="theme-toggle" type="button" data-action="theme#toggle" data-theme-target="button" aria-label="Switch to dark theme">
-          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>
-          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
-        </button>
-        <% if user_signed_in? %>
-          <%= link_to account_root_path, class: "site-header__account", aria: { label: "Your account" } do %>
-            <%= avatar_image_tag current_user, size: 32, alt: "", class: "site-header__avatar" %>
+
+        <div class="nav-links" id="nav-links">
+          <%= link_to "Speakers", root_path(anchor: "speakers"), class: "nav-link", data: { section: "speakers" } %>
+          <%= link_to "Schedule", root_path(anchor: "schedule"), class: "nav-link", data: { section: "schedule" } %>
+          <%= link_to "CFP", root_path(anchor: "cfp"), class: "nav-link", data: { section: "cfp" } %>
+          <%= link_to "Rails Girls", root_path(anchor: "rails-girls"), class: "nav-link", data: { section: "rails-girls" } %>
+          <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-link", data: { section: "explore-pune-day" } %>
+          <%= link_to "Venue", root_path(anchor: "venue"), class: "nav-link", data: { section: "venue" } %>
+          <%= link_to "Sponsors", root_path(anchor: "sponsors"), class: "nav-link", data: { section: "sponsors" } %>
+        </div>
+
+        <div class="nav-actions">
+          <% if user_signed_in? %>
+            <%= link_to account_root_path, class: "nav-auth nav-auth--desktop", aria: { label: "Your account" } do %>
+              <%= avatar_image_tag current_user, size: 26, alt: "", class: "nav-auth__avatar" %>
+              <span>Account</span>
+            <% end %>
+          <% else %>
+            <%= link_to "Log in", account_sign_in_path, class: "nav-auth nav-auth--desktop" %>
           <% end %>
-        <% else %>
-          <%= link_to "Log in", account_sign_in_path, class: "site-header__signin" %>
-        <% end %>
-        <% if authenticated? %>
-          <%= button_to "Sign out", session_path, method: :delete, class: "sign-out" %>
-        <% end %>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle colour theme" title="Toggle theme">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <%= link_to "Get Your Pass", tickets_store_path, class: "btn-nav" %>
+        </div>
+
+        <button class="nav-mobile-toggle" id="nav-mobile-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-mobile-menu">
+          <svg id="hamburger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <svg id="close-icon" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-    </header>
+    </nav>
+
+    <div class="nav-mobile-menu" id="nav-mobile-menu" role="dialog" aria-label="Mobile menu">
+      <%= link_to "Speakers", root_path(anchor: "speakers"), class: "nav-mobile-link" %>
+      <%= link_to "Schedule", root_path(anchor: "schedule"), class: "nav-mobile-link" %>
+      <%= link_to "CFP", root_path(anchor: "cfp"), class: "nav-mobile-link" %>
+      <%= link_to "Rails Girls", root_path(anchor: "rails-girls"), class: "nav-mobile-link" %>
+      <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-mobile-link" %>
+      <%= link_to "Venue", root_path(anchor: "venue"), class: "nav-mobile-link" %>
+      <%= link_to "Sponsors", root_path(anchor: "sponsors"), class: "nav-mobile-link" %>
+      <% if user_signed_in? %>
+        <%= link_to "My account", account_root_path, class: "nav-mobile-link" %>
+      <% else %>
+        <%= link_to "Log in", account_sign_in_path, class: "nav-mobile-link" %>
+      <% end %>
+      <%= link_to "Get Your Pass", tickets_store_path, class: "nav-mobile-link nav-mobile-link-cta" %>
+      <div class="nav-mobile-actions">
+        <button class="theme-toggle" id="theme-toggle-mobile" type="button" aria-label="Toggle colour theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
     <% end %>
 
     <%= yield %>
 
     <% unless turbo_native_app? %>
-    <footer class="site-footer">
-      <div class="site-footer__inner">
-        <%= link_to "Deccan Queen on Rails", root_path, class: "site-footer__brand" %>
-        <nav class="site-footer__links" aria-label="Explore">
-          <% if user_signed_in? %>
-            <%= link_to "My account", account_root_path %>
-          <% else %>
-            <%= link_to "Log in", account_sign_in_path %>
-          <% end %>
-          <%= link_to "Schedule", schedule_path %>
-          <%= link_to "Speakers", speakers_path %>
-          <%= link_to "Sponsors", sponsors_path %>
-          <%= link_to "Updates", updates_path %>
-          <%= link_to "FAQ", faq_path %>
-          <%= link_to "Info", info_pages_path %>
-        </nav>
-        <nav class="site-footer__links" aria-label="Legal">
-          <a href="https://deccanqueenonrails.com/terms">Terms</a>
-          <a href="https://deccanqueenonrails.com/privacy">Privacy</a>
-          <a href="https://deccanqueenonrails.com/refund-policy">Refunds</a>
-        </nav>
-        <div class="site-footer__association">
-          <span>In association with the</span>
-          <% if File.exist?(Rails.root.join("app/assets/images/rails-foundation.svg")) %>
-            <%= image_tag "rails-foundation.svg", alt: "Rails Foundation", class: "site-footer__association-logo" %>
-          <% else %>
-            <span class="site-footer__association-name">Rails Foundation</span>
-          <% end %>
+    <footer class="footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <%= link_to root_path, class: "footer-logo" do %>
+              <%= image_tag "deccan-logo.png", alt: "Deccan Queen on Rails" %>
+              <span class="footer-logo-text">Deccan Queen on Rails</span>
+            <% end %>
+            <p class="footer-tagline">
+              A Ruby conference rooted in Pune’s heritage. Where Rubyists from across India meet invited voices from the world.
+            </p>
+            <div class="footer-socials">
+              <a href="https://x.com/hideccanqueen" target="_blank" rel="noopener noreferrer" aria-label="X / Twitter">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+              </a>
+              <a href="https://www.linkedin.com/company/deccan-queen-on-rails" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+              </a>
+              <a href="https://www.instagram.com/hideccanqueen/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="footer-col">
+            <p class="footer-col-title">Conference</p>
+            <ul>
+              <li><%= link_to "Speakers", root_path(anchor: "speakers") %></li>
+              <li><%= link_to "Schedule", root_path(anchor: "schedule") %></li>
+              <li><%= link_to "Call for Proposals", root_path(anchor: "cfp") %></li>
+              <li><%= link_to "Sponsors", root_path(anchor: "sponsors") %></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <p class="footer-col-title">Experience</p>
+            <ul>
+              <li><%= link_to "Rails Girls Pune", root_path(anchor: "rails-girls") %></li>
+              <li><%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day") %></li>
+              <li><%= link_to "Venue & Travel", root_path(anchor: "venue") %></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <p class="footer-col-title">Tickets & Account</p>
+            <ul>
+              <li><%= link_to "Get your pass", tickets_store_path %></li>
+              <% if user_signed_in? %>
+                <li><%= link_to "My account", account_root_path %></li>
+              <% else %>
+                <li><%= link_to "Log in", account_sign_in_path %></li>
+              <% end %>
+              <li><%= link_to "Contact", root_path(anchor: "contact") %></li>
+              <li><%= link_to "Code of Conduct", root_path(anchor: "coc") %></li>
+            </ul>
+          </div>
         </div>
-        <p>Made with <span aria-label="Ruby on Rails">Rails</span> in Pune</p>
+
+        <div class="footer-bottom">
+          <p class="footer-copyright">&copy; 2026 Deccan Queen on Rails. All rights reserved.</p>
+          <p class="footer-love">Made with <span>&#10084;</span> in Pune</p>
+        </div>
       </div>
     </footer>
     <% end %>
@@ -154,6 +226,173 @@
     <% unless turbo_native_app? %>
       <%= render "shared/install_prompt" %>
       <%= render "shared/app_tabbar" %>
+
+      <%= javascript_tag nonce: true do %>
+        (function () {
+          function closeMobileMenu() {
+            var menu = document.getElementById('nav-mobile-menu');
+            var toggle = document.getElementById('nav-mobile-toggle');
+            var hamburger = document.getElementById('hamburger-icon');
+            var closeIcon = document.getElementById('close-icon');
+            if (!menu) return;
+            menu.classList.remove('open');
+            if (toggle) { toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-label', 'Open menu'); }
+            if (hamburger) hamburger.classList.remove('hidden');
+            if (closeIcon) closeIcon.classList.add('hidden');
+          }
+
+          function toggleTheme() {
+            var t = window.__dqorTheme || {};
+            if (!t.applyTheme) return;
+            var next = t.getCurrentTheme() === 'dark' ? 'light' : 'dark';
+            t.applyTheme(next);
+            t.storeTheme(next);
+          }
+
+          function activateVideo(el, autoplay) {
+            var vid = el.dataset.vid;
+            if (!vid) return;
+            var iframe = document.createElement('iframe');
+            iframe.src = 'https://www.youtube.com/embed/' + vid + '?autoplay=1&mute=' + (autoplay ? '1' : '0') + '&rel=0';
+            iframe.title = el.getAttribute('aria-label') || 'Video';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            el.innerHTML = '';
+            el.appendChild(iframe);
+            el.style.cursor = 'default';
+          }
+
+          // Attach delegated listeners on document exactly once for the page lifetime,
+          // so Turbo body replacement never leaves them double-bound or detached.
+          function wireOnce() {
+            if (window.__dqorNavWired) return;
+            window.__dqorNavWired = true;
+
+            document.addEventListener('click', function (e) {
+              if (e.target.closest('#theme-toggle, #theme-toggle-mobile')) { toggleTheme(); return; }
+
+              var mToggle = e.target.closest('#nav-mobile-toggle');
+              var menu = document.getElementById('nav-mobile-menu');
+              if (mToggle && menu) {
+                var isOpen = menu.classList.toggle('open');
+                mToggle.setAttribute('aria-expanded', String(isOpen));
+                mToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+                var hamburger = document.getElementById('hamburger-icon');
+                var closeIcon = document.getElementById('close-icon');
+                if (hamburger) hamburger.classList.toggle('hidden', isOpen);
+                if (closeIcon) closeIcon.classList.toggle('hidden', !isOpen);
+                if (isOpen) {
+                  var firstFocusable = menu.querySelector('a[href], button');
+                  if (firstFocusable) firstFocusable.focus();
+                }
+                return;
+              }
+
+              if (e.target.closest('#nav-mobile-menu a')) {
+                closeMobileMenu();
+              } else if (menu && menu.classList.contains('open') && !menu.contains(e.target)) {
+                closeMobileMenu();
+              }
+
+              var facade = e.target.closest('.venue-video-facade');
+              if (facade) { activateVideo(facade, false); return; }
+
+              var a = e.target.closest('a[href*="#"]');
+              if (!a) return;
+              var url = a.getAttribute('href');
+              var hashIndex = url.indexOf('#');
+              if (hashIndex === -1) return;
+              var id = url.slice(hashIndex + 1);
+              if (!id) return;
+              var target = document.getElementById(id);
+              if (!target) return;
+              e.preventDefault();
+              var navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 68;
+              var top = target.getBoundingClientRect().top + window.scrollY - navHeight - 8;
+              window.scrollTo({ top: top, behavior: 'smooth' });
+              if (history.replaceState) history.replaceState(null, '', '#' + id);
+            });
+
+            document.addEventListener('keydown', function (e) {
+              var menu = document.getElementById('nav-mobile-menu');
+              var menuOpen = menu && menu.classList.contains('open');
+
+              if (e.key === 'Escape' && menuOpen) {
+                closeMobileMenu();
+                var toggle = document.getElementById('nav-mobile-toggle');
+                if (toggle) toggle.focus();
+                return;
+              }
+
+              // Trap Tab focus within the open drawer.
+              if (e.key === 'Tab' && menuOpen) {
+                var focusables = menu.querySelectorAll('a[href], button');
+                if (focusables.length) {
+                  var first = focusables[0], last = focusables[focusables.length - 1];
+                  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                }
+                return;
+              }
+
+              if (e.key === 'Enter' || e.key === ' ') {
+                var facade = e.target.closest('.venue-video-facade');
+                if (facade) { e.preventDefault(); activateVideo(facade, false); }
+              }
+            });
+
+            document.addEventListener('turbo:load', perLoad);
+          }
+
+          function refreshScrollSpy() {
+            if (window.__dqorSpy) { window.__dqorSpy.disconnect(); window.__dqorSpy = null; }
+            var navLinks = document.querySelectorAll('.nav-link');
+            if (!navLinks.length) return;
+            var sectionIds = Array.prototype.map.call(navLinks, function (a) { return a.dataset.section; }).filter(Boolean);
+            var sections = sectionIds.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+            if (!sections.length) return;
+            var observer = new IntersectionObserver(function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  var id = entry.target.id;
+                  navLinks.forEach(function (a) { a.classList.toggle('active', a.dataset.section === id); });
+                }
+              });
+            }, { rootMargin: '-' + (68 + 32) + 'px 0px -55% 0px', threshold: 0 });
+            sections.forEach(function (s) { observer.observe(s); });
+            window.__dqorSpy = observer;
+          }
+
+          function refreshVideoAutoplay() {
+            var facades = document.querySelectorAll('.venue-video-facade');
+            if (!facades.length) return;
+            // Respect reduced-motion: don't auto-play on scroll; a click still plays it.
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            var observer = new IntersectionObserver(function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) { activateVideo(entry.target, true); observer.unobserve(entry.target); }
+              });
+            }, { threshold: 0.5 });
+            facades.forEach(function (el) { observer.observe(el); });
+          }
+
+          function perLoad() {
+            refreshScrollSpy();
+            refreshVideoAutoplay();
+          }
+
+          function boot() {
+            wireOnce();
+            perLoad();
+          }
+
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+          } else {
+            boot();
+          }
+        })();
+      <% end %>
     <% end %>
   </body>
 </html>
