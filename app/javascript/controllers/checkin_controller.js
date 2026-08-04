@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import "html5-qrcode"
 
 export default class extends Controller {
-  static targets = ["date", "result"]
+  static targets = ["date", "result", "count"]
 
   connect() {
     const Scanner = window.__Html5QrcodeLibrary__?.Html5QrcodeScanner
@@ -63,6 +63,9 @@ export default class extends Controller {
   }
 
   show(state, message) {
+    if (state === "success" && this.hasCountTarget) {
+      this.countTarget.textContent = String((parseInt(this.countTarget.textContent, 10) || 0) + 1)
+    }
     this.resultTarget.className = `checkin-result checkin-result--${state}`
     this.resultTarget.textContent = message
     this.resultTarget.hidden = false

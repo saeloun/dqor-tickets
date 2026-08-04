@@ -3,6 +3,20 @@ require "rails_helper"
 RSpec.describe "Check-ins", type: :request do
   let(:date) { "2026-10-08" }
 
+  it "shows check-in progress stats for the selected day" do
+    sign_in_admin
+    checked = create(:ticket)
+    checked.check_in!(date)
+    create(:ticket)
+
+    get checkin_path, params: { date: }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("checked in")
+    expect(response.body).to include("valid tickets")
+    expect(response.body).to include('data-checkin-target="count"')
+  end
+
   it "requires an admin session" do
     get checkin_path
 
