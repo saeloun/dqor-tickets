@@ -1,125 +1,933 @@
-<% content_for :title, "Deccan Queen on Rails 2026 · Pune" %>
-<% content_for :meta_description, "India's Ruby and Rails conference — 8 to 11 October 2026 at Hyatt Regency, Pune. Talks, speakers, Rails Girls, and an optional Explore Pune Day." %>
+<% content_for :title, "Deccan Queen on Rails | Rails Conference Pune 2026" %>
+<% content_for :meta_description, "Oct 8–11, 2026 · Pune, India. A Rails conference rooted in Pune’s heritage. Rails developers from India, invited voices from the world. Book your pass." %>
 
-<main class="home">
-  <section class="home-hero">
-    <p class="section-label">India’s Ruby &amp; Rails conference</p>
-    <h1>Deccan Queen on Rails</h1>
-    <p class="home-hero__meta">8–11 October 2026 <span aria-hidden="true">·</span> Hyatt Regency, Pune</p>
-    <p class="home-hero__lede">A city that shaped empires, now shaping code. Two days of Ruby and Rails talks in Pune, an optional Explore Pune Day, and Rails Girls — with good company throughout.</p>
-    <div class="home-hero__cta">
-      <%= link_to "Get your pass", tickets_store_path, class: "btn btn-primary" %>
-      <%= link_to "See the schedule", schedule_path, class: "btn btn-secondary" %>
+<main>
+
+  <!-- ================================================================
+       HERO
+       ================================================================ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-overlay" aria-hidden="true"></div>
+    <div class="background-decorations" aria-hidden="true">
+      <!-- floating ruby gems — commented out
+      <svg class="ruby-gem gem-1" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
+      <svg class="ruby-gem gem-2" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
+      <svg class="ruby-gem gem-3" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
+      <svg class="ruby-gem gem-4" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
+      gradient orbs — commented out
+      <div class="gradient-orb orb-left"></div>
+      <div class="gradient-orb orb-right"></div>
+      -->
+    </div>
+
+    <div class="hero-content">
+      <img class="hero-logo animate-fade-in" src="https://res.cloudinary.com/dh36xzt0f/image/upload/v1768468898/deccan-logo_lq575c.png" alt="Deccan Queen on Rails" style="animation-delay:.05s" />
+
+      <p class="hero-marathi animate-fade-in" style="animation-delay:.07s" aria-label="Aapale svagat ahe — Welcome">आपले स्वागत आहे</p>
+
+      <div class="badge-pill animate-fade-in" style="animation-delay:.1s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.85rem;height:.85rem;color:var(--color-saffron)" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        Rails Conference &middot; <span class="mr" data-en="Pune">पुणे</span>, India &middot; Oct 2026
+      </div>
+
+      <h1 class="hero-heading animate-fade-in-up" style="animation-delay:.2s">
+        <span class="text-ruby">Deccan Queen</span><br />on Rails
+      </h1>
+
+      <p class="hero-date animate-fade-in-up" style="animation-delay:.3s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        October 8–11, 2026 &middot; <span class="mr" data-en="Pune">पुणे</span>, India
+      </p>
+
+      <p class="hero-subtitle animate-fade-in-up" style="animation-delay:.4s">
+        A Rails conference born in the city of <strong><span class="mr" data-en="Maratha warrior-king">शिवाजी महाराज</span>, <span class="mr" data-en="Maratha prime ministers">पेशवे</span>, and the Deccan Queen</strong>. Where Rails developers from across India gather, and invited voices from the world arrive. Deep ideas. Warm <span class="mr" data-en="tea">चहा</span>. The city opens its doors.
+      </p>
+
+      <div class="hero-actions animate-fade-in-up" style="animation-delay:.55s">
+        <a href="#tickets" class="btn btn-primary btn-lg">Get Your Pass &rarr;</a>
+      </div>
+
+      <div id="social-proof" class="social-proof animate-fade-in hidden" style="animation-delay:.7s">
+        <div id="social-proof-avatars" class="avatars"></div>
+        <span class="waitlist-count">Join <strong id="count-number" class="count-number">0</strong>+ on the waitlist</span>
+      </div>
+
+      <div class="hero-socials animate-fade-in" style="animation-delay:.8s">
+        <a href="https://x.com/hideccanqueen" target="_blank" rel="noopener noreferrer" aria-label="Follow on X / Twitter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+        </a>
+        <a href="https://www.linkedin.com/company/deccan-queen-on-rails" target="_blank" rel="noopener noreferrer" aria-label="Follow on LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="https://www.instagram.com/hideccanqueen/" target="_blank" rel="noopener noreferrer" aria-label="Follow on Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="bottom-gradient" aria-hidden="true"></div>
+  </section>
+
+  <!-- ================================================================
+       STAT BAR
+       ================================================================ -->
+  <div class="stat-bar-wrapper">
+    <div class="stat-bar">
+      <div class="stat-item"><span class="stat-value">4</span><span class="stat-label">Days</span></div>
+      <div class="stat-item"><span class="stat-value">2</span><span class="stat-label">Conf Days</span></div>
+      <div class="stat-item"><span class="stat-value">Oct 8</span><span class="stat-label">Starts</span></div>
+      <div class="stat-item"><span class="stat-value">Pune</span><span class="stat-label">India</span></div>
+      <div class="stat-item"><span class="stat-value">&#x267e;</span><span class="stat-label"><span class="mr" data-en="tea">चहा</span></span></div>
+    </div>
+  </div>
+
+  <!-- Arch divider: stat bar (bg-alt) → about (bg-alt) -->
+  <div class="arch-divider arch-divider--to-bg-alt" style="background:var(--color-background-alt)" aria-hidden="true">
+    <svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 48 Q36 0 72 48 Q108 0 144 48 Q180 0 216 48 Q252 0 288 48 Q324 0 360 48 Q396 0 432 48 Q468 0 504 48 Q540 0 576 48 Q612 0 648 48 Q684 0 720 48 Q756 0 792 48 Q828 0 864 48 Q900 0 936 48 Q972 0 1008 48 Q1044 0 1080 48 Q1116 0 1152 48 Q1188 0 1224 48 Q1260 0 1296 48 Q1332 0 1368 48 Q1404 0 1440 48 Z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <!-- ================================================================
+       ABOUT
+       ================================================================ -->
+  <section class="section about-section" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-text">
+          <span class="section-label">About</span>
+          <h2 class="section-heading">A city that shaped empires,<br />now shaping code</h2>
+          <p><span class="mr" data-en="Pune">पुणे</span> was the seat of <span class="mr" data-en="Chhatrapati Shivaji Maharaj — founder of the Maratha Empire">छत्रपती शिवाजी महाराज</span> and the <span class="mr" data-en="Peshwa — prime ministers of the Maratha Empire">पेशवे</span> who built one of the largest empires in Indian history. Today it is India's fastest-growing tech city and its most celebrated education hub — the <span class="mr" data-en="Oxford of the East">पूर्वेचे ऑक्सफर्ड</span>.</p>
+          <p>Deccan Queen on Rails is a community-first Rails conference rooted in that same spirit — bold thinking, deep craft, and warmth for everyone at the table. We bring Rails developers from across India together and invite voices from the global community to join the conversation.</p>
+          <p>Expect honest talks, hallway conversations that shift your thinking — and a city that will make you want to stay longer than planned.</p>
+        </div>
+        <div class="about-callout">
+          <div class="callout-card card">
+            <div class="callout-icon" aria-hidden="true">🚂</div>
+            <h4>The real Deccan Queen</h4>
+            <p>The historic Deccan Queen express has run Pune ↔ Mumbai daily since 1930 — India's first superfast train and a source of enduring <span class="mr" data-en="Pune pride">पुण्याभिमान</span>. Come for the conference. Arrive by train.</p>
+          </div>
+          <div class="callout-card card" style="margin-top:1rem">
+            <div class="callout-icon" aria-hidden="true">💎</div>
+            <h4>Community-first, always</h4>
+            <p>No corporate bloat. A single track where everyone watches the same talks. Lunch together. <span class="mr" data-en="tea">चहा</span> together. Ideas shared freely.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pune at a Glance -->
+      <div class="pune-glance" style="grid-template-columns:repeat(4,1fr)">
+        <div class="pune-glance-item">
+          <span class="pg-emoji">⚔️</span>
+          <strong><span class="mr" data-en="Shivaji Maharaj's Pune">शिवाजी महाराजांची पुणे</span></strong>
+          <p><span class="mr" data-en="Chhatrapati Shivaji Maharaj">छत्रपती शिवाजी महाराज</span> was born near Pune and launched the Maratha Empire from its soil. Sinhagad fort, Shaniwar Wada, Raigad — history is never more than a short drive away.</p>
+        </div>
+        <div class="pune-glance-item">
+          <span class="pg-emoji">🎓</span>
+          <strong><span class="mr" data-en="Oxford of the East">पूर्वेचे ऑक्सफर्ड</span></strong>
+          <p>Pune has been India's education capital for over a century. Home to Savitribai Phule Pune University, IIT Pune, IISER, FTII, and over 800 colleges — it thinks deeply and builds seriously.</p>
+        </div>
+        <div class="pune-glance-item">
+          <span class="pg-emoji">🎭</span>
+          <strong><span class="mr" data-en="Cultural Capital">सांस्कृतिक राजधानी</span></strong>
+          <p>Classical music, Marathi theatre (<span class="mr" data-en="Marathi theater / drama">नाटक</span>), literature festivals, and Ganesh utsav — Pune's cultural life runs deep. The arts here are not a weekend activity; they are the city's heartbeat.</p>
+        </div>
+        <div class="pune-glance-item">
+          <span class="pg-emoji">🍜</span>
+          <strong><span class="mr" data-en="Misal · Mastani · Puran Poli">मिसळ · मस्तानी · पुरण पोळी</span></strong>
+          <p>Post-monsoon October skies, 22–26°C, the Western Ghats at their greenest — and <span class="mr" data-en="Pune's food">पुण्याचं खाणं</span> that will outlast any conference talk in your memory.</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <nav class="home-links" aria-label="Sections">
-    <%= link_to "Schedule", schedule_path, class: "home-link" %>
-    <%= link_to "Speakers", speakers_path, class: "home-link" %>
-    <%= link_to "Sponsors", sponsors_path, class: "home-link" %>
-    <%= link_to "Community", community_path, class: "home-link" %>
-    <%= link_to "Concierge", concierge_path, class: "home-link" %>
-    <%= link_to "FAQ", faq_path, class: "home-link" %>
-    <%= link_to "Info", info_pages_path, class: "home-link" %>
-  </nav>
+  <!-- Arch divider: about (bg-alt) → speakers (bg) -->
+  <div class="arch-divider arch-divider--to-bg" style="background:var(--color-background-alt)" aria-hidden="true">
+    <svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 48 Q36 0 72 48 Q108 0 144 48 Q180 0 216 48 Q252 0 288 48 Q324 0 360 48 Q396 0 432 48 Q468 0 504 48 Q540 0 576 48 Q612 0 648 48 Q684 0 720 48 Q756 0 792 48 Q828 0 864 48 Q900 0 936 48 Q972 0 1008 48 Q1044 0 1080 48 Q1116 0 1152 48 Q1188 0 1224 48 Q1260 0 1296 48 Q1332 0 1368 48 Q1404 0 1440 48 Z" fill="currentColor"/>
+    </svg>
+  </div>
 
-  <section class="home-feature">
-    <p class="section-label">About</p>
-    <h2>A city that shaped empires, now shaping code</h2>
-    <p>Pune has long been a city of scholars, builders, and makers. Deccan Queen on Rails brings that spirit to the Ruby and Rails community — two days of talks, hallway conversations, and a shared love of well-crafted software in one of India’s most welcoming tech cities.</p>
-    <p>Named after the legendary Deccan Queen express, the conference celebrates the journey as much as the destination.</p>
+  <!-- ================================================================
+       SPEAKERS
+       ================================================================ -->
+  <section class="section speakers-section" id="speakers">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label">Voices from India &amp; the World</span>
+        <h2 class="section-heading">Voices from India &amp; the World</h2>
+        <p class="section-subheading" style="margin:0 auto">A curated lineup of speakers from the Ruby and Rails community, including core team members, industry leaders, and rising voices from India.</p>
+      </div>
+
+      <div class="speakers-grid">
+        <div class="speaker-card card">
+          <img src="/dqor/samuel-williams.png" alt="Samuel Williams" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Samuel Williams</p>
+            <p class="speaker-card-role">Creator of Async Ruby</p>
+          </div>
+        </div>
+        <div class="speaker-card card">
+          <img src="/dqor/marco-roth.png" alt="Marco Roth" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Marco Roth</p>
+            <p class="speaker-card-role">Stimulus &amp; Turbo Contributor</p>
+          </div>
+        </div>
+        <div class="speaker-card card">
+          <img src="/dqor/adrian-marin.png" alt="Adrian Marin" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Adrian Marin</p>
+            <p class="speaker-card-role">Author of Avo and Marksmith</p>
+          </div>
+        </div>
+        <div class="speaker-card card">
+          <img src="/dqor/irina-nazarova.png" alt="Irina Nazarova" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Irina Nazarova</p>
+            <p class="speaker-card-role">CEO of Evil Martians</p>
+          </div>
+        </div>
+        <div class="speaker-card card">
+          <img src="/dqor/sam-ruby.png" alt="Sam Ruby" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Sam Ruby</p>
+            <p class="speaker-card-role">Co-author of AWDR</p>
+          </div>
+        </div>
+        <div class="speaker-card card">
+          <img src="/dqor/carmine-paolino.png" alt="Carmine Paolino" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Carmine Paolino</p>
+            <p class="speaker-card-role">Creator of RubyLLM &amp; Chat with Work</p>
+          </div>
+        </div>
+        <div class="speaker-card card">
+          <img src="/dqor/keshav.png" alt="Keshav" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Keshav</p>
+            <p class="speaker-card-role">Creator of Confuscript</p>
+          </div>
+        </div>
+        <div class="speaker-card card">
+          <img src="/dqor/speakers-pawel-strzalkowski.jpg" alt="Paweł Strzałkowski" class="speaker-card-photo" />
+          <div class="speaker-card-body">
+            <p class="speaker-card-name">Paweł Strzałkowski</p>
+            <p class="speaker-card-role">CTO at Visuality &amp; Author of Hifumi</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center" style="margi:3.5rem">
+        <a href="#tickets" class="btn btn-secondary">The CFP has closed — get your pass &rarr;</a>
+      </div>
+
+      <!-- <div class="speaker-formats">
+        <div class="card speaker-format-card">
+          <span class="sf-duration text-ruby">30 min</span>
+          <span class="sf-type">Talk</span>
+          <p class="sf-desc">Full-length session — a topic explored properly, with room for depth.</p>
+        </div>
+        <div class="card speaker-format-card">
+          <span class="sf-duration text-ruby">15 min</span>
+          <span class="sf-type">Lightning Talk</span>
+          <p class="sf-desc">One sharp idea, delivered fast. Often the most memorable session of the day.</p>
+        </div>
+      </div> -->
+    </div>
   </section>
 
-  <% if @speakers.any? %>
-    <section class="home-section">
-      <p class="section-label">Speakers</p>
-      <h2>Voices from India &amp; the world</h2>
-      <ul class="attendee-grid">
-        <% @speakers.each do |speaker| %>
-          <li>
-            <%= link_to speaker_path(speaker), class: "attendee-card__link" do %>
-              <% if speaker.photo.attached? %><%= image_tag speaker.photo, alt: "", class: "attendee-card__avatar" %><% end %>
-              <span class="attendee-card__name"><%= speaker.name %></span>
-              <% if speaker.title.present? %><span class="attendee-card__bio"><%= speaker.title %></span><% end %>
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-      <p><%= link_to "All speakers →", speakers_path %></p>
-    </section>
-  <% end %>
+  <!-- ================================================================
+       SCHEDULE
+       ================================================================ -->
+  <section class="section schedule-section" id="schedule">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label">The Full Experience</span>
+        <h2 class="section-heading">Four days in Pune</h2>
+        <p class="section-subheading" style="margin:0 auto">Talks, community, culture, and the open roads of Maharashtra.</p>
+      </div>
 
-  <% if @talks.any? %>
-    <section class="home-section">
-      <p class="section-label">Schedule</p>
-      <h2>Four days in Pune</h2>
-      <ul class="home-talks">
-        <% @talks.each do |talk| %>
-          <li class="home-talk">
-            <span class="home-talk__time"><%= talk.day&.strftime("%-d %b") %> · <%= talk.time_range %></span>
-            <span class="home-talk__title"><%= talk.title %></span>
-            <% if talk.speaker_display.present? %><span class="home-talk__speaker"><%= talk.speaker_display %></span><% end %>
-          </li>
-        <% end %>
-      </ul>
-      <p><%= link_to "Full schedule →", schedule_path %></p>
-    </section>
-  <% end %>
+      <div class="journey-grid">
+        <div class="journey-card card">
+          <div class="journey-day-badge">
+            <span class="journey-date">Oct 8, Thu</span>
+            <span class="journey-day-num">Day 1</span>
+          </div>
+          <div class="journey-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <h3>Conference Day 1</h3>
+          <p>Keynotes and talks from Rails developers who've been building with Rails from day one — and those pushing its future. Full single track.</p>
+        </div>
 
-  <section class="home-duo">
-    <article class="home-card">
-      <p class="section-label">Rails Girls</p>
-      <h3>Rails Girls Pune</h3>
-      <p>A free, beginner-friendly day to get started with web development and Ruby on Rails — mentors, laptops, and a supportive room. Everyone is welcome.</p>
-    </article>
-    <article class="home-card">
-      <p class="section-label">Explore Pune Day</p>
-      <h3>The city beyond the conference</h3>
-      <p>An optional day out on 11 October — a guided tour, a local food trail, and time to see the city that inspired the conference. Add it to any pass.</p>
-      <%= link_to "Add to your pass", tickets_store_path, class: "btn btn-secondary" %>
-    </article>
+        <div class="journey-card card">
+          <div class="journey-day-badge">
+            <span class="journey-date">Oct 9, Fri</span>
+            <span class="journey-day-num">Day 2</span>
+          </div>
+          <div class="journey-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Conference Day 2</h3>
+          <p>More talks, lightning sessions, hallway conversations — and the afterparty, where the best ideas always happen.</p>
+        </div>
+
+        <div class="journey-card card">
+          <div class="journey-day-badge">
+            <span class="journey-date">Oct 10, Sat</span>
+            <span class="badge-pill ruby" style="font-size:.7rem">Rails Girls</span>
+          </div>
+          <div class="journey-icon" style="background:hsl(348 70% 35% / 0.06)" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Rails Girls Pune</h3>
+          <p>A full-day program for women and non-binary people. Build your first Rails app with coaches from the community.</p>
+          <a href="#rails-girls" class="btn btn-ghost">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+
+        <div class="journey-card card">
+          <div class="journey-day-badge">
+            <span class="journey-date">Oct 11, Sun</span>
+            <span class="badge-pill gold" style="font-size:.7rem">Explore Pune Day</span>
+          </div>
+          <div class="journey-icon" style="background:hsl(40 80% 50% / 0.1);color:var(--color-gold)" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-8 4 4 4-6 4 10"/><path d="M21 17H3"/></svg>
+          </div>
+          <h3>Explore Pune Day</h3>
+          <p><span class="mr" data-en="Sinhagad — Lion's Fort">सिंहगड</span>, <span class="mr" data-en="Lonavala — mountain pass">लोणावळा</span>, <span class="mr" data-en="Pune's old city">जुनी पुणे</span>, food trails. Stay a little longer — <span class="mr" data-en="Maharashtra">महाराष्ट्र</span> has more to show you.</p>
+          <a href="#explore-pune-day" class="btn btn-ghost">See the plan <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+      </div>
+
+      <div class="schedule-coming-soon">
+        <p>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+          The full schedule is live — two days of talks, lightning sessions, and workshops. <a href="#schedule">See the day-by-day schedule</a>, then <a href="#tickets">grab your pass</a>.
+        </p>
+      </div>
+    </div>
   </section>
 
-  <% if @sponsors.any? %>
-    <section class="home-section">
-      <p class="section-label">Sponsors</p>
-      <h2>The organisations making this possible</h2>
-      <ul class="sponsor-grid">
-        <% @sponsors.each do |sponsor| %>
-          <li class="sponsor-card">
-            <%= link_to (sponsor.url.presence || sponsors_path), class: "sponsor-card__link" do %>
-              <% if sponsor.logo.attached? %><%= image_tag sponsor.logo, alt: sponsor.name, class: "sponsor-card__logo" %><% else %><span class="sponsor-card__name"><%= sponsor.name %></span><% end %>
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-      <p><%= link_to "All sponsors →", sponsors_path %></p>
-    </section>
-  <% end %>
+  <!-- ================================================================
+       CFP
+       ================================================================ -->
+  <section class="section cfp-section" id="cfp">
+    <div class="container">
+      <div class="cfp-inner">
+        <div class="cfp-text">
+          <span class="badge-pill rails" style="margin-bottom:.75rem">CFP Closed</span>
+          <span class="section-label">Call for Proposals</span>
+          <h2 class="section-heading">The Call for Proposals has closed.</h2>
+          <p>Thank you to everyone who submitted a talk. We're reviewing proposals and will notify every applicant within four weeks. Missed the CFP? You can still join us — <a href="#tickets">grab your conference pass</a>.</p>
 
-  <% if @announcements.any? %>
-    <section class="home-section">
-      <p class="section-label">Updates</p>
-      <h2>Latest news</h2>
-      <ul class="update-list">
-        <% @announcements.each do |announcement| %>
-          <li class="update">
-            <p class="update__date"><%= announcement.shown_at.strftime("%-d %B %Y") %></p>
-            <h3 class="update__title"><%= link_to announcement.title, updates_path %></h3>
-          </li>
-        <% end %>
-      </ul>
-    </section>
-  <% end %>
+          <div class="cfp-topics">
+            <span class="topic-tag">Ruby Internals</span>
+            <span class="topic-tag">Rails at Scale</span>
+            <span class="topic-tag">Open Source</span>
+            <span class="topic-tag">Testing &amp; Quality</span>
+            <span class="topic-tag">Performance</span>
+            <span class="topic-tag">Security</span>
+            <span class="topic-tag">Community</span>
+            <span class="topic-tag">AI + Rails</span>
+            <span class="topic-tag">Accessibility</span>
+            <span class="topic-tag">Database</span>
+            <span class="topic-tag">Hotwire &amp; Stimulus</span>
+            <span class="topic-tag">Career</span>
+          </div>
 
-  <section class="home-cta">
-    <h2>Choose your experience</h2>
-    <p>Conference passes and an optional Explore Pune Day, priced in INR with GST included.</p>
-    <%= link_to "Get your pass", tickets_store_path, class: "btn btn-primary" %>
+          <div class="cfp-perks">
+            <h4>Speaker perks</h4>
+            <ul class="cfp-perks-list">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Travel support (international &amp; outstation)</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Hotel accommodation for conference days</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Full conference ticket included</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Explore Pune Day included (Oct 11)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="cfp-sidebar">
+          <div class="card cfp-card">
+            <h4>Talk formats</h4>
+            <div class="cfp-formats">
+              <div class="cfp-format-item">
+                <span class="cfp-format-duration">30 min</span>
+                <span class="cfp-format-type">Talk</span>
+              </div>
+              <div class="cfp-format-item">
+                <span class="cfp-format-duration">5 min</span>
+                <span class="cfp-format-type">Lightning Talk</span>
+              </div>
+            </div>
+            <a href="#tickets" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1.25rem">
+              Get your conference pass
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+
+          <div class="card cfp-faq-card" style="margin-top:1rem">
+            <h4 style="margin-bottom:1rem">Common questions</h4>
+            <details class="cfp-faq-item">
+              <summary>Can I submit multiple proposals?</summary>
+              <p>Yes — submit as many as you like. We review each independently.</p>
+            </details>
+            <details class="cfp-faq-item">
+              <summary>Never spoken before?</summary>
+              <p>First-timers are especially encouraged. We want fresh perspectives, not just conference veterans.</p>
+            </details>
+            <details class="cfp-faq-item">
+              <summary>Can I submit from outside India?</summary>
+              <p>Absolutely. We invite global speakers and can help with travel and visa support.</p>
+            </details>
+            <details class="cfp-faq-item">
+              <summary>When will I hear back?</summary>
+              <p>We notify all applicants within 4 weeks of the CFP closing date, regardless of outcome.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section class="home-contact">
-    <p class="section-label">Get in touch</p>
-    <p>Questions? <%= link_to "Ask the concierge", concierge_path %>, read the <%= link_to "FAQ", faq_path %>, or email <a href="mailto:hello@deccanqueenonrails.com">hello@deccanqueenonrails.com</a>.</p>
+  <!-- ================================================================
+       RAILS GIRLS
+       ================================================================ -->
+  <section class="section rails-girls-section" id="rails-girls">
+    <div class="container">
+      <div class="rails-girls-grid">
+        <div class="rails-girls-text">
+          <span class="section-label">October 10, 2026</span>
+          <h2 class="section-heading">Rails Girls Pune</h2>
+          <p>The day after the main conference, we open our doors to women and non-binary people who want to build their first Rails app. Run by coaches from the Rails community.</p>
+          <p>Rails Girls Pune gives beginners a warm, structured introduction to Ruby on Rails — with real mentors, real code, and real <span class="mr" data-en="lunch">जेवण</span>.</p>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.75rem">
+            <a href="#waitlist" class="btn btn-primary">Get Notified When Applications Open</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="rg-coaches-section hidden" id="rg-coaches" aria-hidden="true">
+        <div class="text-center" style="margin-bottom:2rem">
+          <h3 style="font-family:var(--font-display);font-size:1.6rem">Become a Rails Girls Coach</h3>
+          <p style="color:var(--color-muted-foreground);margin-top:.5rem;max-width:40rem;margin-left:auto;margin-right:auto">You don't need to be an expert — just someone who can guide a beginner through their first hours with Rails. Half a day of your time can change someone's trajectory.</p>
+        </div>
+        <div class="rg-coaches-grid">
+          <div class="card">
+            <h4>What coaching involves</h4>
+            <ul class="rg-points" style="margin-top:.75rem">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Guide 2–3 participants through the Rails Girls app</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Help with setup, debugging, and questions</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Be patient, encouraging, and approachable</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h4>What coaches receive</h4>
+            <ul class="rg-points" style="margin-top:.75rem">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Free conference ticket (Oct 8–9)</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Coach dinner the evening before</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>A lot of gratitude</li>
+            </ul>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:.75rem">
+            <p style="color:var(--color-muted-foreground);font-size:.95rem">Coach sign-ups are open — volunteer to mentor at Rails Girls Pune. We'll reach out with the details.</p>
+            <a href="#waitlist" class="btn btn-primary">Sign up to coach</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unified applications notice -->
+      <div class="rg-notice" id="rg-apply">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.3rem;height:1.3rem;flex-shrink:0;color:var(--color-saffron)" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <p>Conference tickets are <strong>open now</strong> — grab your pass. Rails Girls applications and coach/volunteer sign-ups are open too.</p>
+        <a href="#tickets" class="btn btn-primary" style="white-space:nowrap">Get Your Pass</a>
+      </div>
+    </div>
   </section>
+
+  <!-- ================================================================
+       EXPLORE PUNE DAY
+       ================================================================ -->
+  <section class="retreat-section section" id="explore-pune-day">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label" style="--color-ruby:var(--color-gold)">October 11, 2026</span>
+        <h2 class="section-heading">The conference ends.<br />The journey continues.</h2>
+        <p class="section-subheading" style="margin:0 auto">Stay one more day. We'll take you through Maharashtra — forts, ghats, old Pune, and food that'll make you miss the city for years.</p>
+      </div>
+
+      <div class="retreat-grid">
+        <div class="card retreat-activity-card">
+          <span class="retreat-activity-emoji" aria-hidden="true">🏔️</span>
+          <h4><span class="mr" data-en="Sinhagad — Lion's Fort">सिंहगड</span></h4>
+          <p>The fort where <span class="mr" data-en="Tanaji Malusare — Shivaji's bravest commander">तानाजी मालुसरे</span> gave his life in 1670 reclaiming it for <span class="mr" data-en="Shivaji Maharaj">शिवाजी महाराज</span>. A short drive from Pune, a steep climb, and a view that earns every step.</p>
+        </div>
+        <div class="card retreat-activity-card">
+          <span class="retreat-activity-emoji" aria-hidden="true">🌿</span>
+          <h4><span class="mr" data-en="Lonavala — mountain pass">लोणावळा</span> <span class="mr" data-en="Ghats — mountain passes">घाट</span></h4>
+          <p>The Western Ghats in post-monsoon green. Waterfalls, mist, and the kind of quiet that clears your head after two days of big ideas.</p>
+        </div>
+        <div class="card retreat-activity-card">
+          <span class="retreat-activity-emoji" aria-hidden="true">🚶</span>
+          <h4><span class="mr" data-en="Shaniwar Wada — Peshwa palace">शनिवार वाडा</span> &amp; Old <span class="mr" data-en="Pune">पुणे</span></h4>
+          <p><span class="mr" data-en="Kasba Peth — oldest neighbourhood">कसबा पेठ</span>, <span class="mr" data-en="Laxmi Road — Pune's grand bazaar street">लक्ष्मी रस्ता</span>, the <span class="mr" data-en="Peshwa">पेशवे</span> palace. Pune is 350 years old and its <span class="mr" data-en="old city">जुनी पुणे</span> shows every one of them — in the best possible way.</p>
+        </div>
+        <div class="card retreat-activity-card">
+          <span class="retreat-activity-emoji" aria-hidden="true">🍛</span>
+          <h4><span class="mr" data-en="Pune food trail">पुण्याची खाद्ययात्रा</span></h4>
+          <p><span class="mr" data-en="spicy sprouted-lentil curry with bread">मिसळ पाव</span> at Bedekar's. <span class="mr" data-en="thick ice-cream milkshake">मस्तानी</span> at Sujata. <span class="mr" data-en="sweet lentil flatbread">पुरण पोळी</span> at Kothrud. This trail alone is worth the flight to <span class="mr" data-en="Pune">पुणे</span>.</p>
+        </div>
+      </div>
+
+      <div class="retreat-info-bar">
+        <div class="retreat-info-item">
+          <strong>Who it's for</strong>
+          <p>All conference attendees. No extra expertise needed — just curiosity and comfortable shoes.</p>
+        </div>
+        <div class="retreat-info-item">
+          <strong>What's included</strong>
+          <p>Transport, guide, and all activities. Detailed itinerary announced closer to the conference.</p>
+        </div>
+        <div class="retreat-info-item">
+          <strong>How to join</strong>
+          <p>Add Explore Pune Day during conference ticket registration. Requires a Conference Pass (Oct 8–9). Limited spots.</p>
+        </div>
+      </div>
+
+      <div class="retreat-cta-bar" id="explore-pune-day-register">
+        <div class="retreat-cta-text">
+          <p class="retreat-cta-label">Explore Pune Day Add-on · October 11</p>
+          <p>Opt in when you buy your Conference Pass. Pricing announced with ticket sales.</p>
+        </div>
+        <div class="retreat-cta-actions">
+          <a href="#waitlist" class="btn btn-primary">Join the Waitlist for Updates</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       VENUE
+       ================================================================ -->
+  <section class="section venue-section" id="venue">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label">Venue &amp; Travel</span>
+        <h2 class="section-heading"><span class="mr" data-en="Pune">पुणे</span>, India</h2>
+        <p class="section-subheading" style="margin:0 auto">October in <span class="mr" data-en="Pune">पुणे</span> is post-monsoon perfection — clear skies, 24°C, the Western Ghats at their greenest. However far you're travelling, getting here is easier than you'd expect.</p>
+      </div>
+
+      <!-- Pune Tourism Video — facade pattern: loads iframe only on click -->
+      <div class="venue-video">
+        <div class="venue-video-facade" id="pune-video" data-vid="fv4dKdBZNno" role="button" tabindex="0" aria-label="Play Pune — Official Maharashtra Tourism video">
+          <img
+            class="venue-video-thumb"
+            src="https://img.youtube.com/vi/fv4dKdBZNno/maxresdefault.jpg"
+            alt="Pune — Official Maharashtra Tourism"
+            loading="lazy"
+          />
+          <div class="venue-video-overlay">
+            <div class="venue-video-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="venue-video-meta">
+              <span class="venue-video-badge">Maharashtra Tourism</span>
+              <p>See <span class="mr" data-en="Pune">पुणे</span> through the eyes of its own story</p>
+            </div>
+          </div>
+        </div>
+        <p class="venue-video-caption">Official Maharashtra Tourism · <span class="mr" data-en="Pune">पुणे</span> · Click to play</p>
+      </div>
+
+      <!-- International -->
+      <div class="venue-group-label">From outside India</div>
+      <div class="venue-grid" style="margin-bottom:2rem">
+        <div class="card venue-card">
+          <div class="venue-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19 2c-2-2-4-2-5.5-.5L10 5 1.8 6.2c-.5.1-.9.5-.9 1l.9 5 5.3 5.3 5 .9c.5.1.9-.4 1-.9z"/></svg>
+          </div>
+          <h4>Fly into Mumbai (BOM)</h4>
+          <p>Chhatrapati Shivaji Maharaj International Airport (BOM) in Mumbai is the main international gateway — well connected from the US, UK, Europe, Southeast Asia, the Middle East, and Australia. From Mumbai airport, <span class="mr" data-en="Pune">पुणे</span> is 3 hrs by road or rail.</p>
+        </div>
+
+        <div class="card venue-card">
+          <div class="venue-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19 2c-2-2-4-2-5.5-.5L10 5 1.8 6.2c-.5.1-.9.5-.9 1l.9 5 5.3 5.3 5 .9c.5.1.9-.4 1-.9z"/></svg>
+          </div>
+          <h4>Fly direct into Pune (PNQ)</h4>
+          <p>Pune Airport (PNQ) has growing international connectivity — direct flights from Dubai (Emirates, IndiGo), Singapore, Sharjah, Doha, and Muscat. Check your airline for the latest routes. Shorter connection, no transit through Mumbai.</p>
+        </div>
+
+        <div class="card venue-card venue-card-train">
+          <div class="venue-card-icon" aria-hidden="true">🚂</div>
+          <h4>Mumbai → <span class="mr" data-en="Pune">पुणे</span> on the Deccan Queen</h4>
+          <p>Land in Mumbai, hop on the iconic Deccan Queen express from Mumbai CST. Departs 17:10, arrives <span class="mr" data-en="Pune">पुणे</span> 20:30 — scenic, comfortable, and the most fitting way to arrive at a conference named after it.</p>
+          <p class="venue-train-note">Train 12123 · Book on IRCTC (irctc.co.in)</p>
+        </div>
+      </div>
+
+      <!-- From elsewhere in India -->
+      <div class="venue-group-label">From elsewhere in India</div>
+      <div class="venue-grid" style="margin-bottom:2rem">
+        <div class="card venue-card">
+          <div class="venue-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19 2c-2-2-4-2-5.5-.5L10 5 1.8 6.2c-.5.1-.9.5-.9 1l.9 5 5.3 5.3 5 .9c.5.1.9-.4 1-.9z"/></svg>
+          </div>
+          <h4>By Air</h4>
+          <p>Direct flights to Pune (PNQ) from Delhi, Bangalore, Hyderabad, Chennai, Kolkata, Ahmedabad, Jaipur, Goa, and more. Flight time from most metros is under 2 hrs.</p>
+        </div>
+
+        <div class="card venue-card">
+          <div class="venue-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M7 12h.01M17 12h.01"/></svg>
+          </div>
+          <h4>By Train</h4>
+          <p><span class="mr" data-en="Pune">पुणे</span> Junction is well connected to the Indian Railways network. Direct trains from Delhi, Mumbai, Bangalore, Hyderabad, Chennai, Nagpur, and Nashik. Check schedules on IRCTC.</p>
+          <p class="venue-train-note">irctc.co.in · Book 120 days in advance</p>
+        </div>
+
+        <div class="card venue-card">
+          <div class="venue-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v5a2 2 0 0 1-2 2z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+          </div>
+          <h4>By Road from Mumbai</h4>
+          <p>Mumbai–Pune Expressway (NH48) takes about 2.5 hrs by cab. Shivneri Volvo AC buses from Mumbai run every 30 minutes from 05:30–23:30 — comfortable and affordable. Book on redbus.in or MSRTC.</p>
+        </div>
+      </div>
+
+      <!-- Venue + Visa -->
+      <div class="venue-grid">
+        <!-- Conference Venue card hidden until announced
+        <div class="card venue-card">
+          <div class="venue-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h4>Conference Venue</h4>
+          <p class="venue-tbd">To be announced</p>
+          <p>We're finalising a venue in <span class="mr" data-en="Pune">पुणे</span> that matches the warmth of this community. Join the waitlist for updates.</p>
+          <a href="#waitlist" class="btn btn-ghost" style="margin-top:.5rem">Get notified <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+        -->
+
+        <div class="card venue-card" style="grid-column: span 3">
+          <div class="venue-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M12 15h0M7 9h10"/></svg>
+          </div>
+          <h4>Visa for international attendees</h4>
+          <p>India offers an e-Visa for nationals of 170+ countries — applied entirely online, usually approved within 72 hours. We can provide an official invitation letter to support your visa application. <a href="#contact">Contact us</a> early — we're happy to help.</p>
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem">
+            <a href="https://indianvisaonline.gov.in" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">India e-Visa Portal</a>
+            <a href="#contact" class="btn btn-ghost">Request invitation letter <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       EXPLORE PUNE
+       ================================================================ -->
+  <section class="section explore-pune-section" id="explore-pune">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label">Explore Pune</span>
+        <h2 class="section-heading">The city beyond the conference</h2>
+        <p class="section-subheading" style="margin:0 auto">Extend your trip and explore the "Oxford of the East", from historic forts to vibrant food streets and nature escapes in the Western Ghats.</p>
+      </div>
+
+      <div class="explore-pune-grid">
+        <div class="card explore-pune-card">
+          <div class="explore-pune-img-wrap">
+            <img src="/dqor/shaniwar-wada.png" alt="Shaniwar Wada" loading="lazy" class="explore-pune-img" />
+          </div>
+          <div class="explore-pune-card-body">
+            <span class="badge-pill" style="background:hsl(45 90% 50% / 0.15);color:hsl(35 80% 35%);border:1px solid hsl(45 80% 60% / 0.4)">Historical</span>
+            <h4>Shaniwar Wada</h4>
+            <p>The iconic 18th-century fortification and seat of the Peshwa rulers. A must-visit for history buffs.</p>
+          </div>
+        </div>
+
+        <div class="card explore-pune-card">
+          <div class="explore-pune-img-wrap">
+            <img src="/dqor/parvati-hills.png" alt="Parvati Hill" loading="lazy" class="explore-pune-img" />
+          </div>
+          <div class="explore-pune-card-body">
+            <span class="badge-pill" style="background:hsl(150 60% 40% / 0.12);color:hsl(150 60% 30%);border:1px solid hsl(150 50% 50% / 0.4)">Nature</span>
+            <h4>Parvati Hill</h4>
+            <p>Climb 103 steps for panoramic views of Pune. The hilltop temple complex is a serene escape from the city.</p>
+          </div>
+        </div>
+
+        <div class="card explore-pune-card">
+          <div class="explore-pune-img-wrap">
+            <img src="/dqor/pune-food.png" alt="Pune Food Tours" loading="lazy" class="explore-pune-img" />
+          </div>
+          <div class="explore-pune-card-body">
+            <span class="badge-pill" style="background:hsl(20 90% 55% / 0.12);color:hsl(20 80% 35%);border:1px solid hsl(20 80% 60% / 0.4)">Food &amp; Culture</span>
+            <h4>Pune Food Tours</h4>
+            <p>Explore Pune's legendary street food scene, from misal pav to vada pav, with guided weekend food tours.</p>
+          </div>
+        </div>
+
+        <div class="card explore-pune-card">
+          <div class="explore-pune-img-wrap">
+            <img src="/dqor/weekend-treks.png" alt="Weekend Treks" loading="lazy" class="explore-pune-img" />
+          </div>
+          <div class="explore-pune-card-body">
+            <span class="badge-pill" style="background:hsl(210 70% 50% / 0.12);color:hsl(210 60% 35%);border:1px solid hsl(210 60% 60% / 0.4)">Adventure</span>
+            <h4>Weekend Treks</h4>
+            <p>Sinhagad, Rajgad, and Lohagad forts offer exciting treks just 1–2 hours from the city center.</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="explore-pune-also-visit">Also visit: <strong>Aga Khan Palace</strong> · <strong>Laxmi Road Shopping</strong> · <strong>Dagdusheth Halwai Ganpati</strong></p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SPONSORS
+       ================================================================ -->
+  <section class="section sponsors-section" id="sponsors">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label">Sponsors</span>
+        <h2 class="section-heading">The organisations making this possible</h2>
+        <p class="section-subheading" style="margin:0 auto">Deccan Queen on Rails is community-run and sponsor-supported. Your support keeps tickets affordable and scholarships possible.</p>
+      </div>
+
+      <div class="sponsor-tiers">
+        <div class="sponsor-tier sponsor-tier--platinum">
+          <span class="sponsor-tier-badge sponsor-tier-badge--platinum">Platinum Sponsor</span>
+          <div class="sponsor-logos sponsor-logos-lg">
+            <div class="sponsor-card sponsor-card--platinum">
+              <img src="/dqor/saeloun-logo.png" alt="Saeloun" class="sponsor-logo-img" />
+            </div>
+          </div>
+        </div>
+        <div class="sponsor-tier sponsor-tier--wifi">
+          <span class="sponsor-tier-badge sponsor-tier-badge--wifi">Wifi Sponsor</span>
+          <div class="sponsor-logos sponsor-logos-sm">
+            <div class="sponsor-card sponsor-card--wifi">
+              <img src="/dqor/typesense-logo.png" alt="Typesense" class="sponsor-logo-img" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="sponsor-more-note">More sponsors to be announced &mdash; slots still open.</p>
+
+      <div class="sponsor-interest">
+        <div class="sponsor-interest-text">
+          <h3>Interested in sponsoring?</h3>
+          <p>Download our sponsorship prospectus to see packages, reach, and benefits — then drop us a line.</p>
+        </div>
+        <div class="sponsor-interest-actions">
+          <a href="/dqor/deccan-queen-on-rails-sponsorship-deck.pdf" class="btn btn-primary" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Download Prospectus
+          </a>
+          <a href="mailto:sponsors@deccanqueenonrails.com" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            sponsors@deccanqueenonrails.com
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       TICKETS
+       ================================================================ -->
+  <section class="tickets-section" id="tickets">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-label">Tickets</span>
+        <h2 class="section-heading">Choose your experience</h2>
+        <p class="section-subheading" style="margin:0 auto">
+          Three separate events, three separate tickets. Mix and match what works for you.
+        </p>
+      </div>
+
+      <div class="tickets-grid">
+
+        <!-- Conference Pass -->
+        <div class="ticket-card ticket-card--conference ticket-card--featured">
+          <div class="ticket-card-header">
+            <span class="ticket-type-badge ticket-type-badge--conference">Conference</span>
+            <div class="ticket-card-title">Conference Pass</div>
+            <div class="ticket-card-date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              October 8 &amp; 9, 2026
+            </div>
+          </div>
+          <div class="ticket-card-body">
+            <p class="ticket-card-desc">Full access to both conference days — all talks, hallway conversations, and the afterparty.</p>
+            <ul class="ticket-includes">
+              <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>All talks &amp; keynotes (single track)</li>
+              <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Lunch &amp; chai, both days</li>
+              <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Conference afterparty (Oct 9)</li>
+              <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Explore Pune Day add-on available (Oct 11)</li>
+            </ul>
+          </div>
+          <div class="ticket-card-footer">
+            <div class="ticket-price">
+              <span class="ticket-price-amount">From ₹3,500</span>
+              <span class="ticket-price-note">· Early Bird, incl. GST</span>
+            </div>
+            <a href="/tickets" class="btn btn-primary" style="justify-content:center">Buy Conference Pass</a>
+          </div>
+        </div>
+
+        <!-- Rails Girls -->
+        <div class="ticket-card ticket-card--rails-girls">
+          <div class="ticket-card-header">
+            <span class="ticket-type-badge ticket-type-badge--rails-girls">Rails Girls Pune</span>
+            <div class="ticket-card-title">Rails Girls Pass</div>
+            <div class="ticket-card-date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              October 10, 2026 (Saturday)
+            </div>
+          </div>
+          <div class="ticket-card-body">
+            <p class="ticket-card-desc">A free full-day program for women &amp; non-binary people. Separate application — open to beginners with no Rails experience needed.</p>
+            <ul class="ticket-includes">
+              <li class="ticket-check--rails-girls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Full-day hands-on program</li>
+              <li class="ticket-check--rails-girls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Personal coach (1:2–3 ratio)</li>
+              <li class="ticket-check--rails-girls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Lunch &amp; snacks included</li>
+              <li class="ticket-check--rails-girls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Separate from conference ticket</li>
+              <li class="ticket-check--rails-girls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>By application only</li>
+            </ul>
+          </div>
+          <div class="ticket-card-footer">
+            <div class="ticket-price">
+              <span class="ticket-price-free">Coming Soon</span>
+              <span class="ticket-price-note">· application required</span>
+            </div>
+            <a class="btn btn-secondary btn-disabled" style="justify-content:center;border-color:var(--color-saffron);color:var(--color-saffron)" aria-disabled="true" tabindex="-1" role="button">Apply to Attend</a>
+          </div>
+        </div>
+
+        <!-- Explore Pune Day -->
+        <div class="ticket-card ticket-card--retreat">
+          <div class="ticket-card-header">
+            <span class="ticket-type-badge ticket-type-badge--retreat">Explore Pune Day</span>
+            <div class="ticket-card-title">Explore Pune Day Add-on</div>
+            <div class="ticket-card-date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              October 11, 2026 (Sunday)
+            </div>
+          </div>
+          <div class="ticket-card-body">
+            <p class="ticket-card-desc">A curated day through Maharashtra — forts, ghats, food trails, and the kind of conversations that only happen away from a desk. Requires a conference ticket.</p>
+            <ul class="ticket-includes">
+              <li class="ticket-check--retreat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Guided tour (Sinhagad / Lonavala)</li>
+              <li class="ticket-check--retreat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Pune food trail</li>
+              <li class="ticket-check--retreat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Transport included</li>
+              <li class="ticket-check--retreat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Limited spots</li>
+              <li class="ticket-check--retreat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Requires conference pass</li>
+            </ul>
+          </div>
+          <div class="ticket-card-footer">
+            <div class="ticket-price">
+              <span class="ticket-price-amount">₹2,000</span>
+              <span class="ticket-price-note">· add on with your pass</span>
+            </div>
+            <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-gold);color:hsl(35,65%,35%)">Add to Conference Pass</a>
+            <a href="#explore-pune-day" class="btn btn-ghost" style="justify-content:center;color:var(--color-gold)">See what's planned →</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Arch divider: tickets (bg) → waitlist (bg-alt) -->
+    <div class="arch-divider arch-divider--to-bg-alt" style="background:var(--color-background);margin-top:4rem" aria-hidden="true">
+      <svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 48 Q36 0 72 48 Q108 0 144 48 Q180 0 216 48 Q252 0 288 48 Q324 0 360 48 Q396 0 432 48 Q468 0 504 48 Q540 0 576 48 Q612 0 648 48 Q684 0 720 48 Q756 0 792 48 Q828 0 864 48 Q900 0 936 48 Q972 0 1008 48 Q1044 0 1080 48 Q1116 0 1152 48 Q1188 0 1224 48 Q1260 0 1296 48 Q1332 0 1368 48 Q1404 0 1440 48 Z" fill="currentColor"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       WAITLIST
+       ================================================================ -->
+  <section class="section waitlist-section" id="waitlist">
+    <div class="container">
+      <div class="waitlist-inner">
+        <div class="text-center" style="margin-bottom:2rem">
+          <span class="section-label">Stay in the Loop</span>
+          <h2 class="section-heading">Tickets are live</h2>
+          <p class="section-subheading" style="margin:0 auto">The waitlist has closed — passes are on sale now, and speaker reveals and the schedule land on our channels.</p>
+        </div>
+
+        <div class="text-center">
+          <a href="/#tickets" class="btn btn-primary">Get your pass
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       CONTACT / COC
+       ================================================================ -->
+  <section class="section contact-section" id="contact">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label">Contact</span>
+        <h2 class="section-heading">Get in touch</h2>
+      </div>
+
+      <div class="contact-grid">
+        <a href="mailto:hello@deccanqueenonrails.com" class="card contact-card">
+          <div class="contact-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <h4>General</h4>
+          <p>hello@deccanqueenonrails.com</p>
+          <span class="contact-link">Send an email →</span>
+        </a>
+        <a href="mailto:sponsors@deccanqueenonrails.com" class="card contact-card">
+          <div class="contact-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h4>Sponsorship</h4>
+          <p>sponsors@deccanqueenonrails.com</p>
+          <span class="contact-link">Send an email →</span>
+        </a>
+        <a href="mailto:cfp@deccanqueenonrails.com" class="card contact-card">
+          <div class="contact-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h4>CFP &amp; Speakers</h4>
+          <p>cfp@deccanqueenonrails.com</p>
+          <span class="contact-link">Send an email →</span>
+        </a>
+      </div>
+
+      <div class="coc-section" id="coc">
+        <h3>Code of Conduct</h3>
+        <p>Deccan Queen on Rails is dedicated to providing a harassment-free experience for everyone, regardless of gender, gender identity, age, sexual orientation, disability, physical appearance, race, ethnicity, nationality, religion, or experience level. We do not tolerate harassment of participants in any form.</p>
+        <p>All attendees, speakers, sponsors, and volunteers are required to follow this Code of Conduct. Violations may result in removal from the conference without refund.</p>
+        <p>To report a violation, email <a href="mailto:hello@deccanqueenonrails.com">hello@deccanqueenonrails.com</a> or find an organiser on-site.</p>
+      </div>
+    </div>
+  </section>
+
 </main>
+
+<!-- Train animation -->
+<div class="train-animation" aria-hidden="true">
+  <div class="train">
+    <div class="locomotive">
+      <div class="smoke smoke-1"></div>
+      <div class="smoke smoke-2"></div>
+      <div class="smoke smoke-3"></div>
+    </div>
+    <div class="coach"></div>
+    <div class="coach"></div>
+    <div class="coach"></div>
+  </div>
+</div>
