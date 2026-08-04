@@ -14,12 +14,35 @@
     .checkin-ticket { padding: 1rem; border: 1px solid #d1d5db; border-radius: .5rem; background: white; }
     .checkin-ticket p { margin: .25rem 0 .75rem; }
     #checkin-reader { overflow: hidden; border-radius: .5rem; }
+    .checkin-stats { display: flex; flex-wrap: wrap; gap: .6rem; margin: .25rem 0 1.25rem; }
+    .checkin-stat { flex: 1 1 7rem; min-width: 6.5rem; padding: .7rem .85rem; border: 1px solid #e5e0d8; border-radius: .6rem; background: #fff; }
+    .checkin-stat--primary { background: #991b1b; color: #fff; border-color: #991b1b; }
+    .checkin-stat__num { display: block; font-size: 1.55rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+    .checkin-stat__of { font-size: .95rem; font-weight: 600; opacity: .6; }
+    .checkin-stat__label { display: block; font-size: .76rem; margin-top: .3rem; opacity: .85; }
     @media (min-width: 36rem) { .checkin-controls { grid-template-columns: 10rem 1fr auto; align-items: end; } }
   </style>
 <% end %>
 
 <main class="checkin" data-controller="checkin">
   <h1>Attendee check-in</h1>
+
+  <section class="checkin-stats" aria-label="Check-in progress">
+    <div class="checkin-stat checkin-stat--primary">
+      <span class="checkin-stat__num" data-checkin-target="count"><%= @stats[:checked_in] %></span>
+      <span class="checkin-stat__label">checked in · <%= @date.strftime("%a %b %-d") %></span>
+    </div>
+    <div class="checkin-stat">
+      <span class="checkin-stat__num"><%= @stats[:total] %></span>
+      <span class="checkin-stat__label">valid tickets</span>
+    </div>
+    <% @stats[:by_type].each do |row| %>
+      <div class="checkin-stat">
+        <span class="checkin-stat__num"><%= row[:checked_in] %><span class="checkin-stat__of">/<%= row[:total] %></span></span>
+        <span class="checkin-stat__label"><%= row[:name] %></span>
+      </div>
+    <% end %>
+  </section>
 
   <form class="checkin-controls" method="get" action="<%= checkin_path %>">
     <label>

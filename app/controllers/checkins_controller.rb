@@ -7,6 +7,7 @@ class CheckinsController < ApplicationController
     @date = event_date(params[:date], fallback: true)
     @query = params[:q].to_s.strip
     @tickets = search(@query) if @query.present?
+    @stats = checkin_stats(@date)
   end
 
   def create
@@ -47,5 +48,20 @@ class CheckinsController < ApplicationController
         .where("lower(tickets.attendee_name) LIKE :term OR lower(tickets.attendee_email) LIKE :term OR lower(orders.email) LIKE :term OR lower(orders.code) LIKE :term", term:)
         .order(created_at: :desc)
         .limit(20)
+    end
+
+    def checkin_stats(date)
+      key = date.iso8601
+      valid = Ticket.where(canceled_at: nil)
+      checked_in = valid.where("(tickets.checked_in_at ->> ?) IS NOT NULL", key)
+
+      totals = valid.joins(:ticket_type).group("ticket_types.name").order("ticket_types.name").count
+      done = checked_in.joins(:ticket_type).group("ticket_types.name").count
+
+      {
+        total: valid.count,
+        checked_in: checked_in.count,
+        by_type: totals.map { |name, total| { name:, total:, checked_in: done.fetch(name, 0) } }
+      }
     end
 end
