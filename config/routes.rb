@@ -54,6 +54,16 @@ Rails.application.routes.draw do
   get  "calendar", to: "calendar#show", as: :calendar
   post   "talks/:talk_id/bookmark", to: "talk_bookmarks#create", as: :talk_bookmark
   delete "talks/:talk_id/bookmark", to: "talk_bookmarks#destroy"
+
+  # Legacy marketing-site URLs (deccanqueenonrails.com) now served by this app.
+  # Keep old inbound links / bookmarks working once the apex points here.
+  get "cfp(/)",              to: redirect("/#cfp")
+  get "venue(/)",            to: redirect("/#venue")
+  get "rails-girls(/)",      to: redirect("/#rails-girls")
+  get "explore-pune-day(/)", to: redirect("/#explore-pune-day")
+  get "contact(/)",          to: redirect("/#contact")
+  get "waitlist(/)",         to: redirect("/#tickets")
+  get "thanks(/)",           to: redirect("/")
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
