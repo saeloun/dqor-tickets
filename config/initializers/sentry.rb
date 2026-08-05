@@ -10,6 +10,8 @@ if ENV["SENTRY_DSN"].present?
     config.release = ENV["GIT_SHA"] if ENV["GIT_SHA"].present?
     config.traces_sample_rate = 0.2
     config.send_default_pii = false
+    # SystemExit/SignalException are normal process exits (rake tasks, deploy hooks), not errors.
+    config.excluded_exceptions += %w[SystemExit SignalException Interrupt]
     config.before_send = lambda do |event, _hint|
       event.request.data = parameter_filter.filter(event.request.data) if event.request&.data.is_a?(Hash)
       event

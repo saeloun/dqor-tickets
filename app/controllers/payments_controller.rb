@@ -27,6 +27,14 @@ class PaymentsController < ApplicationController
       )
     end
     head :unprocessable_content
+  rescue ActiveRecord::RecordInvalid
+    # The payment was already recorded (e.g. by the Razorpay webhook racing this callback).
+    # The order is fine — just send the buyer to it.
+    if order = Order.find_by(razorpay_order_id: params[:razorpay_order_id])
+      redirect_to order_path(order.code)
+    else
+      redirect_to tickets_store_path, alert: "We couldn't confirm that payment automatically. If you were charged, your tickets will arrive by email shortly — contact us if they don't."
+    end
   rescue ActionController::ParameterMissing, ActiveRecord::RecordNotFound
     redirect_to tickets_store_path, alert: "We couldn't confirm that payment automatically. If you were charged, your tickets will arrive by email shortly — contact us if they don't."
   end
