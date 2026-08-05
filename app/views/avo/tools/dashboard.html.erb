@@ -1,16 +1,16 @@
 <div class="space-y-6">
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <p class="text-sm text-gray-500">Total tickets sold</p>
-      <p class="text-4xl font-bold"><%= @total_sold %></p>
+      <p class="text-3xl font-semibold"><%= @total_sold %></p>
     </div>
     <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <p class="text-sm text-gray-500">Attendees named</p>
-      <p class="text-4xl font-bold"><%= @assigned %><span class="text-lg font-normal text-gray-400"> / <%= @total_sold %></span></p>
+      <p class="text-3xl font-semibold"><%= @assigned %> / <%= @total_sold %></p>
     </div>
     <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <p class="text-sm text-gray-500">Checked in</p>
-      <p class="text-4xl font-bold"><%= @checked_in %></p>
+      <p class="text-3xl font-semibold"><%= @checked_in %></p>
     </div>
   </div>
 
