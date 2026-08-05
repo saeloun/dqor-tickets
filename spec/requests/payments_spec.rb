@@ -20,6 +20,20 @@ RSpec.describe "Payments", type: :request do
     expect(order.payment_events.sole).to have_attributes(kind: "callback_verified", razorpay_payment_id: payment_id)
   end
 
+  it "redirects to the order when the payment was already recorded by the webhook" do
+    create(:payment_event, order:, razorpay_event_id: "webhook_#{payment_id}", razorpay_payment_id: payment_id, kind: "order.paid")
+
+    expect do
+      post payment_callback_path, params: {
+        razorpay_order_id: order.razorpay_order_id,
+        razorpay_payment_id: payment_id,
+        razorpay_signature: signature
+      }
+    end.not_to change(PaymentEvent, :count)
+
+    expect(response).to redirect_to(order_path(order.code))
+  end
+
   it "rejects an invalid signature" do
     expect do
       post payment_callback_path, params: {
