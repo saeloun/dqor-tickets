@@ -1,50 +1,75 @@
-<div class="space-y-6">
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <p class="text-sm text-gray-500">Total tickets sold</p>
-      <p class="text-3xl font-semibold"><%= @total_sold %></p>
+<style>
+  .dq-dash { color: var(--color-foreground); display: grid; gap: 1.25rem; }
+  .dq-dash *, .dq-dash *::before, .dq-dash *::after { box-sizing: border-box; }
+  .dq-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+  @media (min-width: 720px) {
+    .dq-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .dq-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .dq-card {
+    background: var(--color-background);
+    background: color-mix(in oklab, var(--color-background), var(--color-foreground) 5%);
+    border: 1px solid rgba(128, 128, 128, 0.28);
+    border-radius: 0.75rem;
+    padding: 1.4rem 1.5rem;
+  }
+  .dq-card__label { font-size: 0.85rem; opacity: 0.6; margin: 0 0 0.4rem; }
+  .dq-card__value { font-size: 1.9rem; font-weight: 700; line-height: 1.15; margin: 0; }
+  .dq-card__title { font-size: 1.05rem; font-weight: 600; margin: 0 0 1rem; }
+  .dq-line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; }
+  .dq-line + .dq-line { border-top: 1px solid rgba(128, 128, 128, 0.18); }
+  .dq-days { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  @media (min-width: 640px) { .dq-days { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .dq-days { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+  .dq-day__label { font-size: 0.78rem; opacity: 0.6; margin: 0; }
+  .dq-day__value { font-size: 1.4rem; font-weight: 700; margin: 0.15rem 0 0; }
+</style>
+
+<div class="dq-dash">
+  <div class="dq-grid dq-grid--3">
+    <div class="dq-card">
+      <p class="dq-card__label">Total tickets sold</p>
+      <p class="dq-card__value"><%= @total_sold %></p>
     </div>
-    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <p class="text-sm text-gray-500">Attendees named</p>
-      <p class="text-3xl font-semibold"><%= @assigned %> / <%= @total_sold %></p>
+    <div class="dq-card">
+      <p class="dq-card__label">Attendees named</p>
+      <p class="dq-card__value"><%= @assigned %> / <%= @total_sold %></p>
     </div>
-    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <p class="text-sm text-gray-500">Checked in</p>
-      <p class="text-3xl font-semibold"><%= @checked_in %></p>
+    <div class="dq-card">
+      <p class="dq-card__label">Checked in</p>
+      <p class="dq-card__value"><%= @checked_in %></p>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <p class="text-sm text-gray-500">Gross revenue</p>
-      <p class="text-3xl font-semibold"><%= number_to_currency(@gross_revenue / 100.0, unit: "₹", format: "%u%n") %></p>
+  <div class="dq-grid dq-grid--2">
+    <div class="dq-card">
+      <p class="dq-card__label">Gross revenue</p>
+      <p class="dq-card__value"><%= number_to_currency(@gross_revenue / 100.0, unit: "₹", format: "%u%n") %></p>
     </div>
-    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <p class="text-sm text-gray-500">Net after refunds</p>
-      <p class="text-3xl font-semibold"><%= number_to_currency(@net_revenue / 100.0, unit: "₹", format: "%u%n") %></p>
-    </div>
-  </div>
-
-  <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-    <h2 class="mb-4 text-lg font-semibold">Sold by ticket type</h2>
-    <div class="space-y-3">
-      <% @sold_by_type.each do |ticket_type, sold| %>
-        <div class="flex justify-between gap-4">
-          <span><%= ticket_type.name %></span>
-          <strong><%= sold %> / <%= ticket_type.capacity || "∞" %></strong>
-        </div>
-      <% end %>
+    <div class="dq-card">
+      <p class="dq-card__label">Net after refunds</p>
+      <p class="dq-card__value"><%= number_to_currency(@net_revenue / 100.0, unit: "₹", format: "%u%n") %></p>
     </div>
   </div>
 
-  <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-    <h2 class="mb-4 text-lg font-semibold">Orders in the last 7 days</h2>
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+  <div class="dq-card">
+    <p class="dq-card__title">Sold by ticket type</p>
+    <% @sold_by_type.each do |ticket_type, sold| %>
+      <div class="dq-line">
+        <span><%= ticket_type.name %></span>
+        <strong><%= sold %> / <%= ticket_type.capacity || "∞" %></strong>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="dq-card">
+    <p class="dq-card__title">Orders in the last 7 days</p>
+    <div class="dq-days">
       <% 6.downto(0) do |days_ago| %>
         <% date = days_ago.days.ago.to_date %>
         <div>
-          <p class="text-sm text-gray-500"><%= date.strftime("%a, %d %b") %></p>
-          <p class="text-2xl font-semibold"><%= @orders_last_seven_days.fetch(date.iso8601, 0) %></p>
+          <p class="dq-day__label"><%= date.strftime("%a, %d %b") %></p>
+          <p class="dq-day__value"><%= @orders_last_seven_days.fetch(date.iso8601, 0) %></p>
         </div>
       <% end %>
     </div>
