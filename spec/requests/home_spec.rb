@@ -10,6 +10,15 @@ RSpec.describe "Home", type: :request do
     expect(response.body).to include(tickets_store_path)
   end
 
+  it "links the branded favicons, not the generic Rails placeholder" do
+    get root_path
+
+    expect(response.body).to include('href="/favicon.ico"')
+    expect(response.body).to include('href="/dqor/favicon-32x32.png"')
+    expect(response.body).to include('sizes="180x180" href="/dqor/apple-touch-icon.png"')
+    expect(response.body).not_to include("/icon.svg")
+  end
+
   it "serves the ticket storefront at /tickets" do
     get tickets_store_path
 

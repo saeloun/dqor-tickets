@@ -9,6 +9,8 @@ RSpec.describe "PWA", type: :request do
     expect(manifest["display"]).to eq("standalone")
     expect(manifest["start_url"]).to eq("/")
     expect(manifest["icons"]).to be_present
+    expect(manifest["icons"].map { |icon| icon["src"] }).to all(start_with("/dqor/icon-"))
+    expect(manifest["icons"]).to include(a_hash_including("sizes" => "512x512"))
     expect(manifest["theme_color"]).to eq("#981B34")
   end
 
