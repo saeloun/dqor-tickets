@@ -23,6 +23,8 @@
   @media (min-width: 1024px) { .dq-days { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
   .dq-day__label { font-size: 0.78rem; opacity: 0.6; margin: 0; }
   .dq-day__value { font-size: 1.4rem; font-weight: 700; margin: 0.15rem 0 0; }
+  .dq-section { font-size: 1.15rem; font-weight: 700; margin: 0.75rem 0 -0.25rem; }
+  .dq-empty { opacity: 0.6; margin: 0; }
 </style>
 
 <div class="dq-dash">
@@ -72,6 +74,49 @@
           <p class="dq-day__value"><%= @orders_last_seven_days.fetch(date.iso8601, 0) %></p>
         </div>
       <% end %>
+    </div>
+  </div>
+
+  <h2 class="dq-section">Attendee logistics</h2>
+
+  <div class="dq-grid dq-grid--2">
+    <div class="dq-card">
+      <p class="dq-card__title">T-shirt sizes</p>
+      <% @tshirt_counts.each do |size, count| %>
+        <div class="dq-line">
+          <span><%= size %></span>
+          <strong><%= count %></strong>
+        </div>
+      <% end %>
+      <div class="dq-line">
+        <span>Prefer not to say / not chosen</span>
+        <strong><%= @tshirt_unspecified %></strong>
+      </div>
+    </div>
+
+    <div class="dq-card">
+      <p class="dq-card__title">Dietary requests</p>
+      <% if @dietary_counts.any? %>
+        <% @dietary_counts.each do |note, count| %>
+          <div class="dq-line">
+            <span><%= note %></span>
+            <strong><%= count %></strong>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="dq-empty">No dietary requests yet.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="dq-grid dq-grid--2">
+    <div class="dq-card">
+      <p class="dq-card__label">Need childcare / day care</p>
+      <p class="dq-card__value"><%= @childcare_needed %></p>
+    </div>
+    <div class="dq-card">
+      <p class="dq-card__label">Attendees to nudge (no T-shirt size)</p>
+      <p class="dq-card__value"><%= @tshirt_unspecified %></p>
     </div>
   </div>
 </div>
