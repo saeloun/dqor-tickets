@@ -52,6 +52,12 @@ Rails.application.routes.draw do
   get  "info", to: "info_pages#index", as: :info_pages
   get  "info/:slug", to: "info_pages#show", as: :info_page
   get  "calendar", to: "calendar#show", as: :calendar
+
+  # Crawler / answer-engine files (dynamic so the host is always correct).
+  get "robots.txt",  to: "seo#robots",  as: :robots
+  get "sitemap.xml", to: "seo#sitemap", as: :sitemap
+  get "llms.txt",    to: "seo#llms",    as: :llms
+
   post   "talks/:talk_id/bookmark", to: "talk_bookmarks#create", as: :talk_bookmark
   delete "talks/:talk_id/bookmark", to: "talk_bookmarks#destroy"
 
