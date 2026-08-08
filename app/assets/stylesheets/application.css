@@ -484,6 +484,33 @@ button { cursor: pointer; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
 
+/* Motion: gentle page-load fade-up for content sections + card hover lifts.
+   CSS-only, so content can never stick hidden — every section animates 0→1 on
+   load and settles within ~0.8s; reduced-motion collapses it to instant. */
+@media (prefers-reduced-motion: no-preference) {
+  main > section:not(.hero),
+  main > .account-section {
+    animation: dqor-rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  main > section:not(.hero):nth-of-type(2) { animation-delay: 0.05s; }
+  main > section:not(.hero):nth-of-type(3) { animation-delay: 0.10s; }
+  main > section:not(.hero):nth-of-type(4) { animation-delay: 0.15s; }
+}
+@keyframes dqor-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .speaker-card, .journey-card, .retreat-activity-card, .explore-pune-card, .callout-card {
+    transition: transform 0.28s ease, box-shadow 0.28s ease;
+  }
+  .speaker-card:hover, .journey-card:hover, .retreat-activity-card:hover, .explore-pune-card:hover, .callout-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 24px 50px -30px hsl(0 0% 0% / 0.45);
+  }
+}
+
 .claim-link__row, .share-link__row { display: flex; gap: 0.4rem; align-items: stretch; }
 .claim-link__row input, .share-link__row input { flex: 1 1 auto; min-width: 0; }
 .claim-link__copy, .share-link__copy { flex: 0 0 auto; padding: 0 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-card); color: var(--color-foreground); font: inherit; font-size: 0.85rem; cursor: pointer; }
