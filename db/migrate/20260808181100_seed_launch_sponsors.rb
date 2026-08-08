@@ -4,9 +4,15 @@ class SeedLaunchSponsors < ActiveRecord::Migration[8.1]
   # "coming soon" empty state. Logos are served from static public files
   # (public/dqor/*) via logo_path, so they survive redeploys regardless of the
   # Active Storage backend.
+  #
+  # This runs in the boot-time db:prepare (before Puma), so it is bounded by
+  # timeouts and fully rescued: a launch-seed hiccup must never hang or fail
+  # the deploy. Worst case the sponsors are seeded later (re-run or via Avo).
   def up
     return unless table_exists?(:sponsors)
 
+    execute "SET LOCAL lock_timeout = '8s'"
+    execute "SET LOCAL statement_timeout = '30s'"
     Sponsor.reset_column_information
 
     [
