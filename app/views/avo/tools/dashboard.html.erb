@@ -25,9 +25,20 @@
   .dq-day__value { font-size: 1.4rem; font-weight: 700; margin: 0.15rem 0 0; }
   .dq-section { font-size: 1.15rem; font-weight: 700; margin: 0.75rem 0 -0.25rem; }
   .dq-empty { opacity: 0.6; margin: 0; }
+  .dq-scanner {
+    justify-self: start;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1.4rem; border-radius: 0.7rem;
+    background: var(--color-foreground); color: var(--color-background);
+    text-decoration: none; font-weight: 600; font-size: 0.95rem;
+    border: 1px solid transparent;
+  }
+  .dq-scanner:hover { opacity: 0.9; }
 </style>
 
 <div class="dq-dash">
+  <a class="dq-scanner" href="<%= main_app.checkin_path %>">Open the check-in scanner &rarr;</a>
+
   <div class="dq-grid dq-grid--3">
     <div class="dq-card">
       <p class="dq-card__label">Total tickets sold</p>

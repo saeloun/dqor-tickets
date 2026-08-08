@@ -15,7 +15,7 @@ module ApplicationHelper
   end
 
   def entry_qr_svg(ticket)
-    svg = RQRCode::QRCode.new(ticket.secret).as_svg(module_size: 5, standalone: true, use_path: true)
+    svg = RQRCode::QRCode.new(ticket.secret).as_svg(module_size: 5, standalone: true, use_path: true, viewbox: true)
     svg.sub(/\A<\?xml.*?\?>\s*/m, "").html_safe
   end
 end
