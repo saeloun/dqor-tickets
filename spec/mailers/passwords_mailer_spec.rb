@@ -60,13 +60,13 @@ RSpec.describe PasswordsMailer, type: :mailer do
     expect(html).to include(
       "mailto:hello@deccanqueenonrails.com",
       "https://deccanqueenonrails.com",
-      "https://tickets.deccanqueenonrails.com"
+      "/account"
     )
     expect(text).to include("DECCAN QUEEN ON RAILS", "Hyatt Regency Pune")
     expect(text).to include(
       "hello@deccanqueenonrails.com",
       "https://deccanqueenonrails.com",
-      "https://tickets.deccanqueenonrails.com"
+      "/account"
     )
   end
 
