@@ -9,7 +9,7 @@ class CommunityController < ApplicationController
   end
 
   def show
-    @attendee = User.where(discoverable: true).find(params[:id])
+    @attendee = User.find(params[:id])
     @connected = current_user.connected_to?(@attendee)
   end
 end

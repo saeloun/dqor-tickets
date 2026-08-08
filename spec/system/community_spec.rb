@@ -20,4 +20,21 @@ RSpec.describe "Community", type: :system do
     click_on "Connect"
     expect(page).to have_content(/connected/i)
   end
+
+  it "connects with a non-discoverable attendee through their shared profile link" do
+    hidden = User.create!(email: "hidden@example.com", name: "Hidden Attendee", discoverable: false)
+    sign_in_as(hidden)
+    shared_profile_link = find_field("Shareable profile link").value
+
+    me = User.create!(email: "me@example.com", name: "Me")
+    sign_in_as(me)
+    visit community_path
+    expect(page).not_to have_content("Hidden Attendee")
+
+    visit shared_profile_link
+    expect(page).to have_content("Hidden Attendee")
+
+    expect { click_on "Connect" }.to change(Connection, :count).by(1)
+    expect(me.reload).to be_connected_to(hidden)
+  end
 end

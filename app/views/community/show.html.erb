@@ -6,14 +6,28 @@
     <div class="account-identity">
       <h1><%= @attendee.display_name %></h1>
       <% if @attendee.bio.present? %><p class="account-email"><%= @attendee.bio %></p><% end %>
+      <% if @attendee.website.present? %>
+        <p class="attendee-profile__website">
+          <%= link_to "Website", @attendee.website, target: "_blank", rel: "noopener", aria: { label: "Website for #{@attendee.display_name}" } %>
+        </p>
+      <% end %>
+      <% if (social_links = attendee_social_links(@attendee)).any? %>
+        <nav class="attendee-profile__links" aria-label="Social profiles">
+          <% social_links.each do |label, url, _| %>
+            <%= link_to label, url, target: "_blank", rel: "noopener", aria: { label: "#{label} profile for #{@attendee.display_name}" } %>
+          <% end %>
+        </nav>
+      <% end %>
     </div>
   </section>
 
   <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
   <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
 
-  <div class="account-actions">
-    <% if @connected %>
+  <div class="account-actions attendee-profile__actions">
+    <% if @attendee == current_user %>
+      <%= link_to "Edit your profile", account_settings_path, class: "btn btn-secondary" %>
+    <% elsif @connected %>
       <%= button_to "Connected ✓ · Remove", disconnect_attendee_path(@attendee), method: :delete, class: "btn btn-secondary" %>
     <% else %>
       <%= button_to "Connect", connect_attendee_path(@attendee), method: :post, class: "btn btn-primary" %>

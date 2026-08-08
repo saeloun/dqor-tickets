@@ -19,4 +19,19 @@ RSpec.describe "Connections", type: :request do
       delete disconnect_attendee_path(ada)
     }.to change { me.connections.count }.by(-1)
   end
+
+  it "connects with a non-discoverable attendee reached through a direct profile link" do
+    me = User.create!(email: "me@example.com")
+    hidden = User.create!(email: "hidden@example.com", name: "Hidden Attendee", discoverable: false)
+    sign_in_as(me)
+
+    get attendee_path(hidden)
+    expect(response).to have_http_status(:ok)
+
+    expect {
+      post connect_attendee_path(hidden)
+    }.to change { me.connections.count }.by(1)
+    expect(response).to redirect_to(attendee_path(hidden))
+    expect(me).to be_connected_to(hidden)
+  end
 end
