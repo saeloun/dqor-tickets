@@ -515,7 +515,7 @@
       <aside class="stub">
         <div class="stub-eyebrow">Retain This Stub</div>
         <div class="stub-title">Entry QR</div>
-        <div class="qr"><%= raw RQRCode::QRCode.new(ticket.secret).as_svg(module_size: 6, standalone: true, use_path: true) %></div>
+        <div class="qr"><%= raw RQRCode::QRCode.new(ticket.secret).as_svg(module_size: 6, standalone: true, use_path: true, viewbox: true) %></div>
         <span class="label">Serial No.</span>
         <div class="stub-order"><%= ticket.order.code %></div>
         <div class="secret"><%= ticket.secret %></div>
