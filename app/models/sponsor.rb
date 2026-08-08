@@ -1,7 +1,7 @@
 class Sponsor < ApplicationRecord
   has_one_attached :logo
 
-  TIERS = %w[platinum gold silver community].freeze
+  TIERS = %w[platinum gold silver wifi community].freeze
 
   scope :published, -> { where(published: true) }
   scope :ordered, -> { order(:position, :name) }

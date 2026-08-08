@@ -37,6 +37,13 @@
       </section>
     <% end %>
   <% else %>
-    <p class="schedule-empty">The schedule is being finalised — check back soon. Meanwhile, <%= link_to "grab your pass", tickets_store_path %> or <%= link_to "ask the concierge", concierge_path %>.</p>
+    <div class="content-empty">
+      <h2>The schedule is being finalised</h2>
+      <p>Talks appear here as they're confirmed. The dates are locked — <strong>October 8&ndash;11, 2026</strong> at Hyatt Regency, Pune. Grab your pass now so you're set the moment the line-up drops.</p>
+      <div class="content-empty__actions">
+        <%= link_to "Get your pass", tickets_store_path, class: "btn btn-primary" %>
+        <%= link_to "Ask the concierge", concierge_path, class: "btn btn-secondary" %>
+      </div>
+    </div>
   <% end %>
 </main>
