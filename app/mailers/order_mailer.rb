@@ -1,6 +1,4 @@
 class OrderMailer < ApplicationMailer
-  default from: ENV.fetch("MAIL_FROM", "tickets@deccanqueenonrails.com")
-
   def confirmation(order, documents_pending: false)
     @order = order
     invoice = @order.invoices.invoice.first unless documents_pending

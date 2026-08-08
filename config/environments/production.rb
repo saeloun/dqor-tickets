@@ -52,7 +52,7 @@ Rails.application.configure do
   # Replace the default in-process and non-durable queuing backend for Active Job.
   config.active_job.queue_adapter = :solid_queue
 
-  host = ENV.fetch("APP_HOST", "tickets.deccanqueenonrails.com")
+  host = ENV.fetch("APP_HOST", "deccanqueenonrails.com")
   config.action_mailer.default_options = { from: ENV["MAIL_FROM"] }
   config.action_mailer.default_url_options = { host:, protocol: "https" }
   config.action_mailer.delivery_method = :smtp
