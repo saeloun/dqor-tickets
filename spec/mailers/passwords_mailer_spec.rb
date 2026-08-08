@@ -8,6 +8,8 @@ RSpec.describe PasswordsMailer, type: :mailer do
 
     expect(mail.to).to eq([ "admin@example.com" ])
     expect(mail.subject).to eq("Reset your password")
+    expect(mail.from).to eq([ ENV.fetch("MAIL_FROM", "hello@deccanqueenonrails.com") ])
+    expect(mail[:from].display_names).to eq([ "Deccan Queen on Rails" ])
     expect(mail.attachments).to be_empty
   end
 

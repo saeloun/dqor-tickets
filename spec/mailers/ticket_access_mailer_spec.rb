@@ -15,7 +15,8 @@ RSpec.describe TicketAccessMailer, type: :mailer do
     expect(mail.to).to eq([ "buyer@example.com" ])
     expect(mail.subject).to eq("Your Deccan Queen on Rails tickets")
     expect(mail.attachments).to be_empty
-    expect(mail.from).to eq([ ENV.fetch("MAIL_FROM", "tickets@deccanqueenonrails.com") ])
+    expect(mail.from).to eq([ ENV.fetch("MAIL_FROM", "hello@deccanqueenonrails.com") ])
+    expect(mail[:from].display_names).to eq([ "Deccan Queen on Rails" ])
   end
 
   it "carries the token as a query parameter, never in the URL path" do
