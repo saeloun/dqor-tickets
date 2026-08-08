@@ -346,7 +346,9 @@ button { cursor: pointer; }
 .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.15rem; margin-top: 1.5rem; }
 .field { display: grid; gap: 0.45rem; }
 .field label { color: var(--color-foreground-soft); font-size: 0.86rem; font-weight: 600; }
-.field input {
+.field input,
+.field textarea,
+.field select {
   width: 100%;
   min-height: 3rem;
   padding: 0.7rem 0.85rem;
@@ -354,10 +356,12 @@ button { cursor: pointer; }
   border-radius: var(--radius-md);
   color: var(--color-foreground);
   background: var(--color-background);
+  font: inherit;
   outline: 0;
 }
-.field input::placeholder { color: var(--color-muted-foreground); opacity: 0.7; }
-.field input:focus { border-color: var(--color-ring); box-shadow: 0 0 0 3px color-mix(in hsl, var(--color-ring), transparent 78%); }
+.field textarea { min-height: 5.5rem; line-height: 1.55; resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: var(--color-muted-foreground); opacity: 0.7; }
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--color-ring); box-shadow: 0 0 0 3px color-mix(in hsl, var(--color-ring), transparent 78%); }
 .coupon-message { margin: 0; color: var(--color-muted-foreground); font-size: 0.82rem; }
 .coupon-message--applied { color: var(--color-success); }
 .coupon-message--invalid { color: var(--color-destructive); }
@@ -493,29 +497,43 @@ button { cursor: pointer; }
 .site-header__account { display: inline-flex; align-items: center; }
 .site-header__avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
 
-.account-page { max-width: 44rem; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
-.account-header { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.25rem; padding: 1.5rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; }
-.account-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex: none; box-shadow: 0 0 0 3px var(--color-border); }
+.account-page { max-width: 46rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 1.1rem; }
+.account-card, .account-header, .account-section {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.04), 0 22px 48px -32px hsl(0 0% 0% / 0.45);
+}
+.account-header { display: flex; align-items: center; gap: 1.25rem; padding: 1.6rem 1.75rem; }
+.account-avatar { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; flex: none; box-shadow: 0 0 0 2px var(--color-card), 0 0 0 4px var(--color-primary); }
 .account-identity { flex: 1; min-width: 0; }
-.account-identity h1 { margin: 0; font-size: 1.5rem; }
-.account-email { margin: 0.25rem 0 0; color: var(--color-muted-foreground); }
+.account-identity h1 { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 1.7rem; line-height: 1.15; letter-spacing: -0.01em; }
+.account-email { margin: 0.35rem 0 0; color: var(--color-muted-foreground); font-size: 0.95rem; word-break: break-word; }
 .account-signout { flex: none; }
-.account-section { margin-top: 1.25rem; padding: 1.5rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; }
-.account-section h2 { font-size: 1.1rem; margin: 0 0 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--color-border); }
-.account-tickets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-.account-ticket { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem 1rem; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 12px; }
-.account-ticket__row { display: flex; align-items: center; gap: 0.75rem; }
-.account-ticket__type { font-weight: 600; }
-.account-ticket__meta { color: var(--color-muted-foreground); flex: 1; }
-.account-ticket__link { text-decoration: none; color: var(--color-primary); font-weight: 600; }
+.account-section { padding: 1.6rem 1.75rem; }
+.account-section > h2 { font-family: "Playfair Display", Georgia, serif; font-size: 1.3rem; font-weight: 600; margin: 0 0 1.1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border); }
+.account-tickets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.account-ticket {
+  display: flex; flex-direction: column; gap: 0.6rem; padding: 0.9rem 1.1rem; border-radius: 12px;
+  background: color-mix(in oklab, var(--color-card), var(--color-foreground) 5%);
+  border: 1px solid var(--color-border);
+}
+.account-ticket__row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.account-ticket__type { font-weight: 700; }
+.account-ticket__meta { color: var(--color-muted-foreground); flex: 1; min-width: 7rem; }
+.account-ticket__link { text-decoration: none; color: var(--color-primary); font-weight: 600; white-space: nowrap; }
+.account-ticket__link:hover { text-decoration: underline; }
 .account-ticket__pass summary { cursor: pointer; font-weight: 600; color: var(--color-primary); font-size: 0.9rem; }
+.account-ticket__pass[open] summary { margin-bottom: 0.75rem; }
 @media (max-width: 640px) {
   .account-header { flex-wrap: wrap; }
+  .account-header .account-actions { width: 100%; }
   .account-ticket { flex-wrap: wrap; }
 }
 
-.account-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; flex: none; }
-.account-back { display: inline-block; margin-top: 1rem; text-decoration: none; color: var(--color-muted-foreground); }
+.account-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; flex: none; }
+.account-back { display: inline-block; margin-top: 0.25rem; text-decoration: none; color: var(--color-muted-foreground); font-weight: 500; }
+.account-back:hover { color: var(--color-primary); }
 .attendee-grid { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem; }
 .attendee-card__link { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; text-align: center; padding: 1rem 0.75rem; height: 100%; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: inherit; }
 .attendee-card__link:hover { border-color: var(--color-primary); }
