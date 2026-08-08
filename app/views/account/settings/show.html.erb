@@ -25,6 +25,32 @@
         <%= form.label :bio, "About you" %>
         <%= form.text_area :bio, rows: 3, placeholder: "A sentence about what you work on (optional)" %>
       </div>
+      <div class="profile-social-fields">
+        <div class="field profile-social-fields__website">
+          <%= form.label :website, "Website" %>
+          <%= form.text_field :website, autocomplete: "url", inputmode: "url", maxlength: 255, placeholder: "your-site.com" %>
+        </div>
+        <div class="field">
+          <%= form.label :x_username, "X (x.com)" %>
+          <%= form.text_field :x_username, maxlength: 255, placeholder: "username" %>
+        </div>
+        <div class="field">
+          <%= form.label :bluesky, "Bluesky" %>
+          <%= form.text_field :bluesky, maxlength: 255, placeholder: "name.bsky.social" %>
+        </div>
+        <div class="field">
+          <%= form.label :github, "GitHub" %>
+          <%= form.text_field :github, maxlength: 255, placeholder: "username" %>
+        </div>
+        <div class="field">
+          <%= form.label :mastodon, "Mastodon" %>
+          <%= form.text_field :mastodon, maxlength: 255, placeholder: "name@mastodon.social" %>
+        </div>
+        <div class="field">
+          <%= form.label :linkedin, "LinkedIn" %>
+          <%= form.text_field :linkedin, maxlength: 255, placeholder: "profile-name" %>
+        </div>
+      </div>
       <div class="field">
         <%= form.label :avatar, "Profile photo" %>
         <%= form.file_field :avatar, accept: "image/png,image/jpeg,image/webp" %>

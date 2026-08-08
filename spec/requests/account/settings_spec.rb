@@ -25,6 +25,30 @@ RSpec.describe "Account settings", type: :request do
     expect(user).to be_discoverable
   end
 
+  it "updates and normalizes social profile fields" do
+    user = User.create!(email: "grace@example.com")
+    sign_in_as(user)
+
+    patch account_settings_path, params: { user: {
+      website: "grace.dev",
+      x_username: "@ghopper",
+      bluesky: "@grace.bsky.social",
+      github: "@gracehopper",
+      mastodon: "@grace@ruby.social",
+      linkedin: "@grace-hopper"
+    } }
+
+    expect(response).to redirect_to(account_settings_path)
+    expect(user.reload).to have_attributes(
+      website: "https://grace.dev",
+      x_username: "ghopper",
+      bluesky: "grace.bsky.social",
+      github: "gracehopper",
+      mastodon: "grace@ruby.social",
+      linkedin: "grace-hopper"
+    )
+  end
+
   it "sets a password when provided" do
     user = User.create!(email: "grace@example.com")
     sign_in_as(user)

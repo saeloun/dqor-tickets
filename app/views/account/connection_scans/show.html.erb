@@ -1,0 +1,12 @@
+<% content_for :title, "Scan to connect · Deccan Queen on Rails" %>
+
+<main class="account-page">
+  <section class="account-section connection-scanner" data-controller="connect-scanner">
+    <h1>Scan to connect</h1>
+    <p>Point your camera at another attendee’s “Connect with me” code.</p>
+    <div id="connect-reader" class="connection-scanner__reader" data-connect-scanner-target="reader"></div>
+    <p class="connection-scanner__result" role="status" aria-live="polite" data-connect-scanner-target="result" hidden></p>
+  </section>
+
+  <p class="account-back"><%= link_to "← Back to your account", account_root_path %></p>
+</main>

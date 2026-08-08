@@ -19,6 +19,35 @@ RSpec.describe User do
     expect(user).to be_valid
   end
 
+  it "normalizes social profile fields" do
+    user = User.create!(
+      email: "social@example.com",
+      website: " example.com/about ",
+      x_username: " @grace ",
+      bluesky: "@grace.bsky.social",
+      github: "@ghopper",
+      mastodon: "@grace@ruby.social",
+      linkedin: "@grace-hopper"
+    )
+
+    expect(user).to have_attributes(
+      website: "https://example.com/about",
+      x_username: "grace",
+      bluesky: "grace.bsky.social",
+      github: "ghopper",
+      mastodon: "grace@ruby.social",
+      linkedin: "grace-hopper"
+    )
+  end
+
+  it "validates social profile lengths and requires an http website URL" do
+    user = User.new(email: "social@example.com", website: "ftp://example.com", github: "g" * 256)
+
+    expect(user).not_to be_valid
+    expect(user.errors[:website]).to include("must be a valid http(s) URL")
+    expect(user.errors[:github]).to include("is too long (maximum is 255 characters)")
+  end
+
   it "builds a Gravatar URL from the email hash" do
     user = User.new(email: "grace@example.com")
 

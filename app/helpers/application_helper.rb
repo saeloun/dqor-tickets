@@ -15,7 +15,38 @@ module ApplicationHelper
   end
 
   def entry_qr_svg(ticket)
-    svg = RQRCode::QRCode.new(ticket.secret).as_svg(module_size: 5, standalone: true, use_path: true, viewbox: true)
-    svg.sub(/\A<\?xml.*?\?>\s*/m, "").html_safe
+    qr_svg(ticket.secret)
   end
+
+  def connect_qr_svg(url)
+    qr_svg(url)
+  end
+
+  def attendee_social_links(user)
+    [
+      [ "X", "https://x.com/#{ERB::Util.url_encode(user.x_username)}", user.x_username ],
+      [ "Bluesky", "https://bsky.app/profile/#{ERB::Util.url_encode(user.bluesky)}", user.bluesky ],
+      [ "GitHub", "https://github.com/#{ERB::Util.url_encode(user.github)}", user.github ],
+      [ "Mastodon", mastodon_profile_url(user.mastodon), user.mastodon ],
+      [ "LinkedIn", "https://www.linkedin.com/in/#{ERB::Util.url_encode(user.linkedin)}", user.linkedin ]
+    ].select { |_, _, value| value.present? }
+  end
+
+  private
+    def qr_svg(value)
+      svg = RQRCode::QRCode.new(value).as_svg(module_size: 5, standalone: true, use_path: true, viewbox: true)
+      svg.sub(/\A<\?xml.*?\?>\s*/m, "").html_safe
+    end
+
+    def mastodon_profile_url(handle)
+      return if handle.blank?
+      return handle if handle.match?(/\Ahttps?:\/\//i)
+
+      if handle.match?(/\A[^@]+@[^@]+\z/)
+        username, host = handle.split("@", 2)
+        "https://#{host}/@#{ERB::Util.url_encode(username)}"
+      else
+        "https://#{handle}"
+      end
+    end
 end

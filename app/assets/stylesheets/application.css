@@ -437,6 +437,8 @@ button { cursor: pointer; }
 .ticket-assignment > p { color: var(--color-foreground-soft); }
 .assignment-form { text-align: left; }
 .assignment-form .field-grid { margin-top: 0; }
+.profile-social-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.profile-social-fields__website { grid-column: 1 / -1; }
 .assignment-checkbox { display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0; }
 .assignment-checkbox input { width: 1rem; height: 1rem; }
 .claim-link { margin-top: 1.25rem; }
@@ -482,10 +484,10 @@ button { cursor: pointer; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
 
-.claim-link__row { display: flex; gap: 0.4rem; align-items: stretch; }
-.claim-link__row input { flex: 1 1 auto; min-width: 0; }
-.claim-link__copy { flex: 0 0 auto; padding: 0 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-card); color: var(--color-foreground); font: inherit; font-size: 0.85rem; cursor: pointer; }
-.claim-link__copy:hover { border-color: var(--color-border-strong); background: var(--color-muted); }
+.claim-link__row, .share-link__row { display: flex; gap: 0.4rem; align-items: stretch; }
+.claim-link__row input, .share-link__row input { flex: 1 1 auto; min-width: 0; }
+.claim-link__copy, .share-link__copy { flex: 0 0 auto; padding: 0 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-card); color: var(--color-foreground); font: inherit; font-size: 0.85rem; cursor: pointer; }
+.claim-link__copy:hover, .share-link__copy:hover { border-color: var(--color-border-strong); background: var(--color-muted); }
 
 .assignment-summary { margin: 0.25rem 0 0.75rem; color: var(--color-muted-foreground); font-size: 0.9rem; }
 
@@ -540,6 +542,28 @@ button { cursor: pointer; }
 .attendee-card__avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; }
 .attendee-card__name { font-weight: 700; }
 .attendee-card__bio { font-size: 0.8rem; color: var(--color-muted-foreground); }
+.attendee-profile__website { margin: 0.75rem 0 0; }
+.attendee-profile__website a { color: var(--color-primary); font-weight: 650; }
+.attendee-profile__links { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.7rem; }
+.attendee-profile__links a { padding: 0.3rem 0.65rem; border: 1px solid var(--color-border-strong); border-radius: var(--radius-full); color: var(--color-foreground-soft); font-size: 0.78rem; font-weight: 650; text-decoration: none; }
+.attendee-profile__links a:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.attendee-profile__actions { padding-inline: 0.25rem; }
+
+.connect-card { display: grid; grid-template-columns: minmax(150px, 190px) 1fr; align-items: center; gap: 1.5rem; }
+.connect-card__qr { width: 100%; padding: 0.7rem; border-radius: var(--radius-lg); background: #fff; }
+.connect-card__qr svg { display: block; width: 100%; height: auto; }
+.connect-card__body > p:first-child { margin-top: 0; color: var(--color-foreground-soft); }
+.share-link { margin-top: 1rem; }
+.connection-scanner > h1 { margin-top: 0; font-family: var(--font-display); }
+.connection-scanner__reader { overflow: hidden; margin-top: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: #fff; }
+.connection-scanner__result { margin: 1rem 0 0; padding: 0.75rem 1rem; border-radius: var(--radius-md); color: var(--color-destructive); background: color-mix(in hsl, var(--color-destructive), transparent 90%); }
+
+@media (max-width: 640px) {
+  .profile-social-fields { grid-template-columns: 1fr; }
+  .profile-social-fields__website { grid-column: auto; }
+  .connect-card { grid-template-columns: 1fr; }
+  .connect-card__qr { width: min(70vw, 220px); margin-inline: auto; }
+}
 
 .entry-pass { margin: 1.5rem auto 0; padding: 1.5rem; max-width: 20rem; border-radius: 16px; background: var(--color-card); border: 1px solid var(--color-border); text-align: center; }
 .entry-pass__qr { width: min(60vw, 240px); margin: 0.75rem auto; padding: 0.75rem; background: #fff; border-radius: 12px; }

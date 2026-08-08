@@ -10,6 +10,9 @@ RSpec.describe "Account", type: :system do
     expect(page).to have_content("Grace Hopper")
     expect(page).to have_content("grace@example.com")
     expect(page).to have_content("Your tickets")
+    expect(page).to have_content("Connect with me")
+    expect(page).to have_link("Scan to connect")
+    expect(page).to have_css(".connect-card__qr svg")
   end
 
   it "shows the sign-in form" do
