@@ -5,18 +5,20 @@
   <section class="page-hero">
     <p class="section-label">Sponsors</p>
     <h1>Our sponsors</h1>
-    <p>Deccan Queen on Rails is made possible by these wonderful organisations.</p>
+    <p>Deccan Queen on Rails is community-run and sponsor-supported. Your support keeps tickets affordable and scholarships possible.</p>
   </section>
 
   <% if @sponsors_by_tier.any? %>
     <% @sponsors_by_tier.each do |tier, sponsors| %>
       <section class="sponsor-tier">
-        <h2><%= tier.titleize %></h2>
+        <h2 class="sponsor-tier__label"><%= tier.titleize %> Sponsor<%= "s" if sponsors.size > 1 %></h2>
         <ul class="sponsor-grid">
           <% sponsors.each do |sponsor| %>
             <li class="sponsor-card">
               <%= link_to (sponsor.url.presence || "#"), target: "_blank", rel: "noopener", class: "sponsor-card__link" do %>
-                <% if sponsor.logo.attached? %>
+                <% if sponsor.logo_path.present? %>
+                  <%= image_tag sponsor.logo_path, alt: sponsor.name, class: "sponsor-card__logo" %>
+                <% elsif sponsor.logo.attached? %>
                   <%= image_tag sponsor.logo, alt: sponsor.name, class: "sponsor-card__logo" %>
                 <% else %>
                   <span class="sponsor-card__name"><%= sponsor.name %></span>
@@ -28,7 +30,18 @@
         </ul>
       </section>
     <% end %>
-  <% else %>
-    <p class="schedule-empty">Sponsor announcements are coming soon. Interested in sponsoring? Visit <%= link_to "deccanqueenonrails.com", "https://deccanqueenonrails.com" %>.</p>
+
+    <p class="sponsor-more-note">More sponsors to be announced &mdash; slots still open.</p>
   <% end %>
+
+  <section class="sponsor-cta">
+    <div class="sponsor-cta__text">
+      <h2><%= @sponsors_by_tier.any? ? "Join them" : "Be our first sponsor" %></h2>
+      <p>Download the prospectus for packages, reach, and benefits — then drop us a line. We'll tailor something that fits.</p>
+    </div>
+    <div class="sponsor-cta__actions">
+      <a href="/dqor/deccan-queen-on-rails-sponsorship-deck.pdf" class="btn btn-primary" download>Download prospectus</a>
+      <a href="mailto:sponsors@deccanqueenonrails.com" class="btn btn-secondary">sponsors@deccanqueenonrails.com</a>
+    </div>
+  </section>
 </main>

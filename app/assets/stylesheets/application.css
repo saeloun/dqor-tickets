@@ -623,7 +623,7 @@ button { cursor: pointer; }
 .concierge-answer__a { color: var(--color-foreground); }
 
 .storefront-hero__link { display: inline-block; margin-top: 0.5rem; font-weight: 600; color: var(--color-primary); text-decoration: none; }
-.schedule-page { max-width: 48rem; margin: 0 auto; padding: 0 1.25rem 3rem; }
+.schedule-page { max-width: 48rem; margin: 0 auto; padding: 0 1.25rem 3rem; min-height: calc(100vh - var(--nav-height) - 8rem); }
 .schedule-day { margin-top: 2rem; }
 .schedule-day h2 { font-size: 1.25rem; margin: 0 0 1rem; }
 .schedule-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
@@ -639,16 +639,32 @@ button { cursor: pointer; }
 @media (max-width: 640px) { .schedule-talk { flex-direction: column; gap: 0.35rem; } .schedule-talk__time { width: auto; } }
 
 .sponsor-tier { margin-top: 2rem; }
-.sponsor-tier h2 { font-size: 1.15rem; margin: 0 0 1rem; text-transform: capitalize; }
+.sponsor-tier__label, .sponsor-tier h2 { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-primary); font-weight: 700; margin: 0 0 0.9rem; }
 .sponsor-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
 /* Scoped so the marketing .sponsor-card (a logo-centering flex card on the home
    page) does not flex the listing card's link+blurb side by side or double-border it. */
 .schedule-page .sponsor-card { display: block; text-align: center; background: none; border: none; border-radius: 0; box-shadow: none; }
 .schedule-page .sponsor-card:hover { transform: none; box-shadow: none; }
-.sponsor-card__link { display: flex; align-items: center; justify-content: center; min-height: 90px; padding: 1rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: inherit; }
+/* Fixed light chip in both themes (matches the home #sponsors cards) so
+   logos designed for light backgrounds always read well, incl. dark mode. */
+.sponsor-card__link { display: flex; align-items: center; justify-content: center; min-height: 96px; padding: 1rem 1.5rem; background: hsl(40 25% 98%); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: hsl(20 14% 16%); }
+.sponsor-card__link:hover { border-color: var(--color-border-strong); }
 .sponsor-card__logo { max-width: 100%; max-height: 60px; object-fit: contain; }
 .sponsor-card__name { font-weight: 700; }
 .sponsor-card__blurb { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--color-muted-foreground); }
+.sponsor-more-note { margin: 2rem auto 0; text-align: center; color: var(--color-muted-foreground); font-size: 0.9rem; }
+
+/* "Become a sponsor" call-to-action, shared shell with the empty-state card. */
+.sponsor-cta { margin: 2.5rem auto 0; padding: 1.75rem 2rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.sponsor-cta__text h2 { margin: 0 0 0.35rem; font-size: 1.2rem; }
+.sponsor-cta__text p { margin: 0; color: var(--color-muted-foreground); font-size: 0.95rem; max-width: 34rem; }
+.sponsor-cta__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+/* Shared "coming soon" empty state for content pages (schedule, speakers). */
+.content-empty { max-width: 40rem; margin: 2.5rem auto; padding: 2.75rem 2rem; text-align: center; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.content-empty h2 { margin: 0 0 0.6rem; font-size: clamp(1.35rem, 3.5vw, 1.75rem); }
+.content-empty p { margin: 0 auto 1.5rem; max-width: 32rem; color: var(--color-muted-foreground); }
+.content-empty__actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
 
 .speaker-grid { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
 .speaker-card { padding: 1.25rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; }

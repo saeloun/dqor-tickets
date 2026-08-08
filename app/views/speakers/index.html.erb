@@ -32,6 +32,13 @@
       <% end %>
     </ul>
   <% else %>
-    <p class="schedule-empty">Speaker announcements are coming soon.</p>
+    <div class="content-empty">
+      <h2>Speakers, coming soon</h2>
+      <p>The line-up is being curated. The Call for Proposals is open — if you have a Ruby or Rails story worth telling, we would love to hear it.</p>
+      <div class="content-empty__actions">
+        <%= link_to "Submit a talk", "/#cfp", class: "btn btn-primary" %>
+        <%= link_to "Get your pass", tickets_store_path, class: "btn btn-secondary" %>
+      </div>
+    </div>
   <% end %>
 </main>
