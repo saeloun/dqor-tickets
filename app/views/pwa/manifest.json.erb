@@ -1,7 +1,8 @@
 {
-  "name": "Deccan Queen on Rails Tickets",
-  "short_name": "DQoR Tickets",
-  "description": "Tickets, RSVP, and check-in for Deccan Queen on Rails.",
+  "name": "Deccan Queen on Rails",
+  "short_name": "Deccan Queen",
+  "description": "Your pass, schedule, and connections for Deccan Queen on Rails — India's Ruby & Rails conference in Pune.",
+  "id": "/",
   "icons": [
     { "src": "/dqor/icon-192.png", "type": "image/png", "sizes": "192x192" },
     { "src": "/dqor/icon-512.png", "type": "image/png", "sizes": "512x512" },
@@ -15,5 +16,28 @@
   "lang": "en",
   "theme_color": "#981B34",
   "background_color": "#f8f6f2",
-  "categories": ["events"]
+  "categories": ["events"],
+  "shortcuts": [
+    {
+      "name": "My passes",
+      "short_name": "Passes",
+      "description": "Your tickets and entry pass",
+      "url": "/account",
+      "icons": [{ "src": "/dqor/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Scan to connect",
+      "short_name": "Scan",
+      "description": "Scan another attendee to connect",
+      "url": "/account/connection_scan",
+      "icons": [{ "src": "/dqor/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Get tickets",
+      "short_name": "Tickets",
+      "description": "Browse and buy passes",
+      "url": "/tickets",
+      "icons": [{ "src": "/dqor/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
