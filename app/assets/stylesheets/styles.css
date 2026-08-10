@@ -1455,6 +1455,13 @@
   margin-bottom: 0.25rem;
 }
 
+.venue-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-ruby);
+  margin-bottom: 0.35rem;
+}
+
 .venue-card-train {
   background: linear-gradient(135deg, hsl(348 70% 35% / 0.04) 0%, hsl(40 80% 50% / 0.04) 100%);
   border-color: hsl(348 70% 35% / 0.15);
