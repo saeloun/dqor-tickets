@@ -124,6 +124,40 @@
   color: var(--color-ruby);
 }
 
+.hero-countdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: clamp(0.85rem, 2vw, 1rem);
+  font-weight: 600;
+  color: var(--color-foreground-soft);
+  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
+  letter-spacing: 0.02em;
+}
+.hero-countdown__num {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.7em;
+  font-weight: 700;
+  color: var(--color-ruby);
+  line-height: 1;
+}
+.hero-countdown--live {
+  color: var(--color-ruby);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hero-cal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero-cal svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
 .hero-subtitle {
   font-size: clamp(0.9rem, 2vw, 1.15rem);
   color: var(--color-foreground-soft);

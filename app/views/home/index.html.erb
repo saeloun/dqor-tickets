@@ -40,12 +40,24 @@
         October 8–11, 2026 &middot; <span class="mr" data-en="Pune">पुणे</span>, India
       </p>
 
+      <% if Conference.status == :before %>
+        <p class="hero-countdown animate-fade-in-up" style="animation-delay:.35s" aria-label="<%= Conference.days_to_go %> days until the conference">
+          <span class="hero-countdown__num"><%= Conference.days_to_go %></span> days to go
+        </p>
+      <% elsif Conference.status == :during %>
+        <p class="hero-countdown hero-countdown--live animate-fade-in-up" style="animation-delay:.35s">Happening now in <span class="mr" data-en="Pune">पुणे</span></p>
+      <% end %>
+
       <p class="hero-subtitle animate-fade-in-up" style="animation-delay:.4s">
         A Rails conference born in the city of <strong><span class="mr" data-en="Maratha warrior-king">शिवाजी महाराज</span>, <span class="mr" data-en="Maratha prime ministers">पेशवे</span>, and the Deccan Queen</strong>. Where Rails developers from across India gather, and invited voices from the world arrive. Deep ideas. Warm <span class="mr" data-en="tea">चहा</span>. The city opens its doors.
       </p>
 
       <div class="hero-actions animate-fade-in-up" style="animation-delay:.55s">
         <a href="#tickets" class="btn btn-primary btn-lg">Get Your Pass &rarr;</a>
+        <%= link_to calendar_path, class: "btn btn-secondary btn-lg hero-cal" do %>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          Add to calendar
+        <% end %>
       </div>
 
       <div id="social-proof" class="social-proof animate-fade-in hidden" style="animation-delay:.7s">
