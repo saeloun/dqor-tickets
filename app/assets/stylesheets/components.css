@@ -9,7 +9,10 @@
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
-  height: var(--nav-height);
+  /* Clear the phone status bar / notch in the installed PWA (standalone has no
+     browser chrome). env() is 0 in normal browsers, so this is a no-op there. */
+  height: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
   background-color: hsl(40 30% 96% / 0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -187,7 +190,7 @@
 .nav-mobile-menu {
   display: none;
   position: fixed;
-  top: var(--nav-height);
+  top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
   left: 0; right: 0;
   background: var(--color-background);
   border-bottom: 1px solid var(--color-border);
