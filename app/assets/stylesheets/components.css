@@ -386,11 +386,24 @@
 /* ===================================================
    TRAIN ANIMATION (shared)
    =================================================== */
-.train-animation {
+/* Full-viewport clip layer: `transform` makes this the containing block for the
+   fixed train inside, and `overflow: hidden` clips its off-screen travel so the
+   decorative animation can't create a horizontal scrollbar. */
+/* Fixed, full-viewport clip layer. The train inside is position:absolute, so
+   this track's overflow:hidden reliably clips its off-screen travel (an absolute
+   child is clipped by an ancestor's overflow; a fixed child is not). */
+.train-track {
   position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.train-animation {
+  position: absolute;
   bottom: 40px;
   left: -340px;
-  z-index: 5;
   animation: train-move-across 22s linear infinite;
   pointer-events: none;
 }

@@ -899,8 +899,10 @@
 
 @media (max-width: 640px) {
   .sponsor-interest { flex-direction: column; align-items: flex-start; }
-  .sponsor-interest-actions { width: 100%; }
-  .sponsor-interest-actions .btn { flex: 1; justify-content: center; }
+  /* Stack the CTA buttons full-width and let the long email wrap instead of
+     forcing the button (white-space:nowrap) wider than the viewport. */
+  .sponsor-interest-actions { width: 100%; flex-direction: column; align-items: stretch; }
+  .sponsor-interest-actions .btn { width: 100%; min-width: 0; justify-content: center; white-space: normal; overflow-wrap: anywhere; }
 }
 
 /* ===================================================

@@ -108,11 +108,15 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { color-scheme: light; scroll-behavior: smooth; }
+html { color-scheme: light; scroll-behavior: smooth; overflow-x: clip; }
 html[data-theme="dark"] { color-scheme: dark; }
 
 body {
   margin: 0;
+  /* Belt-and-suspenders with html: clip any stray horizontal overflow so no
+     page ever scrolls sideways on mobile. `clip` (not hidden) adds no scroll
+     container, so sticky/smooth-scroll are unaffected. */
+  overflow-x: clip;
   /* Match the nav's safe-area-aware height so content clears the fixed header
      (incl. the notch inset in the installed PWA; env() is 0 in browsers). */
   padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
