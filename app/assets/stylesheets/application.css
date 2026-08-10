@@ -113,7 +113,9 @@ html[data-theme="dark"] { color-scheme: dark; }
 
 body {
   margin: 0;
-  padding-top: var(--nav-height);
+  /* Match the nav's safe-area-aware height so content clears the fixed header
+     (incl. the notch inset in the installed PWA; env() is 0 in browsers). */
+  padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
   color: var(--color-foreground);
   background: var(--color-background);
   font-family: var(--font-sans);
