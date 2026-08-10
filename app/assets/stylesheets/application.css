@@ -108,11 +108,15 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { color-scheme: light; scroll-behavior: smooth; }
+html { color-scheme: light; scroll-behavior: smooth; overflow-x: clip; }
 html[data-theme="dark"] { color-scheme: dark; }
 
 body {
   margin: 0;
+  /* Belt-and-suspenders with html: clip any stray horizontal overflow so no
+     page ever scrolls sideways on mobile. `clip` (not hidden) adds no scroll
+     container, so sticky/smooth-scroll are unaffected. */
+  overflow-x: clip;
   /* Match the nav's safe-area-aware height so content clears the fixed header
      (incl. the notch inset in the installed PWA; env() is 0 in browsers). */
   padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
@@ -632,8 +636,8 @@ button { cursor: pointer; }
 .entry-pass__hint { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--color-muted-foreground); }
 .entry-pass__secret { margin: 0.6rem 0 0; font-family: ui-monospace, "SFMono-Regular", monospace; font-size: 0.7rem; letter-spacing: 0.05em; word-break: break-all; color: var(--color-muted-foreground); }
 
-.install-prompt { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: 0.75rem; }
-.install-prompt__inner { display: flex; align-items: center; gap: 0.75rem; max-width: 32rem; margin: 0 auto; padding: 0.75rem 1rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 14px; box-shadow: var(--shadow-sm, 0 8px 24px rgb(0 0 0 / 0.18)); }
+.install-prompt { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px)); }
+.install-prompt__inner { display: flex; align-items: center; gap: 0.65rem; max-width: 32rem; margin: 0 auto; padding: 0.55rem 0.75rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 14px; box-shadow: var(--shadow-sm, 0 8px 24px rgb(0 0 0 / 0.18)); }
 .install-prompt__icon { width: 36px; height: 36px; border-radius: 8px; flex: none; object-fit: contain; }
 .install-prompt__body { flex: 1; min-width: 0; }
 .install-prompt__title { margin: 0; font-weight: 700; font-size: 0.95rem; }

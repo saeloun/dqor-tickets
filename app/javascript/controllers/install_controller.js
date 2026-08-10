@@ -10,18 +10,41 @@ export default class extends Controller {
       event.preventDefault()
       this.deferredPrompt = event
       if (this.hasInstallButtonTarget) this.installButtonTarget.hidden = false
-      this.element.hidden = false
+      this.reveal()
     }
     window.addEventListener("beforeinstallprompt", this.onBeforeInstall)
 
+    this.onResize = () => { if (!this.element.hidden) this.reserveSpace() }
+    window.addEventListener("resize", this.onResize)
+
     if (this.ios && this.hasTextTarget) {
       this.textTarget.textContent = "Tap Share, then Add to Home Screen to install."
-      this.element.hidden = false
+      this.reveal()
     }
   }
 
   disconnect() {
     window.removeEventListener("beforeinstallprompt", this.onBeforeInstall)
+    window.removeEventListener("resize", this.onResize)
+    this.clearSpace()
+  }
+
+  reveal() {
+    this.element.hidden = false
+    this.reserveSpace()
+  }
+
+  // The banner is position:fixed at the bottom, so reserve equal page space or
+  // it covers content (e.g. the first ticket's price/quantity, the pay button).
+  reserveSpace() {
+    requestAnimationFrame(() => {
+      const height = this.element.offsetHeight
+      if (height) document.body.style.paddingBottom = `${height}px`
+    })
+  }
+
+  clearSpace() {
+    document.body.style.paddingBottom = ""
   }
 
   async install() {
@@ -35,6 +58,7 @@ export default class extends Controller {
   dismiss() {
     try { localStorage.setItem("dqor-install-dismissed", "1") } catch (_) {}
     this.element.hidden = true
+    this.clearSpace()
   }
 
   get dismissed() {
