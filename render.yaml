@@ -6,10 +6,11 @@ services:
     region: singapore
     autoDeploy: true
     healthCheckPath: /up
-    disk:
-      name: dqor-storage
-      mountPath: /rails/storage
-      sizeGB: 1
+    # No persistent disk: prod stores Active Storage on R2 (R2_BUCKET set) and
+    # Solid Queue/Cache/Cable in Postgres, so nothing writes to /rails/storage.
+    # Dropping the disk lets Render run overlapping instances on deploy
+    # (zero-downtime) instead of stopping the old one first. dev/test keep using
+    # the local filesystem (config/storage.yml: storage/, tmp/storage).
     envVars:
       - key: RAILS_MASTER_KEY
         sync: false
