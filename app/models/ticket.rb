@@ -28,6 +28,10 @@ class Ticket < ApplicationRecord
       .where("tshirt_size IS NULL OR tshirt_size = ''")
   }
 
+  # Passes that count as "going": paid order, not canceled. Used for the
+  # public attendee count (social proof) and anywhere we tally real attendees.
+  scope :confirmed, -> { joins(:order).merge(Order.paid).where(canceled_at: nil) }
+
   # Distinct emails of attendees holding a paid, non-canceled ticket — used for broadcast emails.
   def self.broadcast_recipients
     joins(:order).merge(Order.paid)

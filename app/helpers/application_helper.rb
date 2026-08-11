@@ -14,6 +14,15 @@ module ApplicationHelper
     end
   end
 
+  # Social proof: how many passes are confirmed, and a few opt-in faces to show.
+  def whos_coming_count
+    @whos_coming_count ||= Ticket.confirmed.count
+  end
+
+  def whos_coming_faces(limit: 14)
+    User.publicly_attending.order(created_at: :desc).limit(limit)
+  end
+
   def entry_qr_svg(ticket)
     qr_svg(ticket.secret)
   end
