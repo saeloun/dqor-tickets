@@ -1,0 +1,18 @@
+<%# Social proof: confirmed-pass count + a face-pile of opt-in attendees. %>
+<% count = whos_coming_count %>
+<% if count.positive? %>
+  <% faces = whos_coming_faces %>
+  <div class="whos-coming">
+    <% if faces.any? %>
+      <div class="whos-coming__faces" aria-hidden="true">
+        <% faces.each do |attendee| %>
+          <%= avatar_image_tag attendee, size: 36, alt: "", class: "whos-coming__face", loading: "lazy" %>
+        <% end %>
+      </div>
+    <% end %>
+    <p class="whos-coming__count">
+      <strong><%= number_with_delimiter(count) %></strong>
+      <%= "Rubyist".pluralize(count) %> going to <span class="mr" lang="mr" data-en="Pune">पुणे</span>
+    </p>
+  </div>
+<% end %>

@@ -224,6 +224,17 @@ button { cursor: pointer; }
 .storefront-hero { max-width: 42rem; margin: 0 auto 3rem; text-align: center; }
 .storefront-hero h1, .checkout-heading h1 { margin-bottom: 0.75rem; font-size: clamp(2.25rem, 5vw, 3.5rem); }
 .storefront-hero > p:last-child, .checkout-heading > p:last-child { color: var(--color-muted-foreground); font-size: 1.1rem; }
+
+/* Social proof face-pile + attendee count. */
+.whos-coming { display: inline-flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; justify-content: center; margin-top: 1.25rem; }
+.whos-coming__faces { display: flex; }
+.whos-coming__face { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-background); margin-left: -10px; box-shadow: 0 1px 3px hsl(0 0% 0% / 0.25); background: var(--color-muted); }
+.whos-coming__face:first-child { margin-left: 0; }
+.whos-coming__count { margin: 0; color: var(--color-muted-foreground); font-size: 0.95rem; }
+.whos-coming__count strong { color: var(--color-primary); font-weight: 700; font-size: 1.05rem; }
+
+.attending-badge { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0; font-size: 0.85rem; font-weight: 600; color: var(--color-primary); }
+.attending-badge svg { width: 15px; height: 15px; }
 .page-hero { max-width: 46rem; margin: 0 auto 2rem; padding-bottom: 1.5rem; text-align: center; border-bottom: 1px solid var(--color-border); }
 .page-hero .section-label { color: var(--color-primary); }
 .page-hero h1 { margin: 0.4rem 0 0.75rem; font-size: clamp(2rem, 5vw, 3rem); }

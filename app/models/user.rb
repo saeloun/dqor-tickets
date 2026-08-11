@@ -24,12 +24,24 @@ class User < ApplicationRecord
   validates(*SOCIAL_PROFILE_FIELDS, length: { maximum: 255 }, allow_blank: true)
   validate :website_is_http_url
 
+  # Opted-in, named users who actually hold a confirmed pass — the only people
+  # shown on the public "who's coming" wall. Opt-in is off by default.
+  scope :publicly_attending, -> {
+    emails = Ticket.confirmed.where.not(attendee_email: [ nil, "" ]).distinct.pluck(Arel.sql("lower(attendee_email)"))
+    where(public_attendee: true).where.not(name: [ nil, "" ]).where(email: emails)
+  }
+
   def paid_orders
     Order.paid.where("lower(orders.email) = ?", email)
   end
 
   def tickets
     Ticket.joins(:order).merge(paid_orders)
+  end
+
+  # Holds a confirmed pass (bought one, or is named on one).
+  def attending?
+    paid_orders.exists? || Ticket.confirmed.where("lower(attendee_email) = ?", email).exists?
   end
 
   def gravatar_url(size: 200)

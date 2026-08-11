@@ -64,6 +64,10 @@
         <%= form.check_box :discoverable %>
         <%= form.label :discoverable, "List me in the attendee directory so others can connect" %>
       </div>
+      <div class="assignment-checkbox">
+        <%= form.check_box :public_attendee %>
+        <%= form.label :public_attendee, "Show me publicly as attending on the event page" %>
+      </div>
       <%= form.submit "Save settings", class: "btn btn-primary" %>
     <% end %>
   </section>
