@@ -8,7 +8,16 @@ class ApplicationController < ActionController::Base
 
   helper_method :current_user, :user_signed_in?, :turbo_native_app?
 
+  before_action :capture_referral
+
   private
+    # Remember a referral code across the visit so we can credit the referrer
+    # and offer the bring-a-friend discount at checkout.
+    def capture_referral
+      code = params[:ref].to_s.strip.upcase
+      session[:ref] = code if code.present?
+    end
+
     def current_user
       @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
     end

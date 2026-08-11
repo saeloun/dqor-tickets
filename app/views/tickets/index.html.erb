@@ -7,6 +7,9 @@
     <p>Two days of Ruby, Rails, and good company in Pune — with an optional day out in the city.</p>
     <p><%= link_to "See the schedule →", schedule_path, class: "storefront-hero__link" %> <span aria-hidden="true">·</span> <%= link_to "Sponsors", sponsors_path, class: "storefront-hero__link" %> <span aria-hidden="true">·</span> <%= link_to "Add to calendar", calendar_path, class: "storefront-hero__link" %></p>
     <%= render "shared/whos_coming" %>
+    <% if @referrer %>
+      <p class="referral-banner"><strong><%= @referrer.display_name %></strong> invited you — <strong>10% off</strong> applied with code <code>FRIENDS</code>.</p>
+    <% end %>
   </section>
 
   <% if flash[:alert] %>
@@ -119,7 +122,7 @@
         </div>
         <div class="field">
           <%= form.label :coupon_code, "Coupon code" %>
-          <%= form.text_field :coupon_code, autocomplete: "off", placeholder: "Optional", data: { cart_target: "coupon", action: "input->cart#couponChanged" } %>
+          <%= form.text_field :coupon_code, value: @prefill_coupon, autocomplete: "off", placeholder: "Optional", data: { cart_target: "coupon", action: "input->cart#couponChanged" } %>
           <p class="coupon-message" data-cart-target="discount" role="status" aria-live="polite" hidden></p>
         </div>
       </div>

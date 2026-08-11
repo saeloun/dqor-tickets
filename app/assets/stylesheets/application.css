@@ -235,6 +235,9 @@ button { cursor: pointer; }
 
 .attending-badge { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0; font-size: 0.85rem; font-weight: 600; color: var(--color-primary); }
 .attending-badge svg { width: 15px; height: 15px; }
+
+.referral-banner { margin: 0.9rem auto 0; max-width: 30rem; padding: 0.6rem 1.1rem; background: color-mix(in oklab, var(--color-primary), transparent 92%); border: 1px solid color-mix(in oklab, var(--color-primary), transparent 72%); border-radius: 999px; color: var(--color-foreground); font-size: 0.9rem; }
+.referral-banner code { font-weight: 700; color: var(--color-primary); background: none; }
 .page-hero { max-width: 46rem; margin: 0 auto 2rem; padding-bottom: 1.5rem; text-align: center; border-bottom: 1px solid var(--color-border); }
 .page-hero .section-label { color: var(--color-primary); }
 .page-hero h1 { margin: 0.4rem 0 0.75rem; font-size: clamp(2rem, 5vw, 3rem); }

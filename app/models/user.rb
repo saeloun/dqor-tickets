@@ -4,6 +4,15 @@ class User < ApplicationRecord
   has_secure_password validations: false
   has_one_attached :avatar
 
+  before_create :assign_referral_code
+
+  def self.generate_referral_code
+    loop do
+      code = SecureRandom.alphanumeric(7).upcase
+      break code unless exists?(referral_code: code)
+    end
+  end
+
   has_many :connections, dependent: :destroy
   has_many :connected_users, through: :connections, source: :connected_user
   has_many :inbound_connections, class_name: "Connection", foreign_key: :connected_user_id, dependent: :destroy
@@ -42,6 +51,15 @@ class User < ApplicationRecord
   # Holds a confirmed pass (bought one, or is named on one).
   def attending?
     paid_orders.exists? || Ticket.confirmed.where("lower(attendee_email) = ?", email).exists?
+  end
+
+  # Paid orders placed via this user's referral link.
+  def referrals_count
+    Order.paid.where("metadata ->> 'referred_by' = ?", referral_code).count
+  end
+
+  def assign_referral_code
+    self.referral_code ||= self.class.generate_referral_code
   end
 
   def gravatar_url(size: 200)
