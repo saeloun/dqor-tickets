@@ -13,6 +13,8 @@ class OrdersController < ApplicationController
       conference_order_email: checkout[:conference_order_email]
     )
 
+    record_referral(order)
+
     if order.total_paise < 100
       order.complete_comp!
       DeliverOrderConfirmationJob.perform_later(order)
@@ -41,6 +43,21 @@ class OrdersController < ApplicationController
   end
 
   private
+    # Credit the referrer (metadata only — never touches pricing or payment,
+    # and fully rescued so a referral hiccup can't break checkout).
+    def record_referral(order)
+      code = session[:ref].to_s
+      return if code.blank?
+
+      referrer = User.find_by(referral_code: code)
+      return unless referrer
+      return if order.email.to_s.casecmp?(referrer.email.to_s)
+
+      order.update!(metadata: order.metadata.merge("referred_by" => code))
+    rescue => e
+      Rails.logger.warn("referral record failed for order #{order&.code}: #{e.message}")
+    end
+
     def regenerate_documents
       return unless @order.paid?
 

@@ -142,6 +142,22 @@
   </section>
 
   <section class="account-section">
+    <h2>Bring a friend</h2>
+    <p>Share your link — friends get <strong>10% off</strong> their pass, and you'll see who joins.</p>
+    <div class="share-link field" data-controller="clipboard">
+      <label for="referral-link">Your referral link</label>
+      <div class="share-link__row">
+        <%= text_field_tag :referral_link, tickets_store_url(ref: current_user.referral_code), id: "referral-link", readonly: true, data: { clipboard_target: "source" } %>
+        <button type="button" class="share-link__copy" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+      </div>
+    </div>
+    <% joined = current_user.referrals_count %>
+    <% if joined.positive? %>
+      <p class="assignment-summary"><strong><%= pluralize(joined, "friend") %></strong> joined via your link so far. Thank you!</p>
+    <% end %>
+  </section>
+
+  <section class="account-section">
     <h2>Community</h2>
     <% unless current_user.discoverable? %>
       <p class="gst-hint">You’re not listed in the attendee directory yet. <%= link_to "Turn it on in settings", account_settings_path %> so others can connect with you.</p>
