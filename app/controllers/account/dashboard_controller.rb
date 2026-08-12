@@ -8,5 +8,6 @@ class Account::DashboardController < ApplicationController
     @saved_talks = current_user.bookmarked_talks.merge(Talk.published).order(Arel.sql("starts_at IS NULL"), :starts_at)
     @announcements = Announcement.published.recent.limit(3)
     @unread_announcements_count = current_user.unread_announcements_count
+    @unread_messages_count = current_user.unread_messages_count
   end
 end

@@ -38,6 +38,9 @@
     <% else %>
       <%= button_to "Connect", connect_attendee_path(@attendee), method: :post, class: "btn btn-primary" %>
     <% end %>
+    <% if current_user&.can_message?(@attendee) %>
+      <%= button_to "Message", account_conversations_path, method: :post, params: { attendee_id: @attendee.id }, class: "btn btn-primary" %>
+    <% end %>
   </div>
 
   <p class="account-back"><%= link_to "← All attendees", community_path %></p>

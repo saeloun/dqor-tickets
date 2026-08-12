@@ -69,6 +69,14 @@
       <span class="hub-tile__label">Attendees</span>
       <span class="hub-tile__hint">Meet &amp; connect</span>
     <% end %>
+    <%= link_to account_conversations_path, class: "hub-tile" do %>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <% if @unread_messages_count.to_i.positive? %>
+        <span class="hub-tile__badge" aria-label="<%= pluralize(@unread_messages_count, "unread message") %>"><%= @unread_messages_count %></span>
+      <% end %>
+      <span class="hub-tile__label">Messages</span>
+      <span class="hub-tile__hint">Your chats</span>
+    <% end %>
     <%= link_to updates_path, class: "hub-tile" do %>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <% if @unread_announcements_count.to_i.positive? %>

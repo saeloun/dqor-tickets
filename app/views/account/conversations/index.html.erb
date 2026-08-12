@@ -1,0 +1,38 @@
+<% content_for :title, "Messages · Deccan Queen on Rails" %>
+
+<main class="account-page">
+  <section class="account-header">
+    <div class="account-identity">
+      <h1>Messages</h1>
+      <p class="account-email">Chat with attendees you’ve connected with.</p>
+    </div>
+  </section>
+
+  <% if @conversations.any? %>
+    <ul class="conversation-list">
+      <% @conversations.each do |conversation| %>
+        <% other = conversation.other_participant(current_user) %>
+        <% last = conversation.messages.last %>
+        <% unread = conversation.unread_count_for(current_user) %>
+        <li class="conversation-list__item">
+          <%= link_to account_conversation_path(conversation), class: "conversation-card #{'conversation-card--unread' if unread.positive?}" do %>
+            <%= avatar_image_tag other, size: 44, alt: "", class: "conversation-card__avatar" %>
+            <div class="conversation-card__body">
+              <span class="conversation-card__name"><%= other.display_name %></span>
+              <span class="conversation-card__preview"><%= last ? truncate(last.body, length: 60) : "No messages yet" %></span>
+            </div>
+            <% if unread.positive? %>
+              <span class="conversation-card__unread" aria-label="<%= pluralize(unread, "unread message") %>"><%= unread %></span>
+            <% end %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="content-empty">
+      <p>No conversations yet. Connect with attendees in the <%= link_to "attendee directory", community_path %> or by scanning their code, then start a chat.</p>
+    </div>
+  <% end %>
+
+  <p class="account-back"><%= link_to "← Back to your account", account_root_path %></p>
+</main>

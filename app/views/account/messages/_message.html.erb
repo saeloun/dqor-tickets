@@ -1,0 +1,4 @@
+<div class="chat-message" id="<%= dom_id(message) %>" data-sender-id="<%= message.sender_id %>">
+  <div class="chat-message__bubble"><%= simple_format(message.body) %></div>
+  <time class="chat-message__time" datetime="<%= message.created_at.iso8601 %>"><%= message.created_at.in_time_zone("Asia/Kolkata").strftime("%-l:%M %p") %></time>
+</div>

@@ -1,0 +1,25 @@
+<% content_for :title, "Chat with #{@other.display_name} · Deccan Queen on Rails" %>
+
+<main class="chat-page" data-controller="chat" data-chat-current-user-id-value="<%= current_user.id %>">
+  <header class="chat-header">
+    <%= link_to "‹ Messages", account_conversations_path, class: "chat-header__back" %>
+    <%= avatar_image_tag @other, size: 40, alt: "", class: "chat-header__avatar" %>
+    <div class="chat-header__id">
+      <span class="chat-header__name"><%= @other.display_name %></span>
+      <%= link_to "View profile", attendee_path(@other), class: "chat-header__link" %>
+    </div>
+  </header>
+
+  <%= turbo_stream_from @conversation %>
+  <div class="chat-messages" id="chat-messages" data-chat-target="messages">
+    <% if @messages.any? %>
+      <% @messages.each do |message| %>
+        <%= render "account/messages/message", message: message %>
+      <% end %>
+    <% else %>
+      <p class="chat-empty">Say hello to <%= @other.display_name %>.</p>
+    <% end %>
+  </div>
+
+  <%= render "account/conversations/composer", conversation: @conversation, message: @message %>
+</main>

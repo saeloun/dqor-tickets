@@ -1,0 +1,8 @@
+<%= form_with model: message, url: account_conversation_messages_path(conversation), id: "chat-composer", class: "chat-composer", data: { controller: "chat-composer", action: "turbo:submit-end->chat-composer#afterSubmit" } do |form| %>
+  <% if message.errors.any? %>
+    <p class="chat-composer__error" role="alert"><%= message.errors.full_messages.to_sentence %></p>
+  <% end %>
+  <%= form.text_area :body, rows: 1, class: "chat-composer__input", placeholder: "Write a message…", autocomplete: "off",
+        data: { chat_composer_target: "input", action: "keydown.enter->chat-composer#submitOnEnter input->chat-composer#autoGrow" } %>
+  <%= form.button "Send", class: "btn btn-primary chat-composer__send" %>
+<% end %>
