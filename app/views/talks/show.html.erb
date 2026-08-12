@@ -18,11 +18,11 @@
     <%= turbo_stream_from [ @talk, :questions ] %>
     <div id="talk-questions" class="qa-list">
       <% @questions.each do |question| %>
-        <%= render "talks/question", question: question, current_user: current_user %>
+        <%= render "talks/question", question: question %>
       <% end %>
     </div>
     <% if @questions.empty? %>
-      <p class="qa-empty">No questions yet — be the first, and upvote the ones you want answered.</p>
+      <p class="qa-empty">No questions yet — be the first to ask.</p>
     <% end %>
   </section>
 </main>
