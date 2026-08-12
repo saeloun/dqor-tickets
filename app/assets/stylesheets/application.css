@@ -666,6 +666,11 @@ button { cursor: pointer; }
 .star-rating input:focus-visible + label { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .talk-feedback__comment { flex: 1 1 180px; min-width: 140px; padding: 0.4rem 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground); font: inherit; font-size: 0.9rem; }
 .talk-feedback__submit { flex: 0 0 auto; }
+
+.sign-in-divider { display: flex; align-items: center; text-align: center; margin: 1.1rem 0; color: var(--color-foreground-soft); font-size: 0.85rem; }
+.sign-in-divider::before, .sign-in-divider::after { content: ""; flex: 1; border-top: 1px solid var(--color-border); }
+.sign-in-divider span { padding: 0 0.7rem; }
+.google-signin { width: 100%; }
 .hub-tile:hover { transform: translateY(-3px); border-color: var(--color-primary); box-shadow: 0 18px 40px -28px hsl(0 0% 0% / 0.5); }
 .hub-tile svg { width: 26px; height: 26px; color: var(--color-primary); }
 .hub-tile__label { font-weight: 700; margin-top: 0.35rem; }

@@ -16,5 +16,10 @@
       </div>
       <%= form.submit "Email me a sign-in link", class: "btn btn-primary" %>
     <% end %>
+
+    <% if ENV["GOOGLE_CLIENT_ID"].present? %>
+      <p class="sign-in-divider"><span>or</span></p>
+      <%= button_to "Continue with Google", "/auth/google_oauth2", method: :post, data: { turbo: false }, class: "btn btn-secondary google-signin" %>
+    <% end %>
   </section>
 </main>
