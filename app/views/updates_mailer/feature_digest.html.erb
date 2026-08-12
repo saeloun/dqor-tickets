@@ -1,0 +1,42 @@
+<% body_font = MailerHelper::BODY_FONT %>
+<% display_font = MailerHelper::DISPLAY_FONT %>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+  <tr><td align="center" style="padding:0 0 18px;">
+    <%= image_tag attachments["deccan-logo.png"].url, width: 150, alt: "Deccan Queen on Rails", style: "display:block;width:150px;height:auto;" %>
+  </td></tr>
+</table>
+
+<%= mail_label "Product update" %>
+<%= mail_heading "Four new things in your app" %>
+<%= mail_text "We’ve been busy shipping. Here’s what’s new for everyone with a Deccan Queen on Rails pass — all of it lives in your account." %>
+
+<% features = [
+     ["🎟️", "Bring a friend, both save", "Your account now has a personal referral link. Anyone who books through it gets 5% off their pass — and you’ll see who joins from your link."],
+     ["📣", "Share in one tap", "New Share on X, LinkedIn, and WhatsApp buttons pre-fill a message with your link, so spreading the word takes a single tap."],
+     ["💬", "Message other attendees", "Connect with someone — scan their code or tap Connect — then chat 1:1 right inside the app. No swapping numbers."],
+     ["🔔", "Turn on notifications", "Opt in from Settings to get a heads-up about schedule changes, conference updates, and new messages, even when the app is closed."]
+   ] %>
+
+<% features.each do |emoji, title, body| %>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 6px;">
+    <tr>
+      <td width="58" valign="top" style="padding:14px 14px 14px 0;">
+        <div style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;background:#f3e8cf;border:1px solid #e4d6b6;border-radius:12px;"><%= emoji %></div>
+      </td>
+      <td valign="top" style="padding:14px 0;">
+        <div style="font-family:<%= display_font %>;color:#33302c;font-size:17px;font-weight:bold;margin:0 0 4px;"><%= title %></div>
+        <div style="font-family:<%= body_font %>;color:#33302c;font-size:15px;line-height:1.55;"><%= body %></div>
+      </td>
+    </tr>
+  </table>
+  <%= mail_divider unless emoji == "🔔" %>
+<% end %>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:26px 0 6px;">
+  <tr><td align="center">
+    <%= mail_button "Open your account", "https://deccanqueenonrails.com/account" %>
+  </td></tr>
+</table>
+
+<%= mail_note "See you in Pune, October 8–11. — Vipul & the Saeloun team" %>
