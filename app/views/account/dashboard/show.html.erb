@@ -30,6 +30,24 @@
     </div>
   <% end %>
 
+  <% if @incomplete_tickets.any? %>
+    <section class="account-section ticket-nudge" aria-labelledby="finish-tickets-heading">
+      <h2 id="finish-tickets-heading">Finish your <%= "ticket".pluralize(@incomplete_tickets.size) %></h2>
+      <p><%= @incomplete_tickets.size == 1 ? "One pass still needs" : "#{@incomplete_tickets.size} passes still need" %> attendee details so we can print badges and order the right T-shirts.</p>
+      <ul class="ticket-nudge__list">
+        <% @incomplete_tickets.each do |ticket| %>
+          <li class="ticket-nudge__item">
+            <div class="ticket-nudge__info">
+              <span class="ticket-nudge__type"><%= ticket.ticket_type.name %></span>
+              <span class="ticket-nudge__status"><%= ticket.assigned? ? "Missing T-shirt size" : "No attendee yet" %></span>
+            </div>
+            <%= link_to (ticket.assigned? ? "Complete details" : "Add attendee"), ticket_claim_path(ticket.claim_token), class: "btn btn-primary" %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
   <nav class="hub-actions" aria-label="Conference hub">
     <%= link_to schedule_path, class: "hub-tile" do %>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>

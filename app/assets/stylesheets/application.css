@@ -637,6 +637,14 @@ button { cursor: pointer; }
 .share-button--x:hover { background: #000; border-color: #000; color: #fff; }
 .share-button--linkedin:hover { background: #0a66c2; border-color: #0a66c2; color: #fff; }
 .share-button--whatsapp:hover { background: #25d366; border-color: #25d366; color: #062e14; }
+.ticket-nudge { border: 1px solid color-mix(in hsl, var(--color-primary), transparent 55%); background: color-mix(in hsl, var(--color-primary), transparent 92%); }
+.ticket-nudge > h2 { margin-top: 0; }
+.ticket-nudge__list { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.ticket-nudge__item { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; padding: 0.75rem 0.9rem; border-radius: var(--radius-md); background: var(--color-card); border: 1px solid var(--color-border); }
+.ticket-nudge__info { display: flex; flex-direction: column; gap: 0.15rem; }
+.ticket-nudge__type { font-weight: 600; }
+.ticket-nudge__status { font-size: 0.85rem; color: var(--color-foreground-soft); }
+.ticket-nudge__item .btn { flex: 0 0 auto; }
 .connection-scanner > h1 { margin-top: 0; font-family: var(--font-display); }
 .connection-scanner__reader { overflow: hidden; margin-top: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: #fff; }
 .connection-scanner__result { margin: 1rem 0 0; padding: 0.75rem 1rem; border-radius: var(--radius-md); color: var(--color-destructive); background: color-mix(in hsl, var(--color-destructive), transparent 90%); }
