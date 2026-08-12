@@ -141,15 +141,22 @@
     </div>
   </section>
 
+  <% ref_url = tickets_store_url(ref: current_user.referral_code) %>
+  <% share_text = "I'm going to Deccan Queen on Rails — India's Ruby & Rails conference in Pune, Oct 8–11. Grab 5% off with my link:" %>
   <section class="account-section">
     <h2>Bring a friend</h2>
-    <p>Share your link — friends get <strong>10% off</strong> their pass, and you'll see who joins.</p>
+    <p>Share your link — friends get <strong>5% off</strong> their pass, and you'll see who joins.</p>
     <div class="share-link field" data-controller="clipboard">
       <label for="referral-link">Your referral link</label>
       <div class="share-link__row">
-        <%= text_field_tag :referral_link, tickets_store_url(ref: current_user.referral_code), id: "referral-link", readonly: true, data: { clipboard_target: "source" } %>
+        <%= text_field_tag :referral_link, ref_url, id: "referral-link", readonly: true, data: { clipboard_target: "source" } %>
         <button type="button" class="share-link__copy" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
       </div>
+    </div>
+    <div class="share-buttons">
+      <%= link_to "Share on X", "https://twitter.com/intent/tweet?#{{ text: share_text, url: ref_url }.to_query}", target: "_blank", rel: "noopener", class: "share-button share-button--x" %>
+      <%= link_to "LinkedIn", "https://www.linkedin.com/sharing/share-offsite/?#{{ url: ref_url }.to_query}", target: "_blank", rel: "noopener", class: "share-button share-button--linkedin" %>
+      <%= link_to "WhatsApp", "https://wa.me/?#{{ text: "#{share_text} #{ref_url}" }.to_query}", target: "_blank", rel: "noopener", class: "share-button share-button--whatsapp" %>
     </div>
     <% joined = current_user.referrals_count %>
     <% if joined.positive? %>
