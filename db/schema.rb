@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_110001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -161,6 +161,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_100000) do
     t.index ["order_id"], name: "index_payment_events_on_order_id"
     t.index ["razorpay_event_id"], name: "index_payment_events_on_razorpay_event_id", unique: true
     t.index ["razorpay_payment_id"], name: "index_payment_events_on_razorpay_payment_id", unique: true, where: "(razorpay_payment_id IS NOT NULL)"
+  end
+
+  create_table "push_subscriptions", force: :cascade do |t|
+    t.string "auth", null: false
+    t.datetime "created_at", null: false
+    t.string "endpoint", null: false
+    t.string "p256dh", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.bigint "user_id", null: false
+    t.index ["endpoint"], name: "index_push_subscriptions_on_endpoint", unique: true
+    t.index ["user_id"], name: "index_push_subscriptions_on_user_id"
   end
 
   create_table "refunds", force: :cascade do |t|
@@ -425,6 +437,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_100000) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.datetime "announcements_seen_at"
     t.text "bio"
     t.string "bluesky"
     t.datetime "created_at", null: false
@@ -453,6 +466,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_100000) do
   add_foreign_key "invoices", "orders"
   add_foreign_key "orders", "coupons"
   add_foreign_key "payment_events", "orders"
+  add_foreign_key "push_subscriptions", "users"
   add_foreign_key "refunds", "orders"
   add_foreign_key "sessions", "admin_users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

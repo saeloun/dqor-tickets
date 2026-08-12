@@ -78,6 +78,26 @@ RSpec.describe "Account dashboard hub", type: :request do
     expect(response.body).not_to include("ticket-nudge")
   end
 
+  it "badges the Updates tile with unread announcements" do
+    Announcement.create!(title: "Big news", body: "Details", published: true, published_at: Time.current)
+    sign_in_as(User.create!(email: "unread@example.com"))
+
+    get account_root_path
+
+    expect(response.body).to include("hub-tile__badge")
+  end
+
+  it "clears the unread badge after the attendee visits updates" do
+    Announcement.create!(title: "News", body: "Details", published: true, published_at: Time.current)
+    user = User.create!(email: "seen@example.com")
+    sign_in_as(user)
+
+    get updates_path
+    get account_root_path
+
+    expect(response.body).not_to include("hub-tile__badge")
+  end
+
   it "hides the countdown once the event has passed" do
     allow(Conference).to receive(:status).and_return(:after)
     sign_in_as(User.create!(email: "past@example.com", name: "Past Tester"))

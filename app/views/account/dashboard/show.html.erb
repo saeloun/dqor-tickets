@@ -48,6 +48,16 @@
     </section>
   <% end %>
 
+  <% if ENV["VAPID_PUBLIC_KEY"].present? %>
+    <section class="account-section notifications-prompt" data-controller="notifications" data-notifications-compact-value="true" hidden>
+      <div class="notifications-prompt__body">
+        <h2>Turn on notifications</h2>
+        <p class="notifications-status" data-notifications-target="status">Get a heads-up for schedule changes and conference updates.</p>
+      </div>
+      <button type="button" class="btn btn-primary" data-notifications-target="button" data-action="notifications#toggle" hidden>Enable notifications</button>
+    </section>
+  <% end %>
+
   <nav class="hub-actions" aria-label="Conference hub">
     <%= link_to schedule_path, class: "hub-tile" do %>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -61,6 +71,9 @@
     <% end %>
     <%= link_to updates_path, class: "hub-tile" do %>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <% if @unread_announcements_count.to_i.positive? %>
+        <span class="hub-tile__badge" aria-label="<%= pluralize(@unread_announcements_count, "unread update") %>"><%= @unread_announcements_count %></span>
+      <% end %>
       <span class="hub-tile__label">Updates</span>
       <span class="hub-tile__hint">Latest news</span>
     <% end %>

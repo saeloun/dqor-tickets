@@ -10,6 +10,8 @@ class BroadcastAnnouncementJob < ApplicationJob
       AnnouncementMailer.to_attendee(announcement, email).deliver_later
     end
 
+    PushAnnouncementJob.perform_later(announcement)
+
     announcement.update!(emailed_at: Time.current)
   end
 end
