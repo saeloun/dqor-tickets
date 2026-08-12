@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_13_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_13_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -196,16 +196,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_000000) do
     t.bigint "user_id", null: false
     t.index ["endpoint"], name: "index_push_subscriptions_on_endpoint", unique: true
     t.index ["user_id"], name: "index_push_subscriptions_on_user_id"
-  end
-
-  create_table "question_upvotes", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "talk_question_id", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["talk_question_id", "user_id"], name: "index_question_upvotes_on_talk_question_id_and_user_id", unique: true
-    t.index ["talk_question_id"], name: "index_question_upvotes_on_talk_question_id"
-    t.index ["user_id"], name: "index_question_upvotes_on_user_id"
   end
 
   create_table "refunds", force: :cascade do |t|
@@ -528,8 +518,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_000000) do
   add_foreign_key "orders", "coupons"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"
-  add_foreign_key "question_upvotes", "talk_questions"
-  add_foreign_key "question_upvotes", "users"
   add_foreign_key "refunds", "orders"
   add_foreign_key "sessions", "admin_users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

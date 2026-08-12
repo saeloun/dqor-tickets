@@ -45,19 +45,4 @@ RSpec.describe "Talk Q&A", type: :request do
     expect { post talk_questions_path(talk), params: { talk_question: { body: "Where do I start?" } } }
       .to change { talk.talk_questions.count }.by(1)
   end
-
-  it "lets an attendee upvote and remove the upvote" do
-    question = talk.talk_questions.create!(user: User.create!(email: "asker@example.com"), body: "Q?")
-    sign_in_as(attending("voter@example.com"))
-
-    expect { post question_upvote_path(question) }.to change { question.question_upvotes.count }.by(1)
-    expect { delete question_upvote_path(question) }.to change { question.question_upvotes.count }.by(-1)
-  end
-
-  it "does not let a non-attendee upvote" do
-    question = talk.talk_questions.create!(user: User.create!(email: "asker2@example.com"), body: "Q?")
-    sign_in_as(User.create!(email: "nopass2@example.com"))
-
-    expect { post question_upvote_path(question) }.not_to change { QuestionUpvote.count }
-  end
 end

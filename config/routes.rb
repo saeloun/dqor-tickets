@@ -74,8 +74,6 @@ Rails.application.routes.draw do
   resources :talks, only: :show do
     resources :questions, only: :create, controller: "talk_questions"
   end
-  post   "questions/:question_id/upvote", to: "question_upvotes#create", as: :question_upvote
-  delete "questions/:question_id/upvote", to: "question_upvotes#destroy"
 
   # Legacy marketing-site URLs (deccanqueenonrails.com) now served by this app.
   # Keep old inbound links / bookmarks working once the apex points here.
