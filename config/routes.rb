@@ -62,6 +62,7 @@ Rails.application.routes.draw do
   get  "info", to: "info_pages#index", as: :info_pages
   get  "info/:slug", to: "info_pages#show", as: :info_page
   get  "calendar", to: "calendar#show", as: :calendar
+  get  "tickets/:secret/apple-pass", to: "apple_passes#show", as: :apple_pass
 
   # Crawler / answer-engine files (dynamic so the host is always correct).
   get "robots.txt",  to: "seo#robots",  as: :robots
