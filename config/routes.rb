@@ -34,6 +34,9 @@ Rails.application.routes.draw do
     resource :calendar, only: :show
     post   "push_subscriptions", to: "push_subscriptions#create", as: :push_subscriptions
     delete "push_subscriptions", to: "push_subscriptions#destroy"
+    resources :conversations, only: %i[index show create] do
+      resources :messages, only: :create
+    end
     root "dashboard#show"
   end
 

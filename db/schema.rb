@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_110001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_110001) do
     t.index ["user_id"], name: "index_connections_on_user_id"
   end
 
+  create_table "conversations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "one_last_read_at"
+    t.bigint "participant_one_id", null: false
+    t.bigint "participant_two_id", null: false
+    t.datetime "two_last_read_at"
+    t.datetime "updated_at", null: false
+    t.index ["participant_one_id", "participant_two_id"], name: "idx_on_participant_one_id_participant_two_id_34e343b89f", unique: true
+    t.index ["participant_one_id"], name: "index_conversations_on_participant_one_id"
+    t.index ["participant_two_id"], name: "index_conversations_on_participant_two_id"
+  end
+
   create_table "coupons", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "code", null: false
@@ -124,6 +136,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_110001) do
     t.index ["order_id"], name: "index_invoices_on_order_id"
     t.index ["order_id"], name: "index_invoices_one_invoice_per_order", unique: true, where: "((kind)::text = 'invoice'::text)"
     t.index ["refers_to_id"], name: "index_invoices_on_refers_to_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "sender_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["sender_id"], name: "index_messages_on_sender_id"
   end
 
   create_table "orders", force: :cascade do |t|
@@ -461,9 +484,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_110001) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "connections", "users"
   add_foreign_key "connections", "users", column: "connected_user_id"
+  add_foreign_key "conversations", "users", column: "participant_one_id"
+  add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "orders", "coupons"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"

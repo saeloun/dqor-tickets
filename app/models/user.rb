@@ -20,6 +20,7 @@ class User < ApplicationRecord
   has_many :talk_bookmarks, dependent: :destroy
   has_many :bookmarked_talks, through: :talk_bookmarks, source: :talk
   has_many :push_subscriptions, dependent: :destroy
+  has_many :sent_messages, class_name: "Message", foreign_key: :sender_id, dependent: :destroy
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
   normalizes :x_username, :bluesky, :github, :mastodon, :linkedin,
@@ -70,6 +71,21 @@ class User < ApplicationRecord
 
   def connected_to?(other)
     connections.exists?(connected_user_id: other.id)
+  end
+
+  def conversations
+    Conversation.for_user(self)
+  end
+
+  # You can DM anyone you've connected with, or who has connected with you.
+  def can_message?(other)
+    return false if other.nil? || other == self
+
+    connected_to?(other) || other.connected_to?(self)
+  end
+
+  def unread_messages_count
+    conversations.includes(:messages).sum { |conversation| conversation.unread_count_for(self) }
   end
 
   def unread_announcements_count
