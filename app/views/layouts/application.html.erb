@@ -13,6 +13,9 @@
     <% if ENV["GOOGLE_SITE_VERIFICATION"].present? %>
       <meta name="google-site-verification" content="<%= ENV["GOOGLE_SITE_VERIFICATION"] %>">
     <% end %>
+    <% if current_user && ENV["VAPID_PUBLIC_KEY"].present? %>
+      <meta name="vapid-public-key" content="<%= ENV["VAPID_PUBLIC_KEY"] %>">
+    <% end %>
 
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#981B34">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141110">

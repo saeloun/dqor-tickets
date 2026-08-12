@@ -32,6 +32,8 @@ Rails.application.routes.draw do
     resource :settings, only: %i[show update]
     resource :connection_scan, only: :show
     resource :calendar, only: :show
+    post   "push_subscriptions", to: "push_subscriptions#create", as: :push_subscriptions
+    delete "push_subscriptions", to: "push_subscriptions#destroy"
     root "dashboard#show"
   end
 

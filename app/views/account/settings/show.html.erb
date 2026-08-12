@@ -72,5 +72,13 @@
     <% end %>
   </section>
 
+  <% if ENV["VAPID_PUBLIC_KEY"].present? %>
+    <section class="account-section" data-controller="notifications">
+      <h2>Notifications</h2>
+      <p class="notifications-status" data-notifications-target="status">Get a heads-up for schedule changes and conference updates.</p>
+      <button type="button" class="btn btn-secondary" data-notifications-target="button" data-action="notifications#toggle" hidden>Enable notifications</button>
+    </section>
+  <% end %>
+
   <p class="account-back"><%= link_to "← Back to your account", account_root_path %></p>
 </main>

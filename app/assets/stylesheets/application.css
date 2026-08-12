@@ -601,10 +601,20 @@ button { cursor: pointer; }
 
 .hub-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem; }
 .hub-tile {
+  position: relative;
   display: flex; flex-direction: column; gap: 0.25rem; padding: 1.1rem 1.15rem; border-radius: 14px;
   background: var(--color-card); border: 1px solid var(--color-border); text-decoration: none; color: inherit;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
+.hub-tile__badge {
+  position: absolute; top: 0.7rem; right: 0.8rem; min-width: 1.25rem; height: 1.25rem; padding: 0 0.35rem;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 999px;
+  background: var(--color-primary); color: var(--color-primary-foreground); font-size: 0.72rem; font-weight: 700; line-height: 1;
+}
+.notifications-prompt { display: flex; align-items: center; justify-content: space-between; gap: 0.9rem; flex-wrap: wrap; }
+.notifications-prompt__body > h2 { margin: 0 0 0.2rem; }
+.notifications-prompt .notifications-status, .notifications-status { margin: 0; color: var(--color-foreground-soft); }
+.notifications-prompt .btn { flex: 0 0 auto; }
 .hub-tile:hover { transform: translateY(-3px); border-color: var(--color-primary); box-shadow: 0 18px 40px -28px hsl(0 0% 0% / 0.5); }
 .hub-tile svg { width: 26px; height: 26px; color: var(--color-primary); }
 .hub-tile__label { font-weight: 700; margin-top: 0.35rem; }

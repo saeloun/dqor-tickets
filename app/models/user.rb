@@ -19,6 +19,7 @@ class User < ApplicationRecord
   has_many :connectors, through: :inbound_connections, source: :user
   has_many :talk_bookmarks, dependent: :destroy
   has_many :bookmarked_talks, through: :talk_bookmarks, source: :talk
+  has_many :push_subscriptions, dependent: :destroy
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
   normalizes :x_username, :bluesky, :github, :mastodon, :linkedin,
@@ -69,6 +70,16 @@ class User < ApplicationRecord
 
   def connected_to?(other)
     connections.exists?(connected_user_id: other.id)
+  end
+
+  def unread_announcements_count
+    scope = Announcement.published
+    scope = scope.where("coalesce(published_at, created_at) > ?", announcements_seen_at) if announcements_seen_at
+    scope.count
+  end
+
+  def mark_announcements_seen!
+    update_column(:announcements_seen_at, Time.current)
   end
 
   def bookmarked?(talk)

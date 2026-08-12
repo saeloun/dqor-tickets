@@ -3,5 +3,6 @@ class AnnouncementsController < ApplicationController
 
   def index
     @announcements = Announcement.published.recent
+    current_user&.mark_announcements_seen!
   end
 end
