@@ -43,6 +43,41 @@ RSpec.describe "Account dashboard hub", type: :request do
     expect(response.body).to include("Happening now")
   end
 
+  it "nudges the buyer to finish a ticket with no attendee yet" do
+    user = User.create!(email: "buyer@example.com", name: "Buyer")
+    order = create(:order, :paid, email: "buyer@example.com")
+    create(:ticket, order:, attendee_name: nil, attendee_email: nil, assigned_at: nil)
+    sign_in_as(user)
+
+    get account_root_path
+
+    expect(response.body).to include("ticket-nudge")
+    expect(response.body).to include("Finish your ticket")
+    expect(response.body).to include("Add attendee")
+  end
+
+  it "nudges an assigned attendee who is missing details" do
+    user = User.create!(email: "missing@example.com", name: "Missing")
+    order = create(:order, :paid, email: "missing@example.com")
+    create(:ticket, order:, assigned_at: Time.current, tshirt_size: nil)
+    sign_in_as(user)
+
+    get account_root_path
+
+    expect(response.body).to include("Complete details")
+  end
+
+  it "omits the nudge when every ticket is complete" do
+    user = User.create!(email: "complete@example.com", name: "Complete")
+    order = create(:order, :paid, email: "complete@example.com")
+    create(:ticket, order:, assigned_at: Time.current, tshirt_size: "M")
+    sign_in_as(user)
+
+    get account_root_path
+
+    expect(response.body).not_to include("ticket-nudge")
+  end
+
   it "hides the countdown once the event has passed" do
     allow(Conference).to receive(:status).and_return(:after)
     sign_in_as(User.create!(email: "past@example.com", name: "Past Tester"))
