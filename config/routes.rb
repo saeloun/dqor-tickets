@@ -31,6 +31,7 @@ Rails.application.routes.draw do
     delete "sign_out",     to: "sessions#destroy", as: :sign_out
     resource :settings, only: %i[show update]
     resource :connection_scan, only: :show
+    resource :calendar, only: :show
     root "dashboard#show"
   end
 

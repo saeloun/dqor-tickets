@@ -116,6 +116,9 @@
           </li>
         <% end %>
       </ul>
+      <% if @saved_talks.any? { |talk| talk.starts_at.present? } %>
+        <p><%= link_to "Add my schedule to calendar", account_calendar_path(format: :ics), class: "btn btn-secondary" %></p>
+      <% end %>
       <p><%= link_to "Browse the full schedule", schedule_path %>.</p>
     </section>
   <% end %>
