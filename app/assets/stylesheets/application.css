@@ -631,6 +631,12 @@ button { cursor: pointer; }
 .connect-card__qr svg { display: block; width: 100%; height: auto; }
 .connect-card__body > p:first-child { margin-top: 0; color: var(--color-foreground-soft); }
 .share-link { margin-top: 1rem; }
+.share-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+.share-button { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground); font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: border-color .15s ease, background .15s ease, color .15s ease; }
+.share-button:hover { border-color: var(--color-border-strong); }
+.share-button--x:hover { background: #000; border-color: #000; color: #fff; }
+.share-button--linkedin:hover { background: #0a66c2; border-color: #0a66c2; color: #fff; }
+.share-button--whatsapp:hover { background: #25d366; border-color: #25d366; color: #062e14; }
 .connection-scanner > h1 { margin-top: 0; font-family: var(--font-display); }
 .connection-scanner__reader { overflow: hidden; margin-top: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: #fff; }
 .connection-scanner__result { margin: 1rem 0 0; padding: 0.75rem 1rem; border-radius: var(--radius-md); color: var(--color-destructive); background: color-mix(in hsl, var(--color-destructive), transparent 90%); }
