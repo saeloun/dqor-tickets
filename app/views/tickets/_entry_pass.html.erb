@@ -4,5 +4,11 @@
   <p class="entry-pass__name"><%= ticket.attendee_name.presence || ticket.ticket_type.name %></p>
   <p class="entry-pass__type"><%= ticket.ticket_type.name %></p>
   <p class="entry-pass__hint">Show this QR at the entrance. It stays on your phone once this page has loaded.</p>
+  <% if PkpassGenerator.configured? %>
+    <%= link_to apple_pass_path(ticket.secret), class: "apple-wallet-badge", data: { turbo: false }, aria: { label: "Add to Apple Wallet" } do %>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.417 2.2-1.11 2.99-.75.84-1.98 1.49-3.03 1.41-.13-1.1.42-2.27 1.08-3.01.74-.84 2.03-1.46 3.06-1.39zM20.5 17.02c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.39 3.53-4.12 3.54-1.54.02-1.94-1-4.03-.99-2.09.01-2.53 1.01-4.07.99-1.73-.01-3.05-1.78-4.04-3.35C.02 16.83-.28 12.06 1.4 9.5c1.19-1.82 3.07-2.89 4.83-2.89 1.8 0 2.93 1 4.42 1 1.44 0 2.32-1 4.4-1 1.58 0 3.25.86 4.44 2.35-3.9 2.14-3.27 7.71 1.01 8.06z"/></svg>
+      Add to Apple Wallet
+    <% end %>
+  <% end %>
   <p class="entry-pass__secret"><%= ticket.secret %></p>
 </section>
