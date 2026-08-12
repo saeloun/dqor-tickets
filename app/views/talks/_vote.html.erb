@@ -1,0 +1,8 @@
+<span id="<%= dom_id(question, :vote) %>" class="qa-vote">
+  <% if current_user && question.upvoted_by?(current_user) %>
+    <%= button_to "▲", question_upvote_path(question), method: :delete, class: "qa-vote__btn qa-vote__btn--on", aria: { label: "Remove upvote" } %>
+  <% else %>
+    <%= button_to "▲", question_upvote_path(question), method: :post, class: "qa-vote__btn", aria: { label: "Upvote question" } %>
+  <% end %>
+  <span id="<%= dom_id(question, :count) %>" class="qa-vote__count"><%= question.upvotes_count %></span>
+</span>
