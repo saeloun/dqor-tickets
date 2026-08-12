@@ -1,0 +1,16 @@
+<% if talk.ratings_count.positive? %>
+  <p class="talk-rating">★ <%= talk.average_rating %> <span class="talk-rating__count">(<%= pluralize(talk.ratings_count, "rating") %>)</span></p>
+<% end %>
+<% if user_signed_in? && current_user.attending? && talk.over? %>
+  <% fb = talk.feedback_from(current_user) %>
+  <%= form_with url: talk_feedback_path(talk), method: :post, class: "talk-feedback" do %>
+    <div class="star-rating" role="radiogroup" aria-label="Rate <%= talk.title %>">
+      <% 5.downto(1) do |n| %>
+        <%= radio_button_tag "talk_feedback[rating]", n, fb&.rating == n, id: "fb-#{talk.id}-#{n}", required: true %>
+        <%= label_tag "fb-#{talk.id}-#{n}", "★", aria: { label: "#{n} #{"star".pluralize(n)}" } %>
+      <% end %>
+    </div>
+    <%= text_field_tag "talk_feedback[comment]", fb&.comment, placeholder: "Optional comment", maxlength: 1000, class: "talk-feedback__comment" %>
+    <%= submit_tag(fb ? "Update rating" : "Submit rating", class: "btn btn-secondary talk-feedback__submit") %>
+  <% end %>
+<% end %>

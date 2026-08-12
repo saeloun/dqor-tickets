@@ -2,6 +2,7 @@ class Talk < ApplicationRecord
   EVENT_ZONE = "Asia/Kolkata".freeze
 
   has_many :talk_bookmarks, dependent: :destroy
+  has_many :talk_feedbacks, dependent: :destroy
   belongs_to :speaker, optional: true
 
   scope :published, -> { where(published: true) }
@@ -27,5 +28,24 @@ class Talk < ApplicationRecord
 
   def speaker_display
     speaker&.name.presence || speaker_name
+  end
+
+  def over?
+    ended = ends_at || starts_at
+    ended.present? && ended.past?
+  end
+
+  def average_rating
+    talk_feedbacks.average(:rating)&.round(1)
+  end
+
+  def ratings_count
+    talk_feedbacks.count
+  end
+
+  def feedback_from(user)
+    return nil unless user
+
+    talk_feedbacks.find_by(user_id: user.id)
   end
 end

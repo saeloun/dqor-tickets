@@ -8,14 +8,34 @@
     <p>Talks and sessions for Deccan Queen on Rails, Pune.</p>
   </section>
 
+  <% if Conference.status == :during && (@now_talk || @next_talk) %>
+    <section class="schedule-live" aria-label="Now and next">
+      <% if @now_talk %>
+        <div class="schedule-live__item schedule-live__item--now">
+          <span class="schedule-live__label">Happening now</span>
+          <strong class="schedule-live__title"><%= @now_talk.title %></strong>
+          <span class="schedule-live__meta"><%= @now_talk.time_range %><%= " · #{@now_talk.room}" if @now_talk.room.present? %></span>
+        </div>
+      <% end %>
+      <% if @next_talk %>
+        <div class="schedule-live__item">
+          <span class="schedule-live__label">Up next</span>
+          <strong class="schedule-live__title"><%= @next_talk.title %></strong>
+          <span class="schedule-live__meta"><%= @next_talk.time_range %><%= " · #{@next_talk.room}" if @next_talk.room.present? %></span>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
   <% if @talks_by_day.any? %>
     <% @talks_by_day.each do |day, talks| %>
       <section class="schedule-day">
         <h2><%= day ? day.strftime("%A, %-d %B %Y") : "To be scheduled" %></h2>
         <ul class="schedule-list">
           <% talks.each do |talk| %>
-            <li class="schedule-talk">
+            <li class="schedule-talk <%= "schedule-talk--now" if @now_talk && talk.id == @now_talk.id %>">
               <div class="schedule-talk__time">
+                <% if @now_talk && talk.id == @now_talk.id %><span class="schedule-talk__live">● Live now</span><% end %>
                 <%= talk.time_range %>
                 <% if talk.room.present? %><span class="schedule-talk__room"><%= talk.room %></span><% end %>
               </div>
@@ -30,6 +50,7 @@
                     <%= button_to "☆ Save to my schedule", talk_bookmark_path(talk), method: :post, class: "schedule-talk__save" %>
                   <% end %>
                 <% end %>
+                <%= render "schedule/feedback", talk: talk %>
               </div>
             </li>
           <% end %>

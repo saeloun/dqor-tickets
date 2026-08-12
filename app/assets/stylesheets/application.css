@@ -646,6 +646,26 @@ button { cursor: pointer; }
 .conversation-card__preview { color: var(--color-foreground-soft); font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conversation-card--unread .conversation-card__preview { color: var(--color-foreground); font-weight: 500; }
 .conversation-card__unread { flex: 0 0 auto; min-width: 1.25rem; height: 1.25rem; padding: 0 0.35rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--color-primary); color: var(--color-primary-foreground); font-size: 0.72rem; font-weight: 700; }
+
+.schedule-live { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0 0 1.75rem; }
+.schedule-live__item { flex: 1 1 260px; display: flex; flex-direction: column; gap: 0.2rem; padding: 0.9rem 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-card); }
+.schedule-live__item--now { border-color: var(--color-primary); background: color-mix(in hsl, var(--color-primary), transparent 92%); }
+.schedule-live__label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-primary); }
+.schedule-live__title { font-size: 1.05rem; font-weight: 700; }
+.schedule-live__meta { font-size: 0.85rem; color: var(--color-foreground-soft); }
+.schedule-talk--now { border-left: 3px solid var(--color-primary); padding-left: 0.9rem; }
+.schedule-talk__live { display: inline-block; margin-right: 0.4rem; color: var(--color-primary); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.talk-rating { margin: 0.6rem 0 0; font-weight: 600; color: var(--color-primary); }
+.talk-rating__count { color: var(--color-foreground-soft); font-weight: 400; font-size: 0.85rem; }
+.talk-feedback { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+.star-rating { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; }
+.star-rating input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.star-rating label { color: var(--color-border-strong); font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 0 1px; }
+.star-rating label:hover, .star-rating label:hover ~ label { color: #f5a623; }
+.star-rating input:checked ~ label { color: #f5a623; }
+.star-rating input:focus-visible + label { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.talk-feedback__comment { flex: 1 1 180px; min-width: 140px; padding: 0.4rem 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground); font: inherit; font-size: 0.9rem; }
+.talk-feedback__submit { flex: 0 0 auto; }
 .hub-tile:hover { transform: translateY(-3px); border-color: var(--color-primary); box-shadow: 0 18px 40px -28px hsl(0 0% 0% / 0.5); }
 .hub-tile svg { width: 26px; height: 26px; color: var(--color-primary); }
 .hub-tile__label { font-weight: 700; margin-top: 0.35rem; }
