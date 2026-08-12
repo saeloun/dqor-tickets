@@ -1,0 +1,28 @@
+<% content_for :title, "#{@talk.title} · Deccan Queen on Rails" %>
+
+<main class="talk-page">
+  <p class="section-label"><%= link_to "← Schedule", schedule_path %></p>
+  <h1 class="talk-page__title"><%= @talk.title %></h1>
+  <p class="talk-page__meta">
+    <%= @talk.time_range %><% if @talk.room.present? %> &middot; <%= @talk.room %><% end %>
+    <% if @talk.speaker_display.present? %>
+      &middot; <%= @talk.speaker ? link_to(@talk.speaker_display, speaker_path(@talk.speaker)) : @talk.speaker_display %>
+    <% end %>
+  </p>
+  <% if @talk.abstract.present? %><p class="talk-page__abstract"><%= @talk.abstract %></p><% end %>
+
+  <section class="qa" aria-labelledby="qa-heading">
+    <h2 id="qa-heading">Audience questions</h2>
+    <%= render "talks/ask", talk: @talk, question: @question %>
+
+    <%= turbo_stream_from [ @talk, :questions ] %>
+    <div id="talk-questions" class="qa-list">
+      <% @questions.each do |question| %>
+        <%= render "talks/question", question: question, current_user: current_user %>
+      <% end %>
+    </div>
+    <% if @questions.empty? %>
+      <p class="qa-empty">No questions yet — be the first, and upvote the ones you want answered.</p>
+    <% end %>
+  </section>
+</main>

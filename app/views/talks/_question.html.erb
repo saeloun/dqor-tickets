@@ -1,0 +1,10 @@
+<article class="qa-question <%= "qa-question--answered" if question.answered? %>" id="<%= dom_id(question) %>">
+  <%= render "talks/vote", question: question, current_user: current_user %>
+  <div class="qa-question__body">
+    <p class="qa-question__text"><%= question.body %></p>
+    <p class="qa-question__meta">
+      <%= question.user.display_name %> · <%= time_ago_in_words(question.created_at) %> ago
+      <% if question.answered? %><span class="qa-question__answered">Answered</span><% end %>
+    </p>
+  </div>
+</article>

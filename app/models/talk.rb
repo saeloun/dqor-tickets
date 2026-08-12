@@ -3,6 +3,7 @@ class Talk < ApplicationRecord
 
   has_many :talk_bookmarks, dependent: :destroy
   has_many :talk_feedbacks, dependent: :destroy
+  has_many :talk_questions, dependent: :destroy
   belongs_to :speaker, optional: true
 
   scope :published, -> { where(published: true) }
