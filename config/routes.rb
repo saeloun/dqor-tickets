@@ -67,6 +67,7 @@ Rails.application.routes.draw do
 
   post   "talks/:talk_id/bookmark", to: "talk_bookmarks#create", as: :talk_bookmark
   delete "talks/:talk_id/bookmark", to: "talk_bookmarks#destroy"
+  post   "talks/:talk_id/feedback", to: "talk_feedbacks#create", as: :talk_feedback
 
   # Legacy marketing-site URLs (deccanqueenonrails.com) now served by this app.
   # Keep old inbound links / bookmarks working once the apex points here.

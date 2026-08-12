@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -400,6 +400,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_120000) do
     t.index ["user_id"], name: "index_talk_bookmarks_on_user_id"
   end
 
+  create_table "talk_feedbacks", force: :cascade do |t|
+    t.text "comment"
+    t.datetime "created_at", null: false
+    t.integer "rating", null: false
+    t.bigint "talk_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["talk_id", "user_id"], name: "index_talk_feedbacks_on_talk_id_and_user_id", unique: true
+    t.index ["talk_id"], name: "index_talk_feedbacks_on_talk_id"
+    t.index ["user_id"], name: "index_talk_feedbacks_on_user_id"
+  end
+
   create_table "talks", force: :cascade do |t|
     t.text "abstract"
     t.datetime "created_at", null: false
@@ -504,6 +516,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_120000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "talk_bookmarks", "talks"
   add_foreign_key "talk_bookmarks", "users"
+  add_foreign_key "talk_feedbacks", "talks"
+  add_foreign_key "talk_feedbacks", "users"
   add_foreign_key "talks", "speakers"
   add_foreign_key "tickets", "orders"
   add_foreign_key "tickets", "ticket_types"
