@@ -10,6 +10,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <% if ENV["GOOGLE_SITE_VERIFICATION"].present? %>
+      <meta name="google-site-verification" content="<%= ENV["GOOGLE_SITE_VERIFICATION"] %>">
+    <% end %>
 
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#981B34">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141110">
@@ -83,6 +86,8 @@
     <% end %>
 
     <%= yield :head %>
+
+    <%= render "shared/analytics" %>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag "application", "global", "components", "styles", "data-turbo-track": "reload" %>

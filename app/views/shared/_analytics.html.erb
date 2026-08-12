@@ -1,0 +1,9 @@
+<% if Rails.env.production? && (ga_id = ENV["GA_MEASUREMENT_ID"].to_s[/\AG-[A-Z0-9]+\z/i]) %>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=<%= ga_id %>"></script>
+  <%= javascript_tag nonce: true do %>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '<%= ga_id %>');
+  <% end %>
+<% end %>
