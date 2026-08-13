@@ -25,6 +25,7 @@ gem "web-push"
 gem "omniauth-google-oauth2"
 gem "omniauth-rails_csrf_protection"
 gem "rubyzip", require: "zip"
+gem "jwt"
 gem "sentry-ruby"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]

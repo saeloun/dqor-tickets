@@ -10,5 +10,11 @@
       Add to Apple Wallet
     <% end %>
   <% end %>
+  <% if GoogleWalletGenerator.configured? %>
+    <%= link_to google_wallet_pass_path(ticket.secret), class: "google-wallet-badge", data: { turbo: false }, aria: { label: "Add to Google Wallet" } do %>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M12 11h8.5c.1.5.15 1 .15 1.6 0 5-3.35 8.4-8.65 8.4A9 9 0 1 1 12 3a8.6 8.6 0 0 1 6 2.35L15.6 7.7A5.1 5.1 0 0 0 12 6.3a5.7 5.7 0 0 0 0 11.4c3 0 4.9-1.7 5.2-4.1H12z"/></svg>
+      Add to Google Wallet
+    <% end %>
+  <% end %>
   <p class="entry-pass__secret"><%= ticket.secret %></p>
 </section>
