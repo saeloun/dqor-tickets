@@ -5,6 +5,10 @@ class GoogleWalletGenerator
     issuer_id.present? && service_account_email.present? && private_key_pem.present?
   end
 
+  def self.published?
+    configured? && ENV["GOOGLE_WALLET_PUBLISHED"].to_s == "true"
+  end
+
   def self.issuer_id
     ENV["GOOGLE_WALLET_ISSUER_ID"].presence
   end
