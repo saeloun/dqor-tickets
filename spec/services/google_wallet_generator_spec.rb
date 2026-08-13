@@ -43,4 +43,15 @@ RSpec.describe GoogleWalletGenerator do
     allow(ENV).to receive(:[]).with("GOOGLE_WALLET_SA_KEY").and_return(nil)
     expect(described_class).not_to be_configured
   end
+
+  it "is not published until GOOGLE_WALLET_PUBLISHED is enabled" do
+    allow(ENV).to receive(:[]).with("GOOGLE_WALLET_PUBLISHED").and_return(nil)
+    expect(described_class).to be_configured
+    expect(described_class).not_to be_published
+  end
+
+  it "is published when configured and the publish flag is set" do
+    allow(ENV).to receive(:[]).with("GOOGLE_WALLET_PUBLISHED").and_return("true")
+    expect(described_class).to be_published
+  end
 end
