@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_13_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -488,14 +488,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_010000) do
     t.text "bio"
     t.string "bluesky"
     t.datetime "created_at", null: false
-    t.boolean "discoverable", default: false, null: false
+    t.boolean "discoverable", default: true, null: false
     t.string "email", null: false
     t.string "github"
     t.string "linkedin"
     t.string "mastodon"
     t.string "name"
     t.string "password_digest"
-    t.boolean "public_attendee", default: false, null: false
+    t.boolean "public_attendee", default: true, null: false
     t.string "referral_code"
     t.datetime "updated_at", null: false
     t.string "website"
