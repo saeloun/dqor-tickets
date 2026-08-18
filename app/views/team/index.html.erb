@@ -1,23 +1,54 @@
-  <section class="section speakers-section" id="speakers">
-    <div class="container">
-      <div class="text-center" style="margin-bottom:3rem">
-        <span class="section-label">Team · Deccan Queen on Rails</span>
-        <h2 class="section-heading">The crew driving the train</h2>
-        <p class="section-subheading" style="margin:0 auto">The team behind Deccan Queen on Rails</p>
-      </div>
+<section class="section speakers-section" id="speakers">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:3rem">
+      <span class="section-label">Team · Deccan Queen on Rails</span>
+      <h2 class="section-heading">The crew driving the train 🚂</h2>
+      <p class="section-subheading" style="margin:0 auto">The team behind Deccan Queen on Rails</p>
+    </div>
 
-      <% if @team_members.any? %>
-        <div class="speakers-grid">
-          <% @team_members.each do |member| %>
+      <div class="speakers-grid">
           <div class="speaker-card card">
-            <%= image_tag member.photo_url, alt: member.name, class: "speaker-card-photo" %>
+            <img alt="Vipul A M" class="speaker-card-photo" src="/dqor/vipul.webp">
             <div class="speaker-card-body">
-              <p class="speaker-card-name"><%= member.name %></p>
+              <p class="speaker-card-name">Vipul A M</p>
               <p class="speaker-card-role"></p>
             </div>
           </div>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-  </section>
+          <div class="speaker-card card">
+            <img alt="Sonam Goyal" class="speaker-card-photo" src="/dqor/sonam.png">
+            <div class="speaker-card-body">
+              <p class="speaker-card-name">Sonam Goyal</p>
+              <p class="speaker-card-role"></p>
+            </div>
+          </div>
+          <div class="speaker-card card">
+            <img alt="Syeda Sana" class="speaker-card-photo" src="/dqor/sana.jpg">
+            <div class="speaker-card-body">
+              <p class="speaker-card-name">Syeda Sana</p>
+              <p class="speaker-card-role"></p>
+            </div>
+          </div>
+          <div class="speaker-card card">
+            <img alt="Chaitali Khangar" class="speaker-card-photo" src="/dqor/chaitali.png">
+            <div class="speaker-card-body">
+              <p class="speaker-card-name">Chaitali Khangar</p>
+              <p class="speaker-card-role"></p>
+            </div>
+          </div>
+          <div class="speaker-card card">
+            <img alt="Vishwajeet Desurkar" class="speaker-card-photo" src="/dqor/vishwajeet.png">
+            <div class="speaker-card-body">
+              <p class="speaker-card-name">Vishwajeet Desurkar</p>
+              <p class="speaker-card-role"></p>
+            </div>
+          </div>
+          <div class="speaker-card card">
+            <img alt="Faizan" class="speaker-card-photo" src="/dqor/faizan.webp">
+            <div class="speaker-card-body">
+              <p class="speaker-card-name">Faizan</p>
+              <p class="speaker-card-role"></p>
+            </div>
+          </div>
+      </div>
+  </div>
+</section>

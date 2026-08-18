@@ -112,12 +112,12 @@
         <div class="nav-links" id="nav-links">
           <%= link_to "Speakers", root_path(anchor: "speakers"), class: "nav-link", data: { section: "speakers" } %>
           <%= link_to "Schedule", root_path(anchor: "schedule"), class: "nav-link", data: { section: "schedule" } %>
-          <%#= link_to "CFP", root_path(anchor: "cfp"), class: "nav-link", data: { section: "cfp" } %>
+          <%= link_to "CFP", root_path(anchor: "cfp"), class: "nav-link", data: { section: "cfp" } %>
           <%= link_to "Rails Girls", root_path(anchor: "rails-girls"), class: "nav-link", data: { section: "rails-girls" } %>
           <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-link", data: { section: "explore-pune-day" } %>
           <%= link_to "Venue", root_path(anchor: "venue"), class: "nav-link", data: { section: "venue" } %>
           <%= link_to "Sponsors", root_path(anchor: "sponsors"), class: "nav-link", data: { section: "sponsors" } %>
-          <%= link_to "Team", "/team", class: "nav-link" %>
+          <%= link_to "Team", team_path, class: "nav-link #{'active' if request.path == team_path}" %>
         </div>
 
         <div class="nav-actions">
@@ -151,6 +151,7 @@
       <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-mobile-link" %>
       <%= link_to "Venue", root_path(anchor: "venue"), class: "nav-mobile-link" %>
       <%= link_to "Sponsors", root_path(anchor: "sponsors"), class: "nav-mobile-link" %>
+      <%= link_to "Team", team_path, class: "nav-mobile-link #{'active' if current_page?(team_path)}" %>
       <% if user_signed_in? %>
         <%= link_to "My account", account_root_path, class: "nav-mobile-link" %>
       <% else %>
