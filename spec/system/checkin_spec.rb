@@ -191,6 +191,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "falls back to the first event day when the date param is garbage" do
+    create(:ticket, attendee_name: "Rear Admiral")
     sign_in
     visit checkin_path(date: "garbage")
 
