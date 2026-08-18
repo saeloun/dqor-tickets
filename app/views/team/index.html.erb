@@ -1,30 +1,23 @@
-<% content_for :title, "Team · Deccan Queen on Rails" %>
-<% content_for :meta_description, "The crew driving the train (Deccan Queen)." %>
+  <section class="section speakers-section" id="speakers">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:3rem">
+        <span class="section-label">Team · Deccan Queen on Rails</span>
+        <h2 class="section-heading">The crew driving the train</h2>
+        <p class="section-subheading" style="margin:0 auto">The team behind Deccan Queen on Rails</p>
+      </div>
 
-<div class="team-page">
-  <h1>Meet the Team</h1>
-
-  <p>Team info coming soon.</p>
-
-  <% if @team_members.any? %>
-    <div class="team-grid">
-      <% @team_members.each do |member| %>
-        <div class="team-card">
-          <% if member.photo_url.present? %>
-            <%= image_tag member.photo_url, alt: member.name, class: "team-photo" %>
-          <% end %>
-          <h3><%= member.name %></h3>
-          <p class="role"><%= member.role %></p>
-          <% if member.team.present? %>
-            <p class="team-tag"><%= member.team %></p>
-          <% end %>
-          <% if member.bio.present? %>
-            <p class="bio"><%= member.bio %></p>
+      <% if @team_members.any? %>
+        <div class="speakers-grid">
+          <% @team_members.each do |member| %>
+          <div class="speaker-card card">
+            <%= image_tag member.photo_url, alt: member.name, class: "speaker-card-photo" %>
+            <div class="speaker-card-body">
+              <p class="speaker-card-name"><%= member.name %></p>
+              <p class="speaker-card-role"></p>
+            </div>
+          </div>
           <% end %>
         </div>
       <% end %>
     </div>
-  <% else %>
-    <p>Team info coming soon.</p>
-  <% end %>
-</div>
+  </section>
