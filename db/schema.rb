@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_18_132255) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -440,6 +440,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_170000) do
     t.datetime "updated_at", null: false
     t.index ["published", "starts_at"], name: "index_talks_on_published_and_starts_at"
     t.index ["speaker_id"], name: "index_talks_on_speaker_id"
+  end
+
+  create_table "team_members", force: :cascade do |t|
+    t.text "bio"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "linkedin_url"
+    t.string "name", null: false
+    t.string "photo_url"
+    t.integer "position", default: 0, null: false
+    t.boolean "publicly_listed", default: true, null: false
+    t.string "role"
+    t.string "team"
+    t.string "twitter_handle"
+    t.datetime "updated_at", null: false
+    t.index ["position"], name: "index_team_members_on_position"
+    t.index ["publicly_listed"], name: "index_team_members_on_publicly_listed"
   end
 
   create_table "ticket_types", force: :cascade do |t|

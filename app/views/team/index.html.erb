@@ -1,0 +1,30 @@
+<% content_for :title, "Team · Deccan Queen on Rails" %>
+<% content_for :meta_description, "The crew driving the train (Deccan Queen)." %>
+
+<div class="team-page">
+  <h1>Meet the Team</h1>
+
+  <p>Team info coming soon.</p>
+
+  <% if @team_members.any? %>
+    <div class="team-grid">
+      <% @team_members.each do |member| %>
+        <div class="team-card">
+          <% if member.photo_url.present? %>
+            <%= image_tag member.photo_url, alt: member.name, class: "team-photo" %>
+          <% end %>
+          <h3><%= member.name %></h3>
+          <p class="role"><%= member.role %></p>
+          <% if member.team.present? %>
+            <p class="team-tag"><%= member.team %></p>
+          <% end %>
+          <% if member.bio.present? %>
+            <p class="bio"><%= member.bio %></p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p>Team info coming soon.</p>
+  <% end %>
+</div>
