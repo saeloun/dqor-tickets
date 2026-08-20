@@ -772,6 +772,18 @@
   margin-bottom: 1.5rem;
 }
 
+.sponsor-tiers-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  width: 100%;
+}
+
+.sponsor-tiers-row .sponsor-tier {
+  flex: 0 1 300px;
+}
+
 .sponsor-tier-badge--platinum {
   color: var(--color-ruby);
   background: hsl(348 70% 35% / 0.08);
@@ -784,6 +796,12 @@
   border: 1px solid hsl(40 80% 50% / 0.22);
 }
 
+.sponsor-tier-badge--community {
+  color: var(--color-blue);
+  background: hsl(170 60% 40% / 0.08);
+  border: 1px solid hsl(170 60% 40% / 0.18);
+}
+
 [data-theme="dark"] .sponsor-tier-badge--platinum {
   background: hsl(348 68% 58% / 0.12);
   border-color: hsl(348 68% 58% / 0.25);
@@ -792,6 +810,11 @@
 [data-theme="dark"] .sponsor-tier-badge--wifi {
   background: hsl(40 78% 56% / 0.12);
   border-color: hsl(40 78% 56% / 0.25);
+}
+
+[data-theme="dark"] .sponsor-tier-badge--community {
+  background: hsl(170 60% 45% / 0.12);
+  border-color: hsl(170 60% 55% / 0.25);
 }
 
 .sponsor-logos {
@@ -825,7 +848,7 @@
   padding: 1.5rem 2.5rem;
 }
 
-.sponsor-card--wifi {
+.sponsor-card--wifi, .sponsor-card--community {
   width: 220px;
   height: 96px;
   padding: 1.25rem 2rem;
@@ -854,7 +877,7 @@
     padding: 1.25rem 1.75rem;
   }
 
-  .sponsor-card--wifi {
+  .sponsor-card--wifi, .sponsor-card--community {
     width: 180px;
     height: 84px;
     padding: 1rem 1.5rem;
@@ -903,6 +926,13 @@
      forcing the button (white-space:nowrap) wider than the viewport. */
   .sponsor-interest-actions { width: 100%; flex-direction: column; align-items: stretch; }
   .sponsor-interest-actions .btn { width: 100%; min-width: 0; justify-content: center; white-space: normal; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 768px) {
+  .sponsor-tiers-row {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 /* ===================================================
