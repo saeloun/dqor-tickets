@@ -117,6 +117,7 @@
           <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-link", data: { section: "explore-pune-day" } %>
           <%= link_to "Venue", root_path(anchor: "venue"), class: "nav-link", data: { section: "venue" } %>
           <%= link_to "Sponsors", root_path(anchor: "sponsors"), class: "nav-link", data: { section: "sponsors" } %>
+          <%= link_to "Team", team_path, class: "nav-link #{'active' if request.path == team_path}" %>
         </div>
 
         <div class="nav-actions">
@@ -150,6 +151,7 @@
       <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-mobile-link" %>
       <%= link_to "Venue", root_path(anchor: "venue"), class: "nav-mobile-link" %>
       <%= link_to "Sponsors", root_path(anchor: "sponsors"), class: "nav-mobile-link" %>
+      <%= link_to "Team", team_path, class: "nav-mobile-link #{'active' if current_page?(team_path)}" %>
       <% if user_signed_in? %>
         <%= link_to "My account", account_root_path, class: "nav-mobile-link" %>
       <% else %>
