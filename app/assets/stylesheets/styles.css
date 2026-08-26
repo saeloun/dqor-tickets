@@ -790,10 +790,16 @@
   border: 1px solid hsl(348 70% 35% / 0.18);
 }
 
-.sponsor-tier-badge--wifi {
+.sponsor-tier-badge--gold {
   color: var(--color-gold);
   background: hsl(40 80% 50% / 0.1);
   border: 1px solid hsl(40 80% 50% / 0.22);
+}
+
+.sponsor-tier-badge--wifi {
+  color: hsl(275 80% 52%);
+  background: hsl(275 80% 52% / 0.1);
+  border: 1px solid hsl(275 80% 52% / 0.22);
 }
 
 .sponsor-tier-badge--community {
@@ -807,9 +813,14 @@
   border-color: hsl(348 68% 58% / 0.25);
 }
 
-[data-theme="dark"] .sponsor-tier-badge--wifi {
+[data-theme="dark"] .sponsor-tier-badge--gold {
   background: hsl(40 78% 56% / 0.12);
   border-color: hsl(40 78% 56% / 0.25);
+}
+
+[data-theme="dark"] .sponsor-tier-badge--wifi {
+  background: hsl(275 80% 70% / 0.12);
+  border-color: hsl(275 80% 70% / 0.25);
 }
 
 [data-theme="dark"] .sponsor-tier-badge--community {
