@@ -3,9 +3,19 @@ class CommunityController < ApplicationController
   before_action :require_user
 
   def index
-    @attendees = User.where(discoverable: true)
+    @query = params[:q].to_s.strip.first(80)
+    attendees = User.where(discoverable: true)
       .where.not(id: current_user.id)
-      .order(Arel.sql("lower(coalesce(name, email))"))
+
+    if @query.present?
+      pattern = "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%"
+      attendees = attendees.where(
+        "concat_ws(' ', name, job_title, company, conversation_starter, bio, github) ILIKE ?",
+        pattern
+      )
+    end
+
+    @attendees = attendees.order(Arel.sql("lower(coalesce(name, email))"))
   end
 
   def show

@@ -12,16 +12,28 @@ RSpec.describe "Account settings", type: :request do
     expect(response).to redirect_to(account_sign_in_path)
   end
 
-  it "updates name, bio and discoverability" do
+  it "updates the attendee profile and discoverability" do
     user = User.create!(email: "grace@example.com")
     sign_in_as(user)
 
-    patch account_settings_path, params: { user: { name: "Grace Hopper", bio: "Compiler pioneer", discoverable: "1" } }
+    patch account_settings_path, params: { user: {
+      name: "Grace Hopper",
+      job_title: "Rear admiral",
+      company: "US Navy",
+      conversation_starter: "Compilers and debugging",
+      bio: "Compiler pioneer",
+      discoverable: "1"
+    } }
 
     expect(response).to redirect_to(account_settings_path)
     user.reload
-    expect(user.name).to eq("Grace Hopper")
-    expect(user.bio).to eq("Compiler pioneer")
+    expect(user).to have_attributes(
+      name: "Grace Hopper",
+      job_title: "Rear admiral",
+      company: "US Navy",
+      conversation_starter: "Compilers and debugging",
+      bio: "Compiler pioneer"
+    )
     expect(user).to be_discoverable
   end
 

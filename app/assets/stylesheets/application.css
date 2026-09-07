@@ -704,11 +704,21 @@ button { cursor: pointer; }
   .hub-countdown__meta { text-align: left; }
 }
 .attendee-grid { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem; }
+.attendee-search { display: flex; align-items: center; gap: 0.6rem; margin-top: 1.25rem; }
+.attendee-search input[type="search"] { flex: 1 1 18rem; min-width: 0; padding: 0.7rem 0.85rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-card); color: var(--color-foreground); font: inherit; }
+.attendee-search__clear { color: var(--color-foreground-soft); font-size: 0.85rem; }
+.attendee-search__summary { margin: 1rem 0 0; color: var(--color-foreground-soft); font-size: 0.9rem; }
 .attendee-card__link { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; text-align: center; padding: 1rem 0.75rem; height: 100%; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; text-decoration: none; color: inherit; }
 .attendee-card__link:hover { border-color: var(--color-primary); }
 .attendee-card__avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; }
 .attendee-card__name { font-weight: 700; }
+.attendee-card__meta { font-size: 0.78rem; color: var(--color-foreground-soft); }
+.attendee-card__starter { font-size: 0.8rem; color: var(--color-primary); }
 .attendee-card__bio { font-size: 0.8rem; color: var(--color-muted-foreground); }
+.attendee-profile__meta { margin: 0.25rem 0 0; color: var(--color-foreground-soft); }
+.attendee-profile__starter { margin-top: 1rem; }
+.attendee-profile__starter h2 { margin: 0.35rem 0; font-size: 1.25rem; }
+.attendee-profile__starter p:last-child { margin-bottom: 0; }
 .attendee-profile__website { margin: 0.75rem 0 0; }
 .attendee-profile__website a { color: var(--color-primary); font-weight: 650; }
 .attendee-profile__links { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.7rem; }
@@ -740,6 +750,8 @@ button { cursor: pointer; }
 .connection-scanner__result { margin: 1rem 0 0; padding: 0.75rem 1rem; border-radius: var(--radius-md); color: var(--color-destructive); background: color-mix(in hsl, var(--color-destructive), transparent 90%); }
 
 @media (max-width: 640px) {
+  .attendee-search { align-items: stretch; flex-wrap: wrap; }
+  .attendee-search input[type="search"] { flex-basis: 100%; }
   .profile-social-fields { grid-template-columns: 1fr; }
   .profile-social-fields__website { grid-column: auto; }
   .connect-card { grid-template-columns: 1fr; }

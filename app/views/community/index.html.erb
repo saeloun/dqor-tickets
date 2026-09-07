@@ -5,14 +5,27 @@
     <h1>Attendees</h1>
     <p>People coming to Deccan Queen on Rails who’ve chosen to be listed. <%= link_to "Manage your listing", account_settings_path %>.</p>
 
+    <%= form_with url: community_path, method: :get, class: "attendee-search", role: "search" do |form| %>
+      <%= form.label :q, "Find people by name, company, role, topic, or GitHub", class: "sr-only" %>
+      <%= form.search_field :q, value: @query, placeholder: "Search people, companies, or topics", maxlength: 80, autocomplete: "off" %>
+      <%= form.submit "Search", class: "btn btn-secondary" %>
+      <%= link_to "Clear", community_path, class: "attendee-search__clear" if @query.present? %>
+    <% end %>
+
     <% if @attendees.any? %>
+      <% if @query.present? %><p class="attendee-search__summary"><%= pluralize(@attendees.size, "match") %> for “<%= @query %>”</p><% end %>
       <ul class="attendee-grid">
         <% @attendees.each do |attendee| %>
           <li>
             <%= link_to attendee_path(attendee), class: "attendee-card__link" do %>
               <%= avatar_image_tag attendee, size: 64, alt: "", class: "attendee-card__avatar" %>
               <span class="attendee-card__name"><%= attendee.display_name %></span>
-              <% if attendee.bio.present? %>
+              <% if attendee.job_title.present? || attendee.company.present? %>
+                <span class="attendee-card__meta"><%= [ attendee.job_title, attendee.company ].compact_blank.join(" · ") %></span>
+              <% end %>
+              <% if attendee.conversation_starter.present? %>
+                <span class="attendee-card__starter">Ask me about <%= truncate(attendee.conversation_starter, length: 90) %></span>
+              <% elsif attendee.bio.present? %>
                 <span class="attendee-card__bio"><%= truncate(attendee.bio, length: 80) %></span>
               <% end %>
             <% end %>
@@ -20,7 +33,11 @@
         <% end %>
       </ul>
     <% else %>
-      <p>No attendees have opted in yet. Be the first — <%= link_to "list yourself", account_settings_path %>.</p>
+      <% if @query.present? %>
+        <p>No attendees match “<%= @query %>”. <%= link_to "Clear the search", community_path %>.</p>
+      <% else %>
+        <p>No attendees have opted in yet. Be the first — <%= link_to "list yourself", account_settings_path %>.</p>
+      <% end %>
     <% end %>
   </section>
 </main>

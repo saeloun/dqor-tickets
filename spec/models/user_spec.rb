@@ -55,6 +55,13 @@ RSpec.describe User do
     expect(user.errors[:github]).to include("is too long (maximum is 255 characters)")
   end
 
+  it "keeps attendee conversation fields short enough for the directory" do
+    user = User.new(email: "social@example.com", job_title: "r" * 121, company: "c" * 121, conversation_starter: "t" * 241)
+
+    expect(user).not_to be_valid
+    expect(user.errors).to include(:job_title, :company, :conversation_starter)
+  end
+
   it "builds a Gravatar URL from the email hash" do
     user = User.new(email: "grace@example.com")
 

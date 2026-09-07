@@ -24,6 +24,33 @@ RSpec.describe "Community", type: :request do
     expect(response.body).not_to include("Zephyr Selftest")
   end
 
+  it "searches attendee roles, companies, and conversation starters without exposing hidden attendees" do
+    me = User.create!(email: "me@example.com")
+    User.create!(email: "ada@example.com", name: "Ada", company: "Analytical Engines", conversation_starter: "Compilers", discoverable: true)
+    User.create!(email: "grace@example.com", name: "Grace", job_title: "Rear admiral", discoverable: true)
+    User.create!(email: "hidden@example.com", name: "Hidden", company: "Analytical Engines", discoverable: false)
+    sign_in_as(me)
+
+    get community_path, params: { q: "Analytical" }
+
+    expect(response.body).to include("Ada")
+    expect(response.body).to include("Analytical Engines")
+    expect(response.body).not_to include("Grace")
+    expect(response.body).not_to include("Hidden")
+  end
+
+  it "treats search wildcards as text" do
+    me = User.create!(email: "me@example.com")
+    User.create!(email: "exact@example.com", name: "100% Ruby", discoverable: true)
+    User.create!(email: "other@example.com", name: "Other Rubyist", discoverable: true)
+    sign_in_as(me)
+
+    get community_path, params: { q: "100%" }
+
+    expect(response.body).to include("100% Ruby")
+    expect(response.body).not_to include("Other Rubyist")
+  end
+
   it "shows a discoverable attendee profile with a connect action" do
     me = User.create!(email: "me@example.com")
     ada = User.create!(email: "ada@example.com", name: "Ada", discoverable: true)
@@ -33,7 +60,7 @@ RSpec.describe "Community", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Ada")
-    expect(response.body).to include("Connect")
+    expect(response.body).to include("Connect &amp; message")
   end
 
   it "renders filled profile links and hides blank ones" do
