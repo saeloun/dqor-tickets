@@ -7,8 +7,10 @@ class Refund < ApplicationRecord
   belongs_to :order
 
   enum :status, { pending: "pending", initiated: "initiated", processed: "processed", failed: "failed" }, validate: true
+  enum :reason, { ticket_cancellation: "ticket_cancellation", price_adjustment: "price_adjustment" }, validate: true
 
   validates :amount_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :reference, uniqueness: true, allow_nil: true
 
   def process!(payment_event)
     raise ArgumentError, "payment event belongs to another order" unless payment_event.order_id == order_id
@@ -20,14 +22,19 @@ class Refund < ApplicationRecord
 
       invoice = order.invoices.invoice.first or raise AlreadyRefunded, "order #{order.code} has no invoice to credit"
       owned = order.tickets.where(id: ticket_ids)
-      raise AlreadyRefunded, "tickets on order #{order.code} were already refunded" if owned.any? && owned.where(canceled_at: nil).count != owned.count
+      raise ArgumentError, "refund has no selected tickets" if owned.empty?
+      raise ArgumentError, "refund contains tickets from another order" unless owned.count == ticket_ids.size
+      if ticket_cancellation? && owned.where(canceled_at: nil).count != owned.count
+        raise AlreadyRefunded, "tickets on order #{order.code} were already refunded"
+      end
 
-      line_items = invoice.line_items.select { |line_item| ticket_ids.include?(line_item.fetch("ticket_id")) }
-      raise ArgumentError, "refund has no selected tickets" if line_items.empty?
-      raise ArgumentError, "refund amount does not match selected tickets" unless line_items.sum { |line_item| line_item.fetch("total_paise") } == amount_paise
+      refund_lines = line_items.presence || invoice.line_items.select { |line_item| ticket_ids.include?(line_item.fetch("ticket_id")) }
+      raise ArgumentError, "refund has no selected tickets" if refund_lines.empty?
+      raise ArgumentError, "refund lines do not match selected tickets" unless refund_lines.pluck("ticket_id").sort == ticket_ids.sort
+      raise ArgumentError, "refund amount does not match selected tickets" unless refund_lines.sum { |line_item| line_item.fetch("total_paise") } == amount_paise
 
-      order.tickets.where(id: ticket_ids, canceled_at: nil).update_all(canceled_at: Time.current, updated_at: Time.current)
-      credit_note = Invoice.issue_for!(order, kind: :credit_note, refers_to: invoice, line_items:)
+      order.tickets.where(id: ticket_ids, canceled_at: nil).update_all(canceled_at: Time.current, updated_at: Time.current) if ticket_cancellation?
+      credit_note = Invoice.issue_for!(order, kind: :credit_note, refers_to: invoice, line_items: refund_lines)
       update!(status: "processed", credit_note_number: credit_note.number)
       credit_note
     end

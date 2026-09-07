@@ -24,6 +24,7 @@ class InitiateRefundJob < ApplicationJob
   rescue Razorpay::Error => error
     raise ApplicationJob::TransientRazorpayError, error.message if [ 409, 429 ].include?(error.status.to_i) || error.status.to_i >= 500
 
+    refund.update!(status: "failed")
     raise
   end
 end

@@ -207,25 +207,35 @@ class Order < ApplicationRecord
 
   def refund_tickets!(ticket_ids)
     selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
-    raise ArgumentError, "only a paid order can be refunded" unless paid?
+    refund, payment_id = with_lock do
+      raise ArgumentError, "only a paid order can be refunded" unless paid?
 
-    selected_tickets = tickets.where(id: selected_ids, canceled_at: nil)
-    raise ArgumentError, "select at least one refundable ticket" unless selected_tickets.count == selected_ids.size && selected_ids.any?
+      selected_tickets = tickets.where(id: selected_ids, canceled_at: nil)
+      raise ArgumentError, "select at least one refundable ticket" unless selected_tickets.count == selected_ids.size && selected_ids.any?
 
-    already_refunding = refunds.where(status: Refund::OPEN_STATUSES).flat_map(&:ticket_ids).intersection(selected_ids)
-    raise Refund::AlreadyRefunded, "a refund is already in progress for those tickets" if already_refunding.any?
+      already_refunding = refunds.ticket_cancellation.where(status: Refund::OPEN_STATUSES).flat_map(&:ticket_ids).intersection(selected_ids)
+      raise Refund::AlreadyRefunded, "a refund is already in progress for those tickets" if already_refunding.any?
 
-    invoice = invoices.invoice.first or raise ArgumentError, "order #{code} has no invoice to refund against"
-    lines = invoice.line_items.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
-    amount_paise = lines.sum { |line| line.fetch("total_paise") }
-    payment_id = if amount_paise.positive?
-      payment_events.order(created_at: :desc).filter_map do |event|
-        event.razorpay_payment_id || event.raw.dig("payload", "payment", "entity", "id")
-      end.first || raise(ArgumentError, "order has no Razorpay payment")
+      invoice = invoices.invoice.first or raise ArgumentError, "order #{code} has no invoice to refund against"
+      lines = invoice.line_items.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+      prior_credits = refunds.where.not(status: "failed").flat_map(&:line_items).group_by { |line| line.fetch("ticket_id") }
+      lines = lines.map do |line|
+        credits = prior_credits.fetch(line.fetch("ticket_id"), [])
+        line.merge(%w[price_paise discount_paise taxable cgst sgst igst total_paise].to_h do |key|
+          [ key, line.fetch(key) - credits.sum { |credit| credit.fetch(key) } ]
+        end)
+      end
+      amount_paise = lines.sum { |line| line.fetch("total_paise") }
+      payment_id = if amount_paise.positive?
+        payment_events.order(created_at: :desc).filter_map do |event|
+          event.razorpay_payment_id || event.raw.dig("payload", "payment", "entity", "id")
+        end.first || raise(ArgumentError, "order has no Razorpay payment")
+      end
+
+      [ refunds.create!(amount_paise:, ticket_ids: selected_ids, line_items: lines, status: "initiated"), payment_id ]
     end
 
-    refund = refunds.create!(amount_paise:, ticket_ids: selected_ids, status: "initiated")
-    if amount_paise.zero?
+    if refund.amount_paise.zero?
       event = payment_events.create!(razorpay_event_id: "free_refund_#{refund.id}", kind: "refund.processed", amount_paise: 0)
       ProcessRefundJob.perform_now(refund.id, event.id)
     else
