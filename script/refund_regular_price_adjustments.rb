@@ -16,13 +16,15 @@ total = 0
 puts "mode\torder\ttickets\tamount_paise\tresult"
 orders.find_each do |order|
   adjustment = Orders::RegularPriceRefund.new(order)
-  amount = adjustment.amount_paise
-  next if amount.zero?
+  existing = order.refunds.find_by(reference: adjustment.reference)
+  lines = adjustment.line_items unless existing
+  amount = existing&.amount_paise || lines.sum { |line| line.fetch("total_paise") }
+  next if amount.zero? && !existing
 
-  refund = adjustment.call if execute
-  count += 1
-  total += amount
-  puts [ execute ? "execute" : "preview", order.code, adjustment.line_items.pluck("ticket_id").join(","), amount, refund&.id || "eligible" ].join("\t")
+  refund = adjustment.call if execute && (!existing || existing.initiated? && !existing.razorpay_refund_id?)
+  count += 1 unless existing
+  total += amount unless existing
+  puts [ execute ? "execute" : "preview", order.code, existing&.ticket_ids&.join(",") || lines.pluck("ticket_id").join(","), amount, refund&.id || existing&.status || "eligible" ].join("\t")
 rescue ArgumentError => error
   puts [ "skip", order.code, "", 0, error.message ].join("\t")
 end
