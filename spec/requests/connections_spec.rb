@@ -22,11 +22,12 @@ RSpec.describe "Connections", type: :request do
 
   it "connects with a non-discoverable attendee reached through a direct profile link" do
     me = User.create!(email: "me@example.com")
-    hidden = User.create!(email: "hidden@example.com", name: "Hidden Attendee", discoverable: false)
+    hidden = User.create!(email: "hidden@example.com", name: "Hidden Attendee", discoverable: false, github: "hidden-rubyist")
     sign_in_as(me)
 
     get attendee_path(hidden)
     expect(response).to have_http_status(:ok)
+    expect(response.body).to include("https://www.rubyevents.org/profiles/hidden-rubyist")
 
     expect {
       post connect_attendee_path(hidden)

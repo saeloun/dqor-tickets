@@ -60,6 +60,10 @@
         <%= form.label :password, "Set a password" %>
         <%= form.password_field :password, autocomplete: "new-password", placeholder: "Optional — you can always sign in by email" %>
       </div>
+      <div class="field">
+        <%= form.label :password_confirmation, "Confirm password" %>
+        <%= form.password_field :password_confirmation, autocomplete: "new-password" %>
+      </div>
       <div class="assignment-checkbox">
         <%= form.check_box :discoverable %>
         <%= form.label :discoverable, "List me in the attendee directory so others can connect" %>
