@@ -5,6 +5,9 @@
     <%= avatar_image_tag @attendee, size: 96, alt: "", class: "account-avatar" %>
     <div class="account-identity">
       <h1><%= @attendee.display_name %></h1>
+      <% if @attendee.job_title.present? || @attendee.company.present? %>
+        <p class="attendee-profile__meta"><%= [ @attendee.job_title, @attendee.company ].compact_blank.join(" · ") %></p>
+      <% end %>
       <% if @attendee.public_attendee? && @attendee.attending? %>
         <p class="attending-badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
@@ -30,13 +33,21 @@
   <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
   <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
 
+  <% if @attendee.conversation_starter.present? %>
+    <section class="account-section attendee-profile__starter">
+      <p class="section-label">Conversation starter</p>
+      <h2>Ask me about</h2>
+      <p><%= @attendee.conversation_starter %></p>
+    </section>
+  <% end %>
+
   <div class="account-actions attendee-profile__actions">
     <% if @attendee == current_user %>
       <%= link_to "Edit your profile", account_settings_path, class: "btn btn-secondary" %>
     <% elsif @connected %>
       <%= button_to "Connected ✓ · Remove", disconnect_attendee_path(@attendee), method: :delete, class: "btn btn-secondary" %>
     <% else %>
-      <%= button_to "Connect", connect_attendee_path(@attendee), method: :post, class: "btn btn-primary" %>
+      <%= button_to "Connect & message", connect_attendee_path(@attendee), method: :post, class: "btn btn-primary" %>
     <% end %>
     <% if current_user&.can_message?(@attendee) %>
       <%= button_to "Message", account_conversations_path, method: :post, params: { attendee_id: @attendee.id }, class: "btn btn-primary" %>

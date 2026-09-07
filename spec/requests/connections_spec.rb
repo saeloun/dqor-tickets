@@ -31,8 +31,8 @@ RSpec.describe "Connections", type: :request do
 
     expect {
       post connect_attendee_path(hidden)
-    }.to change { me.connections.count }.by(1)
-    expect(response).to redirect_to(attendee_path(hidden))
+    }.to change { me.connections.count }.by(1).and change(Conversation, :count).by(1)
+    expect(response).to redirect_to(account_conversation_path(Conversation.last))
     expect(me).to be_connected_to(hidden)
   end
 end

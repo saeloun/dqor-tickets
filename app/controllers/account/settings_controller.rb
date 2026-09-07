@@ -15,7 +15,7 @@ class Account::SettingsController < ApplicationController
 
   private
     def settings_params
-      permitted = params.expect(user: [ :name, :bio, :discoverable, :public_attendee, :avatar, :password, :password_confirmation, :website, :x_username, :bluesky, :github, :mastodon, :linkedin ])
+      permitted = params.expect(user: [ :name, :job_title, :company, :conversation_starter, :bio, :discoverable, :public_attendee, :avatar, :password, :password_confirmation, :website, :x_username, :bluesky, :github, :mastodon, :linkedin ])
       permitted.extract!(:password, :password_confirmation) if permitted[:password].blank?
       permitted
     end

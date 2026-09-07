@@ -17,8 +17,8 @@ RSpec.describe "Community", type: :system do
     click_on "Ada Lovelace"
     expect(page).to have_content("Ada Lovelace")
 
-    click_on "Connect"
-    expect(page).to have_content(/connected/i)
+    click_on "Connect & message"
+    expect(page).to have_content("Say hello to Ada Lovelace")
   end
 
   it "connects with a non-discoverable attendee through their shared profile link" do
@@ -34,7 +34,8 @@ RSpec.describe "Community", type: :system do
     visit shared_profile_link
     expect(page).to have_content("Hidden Attendee")
 
-    expect { click_on "Connect" }.to change(Connection, :count).by(1)
+    expect { click_on "Connect & message" }.to change(Connection, :count).by(1)
     expect(me.reload).to be_connected_to(hidden)
+    expect(page).to have_content("Say hello to Hidden Attendee")
   end
 end

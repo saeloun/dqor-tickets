@@ -34,6 +34,8 @@ class User < ApplicationRecord
 
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 8 }, confirmation: true, allow_nil: true
+  validates :job_title, :company, length: { maximum: 120 }, allow_blank: true
+  validates :conversation_starter, length: { maximum: 240 }, allow_blank: true
   validates(*SOCIAL_PROFILE_FIELDS, length: { maximum: 255 }, allow_blank: true)
   validate :website_is_http_url
 

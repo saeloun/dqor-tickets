@@ -21,6 +21,21 @@
         <%= form.label :name, "Display name" %>
         <%= form.text_field :name, autocomplete: "name", placeholder: "How your name appears to others" %>
       </div>
+      <div class="field-grid">
+        <div class="field">
+          <%= form.label :job_title, "Role" %>
+          <%= form.text_field :job_title, maxlength: 120, autocomplete: "organization-title", placeholder: "Engineering manager" %>
+        </div>
+        <div class="field">
+          <%= form.label :company, "Company" %>
+          <%= form.text_field :company, maxlength: 120, autocomplete: "organization", placeholder: "Your company or project" %>
+        </div>
+      </div>
+      <div class="field">
+        <%= form.label :conversation_starter, "Ask me about" %>
+        <%= form.text_field :conversation_starter, maxlength: 240, placeholder: "Solid Queue, scaling Rails, finding a co-founder…" %>
+        <p class="gst-hint">Give other attendees an easy way to start a useful conversation.</p>
+      </div>
       <div class="field">
         <%= form.label :bio, "About you" %>
         <%= form.text_area :bio, rows: 3, placeholder: "A sentence about what you work on (optional)" %>
