@@ -2266,3 +2266,112 @@
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+
+/* ===================================================
+   COC
+   =================================================== */
+.conduct-section {
+  padding-block: 4rem;
+}
+
+.conduct-content {
+  max-width: 46rem;
+  margin: 0 auto;
+  line-height: 1.75;
+  color: var(--color-text, #333);
+}
+
+.conduct-content p {
+  margin-bottom: 1.25rem;
+  font-size: 1.15rem;
+}
+
+.conduct-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border, hsl(0 0% 0% / 0.08));
+}
+
+.conduct-content h2:first-child {
+  margin-top: 0;
+}
+
+.conduct-content ul,
+.conduct-content ol {
+  margin: 0 0 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.conduct-content ul {
+  list-style: disc;
+}
+
+.conduct-content ol {
+  list-style: decimal;
+}
+
+.conduct-content li {
+  margin-bottom: 0.8rem;
+  font-size: 1.15rem;
+}
+
+.conduct-content li::marker {
+  color: var(--color-gold, hsl(40 80% 50%));
+}
+
+.conduct-content a {
+  color: var(--color-gold, hsl(40 80% 50%));
+  text-decoration: underline;
+  text-decoration-color: hsl(40 80% 50% / 0.35);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.conduct-content a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Report section gets a subtle highlighted callout */
+.conduct-content h2:has(+ p a[href^="mailto:"]) + p {
+  background: hsl(40 80% 50% / 0.06);
+  border: 1px solid hsl(40 80% 50% / 0.18);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .conduct-content {
+  color: var(--color-text-dark, #e5e5e5);
+}
+
+[data-theme="dark"] .conduct-content h2 {
+  border-bottom-color: hsl(0 0% 100% / 0.1);
+}
+
+[data-theme="dark"] .conduct-content li::marker {
+  color: var(--color-gold, hsl(40 78% 56%));
+}
+
+[data-theme="dark"] .conduct-content a {
+  color: hsl(40 78% 56%);
+}
+
+[data-theme="dark"] .conduct-content h2:has(+ p a[href^="mailto:"]) + p {
+  background: hsl(40 78% 56% / 0.08);
+  border-color: hsl(40 78% 56% / 0.2);
+}
+
+/* Responsive spacing */
+@media (max-width: 640px) {
+  .conduct-section {
+    padding-block: 2.5rem;
+  }
+
+  .conduct-content h2 {
+    font-size: 1.2rem;
+    margin-top: 2rem;
+  }
+}
