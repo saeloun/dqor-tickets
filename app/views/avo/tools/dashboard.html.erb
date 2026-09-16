@@ -34,10 +34,16 @@
     border: 1px solid transparent;
   }
   .dq-scanner:hover { opacity: 0.9; }
+  .dq-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 </style>
 
 <div class="dq-dash">
-  <a class="dq-scanner" href="<%= main_app.checkin_path %>">Open the check-in scanner &rarr;</a>
+  <div class="dq-actions">
+    <a class="dq-scanner" href="<%= Avo::Engine.routes.url_helpers.resources_ticket_types_actions_show_path(action_id: Avo::Actions::IssueCompTickets.to_s) %>">Issue complimentary tickets &rarr;</a>
+    <a class="dq-scanner" href="<%= Avo::Engine.routes.url_helpers.new_resources_coupon_path %>">Add discount code &rarr;</a>
+    <a class="dq-scanner" href="<%= Avo::Engine.routes.url_helpers.resources_coupons_path %>">Manage discount codes &amp; usage &rarr;</a>
+    <a class="dq-scanner" href="<%= main_app.checkin_path %>">Open the check-in scanner &rarr;</a>
+  </div>
 
   <div class="dq-grid dq-grid--3">
     <div class="dq-card">
@@ -51,6 +57,17 @@
     <div class="dq-card">
       <p class="dq-card__label">Checked in</p>
       <p class="dq-card__value"><%= @checked_in %></p>
+    </div>
+  </div>
+
+  <div class="dq-grid dq-grid--2">
+    <div class="dq-card">
+      <p class="dq-card__label">Active discount codes</p>
+      <p class="dq-card__value"><%= @active_coupons %></p>
+    </div>
+    <div class="dq-card">
+      <p class="dq-card__label">Discount code uses</p>
+      <p class="dq-card__value"><%= @coupon_uses %></p>
     </div>
   </div>
 

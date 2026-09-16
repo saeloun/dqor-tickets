@@ -10,6 +10,8 @@ class Avo::ToolsController < Avo::ApplicationController
     sold = paid_tickets.group(:ticket_type_id).count
     @sold_by_type = TicketType.order(:position, :id).map { |ticket_type| [ ticket_type, sold.fetch(ticket_type.id, 0) ] }
     @orders_last_seven_days = Order.where(created_at: 7.days.ago..).group("date(created_at)").count
+    @active_coupons = Coupon.where(active: true).count
+    @coupon_uses = Coupon.sum(:uses_count)
 
     assigned = paid_tickets.where.not(attendee_email: [ nil, "" ])
     tshirt = assigned.where.not(tshirt_size: [ nil, "" ]).group(:tshirt_size).count

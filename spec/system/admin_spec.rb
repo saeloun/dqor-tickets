@@ -48,6 +48,8 @@ RSpec.describe "Avo admin", type: :system do
     before { sign_in_through_the_form }
 
     it "reaches the sales dashboard" do
+      create(:coupon, code: "SPEAKER", ticket_type:, uses_count: 3)
+
       visit "/avo/dashboard"
 
       expect(page).to have_current_path("/avo/dashboard")
@@ -56,6 +58,11 @@ RSpec.describe "Avo admin", type: :system do
       expect(page).to have_content("₹3,500.00")
       expect(page).to have_content("Sold by ticket type")
       expect(page).to have_content("Conference Pass")
+      expect(page).to have_content("Active discount codes\n1")
+      expect(page).to have_content("Discount code uses\n3")
+      expect(page).to have_link("Issue complimentary tickets", href: "/avo/resources/ticket_types/actions/Avo::Actions::IssueCompTickets")
+      expect(page).to have_link("Add discount code", href: "/avo/resources/coupons/new")
+      expect(page).to have_link("Manage discount codes & usage", href: "/avo/resources/coupons")
     end
 
     it "lists orders with their code, status and buyer email on the index" do
