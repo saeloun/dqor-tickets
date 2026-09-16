@@ -2274,6 +2274,18 @@
   padding-block: 4rem;
 }
 
+.conduct-section .container {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 2.5rem;
+  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.08);
+}
+
+[data-theme="dark"] .coc-section .container {
+  background: #1a1a1a; /* or whatever your dark surface color is */
+  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.3);
+}
+
 .conduct-content {
   max-width: 46rem;
   margin: 0 auto;
@@ -2343,12 +2355,17 @@
 }
 
 /* Dark mode overrides */
+[data-theme="dark"] h1 {
+  color: var(--color-muted-foreground);
+}
+
 [data-theme="dark"] .conduct-content {
-  color: var(--color-text-dark, #e5e5e5);
+  color: var(--color-muted-foreground);
 }
 
 [data-theme="dark"] .conduct-content h2 {
   border-bottom-color: hsl(0 0% 100% / 0.1);
+  color: var(--color-muted-foreground);
 }
 
 [data-theme="dark"] .conduct-content li::marker {
