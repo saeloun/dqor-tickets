@@ -23,6 +23,16 @@ RSpec.describe "Home", type: :request do
     get tickets_store_path
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Choose your conference pass")
+    expect(response.body).to include("Choose your pass")
+  end
+
+  it "keeps the conference price separate from the Rails Girls price" do
+    create(:ticket_type, slug: "conference-pass-regular", price_paise: 350_000)
+    create(:ticket_type, slug: "rails-girls-pune", price_paise: 35_000)
+
+    get root_path
+
+    expect(response.body).to include("From ₹3,500")
+    expect(response.body).to include("Buy a ticket · ₹350")
   end
 end

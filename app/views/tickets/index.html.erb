@@ -3,8 +3,8 @@
 <main class="storefront">
   <section class="storefront-hero">
     <p class="section-label">Tickets</p>
-    <h1>Choose your conference pass</h1>
-    <p>Two days of Ruby, Rails, and good company in Pune — with an optional day out in the city.</p>
+    <h1>Choose your pass</h1>
+    <p>Conference and Rails Girls tickets, plus an optional day out in Pune.</p>
     <p><%= link_to "See the schedule →", schedule_path, class: "storefront-hero__link" %> <span aria-hidden="true">·</span> <%= link_to "Sponsors", sponsors_path, class: "storefront-hero__link" %> <span aria-hidden="true">·</span> <%= link_to "Add to calendar", calendar_path, class: "storefront-hero__link" %></p>
     <%= render "shared/whos_coming" %>
     <% if @referrer %>
@@ -24,26 +24,29 @@
         <% available = ticket_type.available_quantity %>
         <% state = if ticket_type.purchasable? && available.positive? then "on sale" elsif ticket_type.purchasable? then "sold out" else "coming soon" end %>
         <% add_on = ticket_type.requires_conference_pass? %>
+        <% rails_girls = ticket_type.slug == "rails-girls-pune" %>
         <% featured = ticket_type.slug == "conference-pass-regular" %>
         <% supporter = ticket_type.slug == "supporter-pass" %>
         <% includes = if add_on
              [ "Guided tour around Pune", "Local food trail", "Transport included", "Limited to 50 guests" ]
+           elsif rails_girls
+             [ "Build a Rails app with coaches", "No Rails experience required", "Bring a laptop", "Lunch and snacks included" ]
            elsif supporter
              [ "All talks and keynotes", "Lunch and chai on both days", "Your name listed as a supporter on deccanqueenonrails.com", "Explore Pune Day add-on available" ]
            else
              [ "All talks and keynotes", "Lunch and chai on both days", "Explore Pune Day add-on available" ]
            end %>
 
-        <article class="ticket-card <%= add_on ? "ticket-card--retreat" : "ticket-card--conference" %> <%= "ticket-card--featured" if featured %> ticket-card--<%= state.parameterize %>">
+        <article class="ticket-card <%= add_on ? "ticket-card--retreat" : rails_girls ? "ticket-card--rails-girls" : "ticket-card--conference" %> <%= "ticket-card--featured" if featured %> ticket-card--<%= state.parameterize %>">
           <div class="ticket-card-header">
             <div class="ticket-card-badges">
-              <span class="ticket-type-badge <%= add_on ? "ticket-type-badge--retreat" : "ticket-type-badge--conference" %>"><%= add_on ? "Explore Pune Day" : "Conference" %></span>
+              <span class="ticket-type-badge <%= add_on ? "ticket-type-badge--retreat" : rails_girls ? "ticket-type-badge--rails-girls" : "ticket-type-badge--conference" %>"><%= add_on ? "Explore Pune Day" : rails_girls ? "Rails Girls Pune" : "Conference" %></span>
               <span class="ticket-state-badge"><%= state %></span>
             </div>
             <h2 class="ticket-card-title"><%= ticket_type.name %></h2>
             <div class="ticket-card-date">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-              <%= add_on ? "October 11, 2026 (Sunday)" : "October 8 & 9, 2026" %>
+              <%= add_on ? "October 11, 2026 (Sunday)" : rails_girls ? "October 10, 2026 (Saturday)" : "October 8 & 9, 2026" %>
             </div>
           </div>
 
@@ -51,7 +54,7 @@
             <p class="ticket-card-desc"><%= ticket_type.description %></p>
             <ul class="ticket-includes">
               <% includes.each do |item| %>
-                <li class="<%= add_on ? "ticket-check--retreat" : "ticket-check--conference" %>">
+                <li class="<%= add_on ? "ticket-check--retreat" : rails_girls ? "ticket-check--rails-girls" : "ticket-check--conference" %>">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                   <%= item %>
                 </li>
@@ -86,7 +89,7 @@
                 <button type="button" data-action="cart#decrement" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Remove one <%= ticket_type.name %>">−</button>
                 <%= number_field_tag "checkout[quantities][#{ticket_type.id}]", 0,
                       id: "checkout_quantities_#{ticket_type.id}", min: 0, max: [ticket_type.max_per_order, (available if ticket_type.capacity)].compact.min,
-                      data: { cart_target: "quantity", ticket_type_id: ticket_type.id, ticket_kind: "conference", unit_price: ticket_type.price_paise, action: "change->cart#sync input->cart#sync" },
+                      data: { cart_target: "quantity", ticket_type_id: ticket_type.id, ticket_kind: rails_girls ? "standalone" : "conference", unit_price: ticket_type.price_paise, action: "change->cart#sync input->cart#sync" },
                       aria: { label: "#{ticket_type.name} quantity" } %>
                 <button type="button" data-action="cart#increment" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Add one <%= ticket_type.name %>">+</button>
               </div>

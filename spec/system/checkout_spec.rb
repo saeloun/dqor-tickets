@@ -43,7 +43,7 @@ RSpec.describe "Checkout storefront", type: :system do
 
     visit tickets_store_path
 
-    expect(page).to have_css("h1", text: "Choose your conference pass")
+    expect(page).to have_css("h1", text: "Choose your pass")
 
     expect(page).to have_css(".ticket-card--on-sale", text: on_sale.name)
     expect(page).to have_css(".ticket-card--sold-out", text: sold_out.name)
@@ -147,6 +147,7 @@ RSpec.describe "Checkout storefront", type: :system do
   it "reveals the Explore Pune Day gate only for a standalone add-on" do
     conference = create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", price_paise: 350_000, capacity: 10, position: 1)
     add_on = create(:ticket_type, name: "Explore Pune Day", slug: "explore-pune-day", price_paise: 250_000, capacity: 50, requires_conference_pass: true, position: 2)
+    rails_girls = create(:ticket_type, name: "Rails Girls Pune Pass", slug: "rails-girls-pune", price_paise: 35_000, position: 3)
 
     visit tickets_store_path
 
@@ -168,6 +169,9 @@ RSpec.describe "Checkout storefront", type: :system do
     expect(page).to have_no_css(".add-on-gate", visible: :visible)
 
     remove_one(conference)
+    expect(page).to have_css(".add-on-gate", visible: :visible)
+
+    add_one(rails_girls)
     expect(page).to have_css(".add-on-gate", visible: :visible)
 
     uncheck quantity_field_for(add_on), allow_label_click: true
@@ -232,7 +236,7 @@ RSpec.describe "Checkout storefront", type: :system do
     add_one(ticket_type)
     click_button "Continue to payment"
 
-    expect(page).to have_css("h1", text: "Choose your conference pass")
+    expect(page).to have_css("h1", text: "Choose your pass")
     expect(page.evaluate_script("document.getElementById('checkout_buyer_name').validity.valueMissing")).to be(true)
     expect(page.evaluate_script("document.getElementById('checkout_email').validity.valueMissing")).to be(true)
     expect(Order.count).to eq(0)

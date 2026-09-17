@@ -41,6 +41,15 @@ ticket_types = [
     position: 4
   },
   {
+    name: "Rails Girls Pune Pass",
+    slug: "rails-girls-pune",
+    description: "One-day beginner workshop on October 10. Build a Rails app with help from coaches. Bring a laptop.",
+    price_paise: 35_000,
+    capacity: nil,
+    active: true,
+    position: 5
+  },
+  {
     name: "Explore Pune Day Add-on",
     slug: "explore-pune-day",
     description: "Explore Pune on Oct 11",
@@ -48,7 +57,7 @@ ticket_types = [
     capacity: 50,
     active: false,
     requires_conference_pass: true,
-    position: 5
+    position: 6
   },
   {
     name: "Complimentary Pass",
@@ -57,7 +66,7 @@ ticket_types = [
     price_paise: 0,
     capacity: nil,
     hidden: true,
-    position: 6
+    position: 7
   }
 ]
 
