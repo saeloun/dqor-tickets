@@ -20,4 +20,18 @@ RSpec.describe InitiateRefundJob, type: :job do
     expect(refund.reload).to have_attributes(razorpay_refund_id: "rfnd_test")
     expect(order.payment_events.where(kind: "refund_created").count).to eq(1)
   end
+
+  it "marks a refund failed when Razorpay permanently rejects it" do
+    refund = create(:refund, status: "initiated")
+    stub_request(:post, "https://api.razorpay.com/v1/payments/pay_test/refund")
+      .to_return(
+        status: 400,
+        body: { error: { code: "BAD_REQUEST_ERROR", description: "invalid refund" } }.to_json,
+        headers: { "Content-Type" => "application/json" }
+      )
+
+    expect { described_class.perform_now(refund, "pay_test") }.to raise_error(Razorpay::Error)
+
+    expect(refund.reload).to be_failed
+  end
 end

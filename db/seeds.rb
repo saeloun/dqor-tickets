@@ -17,7 +17,7 @@ ticket_types = [
     name: "Conference Pass — Regular",
     slug: "conference-pass-regular",
     description: "Conference pass for Oct 8–9",
-    price_paise: 550_000,
+    price_paise: 350_000,
     capacity: 140,
     active: true,
     position: 2
