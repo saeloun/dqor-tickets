@@ -19,6 +19,13 @@ RSpec.describe User do
     expect(user).to be_valid
   end
 
+  it "requires a matching password confirmation when one is supplied" do
+    user = User.new(email: "a@b.com", password: "longenough", password_confirmation: "different")
+
+    expect(user).not_to be_valid
+    expect(user.errors[:password_confirmation]).to include("doesn't match Password")
+  end
+
   it "normalizes social profile fields" do
     user = User.create!(
       email: "social@example.com",
