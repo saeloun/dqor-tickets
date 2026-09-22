@@ -13,6 +13,11 @@ class Account::SessionsController < ApplicationController
   def create
     email = params[:email].to_s.strip.downcase
 
+    if params[:password].present?
+      authenticate_with_password(email)
+      return
+    end
+
     if email.match?(URI::MailTo::EMAIL_REGEXP)
       user = User.find_or_create_by!(email: email)
       AccountMailer.magic_link(user, magic_token(user)).deliver_later
@@ -39,6 +44,15 @@ class Account::SessionsController < ApplicationController
   end
 
   private
+    def authenticate_with_password(email)
+      if user = User.authenticate_by(email: email, password: params[:password])
+        sign_in(user)
+        redirect_to account_root_path, notice: "You’re signed in."
+      else
+        redirect_to account_sign_in_path, alert: "That email or password is incorrect."
+      end
+    end
+
     def magic_token(user)
       verifier.generate(user.id, purpose: MAGIC_PURPOSE, expires_in: MAGIC_EXPIRY)
     end

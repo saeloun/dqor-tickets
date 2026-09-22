@@ -128,6 +128,15 @@ Copy `.env.example` to `.env` for development. Never commit real credentials.
 | `ADMIN_EMAIL` | Email used to seed the first admin account. |
 | `ADMIN_PASSWORD` | Password used when that admin account is first created. |
 
+### Attendee sign-in
+
+| Variable | Purpose |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` | Enables Google sign-in when paired with `GOOGLE_CLIENT_SECRET`. |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret. Use `/auth/google_oauth2/callback` as the callback path. |
+| `GITHUB_CLIENT_ID` | Enables GitHub sign-in when paired with `GITHUB_CLIENT_SECRET`. |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret. Use `/auth/github/callback` as the callback path. |
+
 ### Sentry
 
 | Variable | Purpose |

@@ -36,6 +36,7 @@ module ApplicationHelper
       [ "X", "https://x.com/#{ERB::Util.url_encode(user.x_username)}", user.x_username ],
       [ "Bluesky", "https://bsky.app/profile/#{ERB::Util.url_encode(user.bluesky)}", user.bluesky ],
       [ "GitHub", "https://github.com/#{ERB::Util.url_encode(user.github)}", user.github ],
+      [ "Ruby Passport", "https://www.rubyevents.org/profiles/#{ERB::Util.url_encode(user.github)}", user.github ],
       [ "Mastodon", mastodon_profile_url(user.mastodon), user.mastodon ],
       [ "LinkedIn", "https://www.linkedin.com/in/#{ERB::Util.url_encode(user.linkedin)}", user.linkedin ]
     ].select { |_, _, value| value.present? }

@@ -670,7 +670,7 @@ button { cursor: pointer; }
 .sign-in-divider { display: flex; align-items: center; text-align: center; margin: 1.1rem 0; color: var(--color-foreground-soft); font-size: 0.85rem; }
 .sign-in-divider::before, .sign-in-divider::after { content: ""; flex: 1; border-top: 1px solid var(--color-border); }
 .sign-in-divider span { padding: 0 0.7rem; }
-.google-signin { width: 100%; }
+.oauth-signin { width: 100%; }
 
 .talk-page { max-width: 720px; margin: 0 auto; padding: 2rem 1rem; }
 .talk-page__title { font-size: 1.8rem; margin: 0.5rem 0 0.4rem; }
