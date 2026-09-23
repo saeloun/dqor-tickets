@@ -13,12 +13,17 @@
       <% @speakers.each do |speaker| %>
         <li class="speaker-card">
           <% if speaker.photo.attached? %>
-            <%= image_tag speaker.photo, alt: speaker.name, class: "speaker-card__photo" %>
+            <%= link_to speaker_path(speaker) do %>
+              <%= image_tag speaker.photo, alt: speaker.name, class: "speaker-card__photo" %>
+            <% end %>
           <% end %>
           <h3 class="speaker-card__name"><%= link_to speaker.name, speaker_path(speaker) %></h3>
           <% if speaker.title.present? %><p class="speaker-card__title"><%= speaker.title %></p><% end %>
-          <% if speaker.bio.present? %><p class="speaker-card__bio"><%= speaker.bio %></p><% end %>
           <% talks = speaker.published_talks %>
+          <% if speaker.name.in?(["Samuel Williams", "Katie Lawhorn", "Tavian Barnes"]) %>
+            <% combined_talk = Talk.where(published: true).find_by(title: "Opening keynote: When Rails Met Fibers: Migrating Sidekick from Puma to Falcon") %>
+            <% talks = (talks + [combined_talk]).uniq.compact if combined_talk %>
+          <% end %>
           <% if talks.any? %>
             <ul class="speaker-card__talks">
               <% talks.each do |talk| %><li><%= talk.title %></li><% end %>
