@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -464,6 +464,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_103000) do
     t.integer "capacity"
     t.datetime "created_at", null: false
     t.text "description"
+    t.date "event_ends_on"
+    t.date "event_starts_on"
     t.boolean "hidden", default: false, null: false
     t.integer "max_per_order"
     t.integer "min_per_order", default: 1, null: false
@@ -475,6 +477,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_103000) do
     t.datetime "sales_start_at"
     t.string "slug", null: false
     t.datetime "updated_at", null: false
+    t.string "venue_address"
+    t.string "venue_name"
     t.index ["slug"], name: "index_ticket_types_on_slug", unique: true
   end
 
