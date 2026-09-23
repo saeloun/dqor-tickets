@@ -6,11 +6,15 @@ Payment for order <%= @order.code %> is confirmed. Your tax invoice is being pre
 <% else %>
 Payment for order <%= @order.code %> is confirmed. Your tax invoice is attached.
 <% end %>
-When and where:
-October 8-11, 2026 at Hyatt Regency Pune, Nagar Road, Pune, Maharashtra.
+<% ticket_types = @active_tickets.map(&:ticket_type).uniq %>
+<% ticket_types.each do |ticket_type| %>
+When and where<%= ticket_types.size > 1 ? " — #{ticket_type.name}" : "" %>:
+<%= ticket_type.event_window %> at <%= ticket_type.venue_name %>, <%= ticket_type.venue_address %>.
+<% end %>
 More on the venue, travel and schedule: https://deccanqueenonrails.com
 
-<% unassigned = @order.tickets.reject(&:canceled_at?).reject(&:assigned?) %><% if unassigned.any? %>
+<% unassigned = @active_tickets.reject(&:assigned?) %>
+<% if unassigned.any? %>
 You've got <%= pluralize(@order.tickets.count, "ticket") %>, and <%= unassigned.size == @order.tickets.count ? "nobody is named on them yet" : "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}" %>.
 That is fine - assign them whenever you are ready:
 <% else %>
@@ -22,7 +26,7 @@ attendee named on it. Manage them here:
 
 Send an attendee their own link and they fill in their own name, dietary needs,
 T-shirt size and childcare:
-<%= render "order_mailer/claim_links", order: @order, formats: [ :text ] %>
+<%= render "order_mailer/claim_links", active_tickets: @active_tickets, formats: [ :text ] %>
 Keep this email - these links are how you and your attendees manage the tickets.
 
 See you in Pune.

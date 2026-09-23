@@ -1,5 +1,4 @@
-<% tickets = @order.tickets.reject(&:canceled_at?) %>
-<% unassigned = tickets.reject(&:assigned?) %>
+<% unassigned = @active_tickets.reject(&:assigned?) %>
 Your order <%= @order.code %>
 
 Hello <%= @order.buyer_name %>,
@@ -11,10 +10,10 @@ your tickets and tax invoice, and where you name your attendees:
 <% if unassigned.any? %>
 <%= pluralize(unassigned.size, "ticket") %> still <%= unassigned.one? ? "has" : "have" %> nobody named on <%= unassigned.one? ? "it" : "them" %>.
 <% else %>
-All <%= pluralize(tickets.size, "ticket") %> already have an attendee. If anything needs
+All <%= pluralize(@active_tickets.size, "ticket") %> already have an attendee. If anything needs
 correcting, use the links below.
 <% end %>
 One link per ticket - send an attendee their own link and they fill in their own
 name, dietary needs, T-shirt size and childcare:
-<%= render "order_mailer/claim_links", order: @order, formats: [ :text ] %>
+<%= render "order_mailer/claim_links", active_tickets: @active_tickets, formats: [ :text ] %>
 See you in Pune.

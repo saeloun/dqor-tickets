@@ -1,6 +1,7 @@
 class OrderMailer < ApplicationMailer
   def confirmation(order, documents_pending: false)
     @order = order
+    @active_tickets = order.tickets.reject(&:canceled_at?)
     invoice = @order.invoices.invoice.first unless documents_pending
     @documents_pending = documents_pending || !invoice&.pdf&.attached?
 
@@ -10,6 +11,7 @@ class OrderMailer < ApplicationMailer
 
   def order_link(order)
     @order = order
+    @active_tickets = order.tickets.reject(&:canceled_at?)
     mail(to: @order.email, subject: "Your Deccan Queen on Rails order link")
   end
 

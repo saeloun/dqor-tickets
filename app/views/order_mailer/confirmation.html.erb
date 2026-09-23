@@ -7,11 +7,14 @@
   <%= mail_text do %>Payment for order <strong><%= @order.code %></strong> is confirmed. Your tax invoice is attached.<% end %>
 <% end %>
 
-<%= mail_label "When and where" %>
-<%= mail_text do %><strong>October 8&ndash;11, 2026</strong> at <strong>Hyatt Regency Pune</strong> &middot; Nagar Road, Pune, Maharashtra.<% end %>
+<% ticket_types = @active_tickets.map(&:ticket_type).uniq %>
+<% ticket_types.each do |ticket_type| %>
+  <%= mail_label ticket_types.size > 1 ? "When and where — #{ticket_type.name}" : "When and where" %>
+  <%= mail_text do %><strong><%= ticket_type.event_window %></strong> at <strong><%= ticket_type.venue_name %></strong> &middot; <%= ticket_type.venue_address %>.<% end %>
+<% end %>
 <%= mail_note "More on the venue, travel and schedule is at deccanqueenonrails.com." %>
 
-<% unassigned = @order.tickets.reject(&:canceled_at?).reject(&:assigned?) %>
+<% unassigned = @active_tickets.reject(&:assigned?) %>
 <% if unassigned.any? %>
   <%= mail_text "You've got #{pluralize(@order.tickets.count, "ticket")}, and #{unassigned.size == @order.tickets.count ? "nobody is named on them yet" : "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}"}. That is fine — assign them whenever you are ready." %>
 <% else %>
@@ -25,7 +28,7 @@
 <%= mail_label "Send an attendee their own link" %>
 <%= mail_note "They fill in their own name, dietary needs, T-shirt size and childcare, and their ticket is emailed straight to them." %>
 
-<%= render "order_mailer/claim_links", order: @order %>
+<%= render "order_mailer/claim_links", active_tickets: @active_tickets %>
 
 <%= mail_note "Keep this email — these links are how you and your attendees manage the tickets." %>
 <%= mail_text "See you in Pune." %>

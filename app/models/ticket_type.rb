@@ -25,6 +25,10 @@ class TicketType < ApplicationRecord
     slug.start_with?("conference-pass-")
   end
 
+  def event_window
+    slug == "rails-girls-pune" ? "October 10, 2026" : "October 8–11, 2026"
+  end
+
   private
     def sales_window_is_ordered
       errors.add(:sales_end_at, "must be after sales start") if sales_start_at && sales_end_at && sales_end_at < sales_start_at
