@@ -414,11 +414,23 @@
   margin: 0 auto 1.5rem;
 }
 
+.team-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
 .speaker-card {
   padding: 0;
   overflow: hidden;
   text-align: center;
   border-radius: 0.5rem;
+}
+
+.team-card {
+  flex: 0 1 calc(33.333% - 1rem);
+  max-width: calc(33.333% - 1rem);
 }
 
 .speaker-card-photo {
