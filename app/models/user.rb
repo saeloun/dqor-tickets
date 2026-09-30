@@ -33,7 +33,7 @@ class User < ApplicationRecord
   }
 
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :password, length: { minimum: 8 }, allow_nil: true
+  validates :password, length: { minimum: 8 }, confirmation: true, allow_nil: true
   validates(*SOCIAL_PROFILE_FIELDS, length: { maximum: 255 }, allow_blank: true)
   validate :website_is_http_url
 

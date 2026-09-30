@@ -53,9 +53,19 @@ RSpec.describe "Account settings", type: :request do
     user = User.create!(email: "grace@example.com")
     sign_in_as(user)
 
-    patch account_settings_path, params: { user: { password: "supersecret" } }
+    patch account_settings_path, params: { user: { password: "supersecret", password_confirmation: "supersecret" } }
 
     expect(user.reload.authenticate("supersecret")).to be_truthy
+  end
+
+  it "rejects a password confirmation mismatch" do
+    user = User.create!(email: "grace@example.com")
+    sign_in_as(user)
+
+    patch account_settings_path, params: { user: { password: "supersecret", password_confirmation: "different" } }
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(user.reload.password_digest).to be_nil
   end
 
   it "keeps the existing password when the field is left blank" do

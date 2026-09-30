@@ -4,7 +4,7 @@
   <section class="status-card">
     <p class="section-label">Account</p>
     <h1>Sign in</h1>
-    <p>Enter your email and we’ll send you a one-tap sign-in link. No password needed — you can add one later in settings.</p>
+    <p>Use your saved password, GitHub, Google, or a one-tap email link.</p>
 
     <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
     <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
@@ -12,14 +12,33 @@
     <%= form_with url: account_sign_in_path, method: :post, class: "assignment-form" do |form| %>
       <div class="field">
         <%= form.label :email, "Email" %>
-        <%= form.email_field :email, required: true, autocomplete: "email", placeholder: "you@example.com" %>
+        <%= form.email_field :email, required: true, autocomplete: "username", placeholder: "you@example.com" %>
       </div>
-      <%= form.submit "Email me a sign-in link", class: "btn btn-primary" %>
+      <div class="field">
+        <%= form.label :password, "Password" %>
+        <%= form.password_field :password, required: true, autocomplete: "current-password" %>
+      </div>
+      <%= form.submit "Sign in", class: "btn btn-primary" %>
     <% end %>
 
-    <% if ENV["GOOGLE_CLIENT_ID"].present? %>
-      <p class="sign-in-divider"><span>or</span></p>
-      <%= button_to "Continue with Google", "/auth/google_oauth2", method: :post, data: { turbo: false }, class: "btn btn-secondary google-signin" %>
+    <p class="sign-in-divider"><span>or</span></p>
+
+    <%= form_with url: account_sign_in_path, method: :post, class: "assignment-form" do |form| %>
+      <div class="field">
+        <%= form.label :email, "Email for a sign-in link" %>
+        <%= form.email_field :email, required: true, autocomplete: "email", placeholder: "you@example.com" %>
+      </div>
+      <%= form.submit "Email me a sign-in link", class: "btn btn-secondary" %>
+    <% end %>
+
+    <% if ENV["GITHUB_CLIENT_ID"].present? || ENV["GOOGLE_CLIENT_ID"].present? %>
+      <p class="sign-in-divider"><span>or continue with</span></p>
+      <% if ENV["GITHUB_CLIENT_ID"].present? %>
+        <%= button_to "GitHub", "/auth/github", method: :post, data: { turbo: false }, class: "btn btn-secondary oauth-signin" %>
+      <% end %>
+      <% if ENV["GOOGLE_CLIENT_ID"].present? %>
+        <%= button_to "Google", "/auth/google_oauth2", method: :post, data: { turbo: false }, class: "btn btn-secondary oauth-signin" %>
+      <% end %>
     <% end %>
   </section>
 </main>

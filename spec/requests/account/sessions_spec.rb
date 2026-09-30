@@ -26,6 +26,25 @@ RSpec.describe "Account sessions", type: :request do
     }.not_to change(User, :count)
   end
 
+  it "signs in with a saved password" do
+    user = User.create!(email: "grace@example.com", password: "supersecret")
+
+    post account_sign_in_path, params: { email: " GRACE@example.com ", password: "supersecret" }
+
+    expect(response).to redirect_to(account_root_path)
+    follow_redirect!
+    expect(response.body).to include(user.email)
+  end
+
+  it "does not reveal whether an email exists when password sign-in fails" do
+    User.create!(email: "grace@example.com", password: "supersecret")
+
+    post account_sign_in_path, params: { email: "grace@example.com", password: "wrong-password" }
+
+    expect(response).to redirect_to(account_sign_in_path)
+    expect(flash[:alert]).to eq("That email or password is incorrect.")
+  end
+
   it "signs in through a valid magic link" do
     user = User.create!(email: "grace@example.com")
 

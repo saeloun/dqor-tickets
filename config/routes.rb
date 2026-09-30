@@ -25,6 +25,7 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
 
   get "auth/google_oauth2/callback", to: "account/omniauth_sessions#create"
+  get "auth/github/callback",       to: "account/omniauth_sessions#create"
   get "auth/failure",                to: "account/omniauth_sessions#failure"
 
   namespace :account do
