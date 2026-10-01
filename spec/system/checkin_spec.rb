@@ -199,7 +199,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   describe "on a device with no camera" do
-    before { driven_by :cuprite }
+    before { driven_by :cuprite_system }
 
     it "still checks in from the search results when no scanner is running" do
       ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Grace Hopper")
