@@ -193,13 +193,14 @@ RSpec.describe "Check-in", type: :system do
   it "falls back to the first event day when the date param is garbage" do
     create(:ticket, attendee_name: "Rear Admiral")
     sign_in
+    expect(page).to have_current_path(Avo.configuration.home_path)
     visit checkin_path(date: "garbage")
 
     expect(page).to have_select("date", selected: "Oct 8")
   end
 
   describe "on a device with no camera" do
-    before { driven_by :cuprite }
+    before { driven_by :cuprite_system }
 
     it "still checks in from the search results when no scanner is running" do
       ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Grace Hopper")
