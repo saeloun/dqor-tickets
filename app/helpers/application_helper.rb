@@ -31,6 +31,13 @@ module ApplicationHelper
     qr_svg(url)
   end
 
+  def safe_profile_url(value)
+    uri = URI.parse(value.to_s)
+    uri.to_s if uri.is_a?(URI::HTTP) && uri.host.present?
+  rescue URI::InvalidURIError
+    nil
+  end
+
   def attendee_social_links(user)
     [
       [ "X", "https://x.com/#{ERB::Util.url_encode(user.x_username)}", user.x_username ],
@@ -38,7 +45,12 @@ module ApplicationHelper
       [ "GitHub", "https://github.com/#{ERB::Util.url_encode(user.github)}", user.github ],
       [ "Mastodon", mastodon_profile_url(user.mastodon), user.mastodon ],
       [ "LinkedIn", "https://www.linkedin.com/in/#{ERB::Util.url_encode(user.linkedin)}", user.linkedin ]
-    ].select { |_, _, value| value.present? }
+    ].filter_map do |label, url, value|
+      next if value.blank?
+
+      url = safe_profile_url(url)
+      [ label, url, value ] if url
+    end
   end
 
   private
