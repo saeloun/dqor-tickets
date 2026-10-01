@@ -12,9 +12,9 @@
         </p>
       <% end %>
       <% if @attendee.bio.present? %><p class="account-email"><%= @attendee.bio %></p><% end %>
-      <% if @attendee.website.present? %>
+      <% if (website_url = safe_profile_url(@attendee.website)) %>
         <p class="attendee-profile__website">
-          <%= link_to "Website", @attendee.website, target: "_blank", rel: "noopener", aria: { label: "Website for #{@attendee.display_name}" } %>
+          <%= link_to "Website", website_url, target: "_blank", rel: "noopener", aria: { label: "Website for #{@attendee.display_name}" } %>
         </p>
       <% end %>
       <% if (social_links = attendee_social_links(@attendee)).any? %>
