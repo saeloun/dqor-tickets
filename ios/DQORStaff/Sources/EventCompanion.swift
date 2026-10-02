@@ -20,15 +20,21 @@ struct DemoPass: Identifiable {
     let party: DemoEntitlementStatus
 }
 enum DemoCompanion {
+    static let previewDay = EventDay(id: "afterhours-preview", event: "Deccan After Hours", day: "Saturday, 14 November · 2026")
     static func schedule(for day: EventDay) -> [DemoScheduleItem] {
-        guard DemoStaffAPI.days.contains(day) else { return [] }
+        guard DemoStaffAPI.days.contains(day) || day == previewDay else { return [] }
+        if day == previewDay {
+            return [DemoScheduleItem(id: "afterhours-welcome", time: "18:00–18:30", title: "Settle in", location: "The Courtyard · sample venue"),
+                    DemoScheduleItem(id: "afterhours-ideas", time: "18:30–20:00", title: "Ideas & encounters", location: "The Courtyard · sample venue"),
+                    DemoScheduleItem(id: "afterhours-evening", time: "20:00–21:00", title: "Stay a little longer", location: "The Courtyard · sample venue")]
+        }
         let workshop = day.id == "workshop-1"
         return [DemoScheduleItem(id: day.id + "-welcome", time: "09:00–09:30", title: "Doors and welcome", location: "Welcome desk"),
                 DemoScheduleItem(id: day.id + "-session", time: "09:30–12:00", title: workshop ? "Hands-on design studio" : "Community talks", location: workshop ? "Studio A" : "Main hall"),
                 DemoScheduleItem(id: day.id + "-lunch", time: "12:00–13:00", title: "Lunch break", location: "Dining area")]
     }
     static func passes(for day: EventDay) -> [DemoPass] {
-        guard DemoStaffAPI.days.contains(day) else { return [] }
+        guard DemoStaffAPI.days.contains(day) || day == previewDay else { return [] }
         return [DemoPass(id: day.id + "-sample", name: "Sample attendee pass", admission: .available, meal: .redeemed, party: .notIncluded)]
     }
 }
@@ -39,46 +45,79 @@ struct EventCompanionView: View {
     @State private var query = ""
     var body: some View {
         Group {
-            if wallet { content }
-            else { content.searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Find a session or room") }
-        }.navigationTitle(wallet ? "Sample passes" : "Schedule")
+            if wallet { passContent }
+            else { scheduleContent.searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Find a session or room") }
+        }
+        .navigationTitle(wallet ? "Sample passes" : "Schedule")
+        .navigationBarTitleDisplayMode(.inline)
+        .background(AttendeeStyle.canvas).tint(AttendeeStyle.accent)
     }
-    private var content: some View {
-        List {
-            Section {
-                Text(day.event).font(.headline)
-                Text(day.day)
-                Label("Synthetic preview", systemImage: "testtube.2")
-                Text(wallet ? "These sample passes are not your tickets and cannot be used for entry or redemption." : "Sample agenda · times are illustrative local event times, not a published schedule.")
-                    .font(.subheadline)
-            }
-            if wallet {
-                ForEach(DemoCompanion.passes(for: day)) { pass in
-                    Section(header: Text(pass.name).font(.headline).foregroundStyle(.primary)) {
-                        status("Admission", pass.admission)
-                        status("Meal", pass.meal)
-                        status("Party", pass.party)
-                        Text("Admission and each redemption are tracked separately. This preview cannot change any status.").font(.caption)
-                    }
-                }
-                Section { Text("Live passes and Apple Wallet export are not connected.") }
-            } else {
+    private var scheduleContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                PreviewBadge()
+                AttendeeEventTitle(day: day)
+                Label(day.day, systemImage: "calendar").font(.subheadline)
+                Text("A day for good ideas.").font(.title2.weight(.medium))
+                Text("Sample agenda · illustrative local times.").font(.subheadline).foregroundStyle(AttendeeStyle.secondary)
                 let sessions = DemoCompanion.schedule(for: day).filter { query.isEmpty || "\($0.title) \($0.location)".localizedCaseInsensitiveContains(query) }
                 if sessions.isEmpty { ContentUnavailableView.search(text: query) }
                 ForEach(sessions) { item in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(item.time).font(.subheadline.monospacedDigit())
-                        Text(item.title).font(.headline)
-                        Label(item.location, systemImage: "mappin")
-                    }.padding(.vertical, 6).accessibilityElement(children: .combine)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(item.time).font(.subheadline.monospacedDigit()).foregroundStyle(AttendeeStyle.secondary)
+                        Text(item.title).font(.title3.weight(.semibold))
+                        Label(item.location, systemImage: "mappin").font(.subheadline)
+                    }.frame(maxWidth: .infinity, alignment: .leading).padding(24)
+                        .background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 20))
+                        .accessibilityElement(children: .combine)
                 }
-            }
-        }
+            }.padding(20).frame(maxWidth: 640)
+        }.foregroundStyle(AttendeeStyle.ink)
+    }
+    private var passContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                PreviewBadge()
+                ForEach(DemoCompanion.passes(for: day)) { pass in
+                    VStack(alignment: .leading, spacing: 0) {
+                        EventArtwork(showsHeadline: false).frame(height: 120).clipped().accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 20) {
+                            AttendeeEventTitle(day: day)
+                            Label(day.day, systemImage: "calendar").font(.subheadline)
+                            Divider()
+                            HStack(alignment: .top) {
+                                Image(systemName: "person.crop.circle").font(.title)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(day == DemoCompanion.previewDay ? "Aarav Shah" : "Alex Morgan").font(.headline)
+                                    Text("Synthetic attendee · sample pass").font(.caption).foregroundStyle(AttendeeStyle.secondary)
+                                }
+                            }
+                            VStack(spacing: 12) {
+                                Image(systemName: "sparkle").font(.largeTitle)
+                                Text("Entry code appears here").font(.headline)
+                                Text("SAMPLE · no scannable credential").font(.caption)
+                            }.frame(maxWidth: .infinity).padding(24)
+                                .background(AttendeeStyle.canvas, in: RoundedRectangle(cornerRadius: 16))
+                            status("Admission", pass.admission)
+                            Divider()
+                            Text("Included with this sample").font(.subheadline.weight(.semibold))
+                            status("Meal", pass.meal)
+                            status("Party", pass.party)
+                            Divider()
+                            Label("Preview only · not valid for entry", systemImage: "lock").font(.subheadline.weight(.semibold))
+                            Text("No admission QR is issued. Each status is independent; nothing can be redeemed from this preview.").font(.caption).foregroundStyle(AttendeeStyle.secondary)
+                        }.padding(24)
+                    }.background(AttendeeStyle.card).clipShape(RoundedRectangle(cornerRadius: 24))
+                }
+                Text("Live passes and Apple Wallet export are not connected.").font(.footnote).foregroundStyle(AttendeeStyle.secondary)
+            }.padding(20).frame(maxWidth: 640)
+        }.foregroundStyle(AttendeeStyle.ink)
     }
     private func status(_ name: String, _ value: DemoEntitlementStatus) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(name).font(.headline)
             Label(value.rawValue, systemImage: value == .available ? "ticket" : value == .redeemed ? "checkmark.circle" : "minus.circle")
+                .font(.subheadline).foregroundStyle(AttendeeStyle.secondary)
         }.accessibilityElement(children: .combine)
     }
 }

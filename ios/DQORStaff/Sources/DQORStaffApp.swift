@@ -7,7 +7,14 @@ struct DQORStaffApp: App {
         failCheckIn: ProcessInfo.processInfo.arguments.contains("--fail-checkin"),
         role: ProcessInfo.processInfo.arguments.contains("--finance") ? .finance : .volunteer,
         duplicateNames: ProcessInfo.processInfo.arguments.contains("--duplicate-names")))
-    var body: some Scene { WindowGroup { StaffRootView(store: store) } }
+    private var previewColorScheme: ColorScheme? {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("--dark-preview") ? .dark : nil
+        #else
+        return nil
+        #endif
+    }
+    var body: some Scene { WindowGroup { StaffRootView(store: store).preferredColorScheme(previewColorScheme) } }
 }
 
 struct StaffRootView: View {
@@ -31,6 +38,7 @@ struct StaffRootView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         if let day = store.day {
                             Menu("Explore", systemImage: "ellipsis.circle") {
+                                NavigationLink("Event preview") { AttendeeEventView(day: day) }
                                 NavigationLink("Schedule") { EventCompanionView(day: day, wallet: false) }
                                 NavigationLink("Sample passes") { EventCompanionView(day: day, wallet: true) }
                                 if store.can(.searchAttendees) {
@@ -115,6 +123,8 @@ struct StaffRootView: View {
             Text("Scan tickets, review a batch, and confirm every arrival.").font(.title3).foregroundStyle(.primary)
             Label { Text("Demo mode · synthetic attendees only").fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: "testtube.2") }.font(.headline)
             Text("Explore staff check-in using sample attendees. This preview does not connect to a live event.").foregroundStyle(.primary)
+            NavigationLink("Explore sample event") { AttendeeEventView(day: DemoCompanion.previewDay) }
+                .font(.headline).frame(minHeight: 48).accessibilityIdentifier("exploreSampleEvent")
             Button("Enter demo") { Task { await store.signIn() } }
                 .buttonStyle(.borderedProminent).controlSize(.large).disabled(store.busy).accessibilityIdentifier("enterDemo")
             if let message = store.message { Text(message).foregroundStyle(.red) }

@@ -3,6 +3,12 @@ import XCTest
 
 @MainActor
 final class CompanionTests: XCTestCase {
+    func testSharedArtworkIsBundledAndAttendeePreviewCannotBecomeStaffDay() {
+        XCTAssertNotNil(EventArtwork.cover)
+        XCTAssertFalse(DemoStaffAPI.days.contains(DemoCompanion.previewDay))
+        XCTAssertEqual(DemoCompanion.schedule(for: DemoCompanion.previewDay).count, 3)
+        XCTAssertEqual(DemoCompanion.passes(for: DemoCompanion.previewDay).count, 1)
+    }
     func testFixturesAreScopedAndEntitlementsIndependent() {
         let first = DemoStaffAPI.days[0], second = DemoStaffAPI.days[1]
         XCTAssertTrue(Set(DemoCompanion.schedule(for: first).map(\.id)).isDisjoint(with: DemoCompanion.schedule(for: second).map(\.id)))

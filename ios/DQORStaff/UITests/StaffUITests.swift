@@ -214,4 +214,44 @@ final class StaffUITests: XCTestCase {
         capture(app, name: "Largest text workshop schedule")
     }
 
+    @MainActor
+    func testAttendeeEventAndPassDesignJourney() {
+        let app = XCUIApplication(); app.launch()
+        app.buttons["exploreSampleEvent"].tap()
+        XCTAssertTrue(app.staticTexts["Synthetic preview"].waitForExistence(timeout: 5))
+        capture(app, name: "Attendee event artwork and identity")
+        app.swipeUp()
+        capture(app, name: "Attendee event metadata and actions")
+        app.buttons["eventSamplePass"].tap()
+        XCTAssertTrue(app.staticTexts["Admission"].waitForExistence(timeout: 5))
+        capture(app, name: "Attendee ticket card")
+        app.swipeUp()
+        XCTAssertTrue(app.staticTexts["Not included"].exists)
+        capture(app, name: "Attendee separate pass states")
+        app.navigationBars.buttons["BackButton"].tap()
+        app.buttons["eventSchedule"].tap()
+        capture(app, name: "Attendee programme")
+        app.navigationBars.buttons["BackButton"].tap()
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.buttons["enterDemo"].exists)
+    }
+    @MainActor
+    func testAttendeeLargestTextDarkNavigation() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL", "--dark-preview"]
+        app.launch()
+        func reveal(_ element: XCUIElement) {
+            for _ in 0..<12 { if element.isHittable { return }; app.swipeUp() }
+        }
+        reveal(app.buttons["exploreSampleEvent"]); app.buttons["exploreSampleEvent"].tap()
+        reveal(app.buttons["eventSamplePass"])
+        capture(app, name: "Attendee largest text dark event")
+        app.buttons["eventSamplePass"].tap()
+        reveal(app.staticTexts["Not included"])
+        XCTAssertTrue(app.staticTexts["Not included"].isHittable)
+        capture(app, name: "Attendee largest text dark pass")
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.buttons["eventSamplePass"].exists)
+    }
+
 }
