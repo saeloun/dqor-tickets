@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -23,6 +24,9 @@ import `in`.dqor.staff.nativeapi.*
 fun NativeStaffApp(events: List<Event>, workflow: NativeDeskWorkflow, demo: MockNativeTransport,
                    run: (suspend NativeDeskWorkflow.() -> Unit) -> Unit) {
     val state by workflow.state.collectAsStateWithLifecycle()
+    val listState=rememberLazyListState()
+    LaunchedEffect(state.event,state.session==null) {listState.scrollToItem(0)}
+    LaunchedEffect(state.results) {if(state.results.isNotEmpty()) listState.scrollToItem(0)}
     var scanning by remember { mutableStateOf(false) }
     var offline by remember { mutableStateOf(demo.offline) }
     var timeoutArmed by remember { mutableStateOf(false) }
@@ -68,7 +72,7 @@ fun NativeStaffApp(events: List<Event>, workflow: NativeDeskWorkflow, demo: Mock
                     confirmButton={Button(onClick={run {confirmReview(review)}},enabled=!state.busy) {Text(if(state.uncertain) "Retry same tickets" else "Confirm check-in")}},
                     dismissButton={TextButton(onClick={if(state.uncertain) workflow.discardUncertain() else workflow.cancelReview()},enabled=!state.busy) {Text(if(state.uncertain) "Dismiss without admitting" else "Cancel")}})
             }
-            LazyColumn(Modifier.testTag("staff-screen").safeDrawingPadding().padding(horizontal=20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+            LazyColumn(Modifier.testTag("staff-screen").safeDrawingPadding().padding(horizontal=20.dp),state=listState,verticalArrangement=Arrangement.spacedBy(14.dp)) {
                 item {Spacer(Modifier.height(12.dp)); Text("DQOR / STAFF",style=MaterialTheme.typography.labelLarge); Text("MOCK TRANSPORT · Live networking disabled",style=MaterialTheme.typography.labelMedium)}
                 item {Text(state.message,Modifier.semantics {liveRegion=LiveRegionMode.Polite}); if(state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())}
                 item {Row {Switch(offline,{offline=it; demo.offline=it; scanning=false},enabled=!state.busy,modifier=Modifier.semantics {contentDescription="Simulate offline connection"}); Text("Simulate offline",Modifier.padding(12.dp))}}

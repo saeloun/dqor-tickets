@@ -83,7 +83,7 @@ class NativeDeskWorkflow(private val client: NativeStaffClient) {
     fun reviewSelection() {
         val old=mutable.value
         if(old.busy || old.uncertain || !old.canWrite || old.selected.isEmpty() || old.event==null) return
-        mutable.value=old.copy(review=ReviewBatch(old.event,old.date,old.selected.toList()),message="Review names, IDs and date. Nothing has been submitted.")
+        mutable.value=old.copy(review=ReviewBatch(old.event,old.date,old.selected.toList()),results=emptyList(),message="Review names, IDs and date. Nothing has been submitted.")
     }
     fun cancelReview() { if(!mutable.value.busy && !mutable.value.uncertain) mutable.value=mutable.value.copy(review=null) }
     fun discardUncertain() {
@@ -94,6 +94,6 @@ class NativeDeskWorkflow(private val client: NativeStaffClient) {
         if(old.review !== expected || old.event!=expected.event || old.date!=expected.date || !old.canWrite) return@perform
         val response=client.confirm(expected.event,expected.date,expected.tickets.map {it.id},true)
         mutable.value=mutable.value.copy(results=response.results,review=null,selected=emptyList(),preview=null,uncertain=false,
-            message=response.results.joinToString(". ") {"${it.attendee ?: "Ticket ${it.ticketId}"}: ${it.message}"})
+            message=if(response.results.size==1) response.results.single().let {"${it.attendee ?: "Ticket ${it.ticketId}"}: ${it.message}"} else "${response.results.size} results: ${response.results.count {it.state==NativeState.SUCCESS}} confirmed, ${response.results.count {it.state==NativeState.WARNING}} duplicate warnings, ${response.results.count {it.state==NativeState.ERROR}} rejected. Review each outcome below.")
     }
 }

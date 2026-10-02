@@ -37,6 +37,7 @@ class NativeStaffUiTest {
         tap("Review 1 tickets"); compose.onNodeWithText("Confirm check-in").performClick(); compose.waitForIdle()
         assertEquals(1,server.confirmationCalls); assertEquals(1,server.attendanceCount)
         assertEquals(NativeState.SUCCESS,flow.state.value.results.single().state)
+        compose.onNodeWithText("Asha Rao: Demo check-in confirmed").assertIsDisplayed()
         tap("Sign out"); compose.onNodeWithText("Sign in to demo").assertExists(); assertNull(flow.state.value.session)
     }
     @Test fun expiryReturnsToSignInWithoutConfirmation() {
