@@ -27,6 +27,7 @@ class Account::SessionsController < ApplicationController
 
     if user
       sign_in(user)
+      session[:verified_attendee_email] = user.email
       redirect_to account_root_path, notice: "You’re signed in."
     else
       redirect_to account_sign_in_path, alert: "That link is invalid or has expired. Request a new one."

@@ -1,0 +1,12 @@
+<main style="max-width:40rem;margin:auto;padding:1rem" data-controller="slot-scanner" data-slot-scanner-url-value="<%= redeem_event_slot_path(@slot) %>">
+<%= link_to "Change scan purpose", event_slots_path %>
+<h1>Scanning: <%= @slot.name %></h1><p><strong><%= @slot.active? ? "Active purpose" : "Draft — redemption disabled" %></strong></p>
+<p><%= @slot.starts_at.in_time_zone("Asia/Kolkata") %> — <%= @slot.ends_at.in_time_zone("Asia/Kolkata") %></p>
+<p>This scan records this purpose only. Regular entry is separate.</p>
+<div id="slot-reader"></div><p role="status" data-slot-scanner-target="result">Waiting for scan.</p>
+<button type="button" data-action="slot-scanner#retry">Retry last unconfirmed scan</button>
+<button type="button" data-action="slot-scanner#next">Allow a new scan of the same ticket</button>
+<% if Current.admin_user.admin? %><h2>Recent redemptions and corrections</h2>
+<% @slot.redemptions.order(id: :desc).limit(20).each do |redemption| %><p>Ticket #<%= redemption.ticket_id %> · <%= redemption.redeemed_at %> · <%= redemption.voided_at? ? "Corrected" : "Redeemed" %></p>
+<% unless redemption.voided_at? %><%= form_with url: correct_event_slot_path(@slot) do |f| %><%= f.hidden_field :redemption_id, value: redemption.id %><%= f.label :reason, "Correction reason" %><%= f.text_field :reason, required: true %><%= f.submit "Void redemption" %><% end %><% end %><% end %><% end %>
+</main>

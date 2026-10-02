@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_150200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -111,6 +111,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_150200) do
     t.datetime "valid_until"
     t.index "lower((code)::text)", name: "index_coupons_on_lower_code", unique: true
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
+  end
+
+  create_table "event_slot_redemptions", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_slot_id", null: false
+    t.datetime "redeemed_at", null: false
+    t.string "request_key", null: false
+    t.bigint "ticket_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "void_reason"
+    t.datetime "voided_at"
+    t.bigint "voided_by_id"
+    t.index ["admin_user_id"], name: "index_event_slot_redemptions_on_admin_user_id"
+    t.index ["event_slot_id", "request_key"], name: "index_event_slot_redemptions_on_event_slot_id_and_request_key", unique: true
+    t.index ["event_slot_id"], name: "index_event_slot_redemptions_on_event_slot_id"
+    t.index ["ticket_id"], name: "index_event_slot_redemptions_on_ticket_id"
+  end
+
+  create_table "event_slots", force: :cascade do |t|
+    t.boolean "active", default: false, null: false
+    t.integer "capacity"
+    t.datetime "created_at", null: false
+    t.datetime "ends_at", null: false
+    t.string "name", null: false
+    t.integer "redemption_limit", default: 1, null: false
+    t.datetime "starts_at", null: false
+    t.bigint "ticket_type_ids", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.check_constraint "ends_at > starts_at AND redemption_limit > 0 AND (capacity IS NULL OR capacity > 0)", name: "event_slot_limits"
   end
 
   create_table "faqs", force: :cascade do |t|
@@ -562,6 +592,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_150200) do
   add_foreign_key "conversations", "users", column: "participant_one_id"
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "event_slot_redemptions", "admin_users"
+  add_foreign_key "event_slot_redemptions", "admin_users", column: "voided_by_id"
+  add_foreign_key "event_slot_redemptions", "event_slots"
+  add_foreign_key "event_slot_redemptions", "tickets"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "messages", "conversations"
