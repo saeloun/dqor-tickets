@@ -178,6 +178,31 @@ form on 2026-10-02. No new deployment or authenticated production test occurred.
 The URL is a sign-in page, not an attendee invite. The existing attendee-scoped
 registration link and its access rules still require authenticated inspection.
 
+### Active WebSocket revocation gate
+
+Security review of the exact pinned Roundhouse `d6da862` reports that
+`src/lower/module_mixins.rs` implements Turbo::StreamsChannel/ActiveStorage
+authorization special cases and includes `e2e/campfire/cable_guard.spec.js`.
+Do not describe this pin as missing prepend authorization support.
+
+The remaining reported defect is in `runtime/spinel/action_cable.rb` lines
+206–226: `RemoteConnection.disconnect` checks test expectations and returns nil
+without actually closing a live socket. The runtime ledger warns that open
+sockets can continue after membership removal or deactivation. No live exploit
+probe was performed. Before any SSO or multi-tenant release, implement real
+active-socket revocation and verify the exact candidate binary with an already
+connected client after logout, ban/deactivation, membership removal and role
+downgrade. Verify it receives no unauthorized subsequent messages, cannot send,
+and cannot replay an earlier signed stream; reconnect rejection alone is not
+enough. This gate remains blocked while the pinned archive and authorized host
+cannot be inspected and tested. An upstream source fix or newer conformance
+score is not evidence that the deployed pinned binary is fixed.
+
+Campfire global administrators are server operators, not event organizers.
+Never map organization/event roles to global Campfire administration. Restrict
+bot/webhook destinations before any untrusted tenant can configure them; an
+outbound webhook may otherwise reach operator/internal networks.
+
 ### Optional ticketing-account linkage (proposal only)
 
 Today Campfire has a separate account. The main application's signed-in chat
