@@ -16,8 +16,13 @@ Sam Ruby's [Spinel Campfire bundle](https://rubys.github.io/roundhouse/apps/camp
 Run on the host, with the existing `kamal` Docker network and proxy:
 
 ```sh
+set -e
 cd /opt/dqor-campfire
-curl -fsSL https://rubys.github.io/roundhouse/campfire/docker.tgz -o docker.tgz
+if [ ! -f docker.tgz ]; then
+  curl -fsSL https://rubys.github.io/roundhouse/campfire/docker.tgz -o docker.tgz.download
+  printf '%s  %s\n' a91496ff7aad9232a79ba72017656698388ea02976b97c48cf0921f7205d921e docker.tgz.download | sha256sum -c -
+  mv docker.tgz.download docker.tgz
+fi
 printf '%s  %s\n' a91496ff7aad9232a79ba72017656698388ea02976b97c48cf0921f7205d921e docker.tgz | sha256sum -c -
 tar -xzf docker.tgz
 docker build -t dqor-campfire:a91496ff7aad campfire-docker
