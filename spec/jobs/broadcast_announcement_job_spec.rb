@@ -1,36 +1,113 @@
 require "rails_helper"
 
 RSpec.describe BroadcastAnnouncementJob, type: :job do
-  include ActiveJob::TestHelper
+  let(:admin) { create(:admin_user) }
+  let(:announcement) { Announcement.create!(title: "Know before you go", body: "Doors open at 8:30am.") }
+  let(:email) { "a@example.com" }
+  let!(:preference) { AnnouncementPreference.create!(email: email, consented_at: Time.current) }
+  let!(:ticket) { create(:ticket, order: create(:order, :paid), attendee_email: email) }
 
-  it "emails the announcement to each distinct paid attendee and records emailed_at" do
-    order = create(:order, :paid)
-    create(:ticket, order:, attendee_email: "a@example.com")
-    create(:ticket, order:, attendee_email: "b@example.com")
-    announcement = Announcement.create!(title: "Know before you go", body: "Doors open at 8:30am.")
-
-    expect {
-      described_class.perform_now(announcement)
-    }.to have_enqueued_mail(AnnouncementMailer, :to_attendee).twice
-
-    expect(announcement.reload.emailed_at).to be_present
+  def approve
+    AnnouncementCampaign.approve!(announcement: announcement, admin: admin,
+      review_digest: AnnouncementCampaign.review_digest(announcement, AnnouncementCampaign.audience))
   end
 
-  it "does not re-send an announcement that was already emailed" do
-    announcement = Announcement.create!(title: "X", body: "y", emailed_at: Time.current)
-
-    expect {
-      described_class.perform_now(announcement)
-    }.not_to have_enqueued_mail(AnnouncementMailer, :to_attendee)
+  before do
+    AnnouncementDispatchLimit.control.update!(window_started_at: 2.minutes.ago, used: 0)
+    ActionMailer::Base.deliveries.clear
   end
 
-  it "renders a branded email to the attendee" do
-    announcement = Announcement.new(title: "Hi there", body: "Line one.\n\nLine two.")
+  it "submits a frozen version once across repeated dispatches" do
+    campaign = approve
+    announcement.update!(title: "Changed", body: "Not approved")
+    2.times { described_class.perform_now }
+    expect(ActionMailer::Base.deliveries.size).to eq(1)
+    expect(ActionMailer::Base.deliveries.first.subject).to eq("Know before you go")
+    expect(campaign.announcement_deliveries.sole.state).to eq("submitted")
+    expect { campaign.update!(body: "tamper") }.to raise_error(ActiveRecord::ReadOnlyRecord)
+  end
 
-    mail = AnnouncementMailer.to_attendee(announcement, "x@example.com")
+  it "does not treat a legacy queued job as approval" do
+    described_class.perform_now(announcement)
+    expect(ActionMailer::Base.deliveries).to be_empty
+    expect(AnnouncementCampaign.count).to eq(0)
+  end
 
-    expect(mail.to).to eq([ "x@example.com" ])
-    expect(mail.subject).to eq("Hi there")
-    expect(mail.body.encoded).to include("Line one").and include("Line two")
+  it "suppresses revoked consent and canceled tickets at delivery" do
+    campaign = approve
+    preference.update!(suppressed_at: Time.current)
+    described_class.perform_now
+    expect(campaign.announcement_deliveries.sole.state).to eq("suppressed")
+    expect(ActionMailer::Base.deliveries).to be_empty
+  end
+
+  it "rechecks ticket eligibility" do
+    campaign = approve
+    ticket.update!(canceled_at: Time.current)
+    described_class.perform_now
+    expect(campaign.announcement_deliveries.sole.state).to eq("suppressed")
+  end
+
+  it "never resends an unknown transport outcome" do
+    campaign = approve
+    allow_any_instance_of(Mail::Message).to receive(:deliver!).and_raise(Net::ReadTimeout)
+    2.times { described_class.perform_now }
+    delivery = campaign.announcement_deliveries.sole
+    expect(delivery.state).to eq("unknown")
+    expect(delivery.attempts).to eq(1)
+    expect(delivery.error_class).to eq("Net::ReadTimeout")
+  end
+
+  it "records a preparation failure separately from submission" do
+    campaign = approve
+    allow(AnnouncementMailer).to receive(:to_attendee).and_raise(ArgumentError)
+    described_class.perform_now
+    expect(campaign.announcement_deliveries.sole.state).to eq("failed")
+  end
+
+  it "recovers interrupted submissions as unknown" do
+    delivery = approve.announcement_deliveries.sole
+    delivery.update!(state: "submitting", attempted_at: 20.minutes.ago)
+    described_class.perform_now
+    expect(delivery.reload.state).to eq("unknown")
+    expect(ActionMailer::Base.deliveries).to be_empty
+  end
+
+  it "enforces the persisted global rate limit across job invocations" do
+    campaign = approve
+    AnnouncementDispatchLimit.control.update!(window_started_at: Time.current, used: 25)
+    2.times { described_class.perform_now }
+    expect(campaign.announcement_deliveries.sole.state).to eq("pending")
+    travel 61.seconds do
+      described_class.perform_now
+      expect(campaign.announcement_deliveries.sole.state).to eq("submitted")
+    end
+  end
+
+  it "fences a stale renderer after its attempt has been recovered" do
+    delivery = approve.announcement_deliveries.sole
+    mail = AnnouncementMailer.to_attendee(delivery.announcement_campaign, email).message
+    allow(AnnouncementMailer).to receive(:to_attendee).and_return(double(message: mail))
+    allow(mail).to receive(:encoded) do
+      delivery.update!(state: "failed", attempted_at: 20.minutes.ago)
+      "rendered"
+    end
+    expect(mail).not_to receive(:deliver!)
+    described_class.perform_now
+    expect(delivery.reload.state).to eq("failed")
+  end
+
+  it "will not use a real mail transport in the test environment" do
+    approve
+    allow(ActionMailer::Base).to receive(:delivery_method).and_return(:smtp)
+    described_class.perform_now
+    expect(ActionMailer::Base.deliveries).to be_empty
+  end
+
+  it "renders escaped content and a signed unsubscribe link" do
+    announcement.update!(body: '<script>alert("x")</script>')
+    mail = AnnouncementMailer.to_attendee(announcement, email)
+    expect(mail.html_part.body.decoded).not_to include("<script>")
+    expect(mail.html_part.body.decoded).to include("announcement_unsubscribe")
   end
 end

@@ -37,11 +37,9 @@ class Ticket < ApplicationRecord
 
   # Distinct emails of attendees holding a paid, non-canceled ticket — used for broadcast emails.
   def self.broadcast_recipients
-    joins(:order).merge(Order.paid)
-      .where(canceled_at: nil)
-      .where.not(attendee_email: [ nil, "" ])
-      .distinct
-      .pluck(:attendee_email)
+    confirmed.where.not(attendee_email: [ nil, "" ])
+      .where("lower(btrim(attendee_email)) IN (?)", AnnouncementPreference.consented.select(:email))
+      .distinct.pluck(Arel.sql("lower(btrim(attendee_email))")).sort
   end
 
   validates :price_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

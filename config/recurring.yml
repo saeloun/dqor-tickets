@@ -10,6 +10,9 @@
 #     schedule: at 5am every day
 
 production:
+  announcement_dispatch:
+    class: BroadcastAnnouncementJob
+    schedule: every minute
   expire_orders:
     class: ExpireOrdersJob
     schedule: every 5 minutes
