@@ -1,0 +1,5 @@
+<p><%= form.label :label, "Question" %><%= form.text_field :label, value: values["label"], required: true, maxlength: 160 %></p>
+<p><%= form.label :help, "Helper text (optional)" %><%= form.text_field :help, value: values["help"], maxlength: 300 %></p>
+<p><%= form.label :type, "Answer type" %><%= form.select :type, FreeEvents::Questions::Schema::TYPES.map { |value, label| [label, value] }, selected: values["type"] || "short_text" %></p>
+<p><%= form.label :required, "Is an answer required?" %><%= form.select :required, [["Optional", "0"], ["Required", "1"]], selected: values["required"].to_s == "1" || values["required"] == true ? "1" : "0" %></p>
+<p data-question-choices><%= form.label :choices, "Choices (choose-one questions only)" %><%= form.text_area :choices, value: values["choices"] || Array(values["options"]).map { |item| item["label"] }.join("\n"), rows: 3 %><span class="help">One choice per line. Use 2–10 choices.</span></p>

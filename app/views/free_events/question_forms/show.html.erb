@@ -1,0 +1,36 @@
+<% content_for :page_scripts do %><%= javascript_include_tag "registration_question_editor", defer: true %><% end %>
+<main>
+  <%= link_to "← Back to event", organizer_organization_event_path(@event.organization, @event), class: "back" %>
+  <p class="eyebrow"><%= @event.title %> · <%= @ticket_type.name %></p><h1>Registration questions</h1>
+  <p class="muted">Ask only what you need to organize this event. No extra information is collected by default.</p>
+  <% (@errors || {}).each_value do |error| %><p role="alert"><%= error %></p><% end %>
+  <div class="notice"><h2>Draft questions</h2><p>Saved edits stay private until you publish. Earlier registrations keep the exact questions and answers they submitted.</p><%= link_to "Preview draft", preview_free_event_questions_path(@event.organization, @event, @ticket_type), class: "button secondary" %></div>
+  <div class="card-list" style="margin-top: 24px">
+    <% @form.draft_questions.each_with_index do |question, index| %>
+      <article class="card"><h2><%= index + 1 %>. <%= question["label"] %></h2>
+        <%= form_with url: free_event_questions_path(@event.organization, @event, @ticket_type), method: :patch, scope: :question, data: { question_editor: true }, namespace: question["id"] do |form| %>
+          <%= hidden_field_tag :revision, @form.lock_version %><%= hidden_field_tag :operation, "update" %><%= hidden_field_tag :question_id, question["id"] %>
+          <%= render "editor_fields", form: form, values: @question_id == question["id"] && @operation == "update" && @input ? @input : question %>
+          <%= form.submit "Save question #{index + 1}" %>
+        <% end %>
+        <div class="actions">
+          <% if index > 0 %><%= button_to "Move question #{index + 1} up", free_event_questions_path(@event.organization, @event, @ticket_type), method: :patch, params: { revision: @form.lock_version, operation: "up", question_id: question["id"] } %><% end %>
+          <% if index < @form.draft_questions.length - 1 %><%= button_to "Move question #{index + 1} down", free_event_questions_path(@event.organization, @event, @ticket_type), method: :patch, params: { revision: @form.lock_version, operation: "down", question_id: question["id"] } %><% end %>
+          <%= button_to "Remove question #{index + 1}", free_event_questions_path(@event.organization, @event, @ticket_type), method: :patch, params: { revision: @form.lock_version, operation: "remove", question_id: question["id"] } %>
+        </div>
+      </article>
+    <% end %>
+  </div>
+  <% if @form.draft_questions.empty? %><p class="empty">No questions yet. Add a question below, or keep registration simple with no extra fields.</p><% end %>
+  <% if @form.draft_questions.length < 12 %>
+    <section class="card" style="margin-top: 24px"><h2>Add a question</h2>
+      <%= form_with url: free_event_questions_path(@event.organization, @event, @ticket_type), method: :patch, scope: :question, data: { question_editor: true }, namespace: "new_question" do |form| %>
+        <%= hidden_field_tag :revision, @form.lock_version %><%= hidden_field_tag :operation, "add" %>
+        <%= render "editor_fields", form: form, values: @operation == "add" && @input ? @input : {} %>
+        <%= form.submit "Add question" %>
+      <% end %>
+    </section>
+  <% end %>
+  <div class="actions"><%= button_to "Publish questions", free_event_questions_path(@event.organization, @event, @ticket_type), method: :patch, params: { revision: @form.lock_version, operation: "publish" } %></div>
+  <% if @published %><section class="card" style="margin-top: 32px"><span class="badge">Published version <%= @published.number %> · Read only</span><h2 style="margin-top: 16px">Current registration form</h2><p class="help">This version is frozen. Change the draft and publish a new version to update future registrations.</p><ol><% @published.questions.each do |question| %><li><%= question["label"] %> · <%= question["required"] ? "Required" : "Optional" %></li><% end %></ol><%= link_to "Download registration answers CSV", export_free_event_answers_path(@event.organization, @event, @ticket_type) %></section><% end %>
+</main>
