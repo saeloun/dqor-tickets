@@ -13,7 +13,7 @@ RSpec.describe PdfRenderer, type: :model do
   end
 
   it "renders a branded GST invoice as a non-trivial PDF" do
-    order = create(:order, :paid, gstin: "27AAAAA0000A1Z5", gst_legal_name: "Ada Labs Pvt Ltd", billing_state_code: "27")
+    order = create(:order, :paid, gstin: "27AAAAA0000A1Z5", gst_legal_name: "Ada Labs Pvt Ltd", billing_state_code: "27", metadata: { "billing_address" => "Test address", "billing_state_name" => "Maharashtra" })
     create(:ticket, order:)
     invoice = Invoice.issue_for!(order)
 

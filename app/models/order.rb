@@ -148,7 +148,11 @@ class Order < ApplicationRecord
       ensure_payable!
       update!(status: :paid)
       coupon&.increment!(:uses_count)
-      Invoice.issue_for!(self)
+      begin
+        Invoice.issue_for!(self)
+      rescue *Invoice::ISSUANCE_ERRORS => error
+        record_invoice_pending!(error)
+      end
       true
     end
   end
@@ -215,8 +219,11 @@ class Order < ApplicationRecord
     already_refunding = refunds.where(status: Refund::OPEN_STATUSES).flat_map(&:ticket_ids).intersection(selected_ids)
     raise Refund::AlreadyRefunded, "a refund is already in progress for those tickets" if already_refunding.any?
 
-    invoice = invoices.invoice.first or raise ArgumentError, "order #{code} has no invoice to refund against"
-    lines = invoice.line_items.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+    invoice = invoices.invoice.first
+    purchase_lines = invoice&.line_items || metadata["invoice_purchase_lines"]
+    raise ArgumentError, "order #{code} has no captured purchase lines to refund against" unless purchase_lines
+    lines = purchase_lines.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+    raise ArgumentError, "refund selection is missing captured purchase lines" unless lines.size == selected_ids.size
     amount_paise = lines.sum { |line| line.fetch("total_paise") }
     payment_id = if amount_paise.positive?
       payment_events.order(created_at: :desc).filter_map do |event|
@@ -290,10 +297,25 @@ class Order < ApplicationRecord
   def attach_documents!
     return unless paid?
 
-    Invoice.issue_for!(self).attach_pdf!
+    Invoice.issue_for!(self, line_items: metadata["invoice_purchase_lines"]).attach_pdf!
+    with_lock do
+      update!(metadata: metadata.except("invoice_pending_reason")) if metadata.key?("invoice_pending_reason")
+    end
+  rescue *Invoice::ISSUANCE_ERRORS => error
+    record_invoice_pending!(error)
+    raise Invoice::DocumentPending, "invoice awaits verified configuration, buyer facts or archived document review"
   end
 
   private
+    def record_invoice_pending!(error)
+      with_lock do
+        # Preserve the monetary basis captured when payment succeeds, even if the tax
+        # document cannot yet be issued. Never regenerate a legacy document's facts.
+        lines = metadata["invoice_purchase_lines"] || invoices.invoice.first&.line_items || Invoice.line_item_snapshot(self)
+        update!(metadata: metadata.merge("invoice_pending_reason" => error.class.name, "invoice_purchase_lines" => lines))
+      end
+    end
+
     def record_polling_failure(error)
       payment_events.create!(
         razorpay_event_id: "polling_check_failed_#{SecureRandom.uuid}",

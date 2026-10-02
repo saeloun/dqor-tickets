@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe "Order page", type: :system do
   before { allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test") }
 
-  def paid_order_with_invoice(**attributes)
-    create(:order, :paid, **attributes).tap { |order| Invoice.issue_for!(order) }
+  def paid_order(**attributes)
+    create(:order, :paid, **attributes)
   end
 
   describe "a paid order" do
@@ -26,7 +26,7 @@ RSpec.describe "Order page", type: :system do
     end
 
     it "renders the assigned attendee and their ticket download" do
-      order = paid_order_with_invoice
+      order = paid_order
       ticket = create(:ticket, order:, attendee_name: "Grace Hopper", attendee_email: "grace@example.com")
       ticket.attach_pdf!
 
@@ -40,7 +40,7 @@ RSpec.describe "Order page", type: :system do
     end
 
     it "renders a claim link and no attendee for an unassigned ticket" do
-      order = paid_order_with_invoice
+      order = paid_order
       ticket = create(:ticket, order:, attendee_name: nil, attendee_email: nil)
 
       visit order_path(order.code)
@@ -53,7 +53,7 @@ RSpec.describe "Order page", type: :system do
     end
 
     it "lists every ticket type in the order and skips canceled tickets" do
-      order = paid_order_with_invoice
+      order = paid_order
       create(:ticket, order:, ticket_type: create(:ticket_type, name: "Conference Pass"))
       create(:ticket, order:, ticket_type: create(:ticket_type, name: "Explore Pune Day"))
       create(:ticket, order:, ticket_type: create(:ticket_type, name: "Refunded Pass"), canceled_at: Time.current)
@@ -68,9 +68,9 @@ RSpec.describe "Order page", type: :system do
     end
 
     it "offers credit note downloads alongside the tax invoice" do
-      order = paid_order_with_invoice
+      order = paid_order
       create(:ticket, order:)
-      invoice = order.invoices.invoice.sole
+      invoice = Invoice.issue_for!(order)
       credit_note = Invoice.issue_for!(order, kind: :credit_note, refers_to: invoice, line_items: invoice.line_items)
       credit_note.attach_pdf!
 
@@ -81,9 +81,9 @@ RSpec.describe "Order page", type: :system do
     end
 
     it "generates the missing invoice pdf on first view" do
-      order = paid_order_with_invoice
+      order = paid_order
       create(:ticket, order:)
-      invoice = order.invoices.invoice.sole
+      invoice = Invoice.issue_for!(order)
       expect(invoice.pdf).not_to be_attached
 
       visit order_path(order.code)
