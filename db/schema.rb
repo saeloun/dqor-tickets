@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_040000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -225,6 +225,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_030000) do
     t.bigint "ticket_type_id", null: false
     t.index ["form_version_id"], name: "index_free_event_responses_on_form_version_id"
     t.index ["ticket_id"], name: "index_free_event_responses_on_ticket_id", unique: true
+  end
+
+  create_table "free_registration_windows", force: :cascade do |t|
+    t.datetime "closes_at"
+    t.datetime "created_at", null: false
+    t.datetime "draft_closes_at"
+    t.datetime "draft_opens_at"
+    t.string "draft_timezone", null: false
+    t.bigint "event_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "opens_at"
+    t.datetime "published_at"
+    t.bigint "ticket_type_id", null: false
+    t.string "timezone"
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_free_registration_windows_on_event_id"
+    t.index ["ticket_type_id"], name: "index_free_registration_windows_on_ticket_type_id", unique: true
+    t.check_constraint "draft_opens_at IS NULL OR draft_closes_at IS NULL OR draft_opens_at < draft_closes_at", name: "free_window_draft_order"
+    t.check_constraint "opens_at IS NULL OR closes_at IS NULL OR opens_at < closes_at", name: "free_window_published_order"
   end
 
   create_table "info_pages", force: :cascade do |t|
@@ -729,6 +748,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_030000) do
   add_foreign_key "free_event_responses", "free_event_form_versions", column: ["form_version_id", "event_id", "ticket_type_id"], primary_key: ["id", "event_id", "ticket_type_id"], name: "free_response_version_ownership"
   add_foreign_key "free_event_responses", "tickets"
   add_foreign_key "free_event_responses", "tickets", column: ["ticket_id", "event_id", "ticket_type_id"], primary_key: ["id", "ownership_key", "ticket_type_id"], name: "free_response_ticket_ownership"
+  add_foreign_key "free_registration_windows", "events"
+  add_foreign_key "free_registration_windows", "ticket_types"
+  add_foreign_key "free_registration_windows", "ticket_types", column: ["ticket_type_id", "event_id"], primary_key: ["id", "ownership_key"], name: "free_window_type_ownership"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "memberships", "organizations"

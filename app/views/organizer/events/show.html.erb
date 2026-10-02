@@ -12,7 +12,7 @@
     <div class="actions"><%= link_to "View public event", published_event_path(@organization.slug, @event.slug), class: "button secondary" %></div>
     <% if FreeEvents::Access.enabled? && (@membership.owner? || @membership.admin?) %>
       <div class="notice" style="margin-top: 24px">
-        <% if TicketType.where(event_id: @event.id).where.not(free_published_at: nil).exists? %><h2>Free registration is open</h2><p>Share the public event page with your community. Manage arrivals from your attendee desk.</p><%= link_to "Attendees and check-in", free_event_attendees_path(@organization, @event), class: "button" %>
+        <% if TicketType.where(event_id: @event.id).where.not(free_published_at: nil).exists? %><h2>Free registration is set up</h2><p>Share the public event page with your community. Manage arrivals from your attendee desk.</p><%= link_to "Attendees and check-in", free_event_attendees_path(@organization, @event), class: "button" %>
         <% else %><h2>Next: open registration</h2><p>Choose a ticket name and the number of free places available.</p><%= link_to "Open free registration", new_free_event_inventory_path(@organization, @event), class: "button" %><% end %>
       </div>
     <% end %>
@@ -20,6 +20,11 @@
   <% if FreeEvents::Questions::Schema.enabled? && (@membership.owner? || @membership.admin?) %>
     <section class="card" style="margin-top: 24px"><h2>Registration questions</h2><p class="help">Set up a separate form for each ticket category. Questions are optional unless you mark them required.</p>
       <% TicketType.where(event_id: @event.id).order(:id).each do |type| %><p><%= link_to "Questions for #{type.name}", free_event_questions_path(@organization, @event, type) %></p><% end %>
+    </section>
+  <% end %>
+  <% if FreeEvents::Windows.enabled? && (@membership.owner? || @membership.admin?) %>
+    <section class="card" style="margin-top: 24px"><h2>Registration windows</h2><p class="help">Save and preview opening and closing times before publishing them.</p>
+      <% TicketType.where(event_id: @event.id, price_paise: 0).order(:id).each do |type| %><p><%= link_to "Window for #{type.name}", free_event_window_path(@organization, @event, type) %></p><% end %>
     </section>
   <% end %>
 </main>

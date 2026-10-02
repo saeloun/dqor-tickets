@@ -1,12 +1,19 @@
 <main>
   <p class="eyebrow">Hosted by <%= @event.organization.name %></p>
   <h1><%= @event.title %></h1>
-  <p class="muted"><%= @event.starts_at.in_time_zone(@event.timezone).strftime("%a, %-d %b %Y · %-I:%M %p") %> – <%= @event.ends_at.in_time_zone(@event.timezone).strftime("%a, %-d %b · %-I:%M %p") %><br><%= @event.timezone %></p>
+  <p class="muted"><%= event_local_range(@event) %><br><%= @event.timezone %></p>
   <% @free_types.each do |type| %>
-    <section class="card"><span class="badge">Free event</span><h2 style="margin-top: 16px"><%= type.name %> · Free</h2>
+    <section class="card registration-state"><span class="badge">Free event</span><h2 style="margin-top: 16px"><%= type.name %> · Free</h2>
+      <% availability = FreeEvents::Availability.call(event: @event, ticket_type: type) %>
+      <p><span class="badge"><%= registration_state_label(availability.state) %></span> <%= availability.message %></p>
+      <% boundaries = availability.state == :upcoming ? [["Opens", availability.opens_at], ["Closes", availability.closes_at]] : [["Closes", availability.closes_at], ["Opens", availability.opens_at]] %>
+      <% boundaries.each_with_index do |(label, time), index| %><% if time %><p class="<%= index.zero? ? "window-boundary" : "help" %>"><%= label %> <%= window_time(time, availability.timezone) %><br><%= availability.timezone %></p><% end %><% end %>
       <p>One ticket per verified attendee. Capacity: <%= type.capacity %>.</p>
       <p class="help">Your name and email are shared with this event’s organizers. Free-only accounts stay out of DQOR networking.</p>
-      <% if @event.ends_at <= Time.current %><p class="badge">Registration closed</p><% else %><% if FreeEvents::Questions::Schema.enabled? && FreeEvents::Form.find_by(ticket_type_id: type.id)&.published_version %><%= link_to "Register free", new_free_event_registration_path(@event.organization.slug, @event.slug, type), class: "button" %><% else %><%= button_to "Register free", free_event_registration_path(@event.organization.slug, @event.slug), params: { ticket_type_id: type.id } %><% end %><% end %>
+      <% if availability.available? %>
+        <% if FreeEvents::Questions::Schema.enabled? && FreeEvents::Form.find_by(ticket_type_id: type.id)&.published_version %><%= link_to "Register free", new_free_event_registration_path(@event.organization.slug, @event.slug, type), class: "button" %><% else %><%= button_to "Register free", free_event_registration_path(@event.organization.slug, @event.slug), params: { ticket_type_id: type.id } %><% end %>
+      <% end %>
+      <p class="help ticket-retrieval">Already registered? <%= link_to "View your ticket", free_event_ticket_path(@event.organization.slug, @event.slug) %></p>
     </section>
   <% end %>
   <% if @free_types.empty? %><p class="notice">Registration is not open here yet. Check back with the organizer for details.</p><% end %>
