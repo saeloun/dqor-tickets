@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
     <title>Theme studio · DQOR</title>
-    <link rel="stylesheet" href="studio.css" />
-    <script type="module" src="studio.js"></script>
+    <link rel="stylesheet" href="studio.css?v=20261002-mobile" />
+    <script type="module" src="studio.js?v=20261002-mobile"></script>
   </head>
   <body class="dq-studio">
     <a class="skip" href="#editor">Skip to editor</a>
@@ -31,7 +31,19 @@
           </p>
         </aside>
       </section>
-      <section class="themes" aria-label="Choose an event theme">
+      <nav class="theme-pagination" aria-label="Theme gallery">
+        <button type="button" id="theme-previous" aria-controls="theme-gallery">
+          ← Previous</button
+        ><span id="theme-position" role="status">1 of 3 · The Gathering</span
+        ><button type="button" id="theme-next" aria-controls="theme-gallery">
+          Next →
+        </button>
+      </nav>
+      <section
+        id="theme-gallery"
+        class="themes"
+        aria-label="Choose an event theme"
+      >
         <button class="theme-card" data-theme="conference" aria-pressed="true">
           <span class="swatch conference-swatch"
             ><span>DQ<br />OR<span class="swatch-star">✳</span></span

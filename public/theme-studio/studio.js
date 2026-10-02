@@ -102,6 +102,7 @@ function sync() {
     .forEach((button) =>
       button.setAttribute("aria-pressed", button.dataset.theme === state.theme),
     );
+  updatePagination();
   sectionOrder();
   updatePreview();
 }
@@ -117,17 +118,87 @@ for (const [id, key] of Object.entries(inputs))
     state[key] = $(id).value;
     changed();
   });
-document.querySelectorAll("[data-theme]").forEach((button) =>
-  button.addEventListener("click", () => {
-    // Retain each in-progress theme in memory; changing themes never overwrites saved drafts.
+const working = {};
+const cards = [...document.querySelectorAll("[data-theme]")];
+const gallery = $("theme-gallery");
+function updatePagination() {
+  const focusedControl = document.activeElement;
+  const index = cards.findIndex((card) => card.dataset.theme === state.theme);
+  $("theme-position").textContent =
+    `${index + 1} of 3 · ${cards[index].querySelector("strong").textContent}`;
+  $("theme-previous").disabled = index === 0;
+  $("theme-next").disabled = index === cards.length - 1;
+  if (
+    [$("theme-previous"), $("theme-next")].includes(focusedControl) &&
+    focusedControl.disabled
+  )
+    cards[index].focus({ preventScroll: true });
+}
+function selectTheme(button, scroll = true) {
+  if (button.dataset.theme !== state.theme) {
     working[state.theme] = structuredClone(state);
     state = working[button.dataset.theme] || defaults(button.dataset.theme);
     history.replaceState(null, "", `?theme=${state.theme}`);
     sync();
     status("Working preview · save to keep in this browser");
-  }),
+  }
+  if (scroll && gallery.scrollWidth > gallery.clientWidth) {
+    gallery.scrollTo({
+      left:
+        gallery.scrollLeft +
+        button.getBoundingClientRect().left -
+        gallery.getBoundingClientRect().left,
+      behavior: "instant",
+    });
+  }
+}
+cards.forEach((button, index) => {
+  button.addEventListener("click", () => selectTheme(button));
+  button.addEventListener("keydown", (event) => {
+    const next =
+      index +
+      (event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0);
+    if (next !== index && cards[next]) {
+      event.preventDefault();
+      selectTheme(cards[next]);
+      cards[next].focus({ preventScroll: true });
+    }
+  });
+});
+for (const [id, offset] of [
+  ["theme-previous", -1],
+  ["theme-next", 1],
+]) {
+  $(id).addEventListener("click", () => {
+    const next =
+      cards.findIndex((card) => card.dataset.theme === state.theme) + offset;
+    if (cards[next]) selectTheme(cards[next]);
+  });
+}
+let scrollTimer;
+gallery.addEventListener("scroll", () => {
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(() => {
+    if (gallery.scrollWidth <= gallery.clientWidth) return;
+    const bounds = gallery.getBoundingClientRect();
+    const visible = (card) => {
+      const rect = card.getBoundingClientRect();
+      return Math.max(
+        0,
+        Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left),
+      );
+    };
+    selectTheme(
+      cards.reduce((best, card) =>
+        visible(card) > visible(best) ? card : best,
+      ),
+      false,
+    );
+  }, 160);
+});
+requestAnimationFrame(() =>
+  selectTheme(cards.find((card) => card.dataset.theme === state.theme)),
 );
-const working = {};
 $("preview").addEventListener("load", updatePreview);
 document.querySelectorAll("[data-size]").forEach((button) =>
   button.addEventListener("click", () => {
