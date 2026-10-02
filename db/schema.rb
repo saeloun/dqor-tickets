@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,6 +63,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.index ["published", "published_at"], name: "index_announcements_on_published_and_published_at"
   end
 
+  create_table "checkin_audits", force: :cascade do |t|
+    t.bigint "admin_user_id"
+    t.datetime "created_at", null: false
+    t.date "event_date", null: false
+    t.string "outcome", null: false
+    t.string "source", null: false
+    t.bigint "ticket_id"
+    t.index ["admin_user_id"], name: "index_checkin_audits_on_admin_user_id"
+    t.index ["event_date", "outcome"], name: "index_checkin_audits_on_event_date_and_outcome"
+    t.index ["ticket_id"], name: "index_checkin_audits_on_ticket_id"
+  end
+
   create_table "connections", force: :cascade do |t|
     t.bigint "connected_user_id", null: false
     t.datetime "created_at", null: false
@@ -99,6 +111,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.datetime "valid_until"
     t.index "lower((code)::text)", name: "index_coupons_on_lower_code", unique: true
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
+  end
+
+  create_table "event_slot_redemptions", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_slot_id", null: false
+    t.datetime "redeemed_at", null: false
+    t.string "request_key", null: false
+    t.bigint "ticket_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "void_reason"
+    t.datetime "voided_at"
+    t.bigint "voided_by_id"
+    t.index ["admin_user_id"], name: "index_event_slot_redemptions_on_admin_user_id"
+    t.index ["event_slot_id", "request_key"], name: "index_event_slot_redemptions_on_event_slot_id_and_request_key", unique: true
+    t.index ["event_slot_id"], name: "index_event_slot_redemptions_on_event_slot_id"
+    t.index ["ticket_id"], name: "index_event_slot_redemptions_on_ticket_id"
+  end
+
+  create_table "event_slots", force: :cascade do |t|
+    t.boolean "active", default: false, null: false
+    t.integer "capacity"
+    t.datetime "created_at", null: false
+    t.datetime "ends_at", null: false
+    t.string "name", null: false
+    t.integer "redemption_limit", default: 1, null: false
+    t.datetime "starts_at", null: false
+    t.bigint "ticket_type_ids", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.check_constraint "ends_at > starts_at AND redemption_limit > 0 AND (capacity IS NULL OR capacity > 0)", name: "event_slot_limits"
   end
 
   create_table "faqs", force: :cascade do |t|
@@ -147,6 +189,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
+  end
+
+  create_table "native_staff_sessions", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.jsonb "capabilities", default: [], null: false
+    t.datetime "created_at", null: false
+    t.string "event", null: false
+    t.jsonb "event_dates", default: [], null: false
+    t.datetime "expires_at", null: false
+    t.string "password_fingerprint", null: false
+    t.string "role", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_native_staff_sessions_on_admin_user_id"
+    t.index ["expires_at"], name: "index_native_staff_sessions_on_expires_at"
+    t.index ["token_digest"], name: "index_native_staff_sessions_on_token_digest", unique: true
   end
 
   create_table "orders", force: :cascade do |t|
@@ -527,15 +585,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "checkin_audits", "admin_users", on_delete: :nullify
+  add_foreign_key "checkin_audits", "tickets", on_delete: :nullify
   add_foreign_key "connections", "users"
   add_foreign_key "connections", "users", column: "connected_user_id"
   add_foreign_key "conversations", "users", column: "participant_one_id"
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "event_slot_redemptions", "admin_users"
+  add_foreign_key "event_slot_redemptions", "admin_users", column: "voided_by_id"
+  add_foreign_key "event_slot_redemptions", "event_slots"
+  add_foreign_key "event_slot_redemptions", "tickets"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users", column: "sender_id"
+  add_foreign_key "native_staff_sessions", "admin_users", on_delete: :cascade
   add_foreign_key "orders", "coupons"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"

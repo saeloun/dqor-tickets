@@ -25,6 +25,10 @@ class TicketType < ApplicationRecord
     slug.start_with?("conference-pass-")
   end
 
+  def valid_on?(date)
+    (!event_starts_on || date >= event_starts_on) && (!event_ends_on || date <= event_ends_on)
+  end
+
   def event_window
     slug == "rails-girls-pune" ? "October 10, 2026" : "October 8–11, 2026"
   end

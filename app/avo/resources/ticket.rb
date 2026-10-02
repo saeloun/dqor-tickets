@@ -13,13 +13,13 @@ class Avo::Resources::Ticket < Avo::BaseResource
     field :childcare_needed, as: :boolean
     field :assigned_at, as: :date_time, readonly: true
     field :price_paise, as: :number, readonly: true
-    field :secret, as: :text, readonly: true
     field :checked_in_at, as: :code, readonly: true
     field :canceled_at, as: :date_time, readonly: true
     field :pdf, as: :file, readonly: true
   end
 
   def actions
+    action Avo::Actions::OpenCheckin
     action Avo::Actions::RequestAttendeeDetails
   end
 end

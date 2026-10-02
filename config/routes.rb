@@ -1,10 +1,32 @@
 Rails.application.routes.draw do
+  resources :event_slots, only: %i[index show new create edit update] do
+    member do
+      post :redeem
+      post :correct
+    end
+  end
+  get "account/redemptions", to: "account/redemptions#index", as: :account_redemptions
+
   root "home#index"
   get "tickets", to: "tickets#index", as: :tickets_store
 
   mount_avo at: "/avo"
 
-  resource :checkin, only: %i[show create]
+  resource :checkin, only: %i[show create] do
+    post :batch
+  end
+
+  namespace :api do
+    namespace :staff do
+      resource :session, only: %i[create show destroy]
+      resources :checkins, only: :index do
+        collection do
+          post :resolve
+          post :confirm
+        end
+      end
+    end
+  end
 
   resource :checkout_preview, only: :create
   resources :orders, param: :code, only: [ :create, :show ]

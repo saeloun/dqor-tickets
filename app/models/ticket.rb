@@ -1,4 +1,5 @@
 class Ticket < ApplicationRecord
+  EVENT_DATES = (8..11).map { |day| Date.new(2026, 10, day) }.freeze
   TSHIRT_SIZES = %w[XS S M L XL XXL 3XL].freeze
 
   class AlreadyCheckedIn < StandardError
@@ -11,6 +12,8 @@ class Ticket < ApplicationRecord
   end
 
   class Canceled < StandardError; end
+  class Unconfirmed < StandardError; end
+  class WrongEventDate < StandardError; end
 
   belongs_to :order
   belongs_to :ticket_type
@@ -74,16 +77,22 @@ class Ticket < ApplicationRecord
     pdf.attach(io: StringIO.new(PdfRenderer.render(self, template: :ticket)), filename: "DQOR-ticket-#{id}.pdf", content_type: "application/pdf")
   end
 
-  def check_in!(date)
-    with_lock do
-      raise Canceled, "canceled ticket cannot be checked in" if canceled_at?
+  def check_in!(date, operator: nil, source: "manual")
+    order.with_lock do
+      with_lock do
+        raise Canceled, "canceled ticket cannot be checked in" if canceled_at? || order.canceled?
+        raise Unconfirmed, "order is not confirmed" unless order.paid?
+        day = date.to_date
+        raise WrongEventDate unless EVENT_DATES.include?(day) && ticket_type.valid_on?(day)
 
-      key = date.to_date.iso8601
-      raise AlreadyCheckedIn, checked_in_at.fetch(key) if checked_in_at.key?(key)
+        key = day.iso8601
+        raise AlreadyCheckedIn, checked_in_at.fetch(key) if checked_in_at.key?(key)
 
-      timestamp = Time.current.iso8601
-      update!(checked_in_at: checked_in_at.merge(key => timestamp))
-      timestamp
+        timestamp = Time.current.iso8601
+        update!(checked_in_at: checked_in_at.merge(key => timestamp))
+        CheckinAudit.create!(ticket: self, admin_user: operator, event_date: day, source:, outcome: "success") if operator
+        timestamp
+      end
     end
   end
 end
