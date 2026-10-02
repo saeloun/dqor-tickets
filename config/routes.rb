@@ -66,6 +66,8 @@ Rails.application.routes.draw do
 
   get "auth/google_oauth2/callback", to: "account/omniauth_sessions#create"
   get "auth/failure",                to: "account/omniauth_sessions#failure"
+  get "chat/login", to: "chat_logins#show", as: :chat_login
+  post "chat/login/redeem", to: "chat_login_redemptions#create", as: :redeem_chat_login
 
   namespace :account do
     get    "sign_in",      to: "sessions#new",     as: :sign_in

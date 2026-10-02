@@ -15,7 +15,7 @@ class Account::SessionsController < ApplicationController
 
     if email.match?(URI::MailTo::EMAIL_REGEXP)
       user = User.find_or_initialize_by(email: email)
-      if user.new_record? && session[:free_pilot_sign_in] && FreeEvents::Access.enabled?
+      if user.new_record? && session[:free_pilot_sign_in]
         user.assign_attributes(free_pilot_identity: true, discoverable: false, public_attendee: false)
       end
       user.save!
@@ -30,9 +30,10 @@ class Account::SessionsController < ApplicationController
     user = User.find_by(id: user_id) if user_id
 
     if user
-      pilot_sign_in = session.delete(:free_pilot_sign_in) && FreeEvents::Access.enabled?
-      pilot_return_to = session.delete(:free_pilot_return_to) if pilot_sign_in
-      FreeEvents::Privacy.enroll!(user) if pilot_sign_in
+      pilot_origin = session.delete(:free_pilot_sign_in)
+      pilot_sign_in = pilot_origin && FreeEvents::Access.enabled?
+      pilot_return_to = session.delete(:free_pilot_return_to)
+      FreeEvents::Privacy.enroll!(user) if pilot_origin
       sign_in(user)
       session[:verified_attendee_email] = user.email
       redirect_to(pilot_sign_in ? (pilot_return_to.presence || free_organizations_path) : account_root_path, notice: "You’re signed in.")

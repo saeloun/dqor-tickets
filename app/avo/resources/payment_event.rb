@@ -5,7 +5,7 @@ class Avo::Resources::PaymentEvent < Avo::BaseResource
 
   def fields
     field :id, as: :id
-    field :order, as: :belongs_to, readonly: true
+    field :order, as: :belongs_to, readonly: true, attach_scope: -> { query.legacy }
     field :kind, as: :text, readonly: true
     field :level, as: :text, readonly: true
     field :mode, as: :text, readonly: true

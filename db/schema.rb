@@ -63,6 +63,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_020000) do
     t.index ["published", "published_at"], name: "index_announcements_on_published_and_published_at"
   end
 
+  create_table "chat_login_grants", force: :cascade do |t|
+    t.string "code_digest", null: false
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.string "name"
+    t.string "state", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code_digest"], name: "index_chat_login_grants_on_code_digest", unique: true
+  end
+
   create_table "checkin_audits", force: :cascade do |t|
     t.bigint "admin_user_id"
     t.datetime "created_at", null: false

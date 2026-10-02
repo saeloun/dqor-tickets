@@ -56,6 +56,27 @@ RSpec.describe "Legacy rejects event-owned commerce", type: :request do
     expect(ticket.reload.checked_in_at).to eq({})
   end
 
+  it "excludes private attendees from legacy association pickers and rejects forged attachments" do
+    sign_in_admin
+    legacy_order = create(:order)
+    legacy_type = create(:ticket_type)
+    [ [ "orders", legacy_order ], [ "ticket_types", legacy_type ] ].each do |resource, parent|
+      path = "/avo/resources/#{resource}/#{parent.id}/tickets"
+      get "#{path}/new"
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("PRIVATE_FREE_ATTENDEE")
+      get "/avo/avo_api/tickets/search", params: { q: "PRIVATE_FREE_ATTENDEE", via_association: "has_many", via_association_id: "tickets", via_reflection_class: parent.class.name, via_reflection_id: parent.id }
+      expect(response.body).not_to include("PRIVATE_FREE_ATTENDEE")
+      post path, params: { fields: { related_id: ticket.id } }
+      expect(response).to have_http_status(:not_found)
+      delete "#{path}/#{ticket.id}"
+      expect(response).to have_http_status(:not_found)
+      expect(ticket.reload).to have_attributes(order_id: order.id, ticket_type_id: type.id)
+    end
+    get "/avo/avo_api/orders/search", params: { q: user.email }
+    expect(response.body).not_to include(order.code)
+  end
+
   it "rejects owned tickets in native resolve, search and batch APIs" do
     allow(NativeStaffSession).to receive(:enabled?).and_return(true)
     allow(NativeStaffSession).to receive(:configured_dates).and_return([ "2026-10-08" ])

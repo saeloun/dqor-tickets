@@ -8,8 +8,8 @@ class Avo::Resources::Invoice < Avo::BaseResource
     field :number, as: :text, readonly: true
     field :kind, as: :text, readonly: true
     field :issued_on, as: :date, readonly: true
-    field :order, as: :belongs_to, readonly: true
-    field :refers_to, as: :belongs_to, readonly: true
+    field :order, as: :belongs_to, readonly: true, attach_scope: -> { query.legacy }
+    field :refers_to, as: :belongs_to, readonly: true, attach_scope: -> { query.legacy }
     field :buyer_snapshot, as: :code, readonly: true
     field :line_items, as: :code, readonly: true
     field :pdf, as: :file, readonly: true

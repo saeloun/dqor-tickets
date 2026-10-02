@@ -5,7 +5,7 @@ class Avo::Resources::Refund < Avo::BaseResource
 
   def fields
     field :id, as: :id
-    field :order, as: :belongs_to
+    field :order, as: :belongs_to, attach_scope: -> { query.legacy }
     field :amount_paise, as: :number
     field :status, as: :text
     field :ticket_ids, as: :code

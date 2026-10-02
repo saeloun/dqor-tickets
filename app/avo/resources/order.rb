@@ -18,17 +18,17 @@ class Avo::Resources::Order < Avo::BaseResource
     field :email, as: :text, readonly: true
     field :buyer_phone, as: :text, readonly: true
     field :total_paise, as: :number, readonly: true
-    field :coupon, as: :belongs_to, readonly: true
+    field :coupon, as: :belongs_to, readonly: true, attach_scope: -> { query.legacy }
     field :gstin, as: :text, readonly: true
     field :gst_legal_name, as: :text, readonly: true
     field :billing_state_code, as: :text, readonly: true
     field :razorpay_order_id, as: :text, readonly: true
     field :expires_at, as: :date_time, readonly: true
     field :metadata, as: :code, readonly: true
-    field :tickets, as: :has_many
-    field :payment_events, as: :has_many
-    field :invoices, as: :has_many
-    field :refunds, as: :has_many
+    field :tickets, as: :has_many, attach_scope: -> { query.legacy }
+    field :payment_events, as: :has_many, attach_scope: -> { query.legacy }
+    field :invoices, as: :has_many, attach_scope: -> { query.legacy }
+    field :refunds, as: :has_many, attach_scope: -> { query.legacy }
   end
 
   def filters

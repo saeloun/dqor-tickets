@@ -18,8 +18,8 @@ class Avo::Resources::TicketType < Avo::BaseResource
     field :active, as: :boolean
     field :requires_conference_pass, as: :boolean
     field :position, as: :number
-    field :tickets, as: :has_many
-    field :coupons, as: :has_many
+    field :tickets, as: :has_many, attach_scope: -> { query.legacy }
+    field :coupons, as: :has_many, attach_scope: -> { query.legacy }
   end
 
   def actions
