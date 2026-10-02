@@ -4,7 +4,9 @@ Rails.application.routes.draw do
 
   mount_avo at: "/avo"
 
-  resource :checkin, only: %i[show create]
+  resource :checkin, only: %i[show create] do
+    post :batch
+  end
 
   resource :checkout_preview, only: :create
   resources :orders, param: :code, only: [ :create, :show ]

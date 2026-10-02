@@ -349,13 +349,13 @@ RSpec.describe Refund, type: :model do
       order, tickets, = paid_order
       Invoice.issue_for!(order)
       ticket = tickets.first
-      ticket.check_in!(Date.current)
+      ticket.check_in!(Date.new(2026, 10, 8))
       refund = refund_for(order, ticket)
 
       refund.process!(refund_event(refund))
 
       expect(ticket.reload.canceled_at).to be_present
-      expect(ticket.checked_in_at.keys).to eq([ Date.current.iso8601 ])
+      expect(ticket.checked_in_at.keys).to eq([ "2026-10-08" ])
     end
   end
 

@@ -34,3 +34,7 @@
 /config/*.key
 
 .gstack/
+
+# Local browser verification artifacts.
+/.playwright-cli/
+/output/playwright/

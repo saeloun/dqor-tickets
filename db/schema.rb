@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_150100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -61,6 +61,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["published", "published_at"], name: "index_announcements_on_published_and_published_at"
+  end
+
+  create_table "checkin_audits", force: :cascade do |t|
+    t.bigint "admin_user_id"
+    t.datetime "created_at", null: false
+    t.date "event_date", null: false
+    t.string "outcome", null: false
+    t.string "source", null: false
+    t.bigint "ticket_id"
+    t.index ["admin_user_id"], name: "index_checkin_audits_on_admin_user_id"
+    t.index ["event_date", "outcome"], name: "index_checkin_audits_on_event_date_and_outcome"
+    t.index ["ticket_id"], name: "index_checkin_audits_on_ticket_id"
   end
 
   create_table "connections", force: :cascade do |t|
@@ -527,6 +539,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "checkin_audits", "admin_users", on_delete: :nullify
+  add_foreign_key "checkin_audits", "tickets", on_delete: :nullify
   add_foreign_key "connections", "users"
   add_foreign_key "connections", "users", column: "connected_user_id"
   add_foreign_key "conversations", "users", column: "participant_one_id"

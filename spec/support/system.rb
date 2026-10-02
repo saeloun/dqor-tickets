@@ -1,7 +1,7 @@
 require "capybara/rspec"
 require "capybara/cuprite"
 
-Capybara.register_driver(:cuprite) do |app|
+Capybara.register_driver(:cuprite_system) do |app|
   options = {
     window_size: [ 1400, 1400 ],
     process_timeout: 30,
@@ -16,11 +16,11 @@ Capybara.register_driver(:cuprite) do |app|
 end
 
 Capybara.default_driver = :rack_test
-Capybara.javascript_driver = :cuprite
+Capybara.javascript_driver = :cuprite_system
 Capybara.default_max_wait_time = 5
 Capybara.server = :puma, { Silent: true }
 Capybara.save_path = Rails.root.join("tmp/capybara")
 
 RSpec.configure do |config|
-  config.before(:each, type: :system) { driven_by :cuprite }
+  config.before(:each, type: :system) { driven_by :cuprite_system }
 end
