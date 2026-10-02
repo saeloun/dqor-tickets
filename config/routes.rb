@@ -2,6 +2,16 @@ Rails.application.routes.draw do
   root "home#index"
   get "tickets", to: "tickets#index", as: :tickets_store
 
+  # Singleton branding for the existing DQOR event; existing admin role only.
+  namespace :organizer do
+    resource :branding, only: %i[show update], controller: "event_branding" do
+      get :preview
+      post :publish
+      post :rollback
+      get "assets/:id", action: :asset, as: :asset
+    end
+  end
+
   mount_avo at: "/avo"
 
   resource :checkin, only: %i[show create]
