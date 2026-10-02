@@ -1,0 +1,21 @@
+{
+  "demo_only": true,
+  "time_zone": "Asia/Kolkata",
+  "sessions": [
+    {"id":"dqor-opening","event_id":"dqor-2026","date":"2026-10-08","starts_at":"09:30","ends_at":"10:15","title":"Small teams, remarkable software","speaker":"Ananya Mehta · sample speaker","venue":"Main hall","track":"TALK","description":"A sample opening session about building thoughtful products with focused teams."},
+    {"id":"dqor-workshop","event_id":"dqor-2026","date":"2026-10-08","starts_at":"10:30","ends_at":"12:00","title":"Rails, from idea to working product","speaker":"Rohan Shah · sample speaker","venue":"Workshop studio","track":"WORKSHOP","description":"A hands-on sample workshop. Bring a laptop; this listing is not a booking or seat reservation."},
+    {"id":"dqor-lunch","event_id":"dqor-2026","date":"2026-10-08","starts_at":"12:00","ends_at":"13:00","title":"Lunch & hallway conversations","speaker":"Community gathering","venue":"Garden court","track":"COMMUNITY","description":"A sample lunch listing. Entry to the event does not redeem a meal entitlement."},
+    {"id":"dqor-day2","event_id":"dqor-2026","date":"2026-10-09","starts_at":"10:00","ends_at":"10:45","title":"Keeping a growing system simple","speaker":"Neha Kulkarni · sample speaker","venue":"Main hall","track":"TALK","description":"A sample conversation about maintainable systems and durable engineering choices."},
+    {"id":"dqor-party","event_id":"dqor-2026","date":"2026-10-10","starts_at":"19:00","ends_at":"21:00","title":"An evening with the community","speaker":"Sample social programme","venue":"Terrace","track":"COMMUNITY","description":"An illustrative afterparty. A party entitlement is separate from conference admission."},
+    {"id":"dqor-closing","event_id":"dqor-2026","date":"2026-10-11","starts_at":"15:00","ends_at":"16:00","title":"What we take home","speaker":"Community roundtable","venue":"Main hall","track":"COMMUNITY","description":"A sample closing roundtable and space to share what you learned."},
+    {"id":"design-opening","event_id":"studio-demo","date":"2026-11-14","starts_at":"10:00","ends_at":"11:00","title":"Designing for everyday life","speaker":"Mira Das · sample speaker","venue":"Studio one","track":"TALK","description":"A fictional programme demonstrating a second event's independent schedule and theme."}
+  ],
+  "passes": [
+    {"id":"sample-pass-asha","event_id":"dqor-2026","attendee":"Asha Rao","ticket_type":"Conference + community","order_code":"DEMO-ORDER-101",
+      "admission":[{"date":"2026-10-08","status":"CHECKED_IN"},{"date":"2026-10-09","status":"NOT_CHECKED_IN"},{"date":"2026-10-10","status":"NOT_CHECKED_IN"},{"date":"2026-10-11","status":"NOT_CHECKED_IN"}],
+      "entitlements":[{"id":"sample-lunch","kind":"MEAL","title":"Conference lunch","date":"2026-10-08","status":"AVAILABLE"},{"id":"sample-party","kind":"PARTY","title":"Community evening","date":"2026-10-10","status":"REDEEMED"}]},
+    {"id":"sample-pass-grace","event_id":"dqor-2026","attendee":"Grace Shah","ticket_type":"Conference day pass","order_code":"DEMO-ORDER-102",
+      "admission":[{"date":"2026-10-08","status":"NOT_CHECKED_IN"}],
+      "entitlements":[{"id":"sample-grace-lunch","kind":"MEAL","title":"Conference lunch","date":"2026-10-08","status":"REDEEMED"},{"id":"sample-grace-party","kind":"PARTY","title":"Community evening","date":"2026-10-10","status":"NOT_INCLUDED"}]}
+  ]
+}

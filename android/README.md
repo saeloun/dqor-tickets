@@ -1,6 +1,6 @@
-# DQOR Android staff workflow
+# DQOR Android event and staff preview
 
-Native Kotlin / Compose staff app, application ID `in.dqor.staff.demo`.
+Native Kotlin / Compose app, application ID `in.dqor.staff.demo`.
 **In-process mock transport only.** The app collects no real credentials, makes
 no live requests and changes no real attendance. Rails and iOS are unchanged.
 
@@ -23,6 +23,13 @@ store release. Path-scoped `.github/workflows/android.yml` builds, unit-tests,
 lints and retains APK/reports for 14 days; existing Rails CI is unchanged.
 Device tests run locally, not in hosted CI. Gradle is pinned to 8.14.3.
 
+## Event and attendee preview
+
+The launcher opens the event catalogue. Browse the sample programme, bookmark
+sessions and open a read-only sample pass with separate admission, meal and party
+redemption states. See [EVENT_EXPERIENCE.md](EVENT_EXPERIENCE.md) for boundaries,
+review screenshots and API needs. Choose **Staff workspace** for the desk flow.
+
 ## Usable preview → review → confirm flow
 
 1. Sign in with the synthetic demo Desk or read-only identity. No password field
@@ -33,11 +40,11 @@ Device tests run locally, not in hosted CI. Gradle is pinned to 8.14.3.
    ineligible. “Preview sample QR” exercises the same resolve path as the camera.
 4. Scanning is **read-only**. Eligible identities are added to a bounded preview
    selection. A preview is never admission. Search adds only explicit tickets;
-   names, email and ticket ID distinguish duplicate names.
+   lookup accepts name, email or order code. Ticket IDs and emails distinguish duplicate names.
 5. Review the selected names/IDs and date, then tap **Confirm check-in**.
    Only that action calls `/api/staff/checkins/confirm`. Cancel does not submit.
    Read every per-ticket result; a mixed batch is not all-success.
-6. Use demo controls to expire the session, invalidate a selected preview, go
+6. Open **Demo scenarios** to expire the session, invalidate a selected preview, go
    offline, or simulate a timeout after the mock server committed. An uncertain
    response retains the exact reviewed IDs/date for explicit retry; duplicate
    outcomes do not add attendance. Nothing is queued or automatically retried.
