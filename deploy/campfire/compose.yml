@@ -2,7 +2,7 @@ name: dqor-campfire
 
 services:
   chat:
-    image: dqor-campfire:c0c42854
+    image: dqor-campfire:6540ba48
     container_name: dqor-campfire
     restart: unless-stopped
     init: true
@@ -11,8 +11,15 @@ services:
     mem_limit: 1g
     security_opt:
       - no-new-privileges:true
+    env_file:
+      - /opt/dqor-campfire/access.env
     environment:
       SPINEL_WORKERS: "2"
+      RAILS_ENV: "production"
+      BLOG_DB: "storage/development.sqlite3"
+      GOOGLE_LOGIN_ENABLED: "true"
+      RUNTIME_DASHBOARD_ENABLED: "true"
+      RH_REQUEST_METRICS: "1"
     ports:
       - "127.0.0.1:4300:3000"
     volumes:
