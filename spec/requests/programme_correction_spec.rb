@@ -18,7 +18,11 @@ RSpec.describe "Day 1 programme correction", type: :request do
   it "adds exactly two minutes to Amanda, preserves neighbours and hides the video idempotently" do
     historical = Talk.create!(title: "DHH retrospective", starts_at: zone.parse("2026-10-09 12:00"), published: true)
     before_keynote = keynote.attributes
-    2.times { correct }
+    correct
+    writes = []
+    observer = ->(*event) { writes << event.last[:sql] if event.last[:sql].match?(/\A(?:UPDATE|INSERT|DELETE)/i) }
+    ActiveSupport::Notifications.subscribed(observer, "sql.active_record") { correct }
+    expect(writes).to be_empty
     expect(amanda.reload.starts_at).to eq(at("10:20"))
     expect(amanda.ends_at).to eq(at("10:30"))
     expect(video.reload).not_to be_published

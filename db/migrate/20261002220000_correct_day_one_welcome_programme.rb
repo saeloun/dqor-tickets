@@ -30,6 +30,8 @@ class CorrectDayOneWelcomeProgramme < ActiveRecord::Migration[8.1]
       raise "Programme times differ from the verified 10:20–10:30 block; preserve edits and inspect before migration"
     end
 
+    return if address.ends_at == corrected_end && !video.published?
+
     address.update_columns(ends_at: corrected_end)
     video.update_columns(published: false)
   end
