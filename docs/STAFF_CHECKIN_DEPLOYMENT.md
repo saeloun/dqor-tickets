@@ -4,8 +4,8 @@ Status: local/CI validation only. Production migration and deployment are blocke
 until the actual Render workspace/service/database and current release are verified.
 
 The migration `20261002150100` adds only `checkin_audits`, foreign keys and indexes;
-it does not rewrite historic ticket attendance. The earlier timestamp `20261002150000`
-is reserved for the separate invoice safety branch. Reconcile schema.rb on integration.
+it does not rewrite historic ticket attendance. Native staff sessions use additive migration `20261002150200`; the separate invoice
+safety branch reserves `20261002160000`. Reconcile schema.rb on integration.
 
 Before release, verify the target PostgreSQL database, a restorable recent backup,
 and the release entrypoint's `db:prepare` behavior. Run the additive migration before

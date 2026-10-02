@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_150100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_150200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -159,6 +159,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_150100) do
     t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
+  end
+
+  create_table "native_staff_sessions", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.jsonb "capabilities", default: [], null: false
+    t.datetime "created_at", null: false
+    t.string "event", null: false
+    t.jsonb "event_dates", default: [], null: false
+    t.datetime "expires_at", null: false
+    t.string "password_fingerprint", null: false
+    t.string "role", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_native_staff_sessions_on_admin_user_id"
+    t.index ["expires_at"], name: "index_native_staff_sessions_on_expires_at"
+    t.index ["token_digest"], name: "index_native_staff_sessions_on_token_digest", unique: true
   end
 
   create_table "orders", force: :cascade do |t|
@@ -550,6 +566,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_150100) do
   add_foreign_key "invoices", "orders"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users", column: "sender_id"
+  add_foreign_key "native_staff_sessions", "admin_users", on_delete: :cascade
   add_foreign_key "orders", "coupons"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"

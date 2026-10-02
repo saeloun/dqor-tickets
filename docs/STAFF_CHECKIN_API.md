@@ -2,7 +2,7 @@
 
 Status: proposed native contract implemented for check-in/lookup on the isolated
 staff-checkin branch; not deployed. Native clients must use mocks until this
-branch and staff authentication are approved and verified. No new credentials,
+branch and native integration are approved and verified. No new credentials,
 SSO grants, staff users or live attendance records are provisioned.
 
 ## Authentication
@@ -12,13 +12,10 @@ password, CSRF token and a cookie jar. It redirects and sets a signed HttpOnly
 staff session cookie. Existing roles are `admin` and `desk`; attendee User login
 is not sufficient. DELETE `/session` signs out. Login is rate-limited.
 
-Native JSON sign-in/session bootstrap is NOT implemented here. Decide whether
-the native app uses an approved hosted authentication handoff or a dedicated
-first-party JSON session flow before implementing real sign-in. Do not scrape or
-share the ticketing attendee cookies, invent bearer credentials, put passwords
-in URLs, or store raw QR secrets in logs/analytics. Preserve CSRF/session rules.
-For now, the native client can mock the payloads below. Production integration
-requires explicit session-expiry/revocation/logout and secure-storage tests.
+Native routes are separate, bearer-only, and disabled by default. See
+[NATIVE_STAFF_API.md](NATIVE_STAFF_API.md) for implemented authentication,
+nonmutating QR preview, scoped confirmation and the integration gates. Do not use
+POST `/checkin` to preview a native batch: it records attendance immediately.
 
 ## Endpoints (staff session required)
 

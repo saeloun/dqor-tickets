@@ -8,6 +8,18 @@ Rails.application.routes.draw do
     post :batch
   end
 
+  namespace :api do
+    namespace :staff do
+      resource :session, only: %i[create show destroy]
+      resources :checkins, only: :index do
+        collection do
+          post :resolve
+          post :confirm
+        end
+      end
+    end
+  end
+
   resource :checkout_preview, only: :create
   resources :orders, param: :code, only: [ :create, :show ]
   get "tickets/find", to: "ticket_access#new", as: :find_tickets
