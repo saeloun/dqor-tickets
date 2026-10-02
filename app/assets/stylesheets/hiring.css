@@ -6,3 +6,5 @@ input:not([type=checkbox]), textarea, select { width: 100%; box-sizing: border-b
 input[type=checkbox] { width: 1.3rem; height: 1.3rem; }
 button, input[type=submit] { min-height: 44px; padding: .7rem 1rem; margin-top: 1rem; background: #164c9c; color: white; border: 0; border-radius: .3rem; font: inherit; cursor: pointer; }
 :focus-visible { outline: 3px solid #b45309; outline-offset: 3px; }
+
+.recruiting-qr svg { max-width: 100%; height: auto; }

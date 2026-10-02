@@ -1,0 +1,4 @@
+<h1>Recruiting request QR</h1><p>This is not an entry ticket. Scanning shares nothing until the attendee signs in and confirms consent.</p>
+<p>Recipient: <%= @share.recipient.display_name %> (<%= @share.recipient.email %>) · <%= @share.job.company.name %></p>
+<p>Role: <%= @share.job.title %>. One use. Request and resulting access expire at <%= @share.expires_at.utc.iso8601 %>.</p>
+<div class="recruiting-qr"><%= @qr.html_safe %></div><p><%= link_to "Open consent form", @url %></p>

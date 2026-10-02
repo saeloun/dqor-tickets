@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_230000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -128,6 +128,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_230000) do
     t.index ["published", "position"], name: "index_faqs_on_published_and_position"
   end
 
+  create_table "hiring_access_events", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "application_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["application_id"], name: "index_hiring_access_events_on_application_id"
+    t.index ["user_id"], name: "index_hiring_access_events_on_user_id"
+  end
+
   create_table "hiring_affiliations", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
@@ -144,12 +154,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_230000) do
     t.datetime "created_at", null: false
     t.bigint "job_id", null: false
     t.binary "quarantined_pdf"
+    t.string "resume_digest"
+    t.string "scan_digest"
+    t.string "scan_status", default: "quarantined", null: false
+    t.datetime "scanned_at"
+    t.bigint "share_request_id"
     t.jsonb "snapshot", default: {}, null: false
     t.datetime "updated_at", null: false
     t.datetime "withdrawn_at"
     t.index ["applicant_id"], name: "index_hiring_applications_on_applicant_id"
     t.index ["job_id", "applicant_id"], name: "index_hiring_applications_on_job_id_and_applicant_id", unique: true
     t.index ["job_id"], name: "index_hiring_applications_on_job_id"
+    t.index ["share_request_id"], name: "index_hiring_applications_on_share_request_id", unique: true
   end
 
   create_table "hiring_companies", force: :cascade do |t|
@@ -179,6 +195,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_230000) do
     t.index ["company_id"], name: "index_hiring_jobs_on_company_id"
     t.index ["event_id"], name: "index_hiring_jobs_on_event_id"
     t.index ["recruiter_id"], name: "index_hiring_jobs_on_recruiter_id"
+  end
+
+  create_table "hiring_share_requests", force: :cascade do |t|
+    t.bigint "applicant_id"
+    t.datetime "consented_at"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "job_id", null: false
+    t.bigint "recipient_id", null: false
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["applicant_id"], name: "index_hiring_share_requests_on_applicant_id"
+    t.index ["job_id"], name: "index_hiring_share_requests_on_job_id"
+    t.index ["recipient_id"], name: "index_hiring_share_requests_on_recipient_id"
+    t.index ["token_digest"], name: "index_hiring_share_requests_on_token_digest", unique: true
   end
 
   create_table "info_pages", force: :cascade do |t|
@@ -623,9 +655,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_230000) do
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "events", "organizations"
+  add_foreign_key "hiring_access_events", "hiring_applications", column: "application_id"
+  add_foreign_key "hiring_access_events", "users"
   add_foreign_key "hiring_affiliations", "hiring_companies", column: "company_id"
   add_foreign_key "hiring_affiliations", "users"
   add_foreign_key "hiring_applications", "hiring_jobs", column: "job_id"
+  add_foreign_key "hiring_applications", "hiring_share_requests", column: "share_request_id"
   add_foreign_key "hiring_applications", "users", column: "applicant_id"
   add_foreign_key "hiring_companies", "organizations"
   add_foreign_key "hiring_companies", "users", column: "claimant_id"
@@ -633,6 +668,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_230000) do
   add_foreign_key "hiring_jobs", "events"
   add_foreign_key "hiring_jobs", "hiring_companies", column: "company_id"
   add_foreign_key "hiring_jobs", "users", column: "recruiter_id"
+  add_foreign_key "hiring_share_requests", "hiring_jobs", column: "job_id"
+  add_foreign_key "hiring_share_requests", "users", column: "applicant_id"
+  add_foreign_key "hiring_share_requests", "users", column: "recipient_id"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "memberships", "organizations"

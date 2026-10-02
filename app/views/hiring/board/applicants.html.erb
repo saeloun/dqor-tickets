@@ -1,8 +1,9 @@
-<h1>Applicants for <%= @job.title %></h1><p>Only active, consented applications for this role appear. PDF downloads remain disabled pending malware scanning.</p>
+<h1>Applicants for <%= @job.title %></h1><p>Only active, consented applications for this role appear. Resume downloads require the delivery gate and a successful scan of the exact stored bytes.</p>
+<%= button_to "Create recruiting QR request", hiring_shares_path(job_id: @job.id) %>
 <% @applications.each do |application| %><article>
 <h2><%= application.snapshot["name"] %></h2>
 <p><%= application.snapshot["email"] %></p><%= simple_format application.snapshot["summary"] %>
 <p><%= application.snapshot["linkedin"] %></p>
 <p>Consent recorded: <%= application.consented_at.utc.iso8601 %></p>
-<% if application.quarantined_pdf.present? %><p>PDF quarantined — unchecked and unavailable.</p><% end %>
+<% if application.quarantined_pdf.present? %><% if application.resume_releasable? %><%= link_to "Download checked PDF", hiring_resume_path(application) %><% else %><p>PDF quarantined — unchecked and unavailable.</p><% end %><% end %>
 </article><% end %>

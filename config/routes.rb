@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
   namespace :hiring do
     root "board#index"
+    get "applications/:id/resume", to: "resumes#show", as: :resume
+    post "jobs/:job_id/shares", to: "shares#create", as: :shares
+    get "recruiting/:token", to: "shares#show", as: :recruiting
+    post "recruiting/:token", to: "shares#confirm"
+    delete "shares/:id", to: "shares#revoke", as: :revoke_share
     delete "affiliations/:id", to: "board#remove_affiliation", as: :remove_affiliation
     post "claims", to: "board#claim", as: :claims
     post "claims/:id/review", to: "board#review_claim", as: :review_claim
