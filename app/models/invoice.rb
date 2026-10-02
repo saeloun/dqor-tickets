@@ -1,5 +1,7 @@
 class Invoice < ApplicationRecord
   class LegacySnapshotUnavailable < StandardError; end
+  class DocumentPending < StandardError; end
+  ISSUANCE_ERRORS = [ InvoicePolicy::NotConfigured, LegacySnapshotUnavailable, ActiveRecord::RecordInvalid, RangeError ].freeze
 
   has_one_attached :pdf
   attr_readonly :order_id, :number, :kind, :issued_on, :refers_to_id,
