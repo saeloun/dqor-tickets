@@ -2,7 +2,7 @@ name: dqor-campfire
 
 services:
   chat:
-    image: dqor-campfire:a91496ff7aad
+    image: dqor-campfire:c0c42854
     container_name: dqor-campfire
     restart: unless-stopped
     init: true
