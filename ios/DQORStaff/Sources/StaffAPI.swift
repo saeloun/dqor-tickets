@@ -82,8 +82,10 @@ actor DemoStaffAPI: StaffAPI {
     private let offline: Bool
     private let failCheckIn: Bool
     private let role: DemoRole
-    init(offline: Bool = false, failCheckIn: Bool = false, role: DemoRole = .volunteer) {
+    private let roster: [Attendee]
+    init(offline: Bool = false, failCheckIn: Bool = false, role: DemoRole = .volunteer, duplicateNames: Bool = false) {
         self.offline = offline; self.failCheckIn = failCheckIn; self.role = role
+        roster = Self.attendees + (duplicateNames ? [Attendee(id: "demo-004", name: "Alex Morgan", email: "alex.second@example.test")] : [])
     }
     func signIn() async throws -> StaffSession { session = true; return StaffSession(displayName: "Demo \(role.rawValue)", capabilities: role.capabilities) }
     func signOut() async { session = false }
@@ -96,12 +98,12 @@ actor DemoStaffAPI: StaffAPI {
         try authorize(.searchAttendees)
         if offline { throw StaffError.offline }
         let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        return Self.attendees.filter { query.isEmpty || "\($0.name) \($0.email) \($0.id)".localizedCaseInsensitiveContains(query) }
+        return roster.filter { query.isEmpty || "\($0.name) \($0.email) \($0.id)".localizedCaseInsensitiveContains(query) }
     }
     func resolveQR(_ payload: String, day: EventDay) async throws -> Attendee {
         try authorize(.scanTickets)
         if offline { throw StaffError.offline }
-        guard let attendee = Self.attendees.first(where: { "dqor-demo:\($0.id)" == payload }) else { throw StaffError.invalidTicket }
+        guard let attendee = roster.first(where: { "dqor-demo:\($0.id)" == payload }) else { throw StaffError.invalidTicket }
         return attendee
     }
     func checkIn(_ attendees: [Attendee], day: EventDay, requestID: UUID) async throws -> [CheckInResult] {
@@ -111,7 +113,7 @@ actor DemoStaffAPI: StaffAPI {
         let results = attendees.map { attendee in
             let key = "\(day.id)/\(attendee.id)"
             let outcome: CheckInOutcome
-            if !Self.attendees.contains(attendee) { outcome = .invalid }
+            if !roster.contains(attendee) { outcome = .invalid }
             else if attendee.id == "demo-003" && day.id == "day-1" { outcome = .ineligible }
             else if checked.contains(key) { outcome = .duplicate }
             else { checked.insert(key); outcome = .checkedIn }

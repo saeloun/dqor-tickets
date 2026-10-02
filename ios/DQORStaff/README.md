@@ -56,3 +56,7 @@ Before device/TestFlight distribution: integrate and test the verified Rails con
 ## Verification checkpoint
 
 On 2026-10-02, the iPhone 17 Pro / iOS 26.2 simulator suite passed **13 unit tests and 5 UI tests** (18 total), covering mixed/duplicate/day eligibility results, repeated/invalid QR input, cooldown/length limits, cancellation, offline and failed submissions, incomplete server responses, stable retry IDs, stable attendee identity, event configuration limits, capability denial, sign-out cleanup, empty search, review cancellation/confirmation, and back/discard behavior. XCTest screenshots captured the welcome, event catalog, lookup, review, and result screens. Small subsequent UI text/color edits were compiler-validated. VoiceOver behavior, largest accessibility sizes, physical camera capture, and production authentication require additional validation before release.
+
+## Accessibility follow-up
+
+The follow-up suite passes **13 unit tests and 9 UI tests** (22 total), including read-only accessibility audits, largest accessibility text size, keyboard search, simulator camera fallback, and duplicate-name confirmation. See [ACCESSIBILITY_REVIEW.md](ACCESSIBILITY_REVIEW.md) for findings and limits, and [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) for the precise backend handoff. `--duplicate-names` adds a synthetic second Alex Morgan to validate identity disambiguation. The app remains mock-only.

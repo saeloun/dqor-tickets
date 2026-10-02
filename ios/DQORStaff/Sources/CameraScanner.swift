@@ -36,6 +36,10 @@ final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsD
     @objc private func background() { stop() }
     @objc private func foreground() { if visible { requestCamera() } }
     private func requestCamera() {
+        #if targetEnvironment(simulator)
+        status.text = "Camera capture is unavailable in Simulator. Use attendee search to try the demo."
+        return
+        #else
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized: start()
         case .notDetermined:
@@ -44,6 +48,7 @@ final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsD
             }
         default: denied()
         }
+        #endif
     }
     private func denied() { status.text = "Camera access is unavailable. Use attendee search, or enable camera access in Settings." }
     private func start() {
