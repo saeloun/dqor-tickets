@@ -24,22 +24,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.dqor.staff.R
+import `in`.dqor.staff.Event
 
 /** DQOR uses the repository's existing public event illustration, copied unchanged.
  * The assembly motif is an original native geometric drawing, not a third-party asset. */
-@Composable internal fun EventArtwork(theme: String, modifier: Modifier=Modifier, compact: Boolean=false) {
+@Composable internal fun EventArtwork(event: Event, modifier: Modifier=Modifier, compact: Boolean=false) {
     // Poster typography is part of decorative artwork. Accessible event text outside
     // the poster respects the user's font scale, including 200% layouts.
     val density=LocalDensity.current
     CompositionLocalProvider(LocalDensity provides Density(density.density,1f)) {
     Box(modifier.clearAndSetSemantics {}) {
-        if(theme=="heritage") {
+        if(event.theme=="heritage") {
             Image(painterResource(R.drawable.dqor_cover),contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.matchParentSize())
             Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color(0x22170F09),Color(0x05170F09),Color(0xD9170F09)))))
             if(!compact) {
-                Text("PUNE   /   2026",Modifier.align(Alignment.TopStart).padding(24.dp),color=Color.White,fontSize=12.sp,letterSpacing=3.sp,fontWeight=FontWeight.Medium)
+                Text("${event.location.substringBefore(",").uppercase()}   /   ${event.dates.first().take(4)}",Modifier.align(Alignment.TopStart).padding(24.dp),color=Color.White,fontSize=12.sp,letterSpacing=3.sp,fontWeight=FontWeight.Medium)
                 Column(Modifier.align(Alignment.BottomStart).padding(24.dp)) {
-                    Text("Deccan Queen\non Rails",color=Color(0xFFFFF4DB),fontFamily=FontFamily.Serif,fontSize=38.sp,lineHeight=39.sp,fontWeight=FontWeight.Bold)
+                    Text(event.name.replace(" on ","\non "),color=Color(0xFFFFF4DB),fontFamily=FontFamily.Serif,fontSize=38.sp,lineHeight=39.sp,fontWeight=FontWeight.Bold)
                     Spacer(Modifier.height(10.dp)); Text("CURIOSITY. CRAFT. COMMUNITY.",color=Color(0xFFE6D9BF),fontSize=10.sp,letterSpacing=1.5.sp)
                 }
             }
@@ -51,7 +52,7 @@ import `in`.dqor.staff.R
                 drawCircle(Color(0xFF42372F),size.width*.055f,Offset(size.width*.17f,size.height*.21f))
             }
             if(!compact) Column(Modifier.align(Alignment.BottomStart).padding(24.dp)) {
-                Text("THE DESIGN\nASSEMBLY",color=Color(0xFF32271F),fontSize=34.sp,lineHeight=34.sp,fontWeight=FontWeight.Black,letterSpacing=(-1).sp)
+                Text(event.name.uppercase(),color=Color(0xFF32271F),fontSize=34.sp,lineHeight=34.sp,fontWeight=FontWeight.Black,letterSpacing=(-1).sp)
                 Spacer(Modifier.height(12.dp)); Text("IDEAS DESERVE A GATHERING.",color=Color(0xFF32271F),fontSize=10.sp,letterSpacing=1.5.sp)
             }
         }

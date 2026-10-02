@@ -72,7 +72,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                         }
                         items(events,key={it.id}) {item ->
                             Card(onClick={eventId=item.id; section=EventSection.OVERVIEW},colors=CardDefaults.cardColors(containerColor=Color.Transparent),modifier=Modifier.fillMaxWidth()) {
-                                EventArtwork(item.theme,Modifier.fillMaxWidth().aspectRatio(1f).clip(PosterShape))
+                                EventArtwork(item,Modifier.fillMaxWidth().aspectRatio(1f).clip(PosterShape))
                                 Column(Modifier.padding(top=16.dp,bottom=4.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                                     Text("${dayLabel(item.dates.first())}  ·  ${item.location.substringBefore(" · ")}",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
                                     Text(item.name,fontSize=24.sp,lineHeight=28.sp,fontWeight=FontWeight.SemiBold)
@@ -87,7 +87,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                     if(pass!=null) PassDetail(event,pass) else Text("Sample pass unavailable",Modifier.padding(24.dp))
                 } else Box(Modifier.weight(1f)) {screenState.SaveableStateProvider("${event.id}-${section.name}") {when(section) {
                     EventSection.OVERVIEW -> LazyColumn(Modifier.fillMaxSize().testTag("event-overview"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
-                        item {EventArtwork(event.theme,Modifier.fillMaxWidth().aspectRatio(1f).clip(PosterShape))}
+                        item {EventArtwork(event,Modifier.fillMaxWidth().aspectRatio(1f).clip(PosterShape))}
                         item {
                             Text(event.name,fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.SemiBold,letterSpacing=(-.8).sp)
                             Spacer(Modifier.height(8.dp)); Text("Hosted by DQOR India · sample event",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -124,7 +124,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
 
 @Composable private fun EventMiniHeader(event: Event,title: String) {
     Row(horizontalArrangement=Arrangement.spacedBy(14.dp),verticalAlignment=Alignment.CenterVertically) {
-        EventArtwork(event.theme,Modifier.size(58.dp).clip(RoundedCornerShape(12.dp)),compact=true)
+        EventArtwork(event,Modifier.size(58.dp).clip(RoundedCornerShape(12.dp)),compact=true)
         Column(Modifier.weight(1f)) {Text(title,fontSize=28.sp,lineHeight=32.sp,fontWeight=FontWeight.SemiBold,letterSpacing=(-.5).sp); Text(event.name,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
     }
 }
@@ -171,7 +171,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
         item {EventMiniHeader(event,"Your passes"); Spacer(Modifier.height(14.dp)); DemoNote("Sample wallet · not valid for entry")}
         if(content.wallet(event.id).isEmpty()) item {Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {Text("No sample passes for this event",style=MaterialTheme.typography.titleMedium); Text("Try the DQOR event to explore admission and redemption states.",color=MaterialTheme.colorScheme.onSurfaceVariant)}}}
         items(content.wallet(event.id),key={it.id}) {pass -> Card(onClick={open(pass.id)},modifier=Modifier.fillMaxWidth(),colors=CardDefaults.cardColors(containerColor=Color.White),border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
-            EventArtwork(event.theme,Modifier.fillMaxWidth().height(112.dp),compact=true)
+            EventArtwork(event,Modifier.fillMaxWidth().height(112.dp),compact=true)
             Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
                 Text(event.name,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(pass.attendee,fontSize=24.sp,lineHeight=28.sp,fontWeight=FontWeight.SemiBold); Text(pass.ticketType,style=MaterialTheme.typography.bodyMedium)
@@ -189,7 +189,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
     var date by rememberSaveable(pass.id) {mutableStateOf(pass.admission.first().date)}
     LazyColumn(Modifier.fillMaxSize().testTag("pass-detail"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
         item {Surface(shape=RoundedCornerShape(24.dp),color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column {
-            EventArtwork(event.theme,Modifier.fillMaxWidth().height(128.dp),compact=true)
+            EventArtwork(event,Modifier.fillMaxWidth().height(128.dp),compact=true)
             Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Text(event.name,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold)
                 Text("${dayLabel(event.dates.first())} · ${event.location}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
