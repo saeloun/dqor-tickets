@@ -1,0 +1,7 @@
+<main class="container">
+  <h1><%= @organization.name %> events</h1>
+  <% if can_manage_events? %><p><%= link_to "Create draft event", new_organizer_organization_event_path(@organization) %></p><% end %>
+  <ul><% @events.each do |event| %>
+    <li><%= link_to event.title, organizer_organization_event_path(@organization, event) %> — <%= event.status %></li>
+  <% end %></ul>
+</main>

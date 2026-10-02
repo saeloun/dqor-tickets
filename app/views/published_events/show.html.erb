@@ -1,0 +1,5 @@
+<main class="container">
+  <h1><%= @event.title %></h1>
+  <p>Organized by <%= @event.organization.name %></p>
+  <p><%= @event.starts_at.in_time_zone(@event.timezone) %> – <%= @event.ends_at.in_time_zone(@event.timezone) %> (<%= @event.timezone %>)</p>
+</main>

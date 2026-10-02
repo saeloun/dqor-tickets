@@ -1,0 +1,12 @@
+<main class="container">
+  <h1><%= @event.title %></h1><p>Status: <%= @event.status %></p>
+  <% @event.errors.full_messages.each do |message| %><p role="alert"><%= message %></p><% end %>
+  <p><%= @event.starts_at&.in_time_zone(@event.timezone) %> – <%= @event.ends_at&.in_time_zone(@event.timezone) %> (<%= @event.timezone %>)</p>
+  <% if can_manage_events? %>
+    <p><%= link_to "Edit", edit_organizer_organization_event_path(@organization, @event) %></p>
+    <% if @event.draft? %><%= button_to "Publish event", publish_organizer_organization_event_path(@organization, @event), method: :post %><% end %>
+  <% end %>
+  <% if @event.published? %><p><%= link_to "View public event", published_event_path(@organization.slug, @event.slug) %></p><% end %>
+  <p><%= link_to "All events", organizer_organization_events_path(@organization) %></p>
+  <p>This event page does not enable ticket sales.</p>
+</main>

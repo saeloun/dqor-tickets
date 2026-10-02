@@ -1,4 +1,13 @@
 Rails.application.routes.draw do
+  namespace :organizer do
+    resources :organizations, only: [] do
+      resources :events, except: :destroy do
+        post :publish, on: :member
+      end
+    end
+  end
+  get "events/:organization_slug/:event_slug", to: "published_events#show", as: :published_event
+
   root "home#index"
   get "tickets", to: "tickets#index", as: :tickets_store
 

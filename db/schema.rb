@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -101,6 +101,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
   end
 
+  create_table "events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "ends_at"
+    t.bigint "organization_id", null: false
+    t.string "slug", null: false
+    t.datetime "starts_at"
+    t.string "status", default: "draft", null: false
+    t.string "timezone", default: "UTC", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "slug"], name: "index_events_on_organization_id_and_slug", unique: true
+    t.index ["organization_id"], name: "index_events_on_organization_id"
+    t.check_constraint "ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at", name: "events_ordered_dates"
+    t.check_constraint "status::text <> 'published'::text OR starts_at IS NOT NULL AND ends_at IS NOT NULL", name: "events_publication_dates"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying]::text[])", name: "events_valid_status"
+  end
+
   create_table "faqs", force: :cascade do |t|
     t.text "answer"
     t.datetime "created_at", null: false
@@ -138,6 +155,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.index ["refers_to_id"], name: "index_invoices_on_refers_to_id"
   end
 
+  create_table "memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "organization_id", null: false
+    t.string "role", default: "viewer", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["organization_id", "user_id"], name: "index_memberships_on_organization_id_and_user_id", unique: true
+    t.index ["organization_id"], name: "index_memberships_on_organization_id"
+    t.index ["user_id"], name: "index_memberships_on_user_id"
+    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying, 'admin'::character varying, 'editor'::character varying, 'viewer'::character varying]::text[])", name: "memberships_valid_role"
+  end
+
   create_table "messages", force: :cascade do |t|
     t.text "body", null: false
     t.bigint "conversation_id", null: false
@@ -168,6 +197,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.index ["code"], name: "index_orders_on_code", unique: true
     t.index ["coupon_id"], name: "index_orders_on_coupon_id"
     t.index ["razorpay_order_id"], name: "index_orders_on_razorpay_order_id", unique: true
+  end
+
+  create_table "organizations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_organizations_on_slug", unique: true
   end
 
   create_table "payment_events", force: :cascade do |t|
@@ -532,8 +569,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
   add_foreign_key "conversations", "users", column: "participant_one_id"
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "events", "organizations"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
+  add_foreign_key "memberships", "organizations"
+  add_foreign_key "memberships", "users"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "orders", "coupons"
