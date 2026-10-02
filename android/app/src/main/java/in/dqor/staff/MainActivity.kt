@@ -17,6 +17,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import `in`.dqor.staff.experience.*
 import androidx.compose.ui.semantics.*
 import kotlinx.coroutines.CancellationException
 import androidx.compose.ui.Modifier
@@ -56,7 +58,13 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         val source = JSONArray(assets.open("events.json").bufferedReader().use { it.readText() })
         val events = (0 until source.length()).map { i -> source.getJSONObject(i).let { e -> Event(e.getString("id"),e.getString("name"),e.getString("location"),e.getString("subtitle"),(0 until e.getJSONArray("dates").length()).map { e.getJSONArray("dates").getString(it) },e.getString("theme")) } }
-        setContent { NativeStaffApp(events,model.workflow,model.transport,model::run) }
+        val experience = EventExperience.parse(assets.open("experience.json").bufferedReader().use { it.readText() })
+        setContent {
+            var staff by rememberSaveable { mutableStateOf(false) }
+            val savedScreens=rememberSaveableStateHolder()
+            if(staff) NativeStaffApp(events,model.workflow,model.transport,onExit={staff=false},run=model::run)
+            else savedScreens.SaveableStateProvider("event-hub") {EventHubApp(events,experience) {staff=true}}
+        }
     }
 }
 

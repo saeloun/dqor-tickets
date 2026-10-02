@@ -99,4 +99,34 @@ class NativeDeskWorkflowTest {
         val f=Fixture(); f.login(); f.server.offline=true; f.flow.logout()
         assertNull(f.state.session); assertNull(f.store.saved); assertTrue(f.state.message.contains("not confirmed"))
     }
+    @Test fun `history distinguishes previews confirmation and duplicate without storing QR or search`()=runBlocking {
+        val f=Fixture(); f.login(); f.flow.setQuery("asha@example.test"); f.flow.search()
+        assertEquals(StaffHistoryStatus.LOOKUP,f.state.history.first().status)
+        f.flow.resolve("demo-101"); assertEquals(StaffHistoryStatus.PREVIEW_ONLY,f.state.history.first().status)
+        assertEquals(0,f.server.attendanceCount)
+        f.flow.reviewSelection(); f.flow.confirmReview(f.state.review!!)
+        assertEquals(StaffHistoryStatus.CONFIRMED,f.state.history.first().status)
+        f.flow.resolve("demo-101"); assertEquals(StaffHistoryStatus.ALREADY_ADMITTED,f.state.history.first().status)
+        assertFalse(f.state.history.toString().contains("demo-101")); assertFalse(f.state.history.toString().contains("asha@example.test"))
+        assertTrue(f.state.history.all {it.event=="dqor-2026" && it.date=="2026-10-08"})
+    }
+    @Test fun `history reports uncertain outcome and later duplicate honestly`()=runBlocking {
+        val f=Fixture(); f.login(); val batch=f.reviewSample(); f.server.timeoutAfterNextConfirmation=true
+        f.flow.confirmReview(batch); assertEquals(StaffHistoryStatus.UNVERIFIED,f.state.history.first().status)
+        f.flow.confirmReview(batch); assertEquals(StaffHistoryStatus.ALREADY_ADMITTED,f.state.history.first().status)
+        assertFalse(f.state.history.any {it.status==StaffHistoryStatus.CONFIRMED}); assertEquals(1,f.server.attendanceCount)
+    }
+    @Test fun `history is bounded scoped by day and cleared on logout and expiry`()=runBlocking {
+        val f=Fixture(); f.login(); repeat(105) {f.flow.search()}; assertEquals(100,f.state.history.size)
+        assertEquals(100,f.state.history.map {it.id}.distinct().size)
+        f.flow.chooseDate("2026-10-09"); f.flow.search(); assertEquals("2026-10-09",f.state.history.first().date)
+        f.flow.logout(); assertTrue(f.state.history.isEmpty())
+        f.login(); f.flow.resolve("demo-101"); f.server.expireSession=true; f.flow.restore(); assertTrue(f.state.history.isEmpty())
+    }
+    @Test fun `manual order lookup and wallet QR use distinct contracts`()=runBlocking {
+        val f=Fixture(); f.login(); f.flow.setQuery("DEMO-102"); f.flow.search()
+        assertEquals(listOf(102L),f.state.tickets.map {it.id})
+        f.flow.resolve("DEMO-ONLY:WALLET:sample-pass-asha:NOT-VALID-FOR-ENTRY")
+        assertTrue(f.state.selected.isEmpty()); assertEquals(0,f.server.attendanceCount)
+    }
 }

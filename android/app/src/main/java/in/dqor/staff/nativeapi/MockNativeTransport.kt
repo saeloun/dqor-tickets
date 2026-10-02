@@ -55,7 +55,7 @@ class MockNativeTransport(private val now: () -> Instant = Instant::now) : Nativ
         return when(route) {
             "/api/staff/checkins" -> {
                 val term=query["q"].orEmpty()
-                val matches=people.filter {it.first !in canceled && (it.second.contains(term,true)||it.third.contains(term,true)||it.first.toString()==term)}
+                val matches=people.filter {it.first !in canceled && (it.second.contains(term,true)||it.third.contains(term,true)||"DEMO-${it.first}".contains(term,true))}
                 NativeResponse(200,JSONObject().put("date",date).put("more_results",false).put("tickets",JSONArray(matches.map {ticket(it,date)})).toString())
             }
             "/api/staff/checkins/resolve" -> {
