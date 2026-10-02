@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -176,6 +176,84 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
     t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
+  end
+
+  create_table "operations_audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "record_id", null: false
+    t.string "record_kind", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["event_id"], name: "index_operations_audit_logs_on_event_id"
+    t.index ["user_id"], name: "index_operations_audit_logs_on_user_id"
+  end
+
+  create_table "operations_business_contacts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.bigint "event_id", null: false
+    t.string "name", null: false
+    t.boolean "outreach_approved", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_operations_business_contacts_on_event_id"
+  end
+
+  create_table "operations_fulfillment_tasks", force: :cascade do |t|
+    t.boolean "completed", default: false, null: false
+    t.datetime "created_at", null: false
+    t.date "due_on"
+    t.bigint "event_id", null: false
+    t.bigint "sponsor_deal_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_operations_fulfillment_tasks_on_event_id"
+    t.index ["sponsor_deal_id"], name: "index_operations_fulfillment_tasks_on_sponsor_deal_id"
+  end
+
+  create_table "operations_manual_entries", force: :cascade do |t|
+    t.bigint "amount_paise", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "kind", null: false
+    t.date "occurred_on", null: false
+    t.string "reference", null: false
+    t.bigint "sponsor_deal_id"
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_engagement_id"
+    t.index ["event_id"], name: "index_operations_manual_entries_on_event_id"
+    t.index ["sponsor_deal_id"], name: "index_operations_manual_entries_on_sponsor_deal_id"
+    t.index ["vendor_engagement_id"], name: "index_operations_manual_entries_on_vendor_engagement_id"
+    t.check_constraint "amount_paise > 0", name: "manual_entries_positive_amount"
+    t.check_constraint "sponsor_deal_id IS NOT NULL AND vendor_engagement_id IS NULL AND (kind::text = ANY (ARRAY['receipt'::character varying, 'refund'::character varying]::text[])) OR sponsor_deal_id IS NULL AND vendor_engagement_id IS NOT NULL AND (kind::text = ANY (ARRAY['expense'::character varying, 'expense_refund'::character varying]::text[]))", name: "manual_entry_target"
+  end
+
+  create_table "operations_sponsor_deals", force: :cascade do |t|
+    t.bigint "amount_paise", null: false
+    t.bigint "business_contact_id", null: false
+    t.string "contribution", default: "cash", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "stage", default: "pledged", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["business_contact_id"], name: "index_operations_sponsor_deals_on_business_contact_id"
+    t.index ["event_id"], name: "index_operations_sponsor_deals_on_event_id"
+    t.check_constraint "(stage::text = ANY (ARRAY['pledged'::character varying, 'committed'::character varying]::text[])) AND (contribution::text = ANY (ARRAY['cash'::character varying, 'in_kind'::character varying]::text[]))", name: "sponsor_deal_categories"
+    t.check_constraint "amount_paise > 0", name: "sponsor_deals_positive_amount"
+  end
+
+  create_table "operations_vendor_engagements", force: :cascade do |t|
+    t.bigint "amount_paise", null: false
+    t.bigint "business_contact_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["business_contact_id"], name: "index_operations_vendor_engagements_on_business_contact_id"
+    t.index ["event_id"], name: "index_operations_vendor_engagements_on_event_id"
+    t.check_constraint "amount_paise > 0", name: "vendor_engagements_positive_amount"
   end
 
   create_table "orders", force: :cascade do |t|
@@ -576,6 +654,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
   add_foreign_key "memberships", "users"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users", column: "sender_id"
+  add_foreign_key "operations_audit_logs", "events"
+  add_foreign_key "operations_audit_logs", "users"
+  add_foreign_key "operations_business_contacts", "events"
+  add_foreign_key "operations_fulfillment_tasks", "events"
+  add_foreign_key "operations_fulfillment_tasks", "operations_sponsor_deals", column: "sponsor_deal_id"
+  add_foreign_key "operations_manual_entries", "events"
+  add_foreign_key "operations_manual_entries", "operations_sponsor_deals", column: "sponsor_deal_id"
+  add_foreign_key "operations_manual_entries", "operations_vendor_engagements", column: "vendor_engagement_id"
+  add_foreign_key "operations_sponsor_deals", "events"
+  add_foreign_key "operations_sponsor_deals", "operations_business_contacts", column: "business_contact_id"
+  add_foreign_key "operations_vendor_engagements", "events"
+  add_foreign_key "operations_vendor_engagements", "operations_business_contacts", column: "business_contact_id"
   add_foreign_key "orders", "coupons"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"

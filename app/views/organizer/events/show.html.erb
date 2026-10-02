@@ -8,5 +8,8 @@
   <% end %>
   <% if @event.published? %><p><%= link_to "View public event", published_event_path(@organization.slug, @event.slug) %></p><% end %>
   <p><%= link_to "All events", organizer_organization_events_path(@organization) %></p>
+  <% if Rails.configuration.x.organizer_operations_enabled && (@membership.owner? || @membership.admin?) %>
+    <p><%= link_to "Sponsor and vendor operations", organizer_organization_event_operations_path(@organization, @event) %></p>
+  <% end %>
   <p>This event page does not enable ticket sales.</p>
 </main>

@@ -1,0 +1,12 @@
+<main>
+  <h1>Local outreach draft</h1>
+  <p>Template only. AI generation is disabled. Nothing has been sent. Review before copying.</p>
+  <p>Uses only this contact's approved name and the selected event title.</p>
+  <pre style="white-space: pre-wrap; overflow-wrap: anywhere">Hello <%= @contact.name %>,
+
+We would like to discuss a possible collaboration for <%= @event.title %>.
+Would you be open to a conversation?
+
+Thank you.</pre>
+  <%= link_to "Back to operations", organizer_organization_event_operations_path(@organization, @event) %>
+</main>
