@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import "jsqr"
 import "html5-qrcode"
 
 export default class extends Controller {
@@ -21,6 +22,7 @@ export default class extends Controller {
     }
     this.scanner = new Scanner("checkin-reader", {
       fps: 10, rememberLastUsedCamera: false, useBarCodeDetectorIfSupported: false,
+      formatsToSupport: [window.__Html5QrcodeLibrary__.Html5QrcodeSupportedFormats.QR_CODE],
       qrbox: (width, height) => { const side = Math.min(250, Math.floor(Math.min(width, height) * 0.7)); return { width: side, height: side } }
     }, false)
     this.scanner.render(secret => this.scan(secret), () => {})
