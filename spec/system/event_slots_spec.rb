@@ -61,3 +61,28 @@ RSpec.describe "Slot scanner recovery", type: :system do
     end
   end
 end
+
+RSpec.describe "Slot software QR fallback", type: :system do
+  it "redeems the preserved CI-failing QR without BarcodeDetector or consuming admission" do
+    operator = create(:admin_user, password: "password123")
+    ticket = create(:ticket, order: create(:order, :paid), secret: Rails.root.join("spec/fixtures/checkin_software_decoder_secret.txt").read.strip)
+    slot = EventSlot.create!(name: "Synthetic QR meal", starts_at: Time.utc(2026, 10, 8, 6), ends_at: Time.utc(2026, 10, 8, 9), active: true, ticket_type_ids: [ ticket.ticket_type_id ])
+    image_path = Rails.root.join("tmp", "slot-fallback-#{ticket.id}.png")
+    RQRCode::QRCode.new(ticket.secret).as_png(size: 360).save(image_path)
+    travel_to(Time.utc(2026, 10, 8, 7)) do
+      visit event_slot_path(slot)
+      fill_in "email", with: operator.email
+      fill_in "password", with: "password123"
+      click_button "Sign in"
+      expect(page).to have_content("Scanning: Synthetic QR meal")
+      page.execute_script("window.BarcodeDetector = undefined")
+      find("span", text: "Scan an Image File", exact_text: true).click
+      find("input[type='file']", visible: :all).set(image_path)
+      expect(page).to have_content("Synthetic QR meal: redeemed at")
+      expect(EventSlotRedemption.where(event_slot: slot, ticket: ticket).count).to eq(1)
+      expect(ticket.reload.checked_in_at).to eq({})
+    end
+  ensure
+    File.delete(image_path) if image_path && File.exist?(image_path)
+  end
+end

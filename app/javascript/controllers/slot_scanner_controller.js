@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import "jsqr"
 import "html5-qrcode"
 export default class extends Controller {
   static values = { url: String }
@@ -10,7 +11,7 @@ export default class extends Controller {
     if (!Scanner) { this.cameraStatusTarget.textContent = "Camera scanner unavailable. Use attendee lookup below."; return }
     if (!window.isSecureContext) { this.cameraStatusTarget.textContent = "Camera requires HTTPS. Use attendee lookup below."; return }
     this.scanner = new Scanner("slot-reader", {
-      fps: 10, rememberLastUsedCamera: false, useBarCodeDetectorIfSupported: false,
+      fps: 10, formatsToSupport: [ window.__Html5QrcodeLibrary__.Html5QrcodeSupportedFormats.QR_CODE ], rememberLastUsedCamera: false, useBarCodeDetectorIfSupported: false,
       qrbox: (width, height) => { const side = Math.min(250, Math.floor(Math.min(width, height) * 0.7)); return { width: side, height: side } }
     }, false)
     this.scanner.render(secret => this.scan(secret), () => {})

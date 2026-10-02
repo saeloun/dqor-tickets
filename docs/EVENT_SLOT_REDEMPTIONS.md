@@ -22,7 +22,9 @@ scan, retaining it across unknown-result retries. The response contains `state`,
 `message`, `redeemed_at`, `redemption_id` on success; 422 rejects invalid eligibility,
 window, capacity, duplicate entitlement or request-key reuse. Existing staff
 session and CSRF rules apply. Never log/persist QR input on the client. The same
-camera library as admission is used in an isolated Stimulus adapter. Pending
+camera library and pinned local jsQR fallback as admission are used in an isolated
+Stimulus adapter, with QR-only decoding. The preserved CI-failing synthetic QR is
+exercised through slot image upload without BarcodeDetector. Pending
 uncertain requests block new scans until retried. Repeated frames are suppressed;
 explicit “Allow a new scan” supports configured multiple redemptions. Visibility
 changes and orientation pause camera processing until an explicit restart. HTTPS,
