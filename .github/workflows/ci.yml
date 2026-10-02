@@ -155,13 +155,12 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/dqor_clamav_test
       HIRING_CLAMAV_INTEGRATION: "true"
       HIRING_CLAMSCAN_PATH: /usr/bin/clamscan
+      HIRING_CLAMAV_DATABASE: /var/lib/clamav
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Configure private temporary database path
-        run: echo "HIRING_CLAMAV_DATABASE=$RUNNER_TEMP/hiring-clamav-db" >> "$GITHUB_ENV"
       - name: Install distro CLI without starting services
         timeout-minutes: 3
         run: |
@@ -171,16 +170,17 @@ jobs:
       - name: Fetch official signatures once, with bounded retries
         timeout-minutes: 4
         run: |
-          mkdir -m 700 "$HIRING_CLAMAV_DATABASE"
-          cat > "$RUNNER_TEMP/hiring-freshclam.conf" <<EOF
+          sudo install -d -m 755 -o clamav -g clamav "$HIRING_CLAMAV_DATABASE"
+          sudo tee /etc/clamav/freshclam.conf > /dev/null <<EOF
           DatabaseDirectory $HIRING_CLAMAV_DATABASE
+          DatabaseOwner clamav
           DatabaseMirror database.clamav.net
           DNSDatabaseInfo current.cvd.clamav.net
           ConnectTimeout 10
           ReceiveTimeout 30
           MaxAttempts 1
           EOF
-          timeout 180s freshclam --config-file="$RUNNER_TEMP/hiring-freshclam.conf" --stdout
+          sudo timeout 180s freshclam --config-file=/etc/clamav/freshclam.conf --stdout
       - name: Record engine and official signature versions
         run: |
           {
@@ -204,4 +204,4 @@ jobs:
         run: timeout 90s bundle exec rspec spec/services/hiring/clamav_integration_spec.rb --format documentation
       - name: Remove task signatures and temporary config
         if: always()
-        run: rm -rf -- "$HIRING_CLAMAV_DATABASE" "$RUNNER_TEMP/hiring-freshclam.conf"
+        run: sudo rm -rf -- "$HIRING_CLAMAV_DATABASE" /etc/clamav/freshclam.conf
