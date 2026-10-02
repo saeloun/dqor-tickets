@@ -22,3 +22,21 @@ local automated decoder callbacks do not prove hardware compatibility.
 Review legacy ticket types without date bounds before launch; their compatibility
 fallback remains the global October 8–11 window. Production counts exclude unpaid,
 canceled and out-of-day tickets. This change does not provision users or grants.
+
+## Phone browser checks
+
+The web route is `/checkin`; native API enablement is not needed. Production HTTPS
+is required for camera access. Permission prompts remain user initiated, and the
+camera selector lets staff choose the back/rear camera after permission. The
+bundled software QR decoder runs without BarcodeDetector, including image-file
+fallback. Permission denial leaves manual attendee search available. Hidden pages
+and orientation changes pause admission callbacks; Restart camera resets the
+scanner and requires the permission/start interaction again. Continuous scans are
+serialized and repeated frames suppressed. No camera permission is requested by
+batch/manual check-in.
+
+Automated Chromium tests cover software-decoded QR images, simulated permission
+denial/manual fallback, mobile layout, orientation restart and repeated frames.
+Actual iPhone Safari/Android Chrome camera focus, rear lens selection, background
+return and HTTPS permissions must still be exercised on those devices before
+claiming verified hardware support.
