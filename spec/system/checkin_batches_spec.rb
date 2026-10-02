@@ -10,6 +10,7 @@ RSpec.describe "Staff batch check-in", type: :system do
     fill_in "password", with: "password123"
     click_button "Sign in"
     expect(page).to have_current_path(checkin_path)
+    expect(page).to have_button("Request Camera Permissions")
   end
 
   it "opens only the Avo selection without recording attendance" do

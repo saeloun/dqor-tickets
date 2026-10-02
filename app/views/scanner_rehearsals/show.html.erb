@@ -1,0 +1,36 @@
+<% content_for :title, "Camera self-test · DQOR" %>
+<% content_for :head do %>
+  <style>
+    .rehearsal { max-width: 42rem; padding: 1rem; margin: auto; overflow-wrap: anywhere; }
+    .rehearsal button, .rehearsal input { font: inherit; padding: .75rem; min-height: 44px; max-width: 100%; box-sizing: border-box; }
+    .rehearsal label { display: block; margin-top: 1rem; }
+    .rehearsal-banner { border: 3px solid #92400e; background: #fef3c7; padding: 1rem; }
+    .rehearsal-sample svg { width: 240px; max-width: 100%; height: auto; background: white; padding: 12px; box-sizing: border-box; }
+    #rehearsal-reader { overflow: hidden; }
+    .rehearsal :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
+  </style>
+<% end %>
+<main class="rehearsal" data-controller="scanner-rehearsal" data-scanner-rehearsal-sample-value="<%= ScannerRehearsalsController::TEST_QR %>" data-action="visibilitychange@document->scanner-rehearsal#visibilityChanged orientationchange@window->scanner-rehearsal#interruptCamera pagehide@window->scanner-rehearsal#interruptCamera turbo:before-cache@document->scanner-rehearsal#beforeCache">
+  <h1>Camera self-test</h1>
+  <p class="rehearsal-banner"><strong>REHEARSAL ONLY — no admission or redemption.</strong> Use only the synthetic sample below. This page does not search real tickets or save results.</p>
+  <ol>
+    <li>Open this page in iPhone Safari or Android Chrome. Show the sample QR on a second screen or print it.</li>
+    <li>Tap Request Camera Permissions and select the back/rear camera. Scan the sample and read the self-test result.</li>
+    <li>Rotate the phone, or switch to another app and return. Scanning pauses; tap Restart camera, request access, and scan again.</li>
+    <li>To rehearse denial, deny camera permission when prompted. The manual test below must still work. Restore permission in browser settings before testing the camera again.</li>
+  </ol>
+  <p>Image-file decoding and manual entry do not verify the physical camera. A self-test result is never an attendee admission.</p>
+  <details class="rehearsal-sample" open>
+    <summary>Synthetic sample QR and text</summary>
+    <%= raw @qr_svg %>
+    <p><code><%= ScannerRehearsalsController::TEST_QR %></code></p>
+  </details>
+  <p data-scanner-rehearsal-target="cameraStatus" role="status">Tap Request Camera Permissions and choose the back/rear camera. If access is denied, use the synthetic manual test below.</p>
+  <button type="button" data-action="scanner-rehearsal#restartCamera">Restart camera</button>
+  <div id="rehearsal-reader"></div>
+  <label for="rehearsal-manual">Synthetic test text</label>
+  <input id="rehearsal-manual" data-scanner-rehearsal-target="manual" autocomplete="off" spellcheck="false">
+  <button type="button" data-action="scanner-rehearsal#manualTest">Test manual fallback</button>
+  <p class="rehearsal-banner" data-scanner-rehearsal-target="result" role="status" aria-live="polite">No test result yet.</p>
+  <p><%= link_to "Leave self-test and choose live scan purpose", event_slots_path, data: { turbo: false } %></p>
+</main>

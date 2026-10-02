@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resource :scanner_rehearsal, only: :show
   resources :event_slots, only: %i[index show new create edit update] do
     member do
       post :redeem

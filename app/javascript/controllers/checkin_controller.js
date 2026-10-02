@@ -1,6 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import "jsqr"
-import "html5-qrcode"
+import { initializeCamera, interruptCamera, restartCamera } from "scanning/camera"
 
 export default class extends Controller {
   static targets = ["date", "result", "count", "selection", "batchButton", "dialog", "confirmation", "outcomes", "control", "cameraStatus"]
@@ -12,41 +11,14 @@ export default class extends Controller {
     this.initializeScanner()
   }
 
-  initializeScanner() {
-    this.cameraInterrupted = false
-    const Scanner = window.__Html5QrcodeLibrary__?.Html5QrcodeScanner
-    if (!Scanner) return this.show("error", "Camera scanner unavailable. Use attendee search below.")
-    if (!window.isSecureContext) {
-      this.cameraStatusTarget.textContent = "Camera requires HTTPS. Use attendee search below."
-      return
-    }
-    this.scanner = new Scanner("checkin-reader", {
-      fps: 10, rememberLastUsedCamera: false, useBarCodeDetectorIfSupported: false,
-      formatsToSupport: [window.__Html5QrcodeLibrary__.Html5QrcodeSupportedFormats.QR_CODE],
-      qrbox: (width, height) => { const side = Math.min(250, Math.floor(Math.min(width, height) * 0.7)); return { width: side, height: side } }
-    }, false)
-    this.scanner.render(secret => this.scan(secret), () => {})
-  }
+  initializeScanner() { initializeCamera(this, "checkin-reader", "Attendee search remains available.") }
 
   visibilityChanged() {
     if (document.hidden) this.interruptCamera()
   }
 
-  interruptCamera() {
-    this.cameraInterrupted = true
-    this.pauseScanner()
-    this.cameraStatusTarget.textContent = "Camera paused after leaving the page or rotating your phone. Tap Restart camera, then choose the back/rear camera. Attendee search remains available."
-  }
-
-  async restartCamera() {
-    if (this.busy) return
-    try { await this.scanner?.clear() } catch (_) {}
-    if (!this.connected) return
-    this.scanner = null
-    this.lastSecret = null
-    this.initializeScanner()
-    this.cameraStatusTarget.textContent = "Tap Request Camera Permissions and choose the back/rear camera. If access is denied, allow camera access in browser settings or use attendee search below."
-  }
+  interruptCamera() { interruptCamera(this, "Attendee search remains available.") }
+  restartCamera() { return restartCamera(this, "Tap Request Camera Permissions and choose the back/rear camera. If access is denied, allow camera access in browser settings or use attendee search below.", true) }
 
   disconnect() {
     this.connected = false
