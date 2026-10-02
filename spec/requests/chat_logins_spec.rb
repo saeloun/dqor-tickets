@@ -60,14 +60,30 @@ RSpec.describe "Conference chat Google login", type: :request do
     expect(grant.code_digest).to eq(Digest::SHA256.hexdigest(code))
     expect(grant.expires_at).to be_within(1.second).of(60.seconds.from_now)
 
+    previous_cookies = cookies.to_hash.dup
     post redeem_chat_login_path, params: { login_code: code, state: state }, as: :json
 
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body).to eq("verified" => true, "email" => "verified@example.com", "name" => "Ruby Fan")
     expect(ChatLoginGrant.count).to eq(0)
+    expect(response.headers["Cache-Control"]).to eq("no-store")
+    expect(response.headers["Set-Cookie"]).to be_nil
+    expect(cookies.to_hash).to eq(previous_cookies)
 
     post redeem_chat_login_path, params: { login_code: code, state: state }, as: :json
     expect(response).to have_http_status(:unauthorized)
+  end
+
+  it "rejects missing grant credentials even with a signed-in DQOR cookie", :csrf do
+    user = User.create!(email: "existing@example.com")
+    get account_magic_path(token: Rails.application.message_verifier(:account_magic_link).generate(user.id, purpose: :account_magic_link, expires_in: 30.minutes))
+    previous_cookies = cookies.to_hash.dup
+
+    post redeem_chat_login_path, params: {}, as: :json
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(response.headers["Set-Cookie"]).to be_nil
+    expect(cookies.to_hash).to eq(previous_cookies)
   end
 
   it "rejects a mismatched state without consuming the valid grant" do
