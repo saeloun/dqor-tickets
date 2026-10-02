@@ -86,17 +86,10 @@ RSpec.describe "Order document lifecycle", type: :model do
 
     it "is backed by a database index so a second invoice cannot be inserted behind its back" do
       order = paid_order
-      Invoice.issue_for!(order)
+      invoice = Invoice.issue_for!(order)
 
       expect do
-        Invoice.create!(
-          order:,
-          number: "DQOR/2026-27/9999",
-          issued_on: Date.current,
-          buyer_snapshot: {},
-          line_items: [],
-          kind: :invoice
-        )
+        Invoice.insert_all!([ invoice.attributes.except("id").merge("number" => "TEST/2627/999999") ])
       end.to raise_error(ActiveRecord::RecordNotUnique)
     end
 

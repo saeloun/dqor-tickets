@@ -344,6 +344,8 @@ RSpec.describe "Checkout storefront", type: :system do
         order_attributes: { email: "accounts@saeloun.test", buyer_name: "Ada Lovelace", gstin: "27AAAAA0000A1Z5", gst_legal_name: "Saeloun India Pvt Ltd", billing_state_code: "27" },
         items: [ { ticket_type_id: ticket_type.id, quantity: 3 } ]
       )
+      # Verified details supplied by finance; checkout collection is a rollout prerequisite.
+      order.update!(metadata: order.metadata.merge("billing_address" => "Test address", "billing_state_name" => "Maharashtra"))
       order.complete_comp! if order.total_paise.zero?
       order.update!(status: :paid) unless order.paid?
       invoice = Invoice.issue_for!(order)
@@ -364,7 +366,8 @@ RSpec.describe "Checkout storefront", type: :system do
         order_attributes: { email: "accounts@other.test", buyer_name: "Grace", gstin: "29AAAAA0000A1Z5", gst_legal_name: "Other Pvt Ltd", billing_state_code: "29" },
         items: [ { ticket_type_id: ticket_type.id, quantity: 3 } ]
       )
-      order.update!(status: :paid)
+      # Verified details supplied by finance; checkout collection is a rollout prerequisite.
+      order.update!(status: :paid, metadata: order.metadata.merge("billing_address" => "Test address", "billing_state_name" => "Test state"))
       invoice = Invoice.issue_for!(order)
 
       expect(invoice.line_items.sum { |line| line.fetch("igst") }).to be_positive
