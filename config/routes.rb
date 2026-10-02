@@ -1,4 +1,16 @@
 Rails.application.routes.draw do
+  namespace :hiring do
+    root "board#index"
+    delete "affiliations/:id", to: "board#remove_affiliation", as: :remove_affiliation
+    post "claims", to: "board#claim", as: :claims
+    post "claims/:id/review", to: "board#review_claim", as: :review_claim
+    post "companies/:company_id/jobs", to: "board#create_job", as: :jobs
+    post "companies/:company_id/affiliation", to: "board#affiliate", as: :affiliation
+    get "jobs/:id", to: "board#show", as: :job
+    post "jobs/:id/apply", to: "board#apply", as: :apply
+    get "jobs/:id/applicants", to: "board#applicants", as: :applicants
+    delete "applications/:id", to: "board#withdraw", as: :withdraw
+  end
   namespace :organizer do
     resources :organizations, only: [] do
       resources :events, except: :destroy do

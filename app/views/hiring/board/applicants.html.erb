@@ -1,0 +1,8 @@
+<h1>Applicants for <%= @job.title %></h1><p>Only active, consented applications for this role appear. PDF downloads remain disabled pending malware scanning.</p>
+<% @applications.each do |application| %><article>
+<h2><%= application.snapshot["name"] %></h2>
+<p><%= application.snapshot["email"] %></p><%= simple_format application.snapshot["summary"] %>
+<p><%= application.snapshot["linkedin"] %></p>
+<p>Consent recorded: <%= application.consented_at.utc.iso8601 %></p>
+<% if application.quarantined_pdf.present? %><p>PDF quarantined — unchecked and unavailable.</p><% end %>
+</article><% end %>
