@@ -1,37 +1,17 @@
 import { Controller } from "@hotwired/stimulus"
-import "jsqr"
-import "html5-qrcode"
+import { initializeCamera, interruptCamera, restartCamera } from "scanning/camera"
 export default class extends Controller {
   static values = { url: String }
   static targets = ["result", "cameraStatus", "control"]
   connect() { this.connected = true; this.busy = false; this.initializeScanner() }
-  initializeScanner() {
-    this.cameraInterrupted = false
-    const Scanner = window.__Html5QrcodeLibrary__?.Html5QrcodeScanner
-    if (!Scanner) { this.cameraStatusTarget.textContent = "Camera scanner unavailable. Use attendee lookup below."; return }
-    if (!window.isSecureContext) { this.cameraStatusTarget.textContent = "Camera requires HTTPS. Use attendee lookup below."; return }
-    this.scanner = new Scanner("slot-reader", {
-      fps: 10, formatsToSupport: [ window.__Html5QrcodeLibrary__.Html5QrcodeSupportedFormats.QR_CODE ], rememberLastUsedCamera: false, useBarCodeDetectorIfSupported: false,
-      qrbox: (width, height) => { const side = Math.min(250, Math.floor(Math.min(width, height) * 0.7)); return { width: side, height: side } }
-    }, false)
-    this.scanner.render(secret => this.scan(secret), () => {})
-  }
+  initializeScanner() { initializeCamera(this, "slot-reader", "Attendee lookup remains available.") }
+
   disconnect() { this.connected = false; this.abort?.abort(); this.scanner?.clear().catch(() => {}); this.scanner = null }
   beforeCache() { this.abort?.abort(); this.interruptCamera() }
   visibilityChanged() { if (document.hidden) this.interruptCamera() }
-  interruptCamera() {
-    this.cameraInterrupted = true
-    try { this.scanner?.pause(true) } catch (_) {}
-    this.cameraStatusTarget.textContent = "Camera paused after leaving the page or rotating your phone. Tap Restart camera, then choose the back/rear camera. Attendee lookup remains available."
-  }
-  async restartCamera() {
-    if (this.busy) return
-    try { await this.scanner?.clear() } catch (_) {}
-    if (!this.connected) return
-    this.scanner = null
-    this.cameraStatusTarget.textContent = "Allow camera access and choose the back/rear camera. If access is denied, use attendee lookup below."
-    this.initializeScanner()
-  }
+  interruptCamera() { interruptCamera(this, "Attendee lookup remains available.") }
+  restartCamera() { return restartCamera(this, "Allow camera access and choose the back/rear camera. If access is denied, use attendee lookup below.") }
+
   manual(event) {
     if (this.busy || this.pending) return
     this.pending = { ticket_id: event.currentTarget.dataset.ticketId, request_key: crypto.randomUUID() }
