@@ -1,0 +1,51 @@
+# Run from repository root: kamal -c deploy/campfire/kamal.yml config
+# Required environment values must identify existing, verified infrastructure.
+service: dqor-campfire
+image: <%= ENV.fetch("CAMPFIRE_IMAGE").inspect %>
+servers:
+  web:
+    hosts:
+      - <%= ENV.fetch("CAMPFIRE_HOST").inspect %>
+    options:
+      user: "1000:1000"
+      init: true
+      cpus: "2"
+      memory: "1g"
+      security-opt: "no-new-privileges:true"
+# Launch the compiled executable directly, with no Rails/Puma entrypoint.
+cmd: ./campfire
+proxy:
+  host: chat.deccanqueenonrails.com
+  app_port: 3000
+  ssl: true
+  forward_headers: true
+  healthcheck:
+    path: /session/new
+    interval: 3
+    timeout: 5
+registry:
+  server: <%= ENV.fetch("CAMPFIRE_REGISTRY").inspect %>
+  username: <%= ENV.fetch("CAMPFIRE_REGISTRY_USERNAME").inspect %>
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+builder:
+  arch: amd64
+  context: .campfire-build/campfire-docker
+  dockerfile: .campfire-build/campfire-docker/Dockerfile
+ssh:
+  config:
+    - <%= File.expand_path("deploy/campfire/ssh_config").inspect %>
+    - <%= File.expand_path("~/.ssh/config").inspect %>
+  user: <%= ENV.fetch("CAMPFIRE_SSH_USER").inspect %>
+  forward_agent: false
+volumes:
+  - /opt/dqor-campfire/storage:/app/storage
+env:
+  clear:
+    PORT: 3000
+    SPINEL_WORKERS: 2
+logging:
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: 3

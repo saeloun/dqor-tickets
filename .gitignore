@@ -34,3 +34,7 @@
 /config/*.key
 
 .gstack/
+
+# Verified Campfire build context (generated C/assets; never credentials).
+/.campfire-build/
+/deploy/campfire/__pycache__/
