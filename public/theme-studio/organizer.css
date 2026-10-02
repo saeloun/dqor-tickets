@@ -1,12 +1,22 @@
+/* Shared organizer vocabulary; event theme tokens remain independent. */
+:root {
+  --organizer-canvas: #f6f5ef;
+  --organizer-ink: #243024;
+  --organizer-primary: #334b28;
+  --organizer-muted: #53634a;
+  --organizer-border: #b6c2ab;
+  --organizer-control-border: #7a8972;
+  --organizer-radius: 12px;
+}
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  background: #f5f5ef;
-  color: #243024;
+  background: var(--organizer-canvas);
+  color: var(--organizer-ink);
   font:
-    14px/1.6 Arial,
+    16px/1.6 Arial,
     sans-serif;
 }
 a {
@@ -16,7 +26,7 @@ a {
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid #275bbb;
+  outline: 3px solid var(--organizer-primary);
   outline-offset: 4px;
 }
 .skip {
@@ -90,7 +100,7 @@ h2 {
 }
 .workspace {
   display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
+  grid-template-columns: 360px minmax(0, 1fr);
   gap: 30px;
   align-items: start;
 }
@@ -98,11 +108,11 @@ h2 {
   padding: 24px;
   background: white;
   border: 1px solid #d3d8cb;
-  border-radius: 8px;
+  border-radius: var(--organizer-radius);
 }
 .hint {
-  font-size: 11px;
-  color: #5c6754;
+  font-size: 13px;
+  color: var(--organizer-muted);
 }
 .editor fieldset {
   border: 0;
@@ -114,13 +124,13 @@ h2 {
 .editor legend {
   float: left;
   width: 100%;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   margin-bottom: 15px;
 }
 label {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   margin: 12px 0 5px;
 }
 input,
@@ -132,16 +142,16 @@ input[type="color"],
 select,
 input[type="file"] {
   width: 100%;
-  min-height: 44px;
-  border: 1px solid #b6c2ab;
+  min-height: 48px;
+  border: 1px solid var(--organizer-control-border);
   border-radius: 4px;
   background: #fafbf7;
   padding: 8px;
-  color: #243024;
+  color: var(--organizer-ink);
 }
 .colors {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 15px;
 }
 input[type="file"] {
@@ -166,18 +176,18 @@ input[type="file"] {
 }
 input[type="submit"],
 button {
-  border: 1px solid #8f9d83;
+  border: 1px solid var(--organizer-control-border);
   border-radius: 4px;
   padding: 13px 18px;
   background: #fff;
-  min-height: 44px;
+  min-height: 48px;
   cursor: pointer;
-  color: #243024;
+  color: var(--organizer-ink);
   white-space: normal;
 }
 input.primary,
 button.primary {
-  background: #334b28;
+  background: var(--organizer-primary);
   color: #fff;
   border-color: #334b28;
 }
@@ -204,7 +214,7 @@ iframe {
   padding: 30px;
   background: #e7ecdf;
   margin-top: 25px;
-  border-radius: 8px;
+  border-radius: var(--organizer-radius);
 }
 .publication p {
   font-size: 12px;
@@ -263,19 +273,19 @@ iframe {
     font-size: 16px;
   }
   nav {
-    font-size: 10px;
-    gap: 12px;
+    font-size: 12px;
+    gap: 16px;
   }
   .intro {
     display: block;
-    padding: 30px 0;
+    padding: 22px 0;
   }
   h1 {
     font-size: 39px;
   }
   .intro aside {
     max-width: none;
-    margin-top: 25px;
+    margin-top: 20px;
   }
   .workspace {
     display: block;
@@ -312,13 +322,13 @@ iframe {
   align-items: center;
   gap: 18px;
   padding: 14px 0;
-  background: #f5f2e9;
+  background: var(--organizer-canvas);
   border-bottom: 1px solid #c8c5ba;
 }
 .editor-actions a,
 .editor-actions button {
   font-size: 13px;
-  min-height: 44px;
+  min-height: 48px;
   display: inline-flex;
   align-items: center;
 }
@@ -354,9 +364,9 @@ dialog a:focus-visible {
   gap: 8px;
 }
 .color-pair input[type="color"] {
-  width: 42px;
-  height: 44px;
-  flex: 0 0 42px;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
   padding: 2px;
 }
 .color-pair input[type="text"] {
@@ -369,7 +379,7 @@ dialog a:focus-visible {
   border: 1px dashed #a2a89b;
   padding: 12px;
   margin: 14px 0;
-  border-radius: 8px;
+  border-radius: var(--organizer-radius);
 }
 .image-choice input[type="file"] {
   max-width: 100%;
@@ -395,10 +405,11 @@ dialog a:focus-visible {
   min-width: 80px;
 }
 .selection button {
-  min-height: 44px;
+  min-height: 48px;
   padding: 8px;
 }
 #saved-preview-dialog {
+  overflow: hidden;
   width: 100vw;
   max-width: none;
   height: 100dvh;
@@ -406,13 +417,14 @@ dialog a:focus-visible {
   border: 0;
   padding: 0;
   margin: 0;
-  background: #f5f2e9;
+  background: var(--organizer-canvas);
 }
 #saved-preview-dialog[open] {
   display: flex;
   flex-direction: column;
 }
 .dialog-bar {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -430,14 +442,14 @@ dialog a:focus-visible {
 }
 .dialog-bar button {
   flex-shrink: 0;
-  min-height: 44px;
+  min-height: 48px;
   padding: 10px;
 }
 #saved-preview-dialog iframe {
-  flex: 1;
+  flex: 1 1 0%;
   min-height: 0;
   width: 100%;
-  height: 100%;
+  height: 0;
   border: 0;
   border-radius: 0;
 }
@@ -457,5 +469,71 @@ dialog a:focus-visible {
   }
   .dialog-bar p {
     max-width: 180px;
+  }
+}
+
+header nav a,
+.editor-actions a {
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+header nav a {
+  font-size: 12px;
+}
+.editor-actions {
+  gap: 12px;
+}
+.editor-actions a {
+  font-size: 14px;
+}
+.editor-actions button {
+  font-size: 14px;
+}
+.editor-actions a:first-child {
+  justify-content: flex-start;
+}
+input[type="text"] {
+  font-size: 16px;
+}
+.color-pair input[type="text"] {
+  border: 1px solid var(--organizer-control-border);
+  border-radius: 4px;
+  background: #fafbf7;
+  color: var(--organizer-ink);
+}
+.image-empty {
+  margin: 12px 0 0;
+}
+.preview-feedback {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+}
+.preview-feedback p {
+  max-width: 36ch;
+}
+#saved-preview-dialog[aria-busy="true"] .dialog-bar {
+  border-bottom-color: var(--organizer-primary);
+}
+@media (max-width: 650px) {
+  header {
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    padding-top: 12px;
+    padding-bottom: 8px;
+  }
+  header nav {
+    margin-left: auto;
+  }
+  .intro aside {
+    font-size: 13px;
+    padding-left: 16px;
   }
 }

@@ -100,4 +100,47 @@ RSpec.describe "Organizer branding", type: :system do
     expect(page).to have_content("Configuration published. Public activation remains off")
     expect(EventBrandingSetting.current.lock_version).to eq(revision + 2)
   end
+
+  it "explains an unavailable preview and retries without losing edits" do
+    page.driver.browser.resize(width: 390, height: 844)
+    open_editor
+    fill_in "Accent hex", with: "#112233"
+    allow_any_instance_of(Organizer::EventBrandingController).to receive(:preview) do |controller|
+      controller.render plain: "Temporarily unavailable", status: :service_unavailable
+    end
+    click_link "Saved preview"
+    expect(page).to have_content("Preview unavailable. Check your session or connection")
+    expect(page).to have_button("Back to editing")
+    expect(page).to have_css('dialog[aria-busy="false"]')
+    page.save_screenshot(Rails.root.join("output/playwright/08-preview-recovery.png")) if ENV["BRANDING_AUDIT_SCREENSHOTS"] == "1"
+    allow_any_instance_of(Organizer::EventBrandingController).to receive(:preview).and_call_original
+    click_button "Try preview again"
+    within_frame(find("#saved-preview-dialog iframe")) do
+      expect(page).to have_content("Deccan Queen on Rails")
+    end
+    expect(page.evaluate_script("document.getElementById('close-preview').getBoundingClientRect().top")).to be >= 0
+    page.save_screenshot(Rails.root.join("output/playwright/09-preview-ready.png")) if ENV["BRANDING_AUDIT_SCREENSHOTS"] == "1"
+    click_button "Back to editing"
+    expect(page).to have_field("Accent hex", with: "#112233")
+  end
+
+  it "announces preview loading and allows returning to edits before the response" do
+    page.driver.browser.resize(width: 390, height: 844)
+    open_editor
+    fill_in "Accent hex", with: "#112233"
+    gate = Queue.new
+    allow_any_instance_of(Organizer::EventBrandingController).to receive(:preview).and_wrap_original do |original, *args|
+      gate.pop
+      original.call(*args)
+    end
+    page.execute_script("document.querySelector('.editor-actions [data-saved-preview]').click()")
+    expect(page).to have_css('dialog[aria-busy="true"]')
+    expect(page).to have_css('#preview-status', text: "Loading saved preview")
+    page.save_screenshot(Rails.root.join("output/playwright/07-preview-loading.png")) if ENV["BRANDING_AUDIT_SCREENSHOTS"] == "1"
+    click_button "Back to editing"
+    expect(page).not_to have_css("dialog[open]")
+    expect(page).to have_field("Accent hex", with: "#112233")
+  ensure
+    gate << true if gate
+  end
 end

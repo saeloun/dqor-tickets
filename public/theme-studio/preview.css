@@ -86,7 +86,8 @@ a:focus-visible {
   font-size: 11px;
 }
 .event-header nav a {
-  min-height: 44px;
+  min-width: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -141,6 +142,9 @@ h1 {
   padding: 15px 20px;
   margin: 20px 0 35px;
   min-height: 48px;
+}
+.event-cta:focus-visible {
+  outline-color: var(--dq-ink);
 }
 .event-cta span {
   font-size: 22px;
