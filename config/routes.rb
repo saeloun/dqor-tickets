@@ -1,4 +1,12 @@
 Rails.application.routes.draw do
+  resources :event_slots, only: %i[index show new create edit update] do
+    member do
+      post :redeem
+      post :correct
+    end
+  end
+  get "account/redemptions", to: "account/redemptions#index", as: :account_redemptions
+
   root "home#index"
   get "tickets", to: "tickets#index", as: :tickets_store
 
