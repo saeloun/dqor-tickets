@@ -21,7 +21,7 @@ module Organizer
       uploads = EventBranding::Configuration::ASSETS.filter_map { |slot| [ slot, values[slot] ] if values[slot].present? }.to_h
       config = { "version" => 1, "theme" => values[:theme], "accent" => values[:accent], "surface" => values[:surface], "font" => values[:font], "sections" => values[:sections] }
       @setting.save_draft!(values: config, uploads: uploads, removals: removals, expected_version: version(values[:lock_version]), actor: Current.admin_user)
-      redirect_to organizer_branding_path, notice: "Draft saved to the server. Published configuration is unchanged.", status: :see_other
+      saved_response("Draft saved to the server. Published configuration is unchanged.")
     end
 
     def preview
@@ -36,13 +36,13 @@ module Organizer
     def publish
       raise EventBranding::Configuration::Invalid, "Confirm publication of the saved draft" unless params[:confirmed] == "1"
       @setting.publish!(expected_version: version(params[:lock_version]), actor: Current.admin_user)
-      redirect_to organizer_branding_path, notice: "Configuration published. Public activation remains off; the live event is unchanged.", status: :see_other
+      saved_response("Configuration published. Public activation remains off; the live event is unchanged.")
     end
 
     def rollback
       raise EventBranding::Configuration::Invalid, "Confirm rollback to the previous publication" unless params[:confirmed] == "1"
       @setting.rollback!(expected_version: version(params[:lock_version]), actor: Current.admin_user)
-      redirect_to organizer_branding_path, notice: "Previous published configuration restored. Draft kept; public activation remains off.", status: :see_other
+      saved_response("Previous published configuration restored. Draft kept; public activation remains off.")
     end
 
     def asset
@@ -52,6 +52,16 @@ module Organizer
     end
 
     private
+      def saved_response(message)
+        respond_to do |format|
+          format.html { redirect_to organizer_branding_path, notice: message, status: :see_other }
+          format.json do
+            flash[:notice] = message
+            render json: { redirect: organizer_branding_path }
+          end
+        end
+      end
+
       def require_organizer
         head :forbidden unless Current.admin_user&.admin?
       end
@@ -72,12 +82,14 @@ module Organizer
 
       def invalid_configuration(error)
         @error = error.message
+        return render json: { error: @error }, status: :unprocessable_entity if request.format.json?
         @configuration = EventBranding::Configuration.new(@setting.reload.draft)
         render :show, status: :unprocessable_entity
       end
 
       def stale_configuration(error)
         @error = error.message
+        return render json: { error: @error }, status: :conflict if request.format.json?
         @configuration = EventBranding::Configuration.new(@setting.reload.draft)
         render :show, status: :conflict
       end

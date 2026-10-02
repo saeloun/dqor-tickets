@@ -124,6 +124,7 @@ label {
   margin: 12px 0 5px;
 }
 input,
+button,
 select {
   font: inherit;
 }
@@ -163,7 +164,8 @@ input[type="file"] {
 .asset input {
   margin-right: 5px;
 }
-input[type="submit"] {
+input[type="submit"],
+button {
   border: 1px solid #8f9d83;
   border-radius: 4px;
   padding: 13px 18px;
@@ -173,7 +175,8 @@ input[type="submit"] {
   color: #243024;
   white-space: normal;
 }
-input.primary {
+input.primary,
+button.primary {
   background: #334b28;
   color: #fff;
   border-color: #334b28;
@@ -294,5 +297,165 @@ iframe {
   }
   h2 {
     font-size: 27px;
+  }
+}
+/* Progressive enhancements retain the same authorized server forms. */
+[hidden] {
+  display: none !important;
+}
+.editor-actions {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 0;
+  background: #f5f2e9;
+  border-bottom: 1px solid #c8c5ba;
+}
+.editor-actions a,
+.editor-actions button {
+  font-size: 13px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.editor-actions button {
+  margin-left: auto;
+}
+#draft-status {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #4e534a;
+}
+#branding-editor,
+#editor-error {
+  scroll-margin-top: 125px;
+}
+button,
+input[type="submit"] {
+  cursor: pointer;
+}
+button:disabled,
+input:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+button:focus-visible,
+dialog a:focus-visible {
+  outline: 3px solid #174f43;
+  outline-offset: 4px;
+}
+.color-pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.color-pair input[type="color"] {
+  width: 42px;
+  height: 44px;
+  flex: 0 0 42px;
+  padding: 2px;
+}
+.color-pair input[type="text"] {
+  min-width: 0;
+  width: 100%;
+  font-family: monospace;
+  padding: 10px 5px;
+}
+.image-choice {
+  border: 1px dashed #a2a89b;
+  padding: 12px;
+  margin: 14px 0;
+  border-radius: 8px;
+}
+.image-choice input[type="file"] {
+  max-width: 100%;
+  font-size: 12px;
+}
+.selection {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+.selection img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: white;
+}
+.selection span {
+  flex: 1;
+  min-width: 80px;
+}
+.selection button {
+  min-height: 44px;
+  padding: 8px;
+}
+#saved-preview-dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: #f5f2e9;
+}
+#saved-preview-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.dialog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 5%;
+  border-bottom: 1px solid #c8c5ba;
+}
+.dialog-bar h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.dialog-bar p {
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+.dialog-bar button {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px;
+}
+#saved-preview-dialog iframe {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+@media (max-width: 650px) {
+  .enhanced-editor .inline-preview {
+    display: none;
+  }
+  .editor-actions {
+    gap: 14px;
+  }
+  .dialog-bar {
+    padding: 12px;
+    gap: 8px;
+  }
+  .dialog-bar h2 {
+    font-size: 19px;
+  }
+  .dialog-bar p {
+    max-width: 180px;
   }
 }

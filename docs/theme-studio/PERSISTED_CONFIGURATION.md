@@ -21,7 +21,7 @@ Managed logo/cover/favicon IDs are assigned by the upload path, checked against 
 
 ## Draft, publication and concurrency
 
-- **Save draft:** commits only the draft and its actor. Unsaved form edits never appear in the saved preview. Validation errors do not partially write images or settings; the UI explicitly shows the latest saved draft after an error.
+- **Save draft:** commits only the draft and its actor. Unsaved form edits never appear in the saved preview. Validation errors do not partially write images or settings; the enhanced editor retains entered values and selected files after validation, stale-write or connection errors. The no-JavaScript HTML fallback explicitly shows the latest saved draft after an error.
 - **Publish saved configuration:** requires explicit confirmation and the current revision. It copies the saved draft to `published`, moves the prior publication to `previous_published`, and records the existing admin actor and UTC timestamp.
 - **Restore previous publication:** requires confirmation/current revision, restores the previous published snapshot, and keeps the draft. One previous snapshot is retained; this is not a complete audit-history archive. Restoring swaps the previous/current snapshots, so that action can also be reversed.
 - Row locks and optimistic `lock_version` reject a second writer's stale draft/publish/rollback instead of silently losing changes. Two independent database connections are tested.
@@ -46,10 +46,24 @@ Migration adds tables only and performs no role grants or data backfill. The sin
 
 ## Verification
 
-- Full local suite: **606 examples, 0 failures** on isolated `dqor_branding_task6_test` with real Chromium system tests.
-- Focused service/model/request/system coverage: **28 examples**, including authentication, desk/attendee denial, CSRF, validation, upload privacy and decoding, atomic failure, stale writes, concurrent writers, saved preview, publish and rollback.
+- Full local suite: **608 examples, 0 failures** on isolated `dqor_branding_task6_test` with real Chromium system tests.
+- Focused service/model/request/system coverage: **30 examples**, including authentication, desk/attendee denial, CSRF, validation, upload privacy and decoding, atomic failure, stale writes, concurrent writers, saved preview, publish and rollback.
 - RuboCop: **331 files, no offenses**. Brakeman: **0 warnings**.
 - Real development-mode Rails browser checks use synthetic data in a separate local database: desktop 1440×1100, phone 390×844, saving and confirmed publication. No horizontal overflow in the page/iframe and no browser console errors.
 - No deployment, public activation, shared-database mutation or live-account grant was performed.
 
 Screenshots: [desktop editor](screenshots/persisted-editor-desktop.png), [phone editor](screenshots/persisted-editor-mobile.png), [phone publication state](screenshots/persisted-published-mobile.png).
+
+## Mobile interaction follow-up
+
+Sticky Edit / Saved preview / Save draft actions make the saved preview reachable before the long form. A full-screen native dialog preserves unsaved form values and files; Back to editing, Escape, and browser Back return focus to the opener. Section links scroll inside the preview. Links to the live event/schedule open separately. Without JavaScript, saved-preview links open in a new tab.
+
+Editable six-digit hex fields accompany color pickers. Private-image cards show selected local thumbnails and filenames with Cancel selection; server decoding and validation remain authoritative. The picker is disabled without JavaScript; editable hex fields still submit normally.
+
+Enhanced submissions use the same authenticated, CSRF-protected endpoints with JSON responses. Validation and connection failures leave the form intact. Pending requests disable editing and repeat submissions; publication/rollback are blocked while edits are unsaved. Leaving the editor with unsaved values triggers the browser's standard warning. No automatic retry occurs after an uncertain result.
+
+The separately labeled static prototype now exposes Previous / Next and “1 of 3” feedback. Touch scrolling and arrow keys synchronize the selected card, editor and preview. Its drafts remain browser-only.
+
+Real Chromium checks: 390×844 phone and 1440×1100 desktop, keyboard focus/section navigation, actual emulated touch swipe, all three gallery directions, no horizontal overflow or console errors. System coverage includes Back/Escape, image cancel, validation retention, failed connection, and repeated save/publish (one revision each).
+
+Updated screenshots: [phone editor](screenshots/persisted-editor-mobile-polish.png), [desktop editor](screenshots/persisted-editor-desktop-polish.png), [full saved preview](screenshots/persisted-full-preview-mobile.png), [gallery first](screenshots/studio-mobile-gallery-first.png), [gallery third](screenshots/studio-mobile-gallery-third.png).
