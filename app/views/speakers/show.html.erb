@@ -15,8 +15,8 @@
   <% if @speaker.bio.present? %><div class="update__body"><%= simple_format(@speaker.bio) %></div><% end %>
 
   <p class="speaker-card__links">
-    <% if @speaker.twitter_url %><%= link_to "Twitter/X", @speaker.twitter_url, target: "_blank", rel: "noopener" %><% end %>
-    <% if @speaker.github_url %><%= link_to "GitHub", @speaker.github_url, target: "_blank", rel: "noopener" %><% end %>
+    <% if @speaker.twitter_url %><%= sanitize(tag.a("Twitter/X", href: @speaker.twitter_url, target: "_blank", rel: "noopener"), attributes: %w[href target rel]) %><% end %>
+    <% if @speaker.github_url %><%= sanitize(tag.a("GitHub", href: @speaker.github_url, target: "_blank", rel: "noopener"), attributes: %w[href target rel]) %><% end %>
   </p>
 
   <% talks = @speaker.published_talks %>

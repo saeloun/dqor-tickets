@@ -24,7 +24,7 @@ RSpec.describe "Speakers", type: :request do
   end
 
   it "shows an announced speaker profile with their talks" do
-    speaker = Speaker.create!(name: "Ada Lovelace", title: "Programmer", bio: "The first programmer.", published: true, status: :announced)
+    speaker = Speaker.create!(name: "Ada Lovelace", title: "Programmer", bio: "The first programmer.", twitter: "@ada", github: "ada", published: true, status: :announced)
     Talk.create!(title: "Analytical Engines", speaker: speaker, published: true)
 
     get speaker_path(speaker)
@@ -32,6 +32,14 @@ RSpec.describe "Speakers", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Ada Lovelace")
     expect(response.body).to include("Analytical Engines")
+
+    [ speaker_path(speaker), speakers_path ].each do |path|
+      get path
+
+      links = Nokogiri::HTML(response.body).css(".speaker-card__links a")
+      expect(links.map { |link| link["href"] }).to eq([ "https://twitter.com/ada", "https://github.com/ada" ])
+      expect(links.all? { |link| link["target"] == "_blank" && link["rel"] == "noopener" }).to be(true)
+    end
   end
 
   it "does not expose a non-announced speaker's profile" do

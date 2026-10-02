@@ -35,6 +35,7 @@ RSpec.describe "Check-in", type: :system do
     fill_in "email", with: admin_user.email
     fill_in "password", with: "password123"
     click_button "Sign in"
+    expect(page).not_to have_current_path(new_session_path)
   end
 
   def open_desk

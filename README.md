@@ -134,6 +134,14 @@ Copy `.env.example` to `.env` for development. Never commit real credentials.
 | --- | --- |
 | `SENTRY_DSN` | Enables Sentry error reporting in production when present. |
 
+### Conference chat
+
+| Variable | Purpose |
+| --- | --- |
+| `CAMPFIRE_JOIN_URL` | Private attendee registration link for Campfire, shown on the signed-in dashboard and attendee directory. Set it in the deployment environment; never commit the invite token. Defaults to `https://chat.deccanqueenonrails.com`, which offers sign-in for existing Campfire accounts. |
+
+Campfire uses a separate account and login from DQOR. New attendees use the configured join link to register.
+
 ## Deployment
 
 Pushes to `main` run two workflows:
