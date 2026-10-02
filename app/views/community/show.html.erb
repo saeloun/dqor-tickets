@@ -12,9 +12,9 @@
         </p>
       <% end %>
       <% if @attendee.bio.present? %><p class="account-email"><%= @attendee.bio %></p><% end %>
-      <% if @attendee.website.present? %>
+      <% if (website_url = safe_profile_url(@attendee.website)) %>
         <p class="attendee-profile__website">
-          <%= sanitize(tag.a("Website", href: @attendee.website, target: "_blank", rel: "noopener", aria: { label: "Website for #{@attendee.display_name}" }), attributes: %w[href target rel aria-label]) %>
+          <%= sanitize(tag.a("Website", href: website_url, target: "_blank", rel: "noopener", aria: { label: "Website for #{@attendee.display_name}" }), attributes: %w[href target rel aria-label]) %>
         </p>
       <% end %>
       <% if (social_links = attendee_social_links(@attendee)).any? %>

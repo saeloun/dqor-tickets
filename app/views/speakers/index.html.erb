@@ -30,8 +30,8 @@
             </ul>
           <% end %>
           <p class="speaker-card__links">
-            <% if speaker.twitter_url %><%= sanitize(tag.a("Twitter/X", href: speaker.twitter_url, target: "_blank", rel: "noopener"), attributes: %w[href target rel]) %><% end %>
-            <% if speaker.github_url %><%= sanitize(tag.a("GitHub", href: speaker.github_url, target: "_blank", rel: "noopener"), attributes: %w[href target rel]) %><% end %>
+            <% if (twitter_url = safe_profile_url(speaker.twitter_url)) %><%= sanitize(tag.a("Twitter/X", href: twitter_url, target: "_blank", rel: "noopener"), attributes: %w[href target rel]) %><% end %>
+            <% if (github_url = safe_profile_url(speaker.github_url)) %><%= sanitize(tag.a("GitHub", href: github_url, target: "_blank", rel: "noopener"), attributes: %w[href target rel]) %><% end %>
           </p>
         </li>
       <% end %>

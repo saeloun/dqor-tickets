@@ -82,18 +82,52 @@ RSpec.describe "Community", type: :request do
     expect(response.body).to include("Connect")
   end
 
-  it "strips executable website protocols even if a stored value bypassed validation" do
-    me = User.create!(email: "me@example.com")
-    attendee = User.create!(email: "unsafe@example.com", website: "https://example.com")
-    User.where(id: attendee.id).update_all(website: "javascript://example.com/%0Aalert(1)")
-    sign_in_as(me)
+  describe "profile URL safeguards" do
+    let(:viewer) { User.create!(email: "viewer@example.com") }
+    let(:attendee) { User.create!(email: "profile@example.com", name: "Ada", discoverable: true) }
 
-    get attendee_path(attendee)
+    before { sign_in_as(viewer) }
 
-    link = Nokogiri::HTML(response.body).at_css(".attendee-profile__website a")
-    expect(link.text).to eq("Website")
-    expect(link["href"]).to be_nil
-    expect(link["rel"]).to eq("noopener")
-    expect(link["aria-label"]).to be_present
+    [ "http://ada.dev/about", "https://ada.dev/about?topic=rails#talks", "ada.dev" ].each do |url|
+      it "renders a valid normalized website for #{url}" do
+        attendee.update!(website: url)
+        get attendee_path(attendee)
+
+        link = response.parsed_body.at_css(".attendee-profile__website a")
+        expect(link["href"]).to eq(attendee.reload.website)
+        expect(link["target"]).to eq("_blank")
+        expect(link["rel"]).to eq("noopener")
+        expect(link["aria-label"]).to eq("Website for Ada")
+      end
+    end
+
+    [
+      nil, "", "javascript:alert(1)", "javascript://example.com/%0Aalert(1)", "data:text/html,<script>alert(1)</script>",
+      "ftp://ada.dev", "//ada.dev", "/profile", "https:profile", "https:///profile",
+      "https://", "https://ada.dev/\nprofile", "https://exa mple.test"
+    ].each do |url|
+      it "omits a legacy stored website #{url.inspect} without falling back to the current page" do
+        User.connection.execute("UPDATE users SET website = #{User.connection.quote(url)} WHERE id = #{attendee.id}")
+        expect(attendee.reload.website).to eq(url)
+
+        get attendee_path(attendee)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body.at_css(".attendee-profile__website")).to be_nil
+        expect(response.parsed_body.css(".account-identity a")).to be_empty
+      end
+    end
+
+    it "omits an invalid Mastodon link while retaining other social profiles and their attributes" do
+      attendee.update!(mastodon: "https://", github: "ada")
+      get attendee_path(attendee)
+
+      links = response.parsed_body.css(".attendee-profile__links a")
+      expect(links.map(&:text)).to eq([ "GitHub" ])
+      expect(links.first["href"]).to eq("https://github.com/ada")
+      expect(links.first["target"]).to eq("_blank")
+      expect(links.first["rel"]).to eq("noopener")
+      expect(links.first["aria-label"]).to eq("GitHub profile for Ada")
+    end
   end
 end

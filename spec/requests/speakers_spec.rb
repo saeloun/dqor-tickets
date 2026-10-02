@@ -49,4 +49,39 @@ RSpec.describe "Speakers", type: :request do
 
     expect(response).to have_http_status(:not_found)
   end
+
+  describe "social profile URLs" do
+    [ "@ada", "javascript:alert(1)", "//evil.example/ada", "https://evil.example/ada" ].each do |handle|
+      it "keeps #{handle.inspect} on fixed social origins consistently on index and detail" do
+        speaker = Speaker.create!(name: "Ada Lovelace", published: true, status: :announced, twitter: handle, github: handle)
+        rendered_links = [ speakers_path, speaker_path(speaker) ].map do |path|
+          get path
+          expect(response).to have_http_status(:ok)
+          links = response.parsed_body.css(".speaker-card__links a")
+          expect(links.map(&:text)).to eq([ "Twitter/X", "GitHub" ])
+          expect(links.map { |link| URI.parse(link["href"]).host }).to eq([ "twitter.com", "github.com" ])
+          links.each do |link|
+            expect(link["target"]).to eq("_blank")
+            expect(link["rel"]).to eq("noopener")
+          end
+          links.map { |link| link["href"] }
+        end
+
+        expect(rendered_links.first).to eq([ speaker.twitter_url, speaker.github_url ])
+        expect(rendered_links.last).to eq(rendered_links.first)
+      end
+    end
+
+    [ nil, "", "bad handle", "ada\nprofile", 'ada" onclick="alert(1)' ].each do |handle|
+      it "omits blank or malformed #{handle.inspect} on both index and detail" do
+        speaker = Speaker.create!(name: "Ada Lovelace", published: true, status: :announced, twitter: handle, github: handle)
+
+        [ speakers_path, speaker_path(speaker) ].each do |path|
+          get path
+          expect(response).to have_http_status(:ok)
+          expect(response.parsed_body.css(".speaker-card__links a")).to be_empty
+        end
+      end
+    end
+  end
 end
