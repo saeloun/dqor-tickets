@@ -12,7 +12,7 @@ class EventSlotsController < ApplicationController
     @query = params[:q].to_s.strip
     @tickets = if @query.length >= 2
       term = "%#{ActiveRecord::Base.sanitize_sql_like(@query.downcase)}%"
-      Ticket.confirmed.includes(:ticket_type)
+      Ticket.legacy.confirmed.includes(:ticket_type)
         .where("lower(tickets.attendee_name) LIKE :term OR lower(tickets.attendee_email) LIKE :term", term:).order(:id).limit(20)
     else
       []
@@ -50,7 +50,7 @@ class EventSlotsController < ApplicationController
 
   def redeem
     slot = EventSlot.find(params[:id])
-    ticket = params[:ticket_id].present? ? Ticket.find_by(id: params[:ticket_id]) : Ticket.find_by(secret: params[:secret])
+    ticket = params[:ticket_id].present? ? Ticket.legacy.find_by(id: params[:ticket_id]) : Ticket.legacy.find_by(secret: params[:secret])
     redemption = EventSlots::Redeem.call(slot:, ticket:, operator: Current.admin_user, request_key: params[:request_key])
     render json: { state: "success", message: "#{slot.name}: redeemed at #{redemption.redeemed_at.iso8601}", redeemed_at: redemption.redeemed_at, redemption_id: redemption.id }
   rescue EventSlots::Redeem::Rejected => error

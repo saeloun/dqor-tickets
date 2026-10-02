@@ -1,0 +1,6 @@
+<main><%= link_to "← Your organizations", free_organizations_path, class: "back" %><p class="eyebrow">A place for your community</p><h1>Create your organization</h1><p>You will own this organization. Creating an organization does not make your personal profile public.</p>
+<% @organization.errors.full_messages.each do |message| %><p role="alert"><%= message %></p><% end %>
+<%= form_with model: @organization, url: free_organizations_path do |form| %>
+<p><%= form.label :name %><%= form.text_field :name, required: true %></p>
+<p><%= form.label :slug, "URL name" %><%= form.text_field :slug, required: true, placeholder: "your-community" %></p>
+<%= form.submit "Create organization" %><% end %></main>

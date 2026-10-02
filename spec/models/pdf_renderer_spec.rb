@@ -34,7 +34,7 @@ RSpec.describe PdfRenderer, type: :model do
     previous_value = ENV["CHROME_NO_SANDBOX"]
     ENV["CHROME_NO_SANDBOX"] = "1"
 
-    render(Object.new, template: :invoice)
+    render(build(:invoice), template: :invoice)
 
     expect(Ferrum::Browser).to have_received(:new).with(hash_including(browser_options: hash_including(
       "no-sandbox" => nil,
@@ -53,7 +53,7 @@ RSpec.describe PdfRenderer, type: :model do
     allow(ApplicationController).to receive(:render).and_return("<html></html>")
     allow(Ferrum::Browser).to receive(:new).and_return(failed_browser, working_browser)
 
-    expect(render(Object.new, template: :invoice)).to eq("%PDF-test")
+    expect(render(build(:invoice), template: :invoice)).to eq("%PDF-test")
     expect(Ferrum::Browser).to have_received(:new).twice
     expect(failed_browser).to have_received(:quit)
     expect(working_browser).to have_received(:quit)

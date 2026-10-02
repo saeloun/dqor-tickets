@@ -1,6 +1,6 @@
 class ProcessRefundJob < ApplicationJob
   def perform(refund_id, payment_event_id)
-    refund = Refund.find(refund_id)
+    refund = Refund.legacy.find(refund_id)
     credit_note = refund.process!(refund.order.payment_events.find(payment_event_id))
     return unless credit_note
 

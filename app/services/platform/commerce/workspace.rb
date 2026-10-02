@@ -36,6 +36,7 @@ module Platform
       def update_ticket_type!(id, attributes)
         @policy.with_access(:manage_inventory) do |event|
           type = TicketType.where(event_id: event.id).lock.find(id)
+          raise UnsupportedAttributes, "Published free inventory cannot be edited here" if type.free_published_at?
           type.update!(draft_attributes(attributes))
           snapshot(type, TYPE_FIELDS)
         end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -157,7 +157,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.index ["organization_id"], name: "index_events_on_organization_id"
     t.check_constraint "ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at", name: "events_ordered_dates"
     t.check_constraint "status::text <> 'published'::text OR starts_at IS NOT NULL AND ends_at IS NOT NULL", name: "events_publication_dates"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying]::text[])", name: "events_valid_status"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'published'::character varying::text])", name: "events_valid_status"
   end
 
   create_table "faqs", force: :cascade do |t|
@@ -168,6 +168,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.string "question", null: false
     t.datetime "updated_at", null: false
     t.index ["published", "position"], name: "index_faqs_on_published_and_position"
+  end
+
+  create_table "free_checkins", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "operator_id", null: false
+    t.bigint "ticket_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_free_checkins_on_event_id"
+    t.index ["operator_id"], name: "index_free_checkins_on_operator_id"
+    t.index ["ticket_id"], name: "index_free_checkins_on_ticket_id", unique: true
   end
 
   create_table "info_pages", force: :cascade do |t|
@@ -206,7 +217,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.index ["organization_id", "user_id"], name: "index_memberships_on_organization_id_and_user_id", unique: true
     t.index ["organization_id"], name: "index_memberships_on_organization_id"
     t.index ["user_id"], name: "index_memberships_on_user_id"
-    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying, 'admin'::character varying, 'editor'::character varying, 'viewer'::character varying]::text[])", name: "memberships_valid_role"
+    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying::text, 'admin'::character varying::text, 'editor'::character varying::text, 'viewer'::character varying::text])", name: "memberships_valid_role"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -254,12 +265,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.integer "status", default: 0, null: false
     t.integer "total_paise", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.index ["code"], name: "index_orders_on_code", unique: true
     t.index ["coupon_id"], name: "index_orders_on_coupon_id"
+    t.index ["event_id", "user_id"], name: "one_free_registration_per_event_user", unique: true, where: "(event_id IS NOT NULL)"
     t.index ["event_id"], name: "index_orders_on_event_id"
     t.index ["id", "ownership_key"], name: "index_orders_on_id_and_ownership_key", unique: true
     t.index ["razorpay_order_id"], name: "index_orders_on_razorpay_order_id", unique: true
+    t.index ["user_id"], name: "index_orders_on_user_id"
     t.check_constraint "event_id IS NULL OR event_id > 0", name: "orders_positive_event"
+    t.check_constraint "event_id IS NULL OR user_id IS NOT NULL AND total_paise = 0 AND razorpay_order_id IS NULL AND coupon_id IS NULL", name: "owned_orders_free_only"
   end
 
   create_table "organizations", force: :cascade do |t|
@@ -567,6 +582,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.date "event_ends_on"
     t.bigint "event_id"
     t.date "event_starts_on"
+    t.datetime "free_published_at"
     t.boolean "hidden", default: false, null: false
     t.integer "max_per_order"
     t.integer "min_per_order", default: 1, null: false
@@ -586,6 +602,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.index ["slug"], name: "index_ticket_types_on_slug", unique: true
     t.check_constraint "event_id IS NULL OR event_id > 0", name: "ticket_types_positive_event"
     t.check_constraint "event_id IS NULL OR hidden = true AND active = false", name: "event_ticket_types_staged"
+    t.check_constraint "free_published_at IS NULL OR event_id IS NOT NULL AND price_paise = 0 AND capacity IS NOT NULL AND capacity > 0", name: "free_inventory_publication"
   end
 
   create_table "tickets", force: :cascade do |t|
@@ -608,10 +625,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.datetime "updated_at", null: false
     t.index ["claim_token"], name: "index_tickets_on_claim_token", unique: true
     t.index ["event_id"], name: "index_tickets_on_event_id"
+    t.index ["id", "ownership_key"], name: "index_tickets_on_id_and_ownership_key", unique: true
     t.index ["order_id"], name: "index_tickets_on_order_id"
     t.index ["secret"], name: "index_tickets_on_secret", unique: true
     t.index ["ticket_type_id"], name: "index_tickets_on_ticket_type_id"
     t.check_constraint "event_id IS NULL OR event_id > 0", name: "tickets_positive_event"
+    t.check_constraint "event_id IS NULL OR price_paise = 0", name: "owned_tickets_free_only"
   end
 
   create_table "users", force: :cascade do |t|
@@ -621,6 +640,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
     t.datetime "created_at", null: false
     t.boolean "discoverable", default: true, null: false
     t.string "email", null: false
+    t.boolean "free_pilot_identity", default: false, null: false
     t.string "github"
     t.string "linkedin"
     t.string "mastodon"
@@ -649,6 +669,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
   add_foreign_key "event_slot_redemptions", "event_slots"
   add_foreign_key "event_slot_redemptions", "tickets"
   add_foreign_key "events", "organizations"
+  add_foreign_key "free_checkins", "events"
+  add_foreign_key "free_checkins", "tickets"
+  add_foreign_key "free_checkins", "tickets", column: ["ticket_id", "event_id"], primary_key: ["id", "ownership_key"], name: "free_checkin_ticket_event"
+  add_foreign_key "free_checkins", "users", column: "operator_id"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "memberships", "organizations"
@@ -658,6 +682,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
   add_foreign_key "native_staff_sessions", "admin_users", on_delete: :cascade
   add_foreign_key "orders", "coupons"
   add_foreign_key "orders", "events"
+  add_foreign_key "orders", "users"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "refunds", "orders"

@@ -4,8 +4,8 @@ RSpec.describe "Commerce ownership constraints" do
   let!(:organization) { Organization.create!(name: "One", slug: "one") }
   let!(:event) { organization.events.create!(title: "One", slug: "one") }
   let!(:other_event) { organization.events.create!(title: "Two", slug: "two") }
-  let!(:type) { create(:ticket_type, event_id: event.id, hidden: true, active: false) }
-  let!(:order) { create(:order, event_id: event.id) }
+  let!(:type) { create(:ticket_type, event_id: event.id, price_paise: 0, hidden: true, active: false) }
+  let!(:order) { create(:order, total_paise: 0, user_id: create(:user_for_free_pilot).id, event_id: event.id) }
   let!(:ticket) { create(:ticket, event_id: event.id, order: order, ticket_type: type) }
   let!(:legacy) { create(:ticket) }
 
@@ -20,8 +20,8 @@ RSpec.describe "Commerce ownership constraints" do
   end
 
   it "rejects cross-event order and ticket-type relationships even without model validations" do
-    other_order = create(:order, event_id: other_event.id)
-    other_type = create(:ticket_type, event_id: other_event.id, active: false, hidden: true)
+    other_order = create(:order, total_paise: 0, user_id: create(:user_for_free_pilot).id, event_id: other_event.id)
+    other_type = create(:ticket_type, event_id: other_event.id, price_paise: 0, active: false, hidden: true)
     expect { database_write { ticket.update_columns(order_id: other_order.id) } }.to raise_error(ActiveRecord::InvalidForeignKey)
     expect { database_write { ticket.update_columns(ticket_type_id: other_type.id) } }.to raise_error(ActiveRecord::InvalidForeignKey)
   end

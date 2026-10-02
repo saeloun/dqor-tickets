@@ -1,5 +1,6 @@
 class OrderMailer < ApplicationMailer
   def confirmation(order, documents_pending: false)
+    LegacyCommerce.assert!(order)
     @order = order
     @active_tickets = order.tickets.reject(&:canceled_at?)
     invoice = @order.invoices.invoice.first unless documents_pending
@@ -10,12 +11,14 @@ class OrderMailer < ApplicationMailer
   end
 
   def order_link(order)
+    LegacyCommerce.assert!(order)
     @order = order
     @active_tickets = order.tickets.reject(&:canceled_at?)
     mail(to: @order.email, subject: "Your Deccan Queen on Rails order link")
   end
 
   def ticket(ticket)
+    LegacyCommerce.assert!(ticket)
     @ticket = ticket
     @order = ticket.order
     attach(@ticket)
@@ -23,12 +26,14 @@ class OrderMailer < ApplicationMailer
   end
 
   def complete_details(ticket)
+    LegacyCommerce.assert!(ticket)
     @ticket = ticket
     @order = ticket.order
     mail(to: @ticket.attendee_email, subject: "One quick thing for your Deccan Queen on Rails ticket")
   end
 
   def refund_note(refund)
+    LegacyCommerce.assert!(refund)
     @refund = refund
     @order = refund.order
     @credit_note = @order.invoices.credit_note.find_by!(number: refund.credit_note_number)

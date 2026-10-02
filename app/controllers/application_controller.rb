@@ -37,6 +37,10 @@ class ApplicationController < ActionController::Base
       @current_user = nil
     end
 
+    def require_legacy_network
+      head :not_found unless current_user&.legacy_network_eligible?
+    end
+
     def require_user
       current_user || redirect_to(account_sign_in_path, alert: "Please sign in to continue.")
     end

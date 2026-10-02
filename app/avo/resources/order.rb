@@ -1,10 +1,12 @@
 class Avo::Resources::Order < Avo::BaseResource
+  self.index_query = -> { query.legacy }
+  self.find_record_method = -> { id.is_a?(Array) ? query.legacy.where(id: id) : query.legacy.find(id) }
   self.title = :code
   self.includes = [ :coupon ]
   self.search = {
     query: -> {
       term = "%#{ActiveRecord::Base.sanitize_sql_like(q.to_s.downcase)}%"
-      query.where("lower(orders.code) LIKE :term OR lower(orders.email) LIKE :term", term:)
+      query.legacy.where("lower(orders.code) LIKE :term OR lower(orders.email) LIKE :term", term:)
     }
   }
 

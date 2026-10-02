@@ -1,4 +1,5 @@
 class TicketType < ApplicationRecord
+  scope :legacy, -> { where(event_id: nil) }
   has_many :tickets, dependent: :restrict_with_exception
   has_many :coupons, dependent: :nullify
 

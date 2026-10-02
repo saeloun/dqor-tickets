@@ -16,7 +16,7 @@ module ApplicationHelper
 
   # Social proof: how many passes are confirmed, and a few opt-in faces to show.
   def whos_coming_count
-    @whos_coming_count ||= Ticket.confirmed.count
+    @whos_coming_count ||= Ticket.legacy.confirmed.count
   end
 
   def whos_coming_faces(limit: 14)

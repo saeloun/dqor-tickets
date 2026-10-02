@@ -1,4 +1,5 @@
 class Ticket < ApplicationRecord
+  scope :legacy, -> { where(event_id: nil) }
   EVENT_DATES = (8..11).map { |day| Date.new(2026, 10, day) }.freeze
   TSHIRT_SIZES = %w[XS S M L XL XXL 3XL].freeze
 
@@ -26,19 +27,19 @@ class Ticket < ApplicationRecord
   normalizes :attendee_email, with: ->(email) { email.strip.downcase }
 
   scope :awaiting_details, -> {
-    where(canceled_at: nil)
+    legacy.where(canceled_at: nil)
       .where.not(attendee_email: [ nil, "" ])
       .where("tshirt_size IS NULL OR tshirt_size = ''")
   }
 
   # Passes that count as "going": paid order, not canceled. Used for the
   # public attendee count (social proof) and anywhere we tally real attendees.
-  scope :confirmed, -> { joins(:order).merge(Order.paid).where(canceled_at: nil) }
+  scope :confirmed, -> { legacy.joins(:order).merge(Order.legacy.paid).where(canceled_at: nil) }
 
   # Distinct emails of attendees holding a paid, non-canceled ticket — used for broadcast emails.
   def self.broadcast_recipients
-    joins(:order).merge(Order.paid)
-      .where(canceled_at: nil)
+    legacy.joins(:order).merge(Order.legacy.paid)
+      .legacy.where(canceled_at: nil)
       .where.not(attendee_email: [ nil, "" ])
       .distinct
       .pluck(:attendee_email)
@@ -59,6 +60,7 @@ class Ticket < ApplicationRecord
   end
 
   def request_details!
+    LegacyCommerce.assert!(self)
     raise Canceled, "canceled ticket cannot be nudged" if canceled_at?
     raise ArgumentError, "ticket is not assigned to an attendee yet" unless assigned?
 
@@ -66,6 +68,7 @@ class Ticket < ApplicationRecord
   end
 
   def assign!(attendee_name:, attendee_email:, dietary_preference: nil, childcare_needed: false, tshirt_size: nil)
+    LegacyCommerce.assert!(self)
     raise Canceled, "canceled ticket cannot be assigned" if canceled_at?
 
     update!(attendee_name:, attendee_email:, dietary_preference:, childcare_needed:, tshirt_size:, assigned_at: Time.current)
@@ -74,10 +77,12 @@ class Ticket < ApplicationRecord
   end
 
   def attach_pdf!
+    LegacyCommerce.assert!(self)
     pdf.attach(io: StringIO.new(PdfRenderer.render(self, template: :ticket)), filename: "DQOR-ticket-#{id}.pdf", content_type: "application/pdf")
   end
 
   def check_in!(date, operator: nil, source: "manual")
+    LegacyCommerce.assert!(self)
     order.with_lock do
       with_lock do
         raise Canceled, "canceled ticket cannot be checked in" if canceled_at? || order.canceled?

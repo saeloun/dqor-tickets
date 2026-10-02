@@ -14,7 +14,11 @@ class Account::SessionsController < ApplicationController
     email = params[:email].to_s.strip.downcase
 
     if email.match?(URI::MailTo::EMAIL_REGEXP)
-      user = User.find_or_create_by!(email: email)
+      user = User.find_or_initialize_by(email: email)
+      if user.new_record? && session[:free_pilot_sign_in] && FreeEvents::Access.enabled?
+        user.assign_attributes(free_pilot_identity: true, discoverable: false, public_attendee: false)
+      end
+      user.save!
       AccountMailer.magic_link(user, magic_token(user)).deliver_later
     end
 
@@ -26,9 +30,12 @@ class Account::SessionsController < ApplicationController
     user = User.find_by(id: user_id) if user_id
 
     if user
+      pilot_sign_in = session.delete(:free_pilot_sign_in) && FreeEvents::Access.enabled?
+      pilot_return_to = session.delete(:free_pilot_return_to) if pilot_sign_in
+      FreeEvents::Privacy.enroll!(user) if pilot_sign_in
       sign_in(user)
       session[:verified_attendee_email] = user.email
-      redirect_to account_root_path, notice: "You’re signed in."
+      redirect_to(pilot_sign_in ? (pilot_return_to.presence || free_organizations_path) : account_root_path, notice: "You’re signed in.")
     else
       redirect_to account_sign_in_path, alert: "That link is invalid or has expired. Request a new one."
     end

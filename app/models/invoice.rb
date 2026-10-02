@@ -1,4 +1,6 @@
 class Invoice < ApplicationRecord
+  scope :legacy, -> { joins(:order).merge(Order.legacy) }
+  validate { errors.add(:order, "must belong to legacy checkout") if order&.event_id.present? }
   has_one_attached :pdf
 
   belongs_to :order
@@ -15,10 +17,12 @@ class Invoice < ApplicationRecord
   before_destroy { raise ActiveRecord::ReadOnlyRecord, "invoices cannot be destroyed" }
 
   def attach_pdf!
+    LegacyCommerce.assert!(self)
     pdf.attach(io: StringIO.new(PdfRenderer.render(self, template: :invoice)), filename: "#{number.tr('/', '-')}.pdf", content_type: "application/pdf") unless pdf.attached?
   end
 
   def self.issue_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil)
+    LegacyCommerce.assert!(order)
     existing = order.invoices.invoice.first if kind.to_s == "invoice"
     return existing if existing
 
@@ -60,10 +64,12 @@ class Invoice < ApplicationRecord
   end
 
   def self.buyer_snapshot(order)
+    LegacyCommerce.assert!(order)
     order.attributes.slice("email", "buyer_name", "buyer_phone", "gstin", "gst_legal_name", "billing_state_code")
   end
 
   def self.line_item_snapshot(order)
+    LegacyCommerce.assert!(order)
     remaining_discount = order.metadata.fetch("discount_paise", 0)
     coupon_ticket_type_id = order.metadata["coupon_ticket_type_id"]
 

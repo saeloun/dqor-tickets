@@ -1,5 +1,13 @@
-<main class="container">
+<main>
+  <p class="eyebrow">Hosted by <%= @event.organization.name %></p>
   <h1><%= @event.title %></h1>
-  <p>Organized by <%= @event.organization.name %></p>
-  <p><%= @event.starts_at.in_time_zone(@event.timezone) %> – <%= @event.ends_at.in_time_zone(@event.timezone) %> (<%= @event.timezone %>)</p>
+  <p class="muted"><%= @event.starts_at.in_time_zone(@event.timezone).strftime("%a, %-d %b %Y · %-I:%M %p") %> – <%= @event.ends_at.in_time_zone(@event.timezone).strftime("%a, %-d %b · %-I:%M %p") %><br><%= @event.timezone %></p>
+  <% @free_types.each do |type| %>
+    <section class="card"><span class="badge">Free event</span><h2 style="margin-top: 16px"><%= type.name %> · Free</h2>
+      <p>One ticket per verified attendee. Capacity: <%= type.capacity %>.</p>
+      <p class="help">Your name and email are shared with this event’s organizers. Free-only accounts stay out of DQOR networking.</p>
+      <% if @event.ends_at <= Time.current %><p class="badge">Registration closed</p><% else %><%= button_to "Register free", free_event_registration_path(@event.organization.slug, @event.slug), params: { ticket_type_id: type.id } %><% end %>
+    </section>
+  <% end %>
+  <% if @free_types.empty? %><p class="notice">Registration is not open here yet. Check back with the organizer for details.</p><% end %>
 </main>

@@ -17,9 +17,9 @@ class TicketAssignmentsController < ApplicationController
   private
     def set_ticket
       if claim_request?
-        @ticket = Ticket.joins(:order).merge(Order.paid).find_by!(claim_token: params.expect(:claim_token))
+        @ticket = Ticket.legacy.joins(:order).merge(Order.legacy.paid).find_by!(claim_token: params.expect(:claim_token))
       else
-        @order = Order.paid.find_by!(code: params.expect(:code))
+        @order = Order.legacy.paid.find_by!(code: params.expect(:code))
         @ticket = @order.tickets.find(params.expect(:id))
       end
     end

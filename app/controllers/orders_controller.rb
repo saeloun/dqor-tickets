@@ -35,7 +35,7 @@ class OrdersController < ApplicationController
   end
 
   def show
-    @order = Order.find_by!(code: params.expect(:code))
+    @order = Order.legacy.find_by!(code: params.expect(:code))
     @order.confirm_from_razorpay_if_stalled!
     regenerate_documents
   rescue ActiveRecord::RecordNotFound
@@ -49,7 +49,7 @@ class OrdersController < ApplicationController
       code = session[:ref].to_s
       return if code.blank?
 
-      referrer = User.find_by(referral_code: code)
+      referrer = User.legacy_network.find_by(referral_code: code)
       return unless referrer
       return if order.email.to_s.casecmp?(referrer.email.to_s)
 
@@ -68,7 +68,7 @@ class OrdersController < ApplicationController
     end
 
     def render_checkout_error(message)
-      @ticket_types = TicketType.where(hidden: false).order(:position, :id)
+      @ticket_types = TicketType.legacy.where(hidden: false).order(:position, :id)
       flash.now[:alert] = message
       render "tickets/index", status: :unprocessable_content
     end
@@ -93,7 +93,7 @@ class OrdersController < ApplicationController
 
         { ticket_type_id:, quantity: }
       end
-      hidden_ids = TicketType.where(id: items.pluck(:ticket_type_id), hidden: true).ids
+      hidden_ids = TicketType.legacy.where(id: items.pluck(:ticket_type_id), hidden: true).ids
       raise Orders::Checkout::InvalidSelection, "ticket type not found" if hidden_ids.any?
 
       items

@@ -1,6 +1,7 @@
 class Account::PushSubscriptionsController < ApplicationController
   allow_unauthenticated_access
   before_action :require_user
+  before_action :require_legacy_network
 
   def create
     subscription = current_user.push_subscriptions.find_or_initialize_by(endpoint: subscription_params[:endpoint])

@@ -6,6 +6,7 @@ class PublishedEventsController < ApplicationController
   def show
     organization = Organization.find_by!(slug: params[:organization_slug])
     @event = organization.events.published.find_by!(slug: params[:event_slug])
+    @free_types = FreeEvents::Access.enabled? ? TicketType.where(event_id: @event.id, price_paise: 0).where.not(free_published_at: nil) : []
   end
 
   private

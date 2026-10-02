@@ -1,12 +1,20 @@
-<main class="container">
-  <h1><%= @event.title %></h1><p>Status: <%= @event.status %></p>
+<main>
+  <%= link_to "← All events", organizer_organization_events_path(@organization), class: "back" %>
+  <p class="eyebrow"><%= @organization.name %></p>
+  <h1><%= @event.title %></h1><p><span class="badge">Status: <%= @event.status %></span> <span class="help"><%= @event.draft? ? "Only your team can view this draft." : "Your event page is public." %></span></p>
   <% @event.errors.full_messages.each do |message| %><p role="alert"><%= message %></p><% end %>
-  <p><%= @event.starts_at&.in_time_zone(@event.timezone) %> – <%= @event.ends_at&.in_time_zone(@event.timezone) %> (<%= @event.timezone %>)</p>
-  <% if can_manage_events? %>
-    <p><%= link_to "Edit", edit_organizer_organization_event_path(@organization, @event) %></p>
-    <% if @event.draft? %><%= button_to "Publish event", publish_organizer_organization_event_path(@organization, @event), method: :post %><% end %>
+  <div class="card"><h2>Event details</h2>
+    <% if @event.starts_at && @event.ends_at %><p><%= @event.starts_at.in_time_zone(@event.timezone).strftime("%a, %-d %b %Y · %-I:%M %p") %> – <%= @event.ends_at.in_time_zone(@event.timezone).strftime("%a, %-d %b · %-I:%M %p") %><br><span class="help"><%= @event.timezone %></span></p><% else %><p class="muted">Add start and end dates before publishing.</p><% end %>
+    <% if can_manage_events? %><%= link_to "Edit", edit_organizer_organization_event_path(@organization, @event) %><% end %>
+  </div>
+  <% if @event.draft? && can_manage_events? %><div class="notice" style="margin-top: 24px"><h2>Ready to share?</h2><p>Publishing makes the event details public. Free registration opens separately after you add ticket capacity.</p><%= button_to "Publish event", publish_organizer_organization_event_path(@organization, @event), method: :post %></div><% end %>
+  <% if @event.published? %>
+    <div class="actions"><%= link_to "View public event", published_event_path(@organization.slug, @event.slug), class: "button secondary" %></div>
+    <% if FreeEvents::Access.enabled? && (@membership.owner? || @membership.admin?) %>
+      <div class="notice" style="margin-top: 24px">
+        <% if TicketType.where(event_id: @event.id).where.not(free_published_at: nil).exists? %><h2>Free registration is open</h2><p>Share the public event page with your community. Manage arrivals from your attendee desk.</p><%= link_to "Attendees and check-in", free_event_attendees_path(@organization, @event), class: "button" %>
+        <% else %><h2>Next: open registration</h2><p>Choose a ticket name and the number of free places available.</p><%= link_to "Open free registration", new_free_event_inventory_path(@organization, @event), class: "button" %><% end %>
+      </div>
+    <% end %>
   <% end %>
-  <% if @event.published? %><p><%= link_to "View public event", published_event_path(@organization.slug, @event.slug) %></p><% end %>
-  <p><%= link_to "All events", organizer_organization_events_path(@organization) %></p>
-  <p>This event page does not enable ticket sales.</p>
 </main>

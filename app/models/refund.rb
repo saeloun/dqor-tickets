@@ -1,4 +1,6 @@
 class Refund < ApplicationRecord
+  scope :legacy, -> { joins(:order).merge(Order.legacy) }
+  validate { errors.add(:order, "must belong to legacy checkout") if order&.event_id.present? }
   class AlreadyRefunded < StandardError; end
   class InvalidTransition < StandardError; end
 
@@ -11,6 +13,7 @@ class Refund < ApplicationRecord
   validates :amount_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   def process!(payment_event)
+    LegacyCommerce.assert!(self)
     raise ArgumentError, "payment event belongs to another order" unless payment_event.order_id == order_id
     raise ArgumentError, "payment event amount does not match refund" unless payment_event.amount_paise == amount_paise
 

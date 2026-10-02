@@ -8,11 +8,11 @@ RSpec.describe Platform::Commerce::Workspace do
   let!(:sibling_event) { organization.events.create!(title: "Sibling", slug: "sibling") }
   let!(:other_event) { other_organization.events.create!(title: "Two", slug: "two") }
   let!(:membership) { Membership.create!(user: user, organization: organization, role: :owner) }
-  let!(:type) { create(:ticket_type, event_id: event.id, hidden: true, active: false) }
-  let!(:order) { create(:order, event_id: event.id, email: "one@example.test", metadata: { private_billing_note: "PRIVATE" }) }
+  let!(:type) { create(:ticket_type, event_id: event.id, price_paise: 0, hidden: true, active: false) }
+  let!(:order) { create(:order, total_paise: 0, user_id: create(:user_for_free_pilot).id, event_id: event.id, email: "one@example.test", metadata: { private_billing_note: "PRIVATE" }) }
   let!(:ticket) { create(:ticket, event_id: event.id, ticket_type: type, order: order, attendee_email: "attendee-one@example.test") }
-  let!(:other_type) { create(:ticket_type, event_id: other_event.id, hidden: true, active: false) }
-  let!(:other_order) { create(:order, event_id: other_event.id, email: "two@example.test") }
+  let!(:other_type) { create(:ticket_type, event_id: other_event.id, price_paise: 0, hidden: true, active: false) }
+  let!(:other_order) { create(:order, total_paise: 0, user_id: create(:user_for_free_pilot).id, event_id: other_event.id, email: "two@example.test") }
   let!(:other_ticket) { create(:ticket, event_id: other_event.id, ticket_type: other_type, order: other_order, attendee_email: "attendee-two@example.test") }
   let!(:legacy_ticket) { create(:ticket) }
   subject(:workspace) { described_class.new(user: user, organization_id: organization.id, event_id: event.id) }
@@ -54,7 +54,7 @@ RSpec.describe Platform::Commerce::Workspace do
     [ other_ticket, legacy_ticket ].each do |foreign|
       expect { workspace.ticket(foreign.id) }.to raise_error(ActiveRecord::RecordNotFound)
     end
-    sibling = create(:order, event_id: sibling_event.id)
+    sibling = create(:order, total_paise: 0, user_id: create(:user_for_free_pilot).id, event_id: sibling_event.id)
     expect { workspace.order_by_code(sibling.code) }.to raise_error(ActiveRecord::RecordNotFound)
   end
 

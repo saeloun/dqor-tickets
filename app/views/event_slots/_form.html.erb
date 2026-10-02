@@ -6,6 +6,6 @@
 <% [:starts_at, :ends_at].each do |field| %><p><%= f.label field %><br><%= f.datetime_local_field field, value: @slot.public_send(field)&.in_time_zone("Asia/Kolkata")&.strftime("%Y-%m-%dT%H:%M"), required: true %></p><% end %>
 <p><%= f.label :capacity, "Total redemption capacity (blank for unlimited)" %><br><%= f.number_field :capacity, min: 1 %></p>
 <p><%= f.label :redemption_limit, "Redemptions per ticket" %><br><%= f.number_field :redemption_limit, min: 1 %></p>
-<fieldset><legend>Explicit eligible ticket types</legend><%= f.collection_check_boxes :ticket_type_ids, TicketType.order(:name), :id, :name do |b| %><p><%= b.label { b.check_box + b.text } %></p><% end %></fieldset>
+<fieldset><legend>Explicit eligible ticket types</legend><%= f.collection_check_boxes :ticket_type_ids, TicketType.legacy.order(:name), :id, :name do |b| %><p><%= b.label { b.check_box + b.text } %></p><% end %></fieldset>
 <p><%= f.label :active do %><%= f.check_box :active %> Activate verified eligibility and schedule<% end %></p><%= f.submit "Save slot" %>
 <% end %></main>
