@@ -384,7 +384,7 @@ dialog a:focus-visible {
   margin-top: 12px;
   overflow-wrap: anywhere;
 }
-.selection img {
+.selection canvas {
   width: 64px;
   height: 64px;
   object-fit: contain;

@@ -20,7 +20,7 @@
           <% if (asset_id = config.fetch("assets")[slot]) %>
             <div class="asset"><%= image_tag asset_organizer_branding_path(id: asset_id), alt: "Saved #{slot} preview" %><label><%= check_box_tag "branding[remove_assets][]", slot, false %> Remove saved <%= slot %></label></div>
           <% end %>
-          <div class="selection" hidden><img alt=""><span></span><button type="button">Cancel selection</button></div></div>
+          <div class="selection" hidden><canvas role="img" aria-label="Selected image preview"></canvas><span></span><button type="button">Cancel selection</button></div></div>
         <% end %>
       </fieldset>
       <fieldset><legend>03 · Section order</legend><p class="hint">Hero stays first. Each section must appear once.</p>

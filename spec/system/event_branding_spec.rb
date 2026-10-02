@@ -60,20 +60,20 @@ RSpec.describe "Organizer branding", type: :system do
     open_editor
     fill_in "Accent hex", with: "#224466"
     attach_file "Cover", Rails.root.join("public/dqor/favicon-32x32.png")
-    expect(page).to have_css('img[alt="Selected cover preview"]')
+    expect(page).to have_css('canvas[aria-label="Selected cover preview"]')
     click_link "Saved preview"
     expect(page).to have_css("dialog[open]")
     expect(page.evaluate_script("document.activeElement.id")).to eq("close-preview")
     page.go_back
     expect(page).not_to have_css("dialog[open]")
     expect(page).to have_field("Accent hex", with: "#224466")
-    expect(page).to have_css('img[alt="Selected cover preview"]')
+    expect(page).to have_css('canvas[aria-label="Selected cover preview"]')
     click_link "Saved preview"
     page.send_keys(:escape)
     expect(page).not_to have_css("dialog[open]")
     expect(page.evaluate_script("document.activeElement.textContent")).to eq("Saved preview")
     click_button "Cancel selection"
-    expect(page).not_to have_css('img[alt="Selected cover preview"]')
+    expect(page).not_to have_css('canvas[aria-label="Selected cover preview"]')
     check "confirmed"
     click_button "Publish saved configuration"
     expect(page).to have_content("Save your draft before publishing")

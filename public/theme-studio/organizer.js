@@ -48,21 +48,21 @@ if (form) {
   document.querySelectorAll(".image-choice").forEach((card) => {
     const input = card.querySelector('input[type="file"]');
     const selected = card.querySelector(".selection");
-    let url;
+    const canvas = selected.querySelector("canvas");
+    let selectionVersion = 0;
     function clear() {
-      if (url) URL.revokeObjectURL(url);
-      url = null;
+      selectionVersion += 1;
       input.value = "";
       selected.hidden = true;
-      selected.querySelector("img").removeAttribute("src");
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
       changed();
     }
     selected.querySelector("button").addEventListener("click", () => {
       clear();
       input.focus();
     });
-    input.addEventListener("change", () => {
-      if (url) URL.revokeObjectURL(url);
+    input.addEventListener("change", async () => {
+      const version = ++selectionVersion;
       const file = input.files[0];
       if (!file) {
         clear();
@@ -78,16 +78,29 @@ if (form) {
         );
         return;
       }
-      url = URL.createObjectURL(file);
-      selected.querySelector("img").src = url;
-      selected.querySelector("img").alt =
-        `Selected ${input.id.replace("branding_", "")} preview`;
-      selected.querySelector("span").textContent =
-        `${file.name} · selected, not saved`;
-      selected.hidden = false;
-      const remove = card.querySelector('input[type="checkbox"]');
-      if (remove) remove.checked = false;
-      changed();
+      let bitmap;
+      try {
+        bitmap = await createImageBitmap(file);
+        if (version !== selectionVersion) return;
+        if (bitmap.width > 4096 || bitmap.height > 4096 || bitmap.width * bitmap.height > 12000000)
+          throw new Error("Choose an image no larger than 4096 pixels per side or 12 megapixels.");
+        const scale = Math.min(1, 256 / Math.max(bitmap.width, bitmap.height));
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        canvas.setAttribute("aria-label", `Selected ${input.id.replace("branding_", "")} preview`);
+        selected.querySelector("span").textContent = `${file.name} · selected, not saved`;
+        selected.hidden = false;
+        const remove = card.querySelector('input[type="checkbox"]');
+        if (remove) remove.checked = false;
+        changed();
+      } catch (failure) {
+        if (version !== selectionVersion) return;
+        clear();
+        showError(`${failure.message || "The selected image could not be decoded."} Other edits are still here.`);
+      } finally {
+        bitmap?.close();
+      }
     });
   });
   const dialog = document.getElementById("saved-preview-dialog");
