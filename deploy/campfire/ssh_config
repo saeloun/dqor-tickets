@@ -1,0 +1,5 @@
+# Scoped to this Kamal configuration; never changes the user's SSH settings.
+Host *
+  StrictHostKeyChecking yes
+  ForwardAgent no
+  BatchMode yes
