@@ -30,3 +30,9 @@ Production prerequisites remain explicit: choose a supported scanner-worker host
 - Official CLI options and return codes: https://github.com/Cisco-Talos/clamav/blob/main/docs/man/clamscan.1.in
 - Official signature maintenance: https://docs.clamav.net/manual/Usage/SignatureManagement.html
 - Recognized Homebrew package: https://formulae.brew.sh/formula/clamav
+
+## Optional Linux CI validation
+
+The existing CI workflow now accepts the boolean `real_clamav` dispatch input, default false. Its optional `real_clamav` job uses the existing public-repository GitHub-hosted Ubuntu runner, distro-signed packages, and a one-shot official FreshClam signature download. No service credentials, private documents, paid/new runner configuration or account changes are required. Daemon/updater services are masked on the ephemeral Linux runner before package installation. The job has a ten-minute limit; signature download has a 180-second limit and one attempt, and the real-engine spec has a 90-second limit in addition to adapter process limits. Engine/package/database versions are written to the run summary. Signature fetch failure fails the job; no test signature or clean verdict substitute is used.
+
+This validates Linux only. Mac administrator-authenticated installation remains pending and must not be inferred from a green Linux result. Production delivery remains default-off, with separate scanner hosting and resource provisioning still required.
