@@ -1,0 +1,15 @@
+diff --git a/app/controllers/accounts/users_controller.rb b/app/controllers/accounts/users_controller.rb
+index 8adefef..1922418 100644
+--- a/app/controllers/accounts/users_controller.rb
++++ b/app/controllers/accounts/users_controller.rb
+@@ -6,7 +6,9 @@ class Accounts::UsersController < ApplicationController
+   end
+ 
+   def update
+-    @user.update(role_params)
++    if @user.update(role_params)
++      @user.reset_remote_connections
++    end
+     redirect_to edit_account_url
+   end
+ 

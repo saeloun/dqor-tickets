@@ -1,0 +1,9 @@
+logout: both_closed=false, post_revocation_delivery=true, unaffected_observer=true, stock_guard=true
+logout: replay_rejected=true
+membership: both_closed=false, post_revocation_delivery=true, unaffected_observer=true, stock_guard=true
+membership: replay_rejected=true
+role: both_closed=false, post_revocation_delivery=true, unaffected_observer=true, stock_guard=true
+role: admin_http_status=403
+FAIL: logout, membership, role, ban
+ban: both_closed=false, post_revocation_delivery=true, unaffected_observer=true, stock_guard=true
+ban: replay_rejected=true

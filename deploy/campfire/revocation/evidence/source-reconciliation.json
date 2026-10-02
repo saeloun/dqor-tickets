@@ -1,0 +1,31 @@
+{
+  "lib": {
+    "files": 80,
+    "unmatched": []
+  },
+  "native/bcrypt": {
+    "files": 3,
+    "unmatched": []
+  },
+  "native/ruby-vips": {
+    "files": 1,
+    "unmatched": []
+  },
+  "native/rqrcode": {
+    "files": 3,
+    "unmatched": []
+  },
+  "native/nokogiri": {
+    "files": 145,
+    "unmatched": []
+  },
+  "sp_json.c": {
+    "matched_pinned_spinel_source": true
+  },
+  "sp_stringio.c": {
+    "matched_pinned_spinel_source": true
+  },
+  "sp_openssl.c": {
+    "matched_pinned_spinel_source": true
+  }
+}

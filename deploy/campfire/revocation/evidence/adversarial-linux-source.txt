@@ -1,0 +1,8 @@
+PASS registered affected socket retired
+PASS unaffected socket remains usable
+FAIL handshake identified before revocation cannot register live afterward
+PASS ban transaction seam completed
+FAIL reconnect during ban commit window is retired by completed ban
+FAIL revocation completes within 500ms when peer never reads
+PASS backpressure fixture cleaned up after peer close
+source-level contract failures=3; native/DB race certification is separate
