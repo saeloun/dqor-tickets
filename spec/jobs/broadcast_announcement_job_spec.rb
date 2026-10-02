@@ -17,6 +17,16 @@ RSpec.describe BroadcastAnnouncementJob, type: :job do
     ActionMailer::Base.deliveries.clear
   end
 
+  it "reserves the existing default worker capacity from announcement traffic" do
+    config = YAML.safe_load(ERB.new(Rails.root.join("config/queue.yml").read).result, aliases: true)
+    workers = config.fetch("production").fetch("workers")
+    expect(workers.first.fetch("queues")).to eq("default")
+    expect(workers.first.fetch("threads")).to eq(3)
+    expect(workers.last.fetch("threads")).to eq(1)
+    expect(described_class.new.queue_name).to eq("announcements")
+    expect(described_class.new.priority).to eq(100)
+  end
+
   it "submits a frozen version once across repeated dispatches" do
     campaign = approve
     announcement.update!(title: "Changed", body: "Not approved")

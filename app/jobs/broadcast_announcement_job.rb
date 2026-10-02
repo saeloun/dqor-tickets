@@ -1,6 +1,7 @@
 # Deliberately does not inherit ApplicationJob's provider/network retry handlers.
 class BroadcastAnnouncementJob < ActiveJob::Base
   queue_as :announcements
+  queue_with_priority 100
   limits_concurrency to: 1, key: "announcement-dispatch", duration: 10.minutes
 
   def self.enabled?
