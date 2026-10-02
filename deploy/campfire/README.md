@@ -4,12 +4,14 @@ Sam Ruby's [Spinel Campfire bundle](https://rubys.github.io/roundhouse/apps/camp
 
 ## Installed release
 
-- Archive: `https://github.com/vipulnsward/roundhouse/releases/download/campfire-dqor-605040cd-f023c3ee/docker.tgz`
-- SHA-256: `8567d2824248e72fc366dec8899ad13371abe88d56ccd5027f7a760c50792e6a`
-- Bundle provenance: Roundhouse `605040cdbab31b4ff9dd653786dd2e4ccac75c05`, Campfire `f023c3eef44e199c5ea292fe1dc4df21721e4bd7`, Spinel `ed603ed`.
-- Image: `dqor-campfire:605040cd-f023c3ee`, built on the Linux AMD64 host.
+- Archive: `https://github.com/vipulnsward/roundhouse/releases/download/campfire-dqor-605040cd-569ff565/docker.tgz`
+- SHA-256: `0faa1d83622b69c3e41ff3084f6943ec906e0ce3e1224703986dff111204686e`
+- Bundle provenance: Roundhouse `605040cdbab31b4ff9dd653786dd2e4ccac75c05`, Campfire `569ff565dafa2516f8ff3e7374d68fc19e91f417`, Spinel `ed603ed`.
+- Image: `dqor-campfire:605040cd-569ff565`, built on the Linux AMD64 host.
 - Storage: `/opt/dqor-campfire/storage`, owned by UID/GID 1000 with directory mode 0700. SQLite, uploads and the generated signing key survive container replacement.
-- Administrator: `vipul@saeloun.com`; password in agent-vault item `dqor-campfire-admin-20261002`.
+- Administrator: `vipul@saeloun.com`; verified Google sign-in in Brave.
+- Branding: DQOR logo with cream/ruby light mode and warm dark mode, including the private runtime dashboard.
+- Native executable: the same release includes `campfire-linux-amd64` (SHA-256 `6fd0e98417a0a7775f95682c4c6678911a1fa255a7583be56c558677b83d448c`). It needs the matching assets and Linux runtime libraries; use the Docker archive for a complete deployment.
 
 ## Rebuild and start
 
@@ -17,23 +19,23 @@ Run on the host, with the existing `kamal` Docker network and proxy. Create `/op
 
 ```sh
 set -e
-install -d -m 0700 /opt/dqor-campfire/releases/605040cd-f023c3ee
-cd /opt/dqor-campfire/releases/605040cd-f023c3ee
+install -d -m 0700 /opt/dqor-campfire/releases/605040cd-569ff565
+cd /opt/dqor-campfire/releases/605040cd-569ff565
 if [ ! -f docker.tgz ]; then
-  curl -fsSL https://github.com/vipulnsward/roundhouse/releases/download/campfire-dqor-605040cd-f023c3ee/docker.tgz -o docker.tgz.download
-  printf '%s  %s\n' 8567d2824248e72fc366dec8899ad13371abe88d56ccd5027f7a760c50792e6a docker.tgz.download | sha256sum -c -
+  curl -fsSL https://github.com/vipulnsward/roundhouse/releases/download/campfire-dqor-605040cd-569ff565/docker.tgz -o docker.tgz.download
+  printf '%s  %s\n' 0faa1d83622b69c3e41ff3084f6943ec906e0ce3e1224703986dff111204686e docker.tgz.download | sha256sum -c -
   mv docker.tgz.download docker.tgz
 fi
-printf '%s  %s\n' 8567d2824248e72fc366dec8899ad13371abe88d56ccd5027f7a760c50792e6a docker.tgz | sha256sum -c -
+printf '%s  %s\n' 0faa1d83622b69c3e41ff3084f6943ec906e0ce3e1224703986dff111204686e docker.tgz | sha256sum -c -
 tar -xzf docker.tgz
-docker build -t dqor-campfire:605040cd-f023c3ee dqor-campfire-google-docker
+docker build -t dqor-campfire:605040cd-569ff565 dqor-campfire-branded-docker
 install -d -m 0700 /opt/dqor-campfire/storage
 chown 1000:1000 /opt/dqor-campfire/storage
 docker compose -f /opt/dqor-campfire/compose.yml config --quiet
 docker compose -f /opt/dqor-campfire/compose.yml up -d
 ```
 
-Copy this directory's `compose.yml` to `/opt/dqor-campfire/compose.yml` first. Retain the verified archive on the host. The release is pinned by checksum; a changed checksum requires a separately tested release. The previous `dqor-campfire:c0c42854` image and original archive remain available for rollback.
+Copy this directory's `compose.yml` to `/opt/dqor-campfire/compose.yml` first. Retain the verified archive on the host. The release is pinned by checksum; a changed checksum requires a separately tested release. The previous `dqor-campfire:605040cd-f023c3ee` image and release remain available for rollback.
 
 On a new installation, complete first-run setup over an SSH tunnel to `127.0.0.1:4300` before publishing the domain. On the current installation it is already complete. Retrieve the account's join link from Campfire account settings and configure `CAMPFIRE_JOIN_URL` on DQOR's Render service. Keep the real invite out of the repository and public pages.
 
@@ -50,11 +52,11 @@ curl --fail --silent --show-error https://chat.deccanqueenonrails.com/session/ne
 
 Use GET for this check: this bundle returns 404 for HEAD. Its `/up` returns 500; `/session/new` renders successfully and is the proxy health check. Public first-run setup is disabled after creating the administrator. Verify registration and a live message between two browser tabs after changing the image or proxy.
 
-The fork fixes shared STI forms that submitted open and closed rooms to the base `/rooms` routes. Creating and renaming both room types is covered by the browser suite. The live room is named `Deccan Queen on Rails`. The earlier room-routing release passed its Rust and browser suites. The Google/monitoring release passes the full Rust suite, 39 Rails controller tests (145 assertions), and a native 200-request concurrency check with exact event/status/body-byte counts. All six native browser checks passed. Native Google callback QA verified invite-only registration, verified admin promotion, private lounge membership, dashboard/JSON access, and anonymous denial against a local mock issuer. Production verification confirmed the pinned image and source labels, ELF/Ruby absence, fresh collector data, Prometheus scrape, and capture of 40 known HTTP requests. Native room checks used a 90-second limit over the SSH tunnel.
+The fork fixes shared STI forms that submitted open and closed rooms to the base `/rooms` routes. Creating and renaming both room types is covered by the browser suite. The live room is named `Deccan Queen on Rails`. The earlier room-routing release passed its Rust and browser suites. The Google/monitoring release passes the full Rust suite, 39 Rails controller tests (145 assertions), and a native 200-request concurrency check with exact event/status/body-byte counts. All six native browser checks passed. Native Google callback QA verified invite-only registration, verified admin promotion, private lounge membership, dashboard/JSON access, and anonymous denial against a local mock issuer. Production verification confirmed the pinned image and source labels, ELF/Ruby absence, fresh collector data, Prometheus scrape, and capture of 40 known HTTP requests. Native room checks used a 90-second limit over the SSH tunnel. The branded native build passed light/dark checks for exact logo bytes, page palette, dashboard logo and inherited accent, with no browser errors. Production Google sign-in completed through the existing Google client in Brave; the branded upgrade preserved that authenticated session and the signing key. The live dashboard confirms the new source labels and native image.
 
 ## Rebuild the fork
 
-Check out Roundhouse commit `605040cdbab31b4ff9dd653786dd2e4ccac75c05`, Campfire commit `f023c3eef44e199c5ea292fe1dc4df21721e4bd7`, and Spinel commit `ed603ed`. Build Spinel with its native OpenSSL package available, then use `scripts/build-campfire-archive --out RELEASE_DIR CAMPFIRE_DIR` from the Roundhouse checkout with `spin` and `spinel` on PATH. The release includes `docker.tgz` and `provenance.json`. The archive contains generated native source, public assets, and Campfire image assets needed by native file fallback. The container links OpenSSL and includes CA certificates for the HTTPS broker redemption.
+Check out Roundhouse commit `605040cdbab31b4ff9dd653786dd2e4ccac75c05`, Campfire commit `569ff565dafa2516f8ff3e7374d68fc19e91f417`, and Spinel commit `ed603ed`. Build Spinel with its native OpenSSL package available, then use `scripts/build-campfire-archive --out RELEASE_DIR CAMPFIRE_DIR` from the Roundhouse checkout with `spin` and `spinel` on PATH. The release includes `docker.tgz` and `provenance.json`. The archive contains generated native source, public assets, and Campfire image assets needed by native file fallback. The container links OpenSSL and includes CA certificates for the HTTPS broker redemption.
 
 ## Data and recovery
 
