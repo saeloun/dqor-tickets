@@ -1,0 +1,46 @@
+<section class="intro"><div><p class="eyebrow">DECCAN QUEEN ON RAILS · EXISTING EVENT</p><h1>Your event.<br>Your expression.</h1><p>Edit a server-saved draft, inspect it, then publish a configuration for integration.</p></div><aside><strong>Public activation is off</strong><p>Saving and publishing here do not change the live event. Storefront, emails, tickets and invoices keep their existing branding until integration is reviewed.</p></aside></section>
+<div class="workspace">
+  <section class="editor" id="branding-editor">
+    <h2>Branding draft</h2><p class="hint">Server revision <%= @setting.lock_version %>. This editor applies to DQOR only. Event identity, dates, venue and ticketing are unchanged.</p>
+    <% config = @configuration.to_h %>
+    <%= form_with url: organizer_branding_path, method: :patch, scope: :branding, multipart: true, data: { turbo: false } do |form| %>
+      <%= form.hidden_field :lock_version, value: @setting.lock_version %>
+      <fieldset><legend>01 · Theme and palette</legend>
+        <%= form.label :theme, "Theme direction" %><%= form.select :theme, [["The Gathering — conference", "conference"], ["The Movement — energetic", "marathon"], ["The Commons — editorial", "campus"]], selected: config.fetch("theme") %>
+        <p class="hint">Direction changes the artwork and layout treatment. Choose the colors below independently.</p>
+        <div class="colors"><div><%= form.label :accent, "Accent" %><%= form.color_field :accent, value: config.fetch("accent") %></div><div><%= form.label :surface, "Background" %><%= form.color_field :surface, value: config.fetch("surface") %></div></div>
+        <%= form.label :font, "Heading style" %><%= form.select :font, [["Editorial serif", "editorial"], ["Modern sans", "modern"], ["Humanist sans", "humanist"]], selected: config.fetch("font") %>
+        <p class="hint">Foreground contrast adapts automatically. Custom CSS, scripts and remote font URLs are not accepted.</p>
+      </fieldset>
+      <fieldset><legend>02 · Private brand images</legend><p class="hint">PNG, JPEG or WebP, up to 1 MB and 4096 pixels per side. Images are decoded, stripped of metadata and stored privately as WebP. Uploads become visible only to existing admin users.</p>
+        <% EventBranding::Configuration::ASSETS.each do |slot| %>
+          <%= form.label slot, slot.capitalize %><%= form.file_field slot, accept: "image/png,image/jpeg,image/webp" %>
+          <% if (asset_id = config.fetch("assets")[slot]) %>
+            <div class="asset"><%= image_tag asset_organizer_branding_path(id: asset_id), alt: "Saved #{slot} preview" %><label><%= check_box_tag "branding[remove_assets][]", slot, false %> Remove saved <%= slot %></label></div>
+          <% end %>
+        <% end %>
+      </fieldset>
+      <fieldset><legend>03 · Section order</legend><p class="hint">Hero stays first. Each section must appear once.</p>
+        <% config.fetch("sections").each_with_index do |section, index| %>
+          <label for="branding_section_<%= index %>">Position <%= index + 1 %></label><%= select_tag "branding[sections][]", options_for_select([["About", "about"], ["Programme", "programme"], ["Venue", "visit"]], section), id: "branding_section_#{index}" %>
+        <% end %>
+      </fieldset>
+      <%= form.submit "Save draft", class: "primary" %>
+      <p class="hint">Save before previewing or publishing. Unsaved form edits are not shown in the preview.</p>
+    <% end %>
+  </section>
+  <section class="preview-column" aria-label="Saved configuration preview">
+    <div class="preview-heading"><div><p class="eyebrow">SAVED ON THE SERVER</p><h2>Draft preview</h2></div><%= link_to "Open saved draft ↗", preview_organizer_branding_path %></div>
+    <iframe title="Saved DQOR branding draft preview" src="<%= preview_organizer_branding_path %>"></iframe>
+    <section class="publication"><h2>Publication</h2>
+      <% if @setting.published_at %><p>Configuration published <%= @setting.published_at.utc.strftime("%d %b %Y, %H:%M UTC") %> by <%= @setting.published_by&.display_name || "a previous admin" %>.</p><%= link_to "Inspect published configuration ↗", preview_organizer_branding_path(snapshot: "published") %><% else %><p>No configuration has been published.</p><% end %>
+      <%= form_with url: publish_organizer_branding_path, data: { turbo: false } do |form| %>
+        <%= form.hidden_field :lock_version, value: @setting.lock_version %><label class="confirmation"><%= form.check_box :confirmed, { required: true }, "1", "0" %> I reviewed the saved draft and want to publish this configuration. Public activation remains off.</label><%= form.submit "Publish saved configuration", class: "primary" %>
+      <% end %>
+      <% if @setting.previous_published %>
+        <%= form_with url: rollback_organizer_branding_path, data: { turbo: false } do |form| %><%= form.hidden_field :lock_version, value: @setting.lock_version %><label class="confirmation"><%= form.check_box :confirmed, { required: true, id: "rollback_confirmed" }, "1", "0" %> Restore the previous published configuration. Keep the current draft.</label><%= form.submit "Restore previous publication" %><% end %>
+      <% end %>
+      <p class="hint">Publication keeps one previous snapshot for rollback. This is configuration publication, not a public-site deployment.</p>
+    </section>
+  </section>
+</div>

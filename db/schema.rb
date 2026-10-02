@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_161000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -99,6 +99,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
     t.datetime "valid_until"
     t.index "lower((code)::text)", name: "index_coupons_on_lower_code", unique: true
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
+  end
+
+  create_table "event_branding_assets", force: :cascade do |t|
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_branding_setting_id", null: false
+    t.integer "height", null: false
+    t.binary "image_data", null: false
+    t.datetime "updated_at", null: false
+    t.integer "width", null: false
+    t.index ["event_branding_setting_id"], name: "index_event_branding_assets_on_event_branding_setting_id"
+  end
+
+  create_table "event_branding_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "draft", default: {}, null: false
+    t.string "event_key", default: "dqor", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.jsonb "previous_published"
+    t.jsonb "published"
+    t.datetime "published_at"
+    t.bigint "published_by_id"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["event_key"], name: "index_event_branding_settings_on_event_key", unique: true
+    t.index ["published_by_id"], name: "index_event_branding_settings_on_published_by_id"
+    t.index ["updated_by_id"], name: "index_event_branding_settings_on_updated_by_id"
+    t.check_constraint "event_key::text = 'dqor'::text", name: "event_branding_single_existing_event"
   end
 
   create_table "faqs", force: :cascade do |t|
@@ -532,6 +560,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_142901) do
   add_foreign_key "conversations", "users", column: "participant_one_id"
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "event_branding_assets", "event_branding_settings"
+  add_foreign_key "event_branding_settings", "admin_users", column: "published_by_id"
+  add_foreign_key "event_branding_settings", "admin_users", column: "updated_by_id"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "messages", "conversations"

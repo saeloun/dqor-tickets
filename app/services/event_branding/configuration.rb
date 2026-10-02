@@ -28,7 +28,7 @@ module EventBranding
 
     def initialize(input)
       raise Invalid, "Branding must be a configuration object" unless input.is_a?(Hash)
-      raise Invalid, "Unsupported branding fields" unless input.keys.sort == KEYS.sort
+      raise Invalid, "Unsupported branding fields" unless input.keys.all? { |key| key.is_a?(String) } && input.keys.sort == KEYS.sort
       raise Invalid, "Unsupported branding version" unless input["version"] == VERSION
       raise Invalid, "Choose an available theme" unless THEMES.include?(input["theme"])
       raise Invalid, "Choose an available heading font" unless FONTS.key?(input["font"])
@@ -64,7 +64,7 @@ module EventBranding
         "--dq-surface" => @configuration.fetch("surface"),
         "--dq-ink" => foreground(@configuration.fetch("surface")),
         "--dq-display-font" => FONTS.fetch(@configuration.fetch("font"))
-      }
+      }.transform_values(&:dup)
     end
 
     private

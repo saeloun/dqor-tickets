@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Event branding · DQOR organizer</title>
+    <%= csrf_meta_tags %>
+    <link rel="stylesheet" href="/theme-studio/organizer.css">
+  </head>
+  <body class="branding-organizer">
+    <a class="skip" href="#branding-editor">Skip to branding editor</a>
+    <header><%= link_to "DQOR / Organizer", organizer_branding_path, class: "brand" %><nav aria-label="Organizer navigation"><%= link_to "Admin dashboard", "/avo" %><%= link_to "Current event", root_path %></nav></header>
+    <main>
+      <% if notice.present? %><p class="notice" role="status"><%= notice %></p><% end %>
+      <% if @error.present? %><p class="error" role="alert"><%= @error %> Your submitted changes were not saved. The form below shows the latest saved draft.</p><% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

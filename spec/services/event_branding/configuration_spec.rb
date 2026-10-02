@@ -46,6 +46,7 @@ RSpec.describe EventBranding::Configuration do
     configuration["accent"].replace("invalid")
     output = subject.to_h
     output["assets"]["logo"] = "untrusted"
+    subject.tokens.fetch("--dq-accent").replace("invalid")
     expect(subject.to_h).to eq(described_class.defaults.to_h)
   end
 
