@@ -30,6 +30,16 @@ struct Attendee: Identifiable, Hashable, Sendable {
     let id: String
     let name: String
     let email: String
+    let eligible: Bool?
+    let checkedInAt: String?
+    init(id: String, name: String, email: String, eligible: Bool? = nil, checkedInAt: String? = nil) {
+        self.id = id; self.name = name; self.email = email; self.eligible = eligible; self.checkedInAt = checkedInAt
+    }
+}
+struct AttendeeSearchPage: Sendable {
+    let attendees: [Attendee]
+    let moreResults: Bool
+    init(attendees: [Attendee], moreResults: Bool = false) { self.attendees = attendees; self.moreResults = moreResults }
 }
 enum CheckInOutcome: String, Sendable {
     case checkedIn, duplicate, ineligible, invalid
@@ -47,7 +57,7 @@ struct CheckInResult: Identifiable, Sendable {
     let outcome: CheckInOutcome
     var id: String { attendee.id }
 }
-enum StaffError: Error, LocalizedError {
+enum StaffError: Error, LocalizedError, Equatable {
     case offline, invalidTicket, signedOut, forbidden
     var errorDescription: String? {
         switch self {
@@ -61,9 +71,9 @@ enum StaffError: Error, LocalizedError {
 /// Production authentication and wire mapping must be supplied only after the Rails contract is verified.
 protocol StaffAPI: Sendable {
     func signIn() async throws -> StaffSession
-    func signOut() async
+    func signOut() async throws
     func eventDays() async throws -> [EventDay]
-    func search(_ query: String, day: EventDay) async throws -> [Attendee]
+    func search(_ query: String, day: EventDay) async throws -> AttendeeSearchPage
     func resolveQR(_ payload: String, day: EventDay) async throws -> Attendee
     func checkIn(_ attendees: [Attendee], day: EventDay, requestID: UUID) async throws -> [CheckInResult]
 }
@@ -94,11 +104,11 @@ actor DemoStaffAPI: StaffAPI {
         if let capability, !role.capabilities.contains(capability) { throw StaffError.forbidden }
     }
     func eventDays() async throws -> [EventDay] { try authorize(); return Self.days }
-    func search(_ query: String, day: EventDay) async throws -> [Attendee] {
+    func search(_ query: String, day: EventDay) async throws -> AttendeeSearchPage {
         try authorize(.searchAttendees)
         if offline { throw StaffError.offline }
         let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        return roster.filter { query.isEmpty || "\($0.name) \($0.email) \($0.id)".localizedCaseInsensitiveContains(query) }
+        return AttendeeSearchPage(attendees: roster.filter { query.isEmpty || "\($0.name) \($0.email) \($0.id)".localizedCaseInsensitiveContains(query) })
     }
     func resolveQR(_ payload: String, day: EventDay) async throws -> Attendee {
         try authorize(.scanTickets)

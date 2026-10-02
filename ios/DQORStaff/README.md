@@ -14,7 +14,7 @@ xcodebuild -project ios/DQORStaff/DQORStaff.xcodeproj -scheme DQORStaff \
 
 `python3 ios/DQORStaff/generate_project.py` reproducibly regenerates the checked-in project using Python's standard library. No XcodeGen or runtime replacement is needed.
 
-Demo launch arguments: `--offline` makes lookup/scanning/submission fail; `--fail-checkin` permits search but rejects submission; `--finance` demonstrates a role without attendance capabilities. These flags only select synthetic fixtures. There is no production URL or network adapter to accidentally enable.
+Demo launch arguments: `--offline` makes lookup/scanning/submission fail; `--fail-checkin` permits search but rejects submission; `--finance` demonstrates a role without attendance capabilities. These flags only select synthetic fixtures. The app still constructs DemoStaffAPI exclusively. A separate disabled NativeStaffAPI adapter is covered by mocked transport tests; no production origin or runtime activation switch is configured.
 
 ## Staff flow
 
@@ -26,11 +26,11 @@ Camera permission is requested only when the user opens scanning. `NSCameraUsage
 
 ## Rails integration seam — pending verified contract
 
-`StaffAPI` is injectable and asynchronous. It separates sign-in/session, authorized event days, attendee search, opaque QR resolution, and confirmed batch submission. `DemoStaffAPI` is an actor with synthetic fixtures. `StaffStore` owns selection, request lifecycle, errors, and confirmation; camera input goes through a separately testable `ScanGate`.
+`StaffAPI` is injectable and asynchronous. It separates sign-in/session, authorized event days, bounded attendee search, opaque QR resolution, and confirmed batch submission. NativeStaffAPI implements the proposed v1 wire contract behind a disabled configuration, with an ephemeral transport and injectable Keychain storage. `DemoStaffAPI` is an actor with synthetic fixtures. `StaffStore` owns selection, request lifecycle, errors, and confirmation; camera input goes through a separately testable `ScanGate`.
 
 The backend owner's current `docs/NATIVE_STAFF_API.md` was reviewed on 2026-10-02. It proposes disabled-by-default, bearer-only native sessions and separate read-only QR resolution, search, and explicit confirmation endpoints. Tokens expire after 8 hours without refresh; current-session logout revokes the token. The API is scoped to the single `dqor-2026` event with server-authorized dates and admin/desk accounts. It is not enabled or exercised in production.
 
-`POST /api/staff/checkins/resolve` now resolves a QR without attendance/audit mutation, addressing the original batch-preview mismatch. Never use legacy `POST /checkin` for preview because it mutates attendance immediately. The native app still has no live adapter or credential store. Before enabling integration, verify the authorized staging origin/fixtures, Keychain policy, session expiry/revocation/logout, canonical event/date mapping, secure transport, per-ticket outcome classification, and physical-device behavior. See [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) for exact acceptance requirements and the received contract snapshot.
+`POST /api/staff/checkins/resolve` now resolves a QR without attendance/audit mutation, addressing the original batch-preview mismatch. Never use legacy `POST /checkin` for preview because it mutates attendance immediately. The app remains demo-only; the disabled native adapter and token-only Keychain implementation are present but never instantiated by the app entry point. Before enabling integration, verify the authorized staging origin/fixtures, Keychain policy, session expiry/revocation/logout, canonical event/date mapping, secure transport, per-ticket outcome classification, and physical-device behavior. See [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) for exact acceptance requirements and the received contract snapshot.
 
 The local request UUID is an API seam, not a claim that Rails accepts an idempotency header. The proposed server safely retries the same ticket IDs/date by returning duplicates. The integration team must supply or verify:
 
@@ -58,3 +58,7 @@ On 2026-10-02, the iPhone 17 Pro / iOS 26.2 simulator suite passed **13 unit tes
 ## Accessibility follow-up
 
 The follow-up suite passes **13 unit tests and 9 UI tests** (22 total), including read-only accessibility audits, largest accessibility text size, keyboard search, simulator camera fallback, and duplicate-name confirmation. See [ACCESSIBILITY_REVIEW.md](ACCESSIBILITY_REVIEW.md) for findings and limits, and [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) for the precise backend handoff. `--duplicate-names` adds a synthetic second Alex Morgan to validate identity disambiguation. The app remains mock-only.
+
+## Disabled adapter checkpoint
+
+[Native adapter details](NATIVE_ADAPTER.md) describe the implemented HTTP/DTO and Keychain boundaries. The native unit suite now passes **40 tests**; the full regression run also passed all **9 UI tests** before the final native-only lifecycle tightening, followed by the 40-unit rerun. No live server was called and the Keychain tests use an injected client. The original requested head `049f2baf34358d6b40757496a1fd59f7ff9c9c62` completed remote CI successfully.

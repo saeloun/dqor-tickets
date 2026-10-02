@@ -32,14 +32,14 @@ The app has no network route configured. The proposed `/api/staff/checkins/resol
 
 ## Native authentication — proposed first-party flow requires integration verification
 
-The proposed native flow is now first-party JSON session creation, separate from web CSRF/cookies. Preserve that isolation. The native app has not implemented login, token persistence, or live calls; do not scrape attendee cookies or create credentials. Hosted-handoff-specific requirements below apply only if the approved approach later changes.
+The proposed native flow is now first-party JSON session creation, separate from web CSRF/cookies. Preserve that isolation. The native app now contains a disabled HTTP adapter and token-only Keychain store, tested through injected fakes. Its entry point still uses only the demo, and no live calls or credential UI are enabled; do not scrape attendee cookies or create credentials. Hosted-handoff-specific requirements below apply only if the approved approach later changes.
 
 Verify the concrete auth specification and authorized test environment against:
 
 1. Authorized HTTPS host(s), staff issuer/audience, native bundle/callback target if applicable, and CSRF/PKCE/state/nonce rules for the selected mechanism. Credentials and secrets must never appear in URLs or source.
 2. Success/error payloads, staff identity and server-issued capabilities, authorized event catalog, canonical date/timezone, and max batch size. Admin/desk are the existing backend roles. Owner/admin/organizer/team-lead/volunteer/finance/AV in this app are future fixture labels only; server-issued capabilities govern access.
 3. Expiry, renewal, revocation and forced logout semantics, including 401 versus 403, role/capability changes during a session, and the behavior of in-flight check-in requests. A transport error after submission must remain “not confirmed.”
-4. Secure storage policy: exactly which cookies/tokens may persist, Keychain accessibility and device-transfer rules if tokens are used, ephemeral versus persistent browser session if hosted auth is used, and logout cleanup/revocation requirements. Do not add a credential store before this is selected.
+4. Secure storage policy: approve the proposed token-only Keychain store using WhenUnlockedThisDeviceOnly, no synchronization/access group, and origin-bound service identity before enabling staging. No passwords or web cookies are retained. Validate logout cleanup/revocation and locked-device behavior.
 5. Authorized synthetic staging staff identity and event fixtures supplied through an approved secret channel, not committed to Git. Session bootstrap, refresh, revocation, logout, forbidden-role and lost-network tests must pass before a production adapter is enabled.
 
 ## Lookup and submission adapter acceptance
@@ -52,3 +52,5 @@ Verify the concrete auth specification and authorized test environment against:
 - Reconcile partial commits after timeout/offline/5xx. Do not automatically retry or queue attendance while offline. Explicitly describe whether a duplicate response provides enough canonical timestamp/context to show “already checked in.”
 
 Signing/team/App Store Connect provisioning and distribution are outside these requirements and remain separately approval-gated.
+
+The disabled adapter implements these seams in `NativeStaffAPI.swift`; see [NATIVE_ADAPTER.md](NATIVE_ADAPTER.md) for structural DTO mapping and the remaining stable-outcome-code request. No provider access, live credentials, or production mutations were authorized by implementing this adapter.

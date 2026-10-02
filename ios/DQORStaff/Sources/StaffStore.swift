@@ -20,6 +20,14 @@ final class StaffStore: ObservableObject {
     func can(_ capability: StaffCapability) -> Bool { session?.capabilities.contains(capability) == true }
     init(api: any StaffAPI) { self.api = api }
 
+    private func handle(_ error: Error) {
+        if let staffError = error as? StaffError, staffError == .signedOut || staffError == .forbidden {
+            generation = UUID(); session = nil; days = []; day = nil; matches = []; selection = []; results = []
+            confirming = false; pendingRequestID = nil; scanGate.reset()
+        }
+        message = error.localizedDescription
+    }
+
     func signIn() async {
         guard !busy else { return }
         busy = true
@@ -28,12 +36,14 @@ final class StaffStore: ObservableObject {
             let session = try await api.signIn()
             let days = try await api.eventDays()
             self.session = session; self.days = days
-        } catch { message = error.localizedDescription }
+        } catch { handle(error) }
     }
     func signOut() async {
         guard !busy else { return }
         generation = UUID(); clearDay(); session = nil; days = []
-        await api.signOut()
+        busy = true
+        defer { busy = false }
+        do { try await api.signOut() } catch { handle(error) }
     }
     func choose(_ day: EventDay) {
         guard !busy else { return }
@@ -48,8 +58,15 @@ final class StaffStore: ObservableObject {
         guard let day, !busy, can(.searchAttendees) else { return }
         busy = true; message = nil; let current = generation
         defer { busy = false }
-        do { let found = try await api.search(query, day: day); if generation == current { matches = found; if found.isEmpty { message = "No attendees found. Try another name, email, or ticket ID." } } }
-        catch { if generation == current { matches = []; message = error.localizedDescription } }
+        do {
+            let page = try await api.search(query, day: day)
+            if generation == current {
+                matches = page.attendees
+                if page.moreResults { message = NativeAPIError.moreResults.localizedDescription }
+                else if matches.isEmpty { message = "No attendees found. Try another name, email, or ticket ID." }
+            }
+        }
+        catch { if generation == current { matches = []; handle(error) } }
     }
     func toggle(_ attendee: Attendee) {
         guard !busy, can(.checkIn) else { return }
@@ -68,7 +85,7 @@ final class StaffStore: ObservableObject {
             if selection.contains(where: { $0.id == attendee.id }) { message = "This attendee is already in your batch." }
             else if selection.count >= batchLimit { message = "Review this batch before adding more attendees. Limit: \(batchLimit)." }
             else { pendingRequestID = nil; selection.append(attendee); message = "Added \(attendee.name) to the batch. Check-in is not yet confirmed." }
-        } catch { if generation == current { message = error.localizedDescription } }
+        } catch { if generation == current { handle(error) } }
     }
     func cancelBatch() { guard !busy else { return }; selection = []; confirming = false; scanGate.reset(); pendingRequestID = nil }
     func confirm() async {
@@ -84,6 +101,6 @@ final class StaffStore: ObservableObject {
                 throw StaffError.offline
             }
             results = response; selection = []; scanGate.reset(); pendingRequestID = nil
-        } catch { message = error.localizedDescription }
+        } catch { handle(error) }
     }
 }

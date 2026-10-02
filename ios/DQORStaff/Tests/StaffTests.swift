@@ -126,7 +126,7 @@ private actor IncompleteAPI: StaffAPI {
     func signIn() async throws -> StaffSession { StaffSession(displayName: "Test", capabilities: [.searchAttendees, .scanTickets, .checkIn]) }
     func signOut() async {}
     func eventDays() async throws -> [EventDay] { DemoStaffAPI.days }
-    func search(_ query: String, day: EventDay) async throws -> [Attendee] { [] }
+    func search(_ query: String, day: EventDay) async throws -> AttendeeSearchPage { AttendeeSearchPage(attendees: []) }
     func resolveQR(_ payload: String, day: EventDay) async throws -> Attendee { throw StaffError.invalidTicket }
     func checkIn(_ attendees: [Attendee], day: EventDay, requestID: UUID) async throws -> [CheckInResult] {
         requestIDs.append(requestID); return []
