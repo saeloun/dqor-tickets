@@ -54,7 +54,11 @@ from a verified staff session and be enforced server-side.
 
 The proposed contract in `docs/STAFF_CHECKIN_API.md` on the separate backend
 check-in branch is the integration target. It requires native auth approval
-before a network adapter can be added. Do not invent bearer tokens or reuse
+before a network adapter can be added. The backend owner is adding a separate
+read-only QR resolve endpoint: production scanning preview must use that endpoint,
+then require confirmation before calling the mutating check-in endpoint. The
+current scanner directly performs demo-only mutations and is not a preview flow.
+Do not invent bearer tokens or reuse
 attendee cookies. Production integration must validate the payload schema,
 display the returned lookup date, use server counts and every per-ticket result,
 handle 401/409/404/422 and ambiguous transport errors, enforce secure session
