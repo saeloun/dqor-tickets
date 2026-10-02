@@ -39,6 +39,27 @@ RSpec.describe "Event slots", type: :request do
     expect(response).to redirect_to(account_sign_in_path)
   end
 
+  it "binds verification to the current email and clears it on logout or account switch" do
+    user = User.create!(email: "Verified@Example.test")
+    token = Rails.application.message_verifier(:account_magic_link).generate(user.id, purpose: :account_magic_link, expires_in: 30.minutes)
+    get account_magic_path(token: token)
+    get account_redemptions_path
+    expect(response).to have_http_status(:ok)
+    user.update!(email: "changed@example.test")
+    get account_redemptions_path, params: { verified_attendee_email: user.email }
+    expect(response).to redirect_to(account_sign_in_path)
+    delete account_sign_out_path
+    get account_redemptions_path, params: { verified_attendee_email: "verified@example.test" }
+    expect(response).to redirect_to(account_sign_in_path)
+    other = User.create!(email: "switch@example.test")
+    token = Rails.application.message_verifier(:account_magic_link).generate(other.id, purpose: :account_magic_link, expires_in: 30.minutes)
+    get account_magic_path(token: token)
+    ticket = create(:ticket, attendee_email: user.email, order: create(:order, :paid))
+    get account_redemptions_path
+    expect(response).to have_http_status(:ok)
+    expect(response.body).not_to include("##{ticket.id}")
+  end
+
   it "requires attendee authentication" do
     get account_redemptions_path
     expect(response).to redirect_to(account_sign_in_path)

@@ -40,8 +40,8 @@ token is emitted. Cache-Control is no-store. Status is a server snapshot with
 refresh, offline, visibility-change and 30-second stale messaging; it makes no
 optimistic success claims and does not queue offline mutations.
 
-Integration: add `/event_slots` navigation to the staff check-in page after agreement
-with the PR146 owner. Native clients can use this contract after approved staff
+Integration: `/event_slots` navigation is added to the staff check-in page with
+PR146 owner agreement. Native clients can use this contract after approved staff
 session integration; no native grants or authentication changes are included.
 
 Validation: focused service/request tests, separate-connection race tests for both
