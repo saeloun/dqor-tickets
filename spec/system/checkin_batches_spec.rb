@@ -79,7 +79,7 @@ RSpec.describe "Staff batch check-in", type: :system do
   end
 
   it "decodes a QR image without BarcodeDetector using the bundled software decoder" do
-    ticket = create(:ticket, order:, attendee_name: "Software Decoder")
+    ticket = create(:ticket, order:, attendee_name: "Software Decoder", secret: Rails.root.join("spec/fixtures/checkin_software_decoder_secret.txt").read.strip)
     image_path = Rails.root.join("tmp", "checkin-fallback-#{ticket.id}.png")
     RQRCode::QRCode.new(ticket.secret).as_png(size: 360).save(image_path)
     open_desk
@@ -90,6 +90,32 @@ RSpec.describe "Staff batch check-in", type: :system do
     expect(ticket.reload.checked_in_at).to have_key("2026-10-08")
   ensure
     File.delete(image_path) if image_path && File.exist?(image_path)
+  end
+
+  it "decodes varied QR payloads and sizes while rejecting a blank image" do
+    payloads = [ "A" * 24, "123456789ABCDEFGHijkmnopq", "z5KfL9yTp2Ax7Hs3Bn8Mq4Rv" ]
+    paths = []
+    open_desk
+    page.execute_script("window.BarcodeDetector = undefined")
+    find("span", text: "Scan an Image File", exact_text: true).click
+    blank_path = Rails.root.join("tmp", "checkin-blank.png")
+    paths << blank_path
+    ChunkyPNG::Image.new(300, 300, ChunkyPNG::Color::WHITE).save(blank_path)
+    find("input[type='file']", visible: :all).set(blank_path)
+    expect(page).to have_content("No MultiFormat Readers")
+    expect(CheckinAudit.count).to eq(0)
+    payloads.zip([ 240, 360, 600 ]).each_with_index do |(secret, size), index|
+      ticket = create(:ticket, order:, attendee_name: "QR Corpus #{index}", secret:)
+      image_path = Rails.root.join("tmp", "checkin-corpus-#{index}.png")
+      paths << image_path
+      RQRCode::QRCode.new(secret).as_png(size:).save(image_path)
+      find("input[type='file']", visible: :all).set(image_path)
+      expect(page).to have_css(".checkin-result--success", text: "QR Corpus #{index}")
+      expect(ticket.reload.checked_in_at).to have_key("2026-10-08")
+    end
+    expect(CheckinAudit.where(outcome: "success").count).to eq(3)
+  ensure
+    paths&.each { |path| File.delete(path) if File.exist?(path) }
   end
 
   it "keeps denied camera permission user-driven and manual check-in available" do
