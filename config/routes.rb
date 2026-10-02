@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "api/public/v1/dqor/programme", to: "api/public/v1/programmes#show", defaults: { format: :json }
+
   resources :event_slots, only: %i[index show new create edit update] do
     member do
       post :redeem
