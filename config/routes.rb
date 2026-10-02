@@ -4,11 +4,16 @@ Rails.application.routes.draw do
   post "free", to: "free_events/organizations#create"
   get "free/tickets", to: "free_events/registrations#index", as: :free_tickets
   get "free/events/:organization_slug/:event_slug/ticket", to: "free_events/registrations#show", as: :free_event_ticket
+  get "free/events/:organization_slug/:event_slug/register/:ticket_type_id", to: "free_events/registrations#new", as: :new_free_event_registration
   post "free/events/:organization_slug/:event_slug/register", to: "free_events/registrations#create", as: :free_event_registration
   get "free/organizations/:organization_id/events/:event_id/inventory/new", to: "free_events/inventory#new", as: :new_free_event_inventory
   post "free/organizations/:organization_id/events/:event_id/inventory", to: "free_events/inventory#create", as: :free_event_inventory
   get "free/organizations/:organization_id/events/:event_id/attendees", to: "free_events/attendees#index", as: :free_event_attendees
   post "free/organizations/:organization_id/events/:event_id/attendees", to: "free_events/attendees#create"
+  get "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/questions", to: "free_events/question_forms#show", as: :free_event_questions
+  patch "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/questions", to: "free_events/question_forms#update"
+  get "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/questions/preview", to: "free_events/question_forms#preview", as: :preview_free_event_questions
+  get "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/questions/answers.csv", to: "free_events/question_forms#export", as: :export_free_event_answers
   resources :event_slots, only: %i[index show new create edit update] do
     member do
       post :redeem

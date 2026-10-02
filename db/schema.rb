@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -190,6 +190,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_020000) do
     t.index ["event_id"], name: "index_free_checkins_on_event_id"
     t.index ["operator_id"], name: "index_free_checkins_on_operator_id"
     t.index ["ticket_id"], name: "index_free_checkins_on_ticket_id", unique: true
+  end
+
+  create_table "free_event_form_versions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "form_id", null: false
+    t.integer "number", null: false
+    t.jsonb "questions", default: [], null: false
+    t.bigint "ticket_type_id", null: false
+    t.index ["form_id", "number"], name: "index_free_event_form_versions_on_form_id_and_number", unique: true
+    t.index ["form_id"], name: "index_free_event_form_versions_on_form_id"
+    t.index ["id", "event_id", "ticket_type_id"], name: "free_form_version_ownership", unique: true
+  end
+
+  create_table "free_event_forms", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "draft_questions", default: [], null: false
+    t.bigint "event_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.bigint "ticket_type_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_free_event_forms_on_event_id"
+    t.index ["id", "event_id", "ticket_type_id"], name: "free_form_ownership", unique: true
+    t.index ["ticket_type_id"], name: "index_free_event_forms_on_ticket_type_id", unique: true
+  end
+
+  create_table "free_event_responses", force: :cascade do |t|
+    t.jsonb "answers", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "form_version_id", null: false
+    t.bigint "ticket_id", null: false
+    t.bigint "ticket_type_id", null: false
+    t.index ["form_version_id"], name: "index_free_event_responses_on_form_version_id"
+    t.index ["ticket_id"], name: "index_free_event_responses_on_ticket_id", unique: true
   end
 
   create_table "info_pages", force: :cascade do |t|
@@ -636,6 +671,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_020000) do
     t.datetime "updated_at", null: false
     t.index ["claim_token"], name: "index_tickets_on_claim_token", unique: true
     t.index ["event_id"], name: "index_tickets_on_event_id"
+    t.index ["id", "ownership_key", "ticket_type_id"], name: "free_response_ticket_ownership_key", unique: true
     t.index ["id", "ownership_key"], name: "index_tickets_on_id_and_ownership_key", unique: true
     t.index ["order_id"], name: "index_tickets_on_order_id"
     t.index ["secret"], name: "index_tickets_on_secret", unique: true
@@ -684,6 +720,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_020000) do
   add_foreign_key "free_checkins", "tickets"
   add_foreign_key "free_checkins", "tickets", column: ["ticket_id", "event_id"], primary_key: ["id", "ownership_key"], name: "free_checkin_ticket_event"
   add_foreign_key "free_checkins", "users", column: "operator_id"
+  add_foreign_key "free_event_form_versions", "free_event_forms", column: "form_id"
+  add_foreign_key "free_event_form_versions", "free_event_forms", column: ["form_id", "event_id", "ticket_type_id"], primary_key: ["id", "event_id", "ticket_type_id"], name: "free_version_form_ownership"
+  add_foreign_key "free_event_forms", "events"
+  add_foreign_key "free_event_forms", "ticket_types"
+  add_foreign_key "free_event_forms", "ticket_types", column: ["ticket_type_id", "event_id"], primary_key: ["id", "ownership_key"], name: "free_form_type_ownership"
+  add_foreign_key "free_event_responses", "free_event_form_versions", column: "form_version_id"
+  add_foreign_key "free_event_responses", "free_event_form_versions", column: ["form_version_id", "event_id", "ticket_type_id"], primary_key: ["id", "event_id", "ticket_type_id"], name: "free_response_version_ownership"
+  add_foreign_key "free_event_responses", "tickets"
+  add_foreign_key "free_event_responses", "tickets", column: ["ticket_id", "event_id", "ticket_type_id"], primary_key: ["id", "ownership_key", "ticket_type_id"], name: "free_response_ticket_ownership"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "memberships", "organizations"

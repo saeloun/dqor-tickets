@@ -6,7 +6,7 @@
     <section class="card"><span class="badge">Free event</span><h2 style="margin-top: 16px"><%= type.name %> · Free</h2>
       <p>One ticket per verified attendee. Capacity: <%= type.capacity %>.</p>
       <p class="help">Your name and email are shared with this event’s organizers. Free-only accounts stay out of DQOR networking.</p>
-      <% if @event.ends_at <= Time.current %><p class="badge">Registration closed</p><% else %><%= button_to "Register free", free_event_registration_path(@event.organization.slug, @event.slug), params: { ticket_type_id: type.id } %><% end %>
+      <% if @event.ends_at <= Time.current %><p class="badge">Registration closed</p><% else %><% if FreeEvents::Questions::Schema.enabled? && FreeEvents::Form.find_by(ticket_type_id: type.id)&.published_version %><%= link_to "Register free", new_free_event_registration_path(@event.organization.slug, @event.slug, type), class: "button" %><% else %><%= button_to "Register free", free_event_registration_path(@event.organization.slug, @event.slug), params: { ticket_type_id: type.id } %><% end %><% end %>
     </section>
   <% end %>
   <% if @free_types.empty? %><p class="notice">Registration is not open here yet. Check back with the organizer for details.</p><% end %>

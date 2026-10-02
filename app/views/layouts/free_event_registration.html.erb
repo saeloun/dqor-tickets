@@ -1,0 +1,5 @@
+<!DOCTYPE html><html lang="en"><head>
+<title><%= @event.title %> · Registration</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<%= csrf_meta_tags %><%= csp_meta_tag %><%= stylesheet_link_tag "organizer_platform" %>
+<%= javascript_include_tag "free_registration_form", defer: true %>
+</head><body class="attendee-registration"><%= yield %></body></html>

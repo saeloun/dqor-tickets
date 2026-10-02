@@ -17,4 +17,9 @@
       </div>
     <% end %>
   <% end %>
+  <% if FreeEvents::Questions::Schema.enabled? && (@membership.owner? || @membership.admin?) %>
+    <section class="card" style="margin-top: 24px"><h2>Registration questions</h2><p class="help">Set up a separate form for each ticket category. Questions are optional unless you mark them required.</p>
+      <% TicketType.where(event_id: @event.id).order(:id).each do |type| %><p><%= link_to "Questions for #{type.name}", free_event_questions_path(@organization, @event, type) %></p><% end %>
+    </section>
+  <% end %>
 </main>
