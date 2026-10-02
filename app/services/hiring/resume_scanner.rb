@@ -1,5 +1,5 @@
-# No scanner executable was found. This adapter deliberately cannot release files.
-# A future supported local scanner must run in an isolated worker, not the web process.
+# Default disabled adapter. It deliberately cannot release files.
+# The optional local ClamAV adapter is configured only on an isolated worker.
 class Hiring::ResumeScanner
   Verdict = Data.define(:status, :digest)
 
