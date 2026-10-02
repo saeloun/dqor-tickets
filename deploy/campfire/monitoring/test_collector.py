@@ -24,6 +24,8 @@ class CollectorTest(unittest.TestCase):
         self.assertNotIn("body", parsed)
         self.assertEqual(safe_path("/users/private@example.org/avatar"), "/users/:redacted/avatar")
         self.assertEqual(safe_path("/rooms/:id/messages/:id"), "/rooms/:id/messages/:id")
+        self.assertEqual(safe_path("/join/:private_code"), "/join/:redacted")
+        self.assertEqual(safe_path("/:unknown/:redacted/:id"), "/:unknown/:redacted/:id")
         self.assertEqual(safe_path("https://secret.example/token"), "/:unknown")
         for line in ("ordinary log", event(status=99), event(duration=float("nan")), event(duration=-1), event(duration=True)):
             self.assertIsNone(parse_event(line))
@@ -78,6 +80,26 @@ class CollectorTest(unittest.TestCase):
                 self.assertGreater(stats["bytes"], 0)
                 self.assertNotIn("private", json.dumps(stats))
                 self.assertEqual(database.execute("SELECT email FROM users").fetchone()[0], "private@example.org")
+
+    def test_database_size_survives_files_disappearing_during_sampling(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "production.sqlite3"
+            with closing(sqlite3.connect(path)) as database:
+                database.execute("CREATE TABLE users (id INTEGER)")
+                database.execute("INSERT INTO users VALUES (1)")
+                database.commit()
+            original_stat = Path.stat
+            for missing in (path, Path(str(path) + "-wal"), Path(str(path) + "-shm")):
+                def raced_stat(candidate, *args, **kwargs):
+                    if candidate == missing:
+                        raise FileNotFoundError("File disappeared after discovery")
+                    return original_stat(candidate, *args, **kwargs)
+                # Reproduce a formerly successful existence check followed by a raced stat.
+                with self.subTest(missing=missing.name):
+                    with patch("collector.Path.exists", return_value=True), patch("collector.Path.stat", raced_stat):
+                        stats = database_stats(root)
+                    self.assertEqual(stats["counts"], {"users": 1})
+                    self.assertEqual(stats["bytes"], 0 if missing == path else original_stat(path).st_size)
 
     def test_exporter_binds_loopback_and_serves_valid_json_and_metrics(self):
         with tempfile.TemporaryDirectory() as root:

@@ -30,7 +30,7 @@ def safe_path(value):
     if not isinstance(value, str) or not value.startswith("/"):
         return "/:unknown"
     parts = value.split("?", 1)[0].split("#", 1)[0].split("/")[1:]
-    return "/" + "/".join(part if part in SEGMENTS or re.fullmatch(r":[a-z_]{1,32}", part) else ":redacted" for part in parts[:12] if part)
+    return "/" + "/".join(part if part in SEGMENTS or part in {":id", ":redacted", ":unknown"} else ":redacted" for part in parts[:12] if part)
 
 
 def parse_event(line):
@@ -88,11 +88,11 @@ def process_stats(pid, proc=Path("/proc")):
 def database_stats(storage):
     counts, size = {}, 0
     for path in sorted(Path(storage).rglob("*.sqlite3")):
-        size += path.stat().st_size
-        for suffix in ("-wal", "-shm"):
-            sidecar = Path(str(path) + suffix)
-            if sidecar.exists():
-                size += sidecar.stat().st_size
+        for candidate in (path, Path(str(path) + "-wal"), Path(str(path) + "-shm")):
+            try:
+                size += candidate.stat().st_size
+            except OSError:
+                pass
         try:
             with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True, timeout=0.2)) as database:
                 database.execute("PRAGMA query_only = ON")
