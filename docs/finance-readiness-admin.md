@@ -48,3 +48,9 @@ Migration `20261002190000` creates only `invoice_policy_reviews`, with creator/a
 Billing details, revisions, expiring-link nonce and audit field names use existing order metadata. Merge checkout/cart/routes carefully with the coordinated backend task; no check-in/native/foundation files are part of this draft. Run the migrations against a backed-up staging database after PR #148, verify blank review defaults and admin-only access, then exercise synthetic registration/high-value/discounted checkout, missing-data follow-up, stale/expired links, and document-only retries before any separately authorized production rollout.
 
 Local verification uses only synthetic `dqor_finance_task9_test` data. No real seller policy has been approved, no messages sent, and no production documents or configuration changed.
+
+## Refund/admission integration lock order
+
+Refund processing acquires `order -> refund -> ticket` locks before document issuance or pending-document metadata writes. Admission uses `order -> ticket`; slot redemption uses `slot -> order -> ticket`. Keep the shared order lock ahead of ticket/refund mutation when integrating those branches. Refund and credit-note retries retain the same outer order lock.
+
+A two-connection PostgreSQL regression holds the admission order lock, waits until the refund actually blocks, then attempts ticket admission. Before the fix both issued-invoice and pending-invoice cases reproduced `ActiveRecord::Deadlocked`; after the fix admission completes and refund cancellation follows, with document replay remaining idempotent. This is an integration prerequisite for finance, not a reason to include finance in the separate first check-in release.
