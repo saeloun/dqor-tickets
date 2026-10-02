@@ -27,6 +27,7 @@ RSpec.describe "Finance readiness screens", type: :system do
     fill_in "Enter your email address", with: admin.email
     fill_in "Enter your password", with: "test-password-123"
     click_button "Sign in"
+    expect(page).to have_current_path("/avo/dashboard")
     visit new_finance_policy_path
     expect(find_field("Seller legal name").value).to eq("")
     expect(page).to have_content("Approval is not tax-registry verification")
