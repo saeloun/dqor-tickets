@@ -74,3 +74,5 @@ select:focus-visible, textarea:focus-visible { outline: 3px solid #896514; outli
 .window-boundary { font-weight: 600; }
 .registration-state .ticket-retrieval { margin-top: 24px; }
 @media (max-width: 720px) { .registration-state button, .registration-state .button { width: 100%; } }
+
+#close-error { display: block; margin-top: 12px; }

@@ -40,6 +40,44 @@ RSpec.describe "Free registration windows", type: :request do
     FreeEvents::Availability.call(event: event.reload, ticket_type: type).state
   end
 
+  it "shows only usable private-pilot navigation for signed-in and signed-out visitors" do
+    [ false, true ].each do |signed_in|
+      login(owner) if signed_in
+      [ false, true ].each do |pilot_enabled|
+        allow(Rails.configuration.x).to receive(:free_event_pilot_enabled).and_return(pilot_enabled)
+        get published_event_path(org.slug, event.slug)
+        expect(response).to have_http_status(:ok)
+        links = Nokogiri::HTML(response.body).css("nav a")
+        if pilot_enabled
+          expect(links.map(&:text)).to eq([ signed_in ? "Your free tickets" : "Sign in" ])
+          expect(links.first["href"]).to eq(free_tickets_path)
+          get links.first["href"]
+          expect(response.status).to eq(signed_in ? 200 : 302)
+          expect(response).to redirect_to(account_sign_in_path) unless signed_in
+        else
+          expect(links).to be_empty
+          expect(response.body).not_to include("/free/tickets")
+        end
+      end
+    end
+  end
+
+  it "previews required-question and unpublished-event/category barriers truthfully" do
+    window = save_window(opens: "", closes: "")
+    form = FreeEvents::Questions::Editor.change(**access, action: "add", revision: 0, fields: { "label" => "Topic", "type" => "short_text", "required" => "1" })
+    FreeEvents::Questions::Editor.change(**access, action: "publish", revision: form.lock_version)
+    allow(Rails.configuration.x).to receive(:free_event_questions_enabled).and_return(false)
+    preview = FreeEvents::Availability.call(event: event, ticket_type: type, preview: window)
+    expect(preview.state).to eq(:closed)
+    expect(preview.message).to include("questions are temporarily unavailable")
+    allow(Rails.configuration.x).to receive(:free_event_questions_enabled).and_return(true)
+    event.update!(status: :draft)
+    expect(FreeEvents::Availability.call(event: event, ticket_type: type, preview: window).state).to eq(:closed)
+    event.update!(status: :published)
+    type.update!(free_published_at: nil)
+    expect(FreeEvents::Availability.call(event: event, ticket_type: type, preview: window).state).to eq(:closed)
+  end
+
   it "keeps drafts private, rejects stale first-save publication and changes state only on publish" do
     expect(ENV["FREE_REGISTRATION_WINDOWS_ENABLED"]).not_to eq("true")
     window = save_window

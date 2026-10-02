@@ -12,10 +12,10 @@ module FreeEvents
       closes_at = [ closes_at.presence, event.ends_at ].compact.min
       timezone = configured ? (preview ? window.draft_timezone : window.timezone) : event.timezone
       result = ->(state, message) { Result.new(state: state, message: message, opens_at: opens_at.presence, closes_at: closes_at, timezone: timezone) }
-      return result.call(:closed, "Registration is not available for this event.") unless preview || event.published?
-      return result.call(:closed, "Registration is not available for this ticket category.") unless ticket_type.event_id == event.id && ticket_type.price_paise.zero? && (preview || ticket_type.free_published_at)
+      return result.call(:closed, "Registration is not available for this event.") unless event.published?
+      return result.call(:closed, "Registration is not available for this ticket category.") unless ticket_type.event_id == event.id && ticket_type.price_paise.zero? && ticket_type.free_published_at
       return result.call(:closed, "Registration is temporarily unavailable.") if configured && !preview && !Windows.enabled?
-      if !preview && !Questions::Schema.enabled? && Form.find_by(event_id: event.id, ticket_type_id: ticket_type.id)&.published_version
+      if !Questions::Schema.enabled? && Form.find_by(event_id: event.id, ticket_type_id: ticket_type.id)&.published_version
         return result.call(:closed, "Registration questions are temporarily unavailable.")
       end
       return result.call(:closed, "Registration has closed.") unless closes_at && now < closes_at

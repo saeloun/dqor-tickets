@@ -33,4 +33,8 @@ The browser journey uses local datetime controls, preserves invalid values, prev
 
 No production migration, activation, paid services, credential changes or email delivery occurred. Independent review and deployment approval remain separate gates.
 
-Local final verification: 738 examples, 0 failures (seed 54541); RuboCop 417 files clean; Brakeman 0 warnings. Migration down/up and schema load passed on the disposable database.
+Local final verification: 740 examples, 0 failures (seed 14684); RuboCop 417 files clean; Brakeman 0 warnings. Migration down/up and schema load passed on the disposable database.
+
+Independent review corrections: hide pilot-only navigation when the pilot is disabled (signed-in and signed-out coverage, no legacy fallback); preserve required-question and event/category publication blockers in the saved-draft preview; label publication as “Publish saved draft”; display closing-order errors as separate blocks with refreshed 390px/320px error evidence.
+
+Final block-error browser recheck: 1 example, 0 failures (seed 50683), 390px/320px images manually inspected without helper/error overlap.

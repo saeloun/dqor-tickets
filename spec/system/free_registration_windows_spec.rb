@@ -25,6 +25,10 @@ RSpec.describe "Registration window journey", type: :system do
     expect(page).to have_field("Registration opens (optional)", with: "2027-01-01T16:00")
     expect(page).to have_field("Registration closes (optional)", with: "2027-01-01T15:00")
     page.save_screenshot(Rails.root.join("tmp/windows-organizer-error-mobile.png"), full: true)
+    page.driver.browser.resize(width: 320, height: 740)
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
+    page.save_screenshot(Rails.root.join("tmp/windows-organizer-error-320.png"), full: true)
+    page.driver.browser.resize(width: 390, height: 844)
     fill_in "Registration closes (optional)", with: "2027-01-02T20:00"
     click_button "Save window draft"
     expect(page).to have_content("Saved draft preview · Private")

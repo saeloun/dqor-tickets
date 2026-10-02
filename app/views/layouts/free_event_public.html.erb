@@ -7,7 +7,7 @@
     <%= stylesheet_link_tag "organizer_platform" %>
   </head>
   <body class="attendee-registration">
-    <header class="site-header"><nav aria-label="Attendee navigation"><%= link_to (current_user ? "Your free tickets" : "Sign in"), free_tickets_path %></nav></header>
+    <% if FreeEvents::Access.enabled? %><header class="site-header"><nav aria-label="Attendee navigation"><%= link_to (current_user ? "Your free tickets" : "Sign in"), free_tickets_path %></nav></header><% end %>
     <% flash.each do |_type, message| %><p class="flash" role="status"><%= message %></p><% end %>
     <%= yield %>
   </body>
