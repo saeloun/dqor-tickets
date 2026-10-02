@@ -73,7 +73,7 @@ fun NativeStaffApp(events: List<Event>, workflow: NativeDeskWorkflow, demo: Mock
                 confirmButton={TextButton(onClick={val action=pendingNavigation; pendingNavigation=null; action?.invoke()}) {Text("Leave")}},
                 dismissButton={TextButton(onClick={pendingNavigation=null}) {Text("Stay")}})
             state.review?.let { review ->
-                AlertDialog(onDismissRequest={if(!state.busy && !state.uncertain) workflow.cancelReview()},title={Text(if(state.uncertain) "Check-in not confirmed" else "Confirm ${review.tickets.size} check-ins?")},
+                AlertDialog(onDismissRequest={if(!state.busy && !state.uncertain) workflow.cancelReview()},title={Text(if(state.uncertain) "Check-in not confirmed" else "Confirm ${review.tickets.size} ${if(review.tickets.size==1) "check-in" else "check-ins"}?")},
                     text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                         Text("${event?.name ?: review.event} · ${review.date} · DEMO")
                         review.tickets.forEach {Text("${it.attendeeName} · ${it.attendeeEmail} · #${it.id}")}
@@ -147,7 +147,7 @@ fun NativeStaffApp(events: List<Event>, workflow: NativeDeskWorkflow, demo: Mock
             if(event!=null && state.session!=null) Surface(shadowElevation=8.dp) {Column(Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 if(state.selected.isNotEmpty()) {
                     Text("${state.selected.size} selected · ${state.date}",style=MaterialTheme.typography.labelLarge)
-                    Button(onClick={scanning=false; workflow.reviewSelection()},enabled=!state.busy && !state.uncertain && state.review==null,modifier=Modifier.fillMaxWidth().heightIn(min=56.dp)) {Text("Review ${state.selected.size} tickets")}
+                    Button(onClick={scanning=false; workflow.reviewSelection()},enabled=!state.busy && !state.uncertain && state.review==null,modifier=Modifier.fillMaxWidth().heightIn(min=56.dp)) {Text("Review ${state.selected.size} ${if(state.selected.size==1) "ticket" else "tickets"}")}
                     if(section=="Lookup") TextButton(onClick={focus.clearFocus(); run {search()}},enabled=!state.busy && !offline,modifier=Modifier.fillMaxWidth()) {Text("Search")}
                     if(section=="Scan") TextButton(onClick={scanning=!scanning},enabled=!state.busy && !offline && state.review==null,modifier=Modifier.fillMaxWidth()) {Text(if(scanning) "Stop scanner" else "Scan another QR")}
                 } else if(section=="Scan") Button(onClick={scanning=!scanning},enabled=!state.busy && !offline && state.review==null,modifier=Modifier.fillMaxWidth().heightIn(min=56.dp)) {Text(if(scanning) "Stop scanner" else "Start QR preview scanner")}

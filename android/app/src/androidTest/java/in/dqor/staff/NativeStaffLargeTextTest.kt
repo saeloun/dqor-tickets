@@ -30,8 +30,8 @@ class NativeStaffLargeTextTest {
         }
         fun tap(text: String) {compose.onNodeWithTag("staff-screen").performScrollToNode(hasText(text)); compose.onNodeWithText(text).performClick(); compose.waitForIdle()}
         tap("Sign in to demo"); tap("DQOR"); tap("Preview sample QR")
-        compose.onNodeWithText("Review 1 tickets").assertIsDisplayed(); compose.captureDemo("13-staff-large-text")
-        compose.onNodeWithText("Review 1 tickets").performClick(); compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithText("Review 1 ticket").assertIsDisplayed(); compose.captureDemo("13-staff-large-text")
+        compose.onNodeWithText("Review 1 ticket").performClick(); compose.onNodeWithText("Cancel").performClick()
         assertEquals(1,flow.state.value.selected.size); assertEquals(0,server.confirmationCalls)
     }
 }

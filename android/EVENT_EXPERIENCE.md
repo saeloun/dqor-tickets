@@ -44,8 +44,15 @@ a duplicate retry is reported as already admitted, never a new success.
 ## Visual system
 
 Operations use warm canvas `#F6F5EF`, ink `#243024`, forest `#334B28`, 12dp cards,
-16sp body and 48–56dp primary controls. Event branding is Android-local terracotta
-or midnight. Large text uses scrollable section tabs and stacked card actions.
+16sp body and 48–56dp primary controls. Attendee chrome is separate: warm off-white `#FAF9F6`, aubergine `#302630`,
+white cards, restrained dividers and artwork-led event identity. The 56dp header,
+square 20dp-radius art, 32/36sp title, compact metadata and one ticket action follow
+the design owner's fresh public Luma reference review. No Luma assets or branding
+are used. DQOR art copies the repository's public `public/dqor/hero-bg.jpg` unchanged;
+the second event uses an original Compose geometric motif. Cropped art carries into
+the pass above its white credential area. Poster typography is decorative, while
+all real labels and actions scale with the system font setting.
+Large text uses scrollable section tabs and stacked card actions.
 Results carry a symbol and text, never only color. No shared web/iOS theme file
 is edited. Camera scanning stops on background, navigation and review.
 
@@ -67,6 +74,15 @@ fixtures, coordinate and approve:
 - If durable staff history is required, a server audit endpoint with scope,
   retention, pagination and authority semantics. Local history cannot prove
   attendance or replace audit records.
+
+The feed owner has proposed PR #171 (`675f4f1`) at
+`GET /api/public/v1/dqor/programme`, with checked-in JSON Schema and synthetic
+example. Android has no blocking shape objection. A future adapter must handle
+string IDs, nullable timestamps/local dates/rooms/speaker fields, explicit timezone,
+ETag/304, authoritative empty arrays and `programme_unavailable` on 503. Track is
+omitted from that public contract; the demo's local track categories must not be
+assumed to exist on the wire. This increment does not consume that undeployed API
+or claim that the local fixture parser implements its schema.
 
 No backend writes are part of this increment. Live/staging validation, attendee
 identity, real QR security and physical-camera testing remain release gates.

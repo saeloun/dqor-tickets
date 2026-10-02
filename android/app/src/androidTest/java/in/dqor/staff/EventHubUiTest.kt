@@ -29,6 +29,7 @@ class EventHubUiTest {
         compose.setContent {EventHubApp(events,content()) {}}
         compose.captureDemo("01-events")
         tap("event-list","Deccan Queen on Rails"); compose.captureDemo("02-overview")
+        compose.onNodeWithTag("event-overview").performScrollToNode(hasText("View my sample passes")); compose.captureDemo("14-event-ticket-action")
         compose.onNodeWithText("Schedule").performScrollTo().performClick()
         compose.captureDemo("03-schedule")
         compose.onNodeWithText("Find a session or speaker").performTextInput("Ananya")
@@ -50,7 +51,7 @@ class EventHubUiTest {
         compose.onNodeWithTag("pass-detail").performScrollToNode(hasText("Redeemed"))
         compose.onNodeWithText("Redeemed").assertExists(); compose.captureDemo("06-independent-redemptions")
         compose.onNodeWithText("← My passes").performClick(); compose.onNodeWithText("← All events").performClick()
-        tap("event-list","The Design Assembly"); compose.onNodeWithText("Passes").performScrollTo().performClick()
+        tap("event-list","The Design Assembly"); compose.captureDemo("15-original-studio-art"); compose.onNodeWithText("Passes").performScrollTo().performClick()
         compose.onNodeWithTag("wallet-list").performScrollToNode(hasText("No sample passes for this event"))
         compose.onNodeWithText("No sample passes for this event").assertIsDisplayed(); compose.captureDemo("07-empty-wallet")
     }

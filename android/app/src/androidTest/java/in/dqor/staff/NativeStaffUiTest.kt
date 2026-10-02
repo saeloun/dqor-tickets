@@ -30,11 +30,11 @@ class NativeStaffUiTest {
     private fun tap(text: String) {if(!text.startsWith("Review ")) compose.onNodeWithTag("staff-screen").performScrollToNode(hasText(text)); compose.onNodeWithText(text).performClick(); compose.waitForIdle()}
     private fun preview() {tap("Preview sample QR"); assertEquals(1,server.resolveCalls); assertEquals(0,server.confirmationCalls)}
     @Test fun scanReviewCancelAndExplicitConfirmation() {
-        preview(); tap("Review 1 tickets")
-        compose.onNodeWithText("Confirm 1 check-ins?").assertExists()
+        preview(); tap("Review 1 ticket")
+        compose.onNodeWithText("Confirm 1 check-in?").assertExists()
         assertEquals(0,server.attendanceCount)
         compose.onNodeWithText("Cancel").performClick(); compose.waitForIdle(); assertEquals(0,server.confirmationCalls)
-        tap("Review 1 tickets"); compose.onNodeWithText("Confirm check-in").performClick(); compose.waitForIdle()
+        tap("Review 1 ticket"); compose.onNodeWithText("Confirm check-in").performClick(); compose.waitForIdle()
         assertEquals(1,server.confirmationCalls); assertEquals(1,server.attendanceCount)
         assertEquals(NativeState.SUCCESS,flow.state.value.results.single().state)
         compose.captureDemo("11-staff-confirmed")
@@ -46,12 +46,12 @@ class NativeStaffUiTest {
         compose.onNodeWithText("Sign in to demo").assertExists(); assertEquals(0,server.attendanceCount); assertNull(flow.state.value.review)
     }
     @Test fun stalePreviewIsRecheckedOnExplicitConfirmation() {
-        preview(); tap("Demo scenarios"); tap("Invalidate selected preview"); tap("Review 1 tickets")
+        preview(); tap("Demo scenarios"); tap("Invalidate selected preview"); tap("Review 1 ticket")
         compose.onNodeWithText("Confirm check-in").performClick(); compose.waitForIdle()
         assertEquals(0,server.attendanceCount); assertEquals(NativeState.ERROR,flow.state.value.results.single().state)
     }
     @Test fun uncertainMutationRequiresExplicitRetryWithSameTickets() {
-        preview(); tap("Demo scenarios"); tap("Simulate next confirmation timeout"); tap("Review 1 tickets")
+        preview(); tap("Demo scenarios"); tap("Simulate next confirmation timeout"); tap("Review 1 ticket")
         compose.onNodeWithText("Confirm check-in").performClick(); compose.waitForIdle()
         compose.onNodeWithText("Check-in not confirmed").assertExists(); assertEquals(1,server.attendanceCount)
         compose.onNodeWithText("Retry same tickets").performClick(); compose.waitForIdle()
