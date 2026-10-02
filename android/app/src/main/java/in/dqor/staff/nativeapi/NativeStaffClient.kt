@@ -18,6 +18,7 @@ class NativeFailure(val kind: Kind) : Exception(kind.message) {
         UNKNOWN("Ticket was not found."), INVALID("Invalid request."),
         RATE_LIMIT("Too many requests. Try again later."),
         NOT_CONFIRMED("Not confirmed. No offline queue. Retry the same ticket IDs and date."),
+        OUTCOME("Unsupported or unverified outcome. Do not admit; staff resolution is required."),
         SCHEMA("Invalid server response. Admission is not confirmed."),
         STORAGE("Secure session storage unavailable. Sign in again.")
     }
@@ -41,7 +42,12 @@ data class NativeTicket(val id: Long, val attendeeName: String, val attendeeEmai
 data class NativePreview(val date: String, val ticket: NativeTicket)
 data class NativeLookup(val date: String, val moreResults: Boolean, val tickets: List<NativeTicket>)
 enum class NativeState { SUCCESS, WARNING, ERROR }
-data class NativeOutcome(val ticketId: Long, val attendee: String?, val state: NativeState, val message: String, val checkedInAt: String?)
+enum class NativeOutcomeCode(val wireValue: String, val state: NativeState) {
+    SUCCESS("success", NativeState.SUCCESS), DUPLICATE("duplicate", NativeState.WARNING),
+    NOT_FOUND("not_found", NativeState.ERROR), UNCONFIRMED("unconfirmed", NativeState.ERROR),
+    WRONG_DATE("wrong_date", NativeState.ERROR), CANCELED("canceled", NativeState.ERROR)
+}
+data class NativeOutcome(val ticketId: Long, val attendee: String?, val state: NativeState, val code: NativeOutcomeCode, val message: String, val checkedInAt: String?)
 data class NativeConfirmation(val date: String, val results: List<NativeOutcome>)
 enum class LogoutResult { REVOKED, LOCAL_ONLY }
 
@@ -130,10 +136,13 @@ class NativeStaffClient(private val config: NativeConfig, private val transport:
             require(json.string("date")==date)
             val results=json.getJSONArray("results").objects().map { result ->
                 val id=result.positiveId("ticket_id") // Rails confirm serializes requested IDs as strings.
-                val state=when(result.string("state")) { "success" -> NativeState.SUCCESS; "warning" -> NativeState.WARNING; "error" -> NativeState.ERROR; else -> error("state") }
+                val code=NativeOutcomeCode.entries.find {it.wireValue==result.opt("code")}
+                    ?: throw NativeFailure(NativeFailure.Kind.OUTCOME)
+                if(result.opt("state")!=code.state.name.lowercase()) throw NativeFailure(NativeFailure.Kind.OUTCOME)
+                val state=code.state
                 val time=result.optionalString("checked_in_at")?.also { Instant.parse(it) }
                 require(state!=NativeState.SUCCESS || time!=null)
-                NativeOutcome(id,result.optionalString("attendee"),state,result.string("message"),time)
+                NativeOutcome(id,result.optionalString("attendee"),state,code,result.string("message"),time)
             }
             require(results.map {it.ticketId} == unique)
             NativeConfirmation(date,results)

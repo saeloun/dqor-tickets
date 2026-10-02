@@ -74,10 +74,10 @@ class MockNativeTransport(private val now: () -> Instant = Instant::now) : Nativ
                     val result=JSONObject().put("ticket_id",id.toString())
                     person?.let {result.put("attendee",it.second)}
                     when {
-                        person==null -> result.put("state","error").put("message","Unknown ticket")
-                        id in canceled -> result.put("state","error").put("message","Eligibility changed. Do not admit.")
-                        key in attendance -> result.put("state","warning").put("message","Already checked in for this date")
-                        else -> {val time=now().toString(); attendance[key]=time; result.put("state","success").put("message","Demo check-in confirmed").put("checked_in_at",time)}
+                        person==null -> result.put("code","not_found").put("state","error").put("message","Unknown ticket")
+                        id in canceled -> result.put("code","canceled").put("state","error").put("message","Eligibility changed. Do not admit.")
+                        key in attendance -> result.put("code","duplicate").put("state","warning").put("message","Already checked in for this date")
+                        else -> {val time=now().toString(); attendance[key]=time; result.put("code","success").put("state","success").put("message","Demo check-in confirmed").put("checked_in_at",time)}
                     }
                 }
                 if(timeoutAfterNextConfirmation) {timeoutAfterNextConfirmation=false; throw IOException("Simulated timeout after commit")}

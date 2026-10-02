@@ -63,7 +63,7 @@ class NativeStaffClientTest {
     }
     @Test fun `confirmation preserves partial outcomes duplicate string ids and ordered result identity`() = runBlocking {
         val f=Fixture(); f.login()
-        f.transport.responses+=NativeResponse(200,"""{"date":"2026-10-08","results":[{"ticket_id":"101","attendee":"Grace Shah","state":"success","message":"Checked in","checked_in_at":"2026-10-08T10:00:00Z"},{"ticket_id":"102","state":"warning","message":"Already checked in"},{"ticket_id":"999","state":"error","message":"Not found"}]}""")
+        f.transport.responses+=NativeResponse(200,"""{"date":"2026-10-08","results":[{"ticket_id":"101","attendee":"Grace Shah","state":"success","code":"success","message":"Checked in","checked_in_at":"2026-10-08T10:00:00Z"},{"ticket_id":"102","state":"warning","code":"duplicate","message":"Already checked in"},{"ticket_id":"999","state":"error","code":"not_found","message":"Not found"}]}""")
         val result=f.client.confirm("dqor-2026","2026-10-08",listOf(101,101,102,999),true)
         assertEquals(listOf(NativeState.SUCCESS,NativeState.WARNING,NativeState.ERROR),result.results.map {it.state})
         assertEquals(3,JSONObject(f.transport.requests.last().body!!).getJSONArray("ticket_ids").length())
@@ -120,10 +120,59 @@ class NativeStaffClientTest {
     }
     @Test fun `malformed 200 and mismatched IDs never imply success`() = runBlocking {
         val f=Fixture(); f.login()
-        for(body in listOf("{}","""{"date":"2026-10-08","results":[{"ticket_id":"999","state":"success","message":"OK"}]}""","""{"date":"2026-10-09","results":[]}""")) {
+        for(body in listOf("{}","""{"date":"2026-10-08","results":[{"ticket_id":"999","state":"success","code":"success","message":"OK"}]}""","""{"date":"2026-10-09","results":[]}""")) {
             f.transport.responses+=NativeResponse(200,body)
             failure(NativeFailure.Kind.SCHEMA) {f.client.confirm("dqor-2026","2026-10-08",listOf(101),true)}
         }
+    }
+    private fun codedResult(code: Any?, state: Any?): JSONObject = JSONObject()
+        .put("ticket_id","101").put("state",state ?: JSONObject.NULL)
+        .put("message","Display wording is not an admission rule")
+        .put("checked_in_at","2026-10-08T10:00:00Z")
+        .also {if(code!=null) it.put("code",code)}
+    private fun resultBody(result: JSONObject) = JSONObject().put("date","2026-10-08")
+        .put("results",org.json.JSONArray().put(result)).toString()
+    @Test fun `all six exact backend code state pairs are typed`() = runBlocking {
+        val f=Fixture(); f.login()
+        val pairs=mapOf("success" to NativeState.SUCCESS,"duplicate" to NativeState.WARNING,
+            "not_found" to NativeState.ERROR,"unconfirmed" to NativeState.ERROR,
+            "wrong_date" to NativeState.ERROR,"canceled" to NativeState.ERROR)
+        for((code,state) in pairs) {
+            f.transport.responses+=NativeResponse(200,resultBody(codedResult(code,state.name.lowercase())))
+            val result=f.client.confirm("dqor-2026","2026-10-08",listOf(101),true).results.single()
+            assertEquals(code,result.code.wireValue); assertEquals(state,result.state)
+        }
+    }
+    @Test fun `missing null nonstring and unknown codes fail closed`() = runBlocking {
+        val f=Fixture(); f.login()
+        for(code in listOf(null,JSONObject.NULL,1,"","future_code","SUCCESS")) {
+            f.transport.responses+=NativeResponse(200,resultBody(codedResult(code,"success")))
+            failure(NativeFailure.Kind.OUTCOME) {f.client.confirm("dqor-2026","2026-10-08",listOf(101),true)}
+        }
+    }
+    @Test fun `every mismatched code state pair fails closed`() = runBlocking {
+        val f=Fixture(); f.login()
+        val pairs=mapOf("success" to "success","duplicate" to "warning","not_found" to "error",
+            "unconfirmed" to "error","wrong_date" to "error","canceled" to "error")
+        for((code,expected) in pairs) for(state in listOf("success","warning","error","future_state",null,42)) {
+            if(state==expected) continue
+            f.transport.responses+=NativeResponse(200,resultBody(codedResult(code,state)))
+            failure(NativeFailure.Kind.OUTCOME) {f.client.confirm("dqor-2026","2026-10-08",listOf(101),true)}
+        }
+    }
+    @Test fun `message text never determines outcome classification`() = runBlocking {
+        val f=Fixture(); f.login()
+        f.transport.responses+=NativeResponse(200,resultBody(codedResult("canceled","error").put("message","Checked in successfully")))
+        assertEquals(NativeState.ERROR,f.client.confirm("dqor-2026","2026-10-08",listOf(101),true).results.single().state)
+        f.transport.responses+=NativeResponse(200,resultBody(codedResult("duplicate","warning").put("message","Unrecognized translated wording")))
+        assertEquals(NativeOutcomeCode.DUPLICATE,f.client.confirm("dqor-2026","2026-10-08",listOf(101),true).results.single().code)
+    }
+    @Test fun `unsupported result prevents publishing a partial success batch`() = runBlocking {
+        val f=Fixture(); f.login()
+        val results=org.json.JSONArray().put(codedResult("success","success"))
+            .put(codedResult("future_code","success").put("ticket_id","102"))
+        f.transport.responses+=NativeResponse(200,JSONObject().put("date","2026-10-08").put("results",results).toString())
+        failure(NativeFailure.Kind.OUTCOME) {f.client.confirm("dqor-2026","2026-10-08",listOf(101,102),true)}
     }
     @Test fun `HTTP failures are typed without displaying server bodies`() = runBlocking {
         val f=Fixture(); f.login()

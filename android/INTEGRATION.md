@@ -30,9 +30,18 @@ staff grants, live requests or attendance were created during implementation.
   `order_code`, boolean `eligible`, nullable `checked_in_at` timestamp.
 - POST `/api/staff/checkins/confirm`: `{ticket_ids,date,confirmed:true}` →
   `{date,results}`. Results contain `ticket_id`, optional `attendee`,
-  `state: success|warning|error`, `message`, timestamp on success.
+  `code`, `state: success|warning|error`, `message`, timestamp on success.
   Rails currently serializes confirmation IDs as strings; the adapter validates
   and accepts positive integer IDs or decimal strings, rejecting fractional IDs.
+
+Confirmation codes are pinned to [backend contract 26d5a1e](https://github.com/saeloun/dqor-tickets/blob/26d5a1eddfb64960b29abd58412da5965b50bb45/docs/NATIVE_STAFF_API.md):
+`success` requires state `success`; `duplicate` requires `warning`; `not_found`,
+`unconfirmed`, `wrong_date` and `canceled` require `error`. The adapter exposes a
+typed `NativeOutcomeCode` and rejects the whole confirmation response if any code
+is missing, unknown, wrongly typed or inconsistent with its state. It reports an
+unsupported/unverified outcome requiring staff resolution, never a new admission.
+Display messages are never parsed for classification. These codes do not apply
+to read-only resolve or request-level errors. Older servers without codes fail closed.
 
 **Native endpoints provide no attendance counts/stats.** Do not infer totals from
 successful results or reuse the legacy web lookup DTO. Confirmation preserves
