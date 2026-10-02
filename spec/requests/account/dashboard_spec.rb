@@ -43,6 +43,24 @@ RSpec.describe "Account dashboard hub", type: :request do
     expect(response.body).to include("Happening now")
   end
 
+  it "links signed-in attendees to conference chat from the hub and directory" do
+    join_url = "https://chat.deccanqueenonrails.com/join/test-invite-token"
+    allow(ENV).to receive(:fetch).and_call_original
+    allow(ENV).to receive(:fetch).with("CAMPFIRE_JOIN_URL", "https://chat.deccanqueenonrails.com").and_return(join_url)
+    sign_in_as(User.create!(email: "chat@example.com"))
+
+    [ account_root_path, community_path ].each do |path|
+      get path
+
+      expect(response).to have_http_status(:ok)
+      link = Nokogiri::HTML(response.body).at_css("a[href='#{join_url}']")
+      expect(link).to be_present
+      expect(link.text).to match(/conference chat/i)
+      expect(link["target"]).to eq("_blank")
+      expect(link["rel"]).to eq("noopener")
+    end
+  end
+
   it "nudges the buyer to finish a ticket with no attendee yet" do
     user = User.create!(email: "buyer@example.com", name: "Buyer")
     order = create(:order, :paid, email: "buyer@example.com")
