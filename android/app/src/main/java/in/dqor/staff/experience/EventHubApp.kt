@@ -25,6 +25,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.zxing.BarcodeFormat
@@ -35,7 +40,7 @@ import java.time.format.DateTimeFormatter
 
 enum class EventSection(val label: String) { OVERVIEW("Overview"), SCHEDULE("Schedule"), PASSES("Passes") }
 private fun dayLabel(day: String)=LocalDate.parse(day).format(DateTimeFormatter.ofPattern("EEE, d MMM",java.util.Locale.ENGLISH))
-private val PosterShape=RoundedCornerShape(20.dp)
+private val PosterShape=RoundedCornerShape(16.dp)
 
 @Composable
 fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Unit) {
@@ -89,7 +94,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                     EventSection.OVERVIEW -> LazyColumn(Modifier.fillMaxSize().testTag("event-overview"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
                         item {EventArtwork(event,Modifier.fillMaxWidth().aspectRatio(1f).clip(PosterShape))}
                         item {
-                            Text(event.name,fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.SemiBold,letterSpacing=(-.8).sp)
+                            EventDisplayTitle(event.name)
                             Spacer(Modifier.height(8.dp)); Text("Hosted by DQOR India · sample event",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         item {
@@ -191,7 +196,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
         item {Surface(shape=RoundedCornerShape(24.dp),color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column {
             EventArtwork(event,Modifier.fillMaxWidth().height(128.dp),compact=true)
             Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Text(event.name,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold)
+                EventDisplayTitle(event.name,compact=true)
                 Text("${dayLabel(event.dates.first())} · ${event.location}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(pass.attendee,fontSize=28.sp,lineHeight=32.sp,fontWeight=FontWeight.SemiBold); Text(pass.ticketType,style=MaterialTheme.typography.bodyMedium)
                 DemoNote("SAMPLE PASS · NOT VALID FOR ENTRY")
@@ -219,4 +224,14 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
         Text(label,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value,style=MaterialTheme.typography.bodyLarge,fontWeight=FontWeight.Medium)
     }
+}
+
+@Composable private fun EventDisplayTitle(name: String, compact: Boolean=false) {
+    val words=name.split(" ")
+    val split=if(words.size>2) words.dropLast(2).joinToString(" ")+" " else ""
+    val title=buildAnnotatedString {
+        append(split)
+        withStyle(SpanStyle(fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic,fontWeight=FontWeight.Medium)) {append(name.removePrefix(split))}
+    }
+    Text(title,fontSize=if(compact) 30.sp else 46.sp,lineHeight=if(compact) 34.sp else 50.sp,fontWeight=FontWeight.SemiBold,letterSpacing=(-1).sp)
 }

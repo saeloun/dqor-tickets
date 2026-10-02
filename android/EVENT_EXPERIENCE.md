@@ -44,9 +44,9 @@ a duplicate retry is reported as already admitted, never a new success.
 ## Visual system
 
 Operations use warm canvas `#F6F5EF`, ink `#243024`, forest `#334B28`, 12dp cards,
-16sp body and 48–56dp primary controls. Attendee chrome is separate: warm off-white `#FAF9F6`, aubergine `#302630`,
+16sp body and 48–56dp primary controls. Attendee chrome is separate: warm off-white `#F8F5F2`, aubergine `#332631` and plum accent `#642F47`,
 white cards, restrained dividers and artwork-led event identity. The 56dp header,
-square 20dp-radius art, 32/36sp title, compact metadata and one ticket action follow
+square 16dp-radius art, 46/50sp title with native serif italic accents, compact metadata and one ticket action follow
 the design owner's fresh public Luma reference review. No Luma assets or branding
 are used. DQOR art copies the repository's public `public/dqor/hero-bg.jpg` unchanged;
 the second event uses an original Compose geometric motif. Cropped art carries into
@@ -102,3 +102,11 @@ fixtures, not screenshots of a live event/account or a published app. Instrument
 screenshot helpers store only synthetic content inside the debug app's private
 files. Device tests and screenshot inspection run locally; hosted CI runs build,
 JVM tests and lint.
+
+
+The subsequent rendered attendee handoff (`docs/theme-studio/attendee/event-mobile.png`
+and `pass-mobile.png` in the design owner's checkout) was inspected before aligning
+the final palette and display hierarchy. Android retains its DQOR conference artwork
+rather than relabeling that conference as the separate fictional After Hours event.
+Pass codes remain clearly invalid synthetic fixtures because no approved attendee
+credential contract is connected; QR pixels stay on white with an untouched quiet zone.
