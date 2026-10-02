@@ -1,0 +1,10 @@
+<%= form_with model: [ :organizer, @organization, @event ] do |form| %>
+  <% @event.errors.full_messages.each do |message| %><p role="alert"><%= message %></p><% end %>
+  <p><%= form.label :title %><%= form.text_field :title, required: true %></p>
+  <p><%= form.label :slug %><%= form.text_field :slug, required: true %></p>
+  <p><%= form.label :timezone, "IANA timezone (for display)" %><%= form.text_field :timezone, required: true, placeholder: "Asia/Kolkata" %></p>
+  <p>Enter start and end in UTC. Dates are required before publication.</p>
+  <p><%= form.label :starts_at, "Start (UTC)" %><%= form.datetime_local_field :starts_at, value: @event.starts_at&.utc&.strftime("%Y-%m-%dT%H:%M") %></p>
+  <p><%= form.label :ends_at, "End (UTC)" %><%= form.datetime_local_field :ends_at, value: @event.ends_at&.utc&.strftime("%Y-%m-%dT%H:%M") %></p>
+  <%= form.submit %>
+<% end %>

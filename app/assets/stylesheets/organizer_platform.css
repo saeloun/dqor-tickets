@@ -1,0 +1,12 @@
+body { margin: 0; background: #f5f6f8; color: #192431; font: 16px/1.6 system-ui, sans-serif; }
+header, main, .flash { max-width: 760px; margin: 0 auto; padding: 24px; }
+header { display: flex; justify-content: space-between; gap: 16px; }
+main { background: white; border: 1px solid #d9dfe6; border-radius: 12px; }
+h1 { line-height: 1.2; }
+a { color: #174b86; }
+label { display: block; font-weight: 600; }
+input { box-sizing: border-box; max-width: 100%; padding: 10px; border: 1px solid #8995a5; border-radius: 6px; font: inherit; }
+input:not([type=submit]) { width: 100%; }
+button, input[type=submit] { padding: 10px 18px; background: #174b86; color: white; border: 0; border-radius: 6px; font: inherit; cursor: pointer; }
+[role=alert] { color: #9d2020; }
+@media (max-width: 800px) { main { margin: 0 12px; } }
