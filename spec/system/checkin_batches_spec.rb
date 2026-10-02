@@ -78,6 +78,53 @@ RSpec.describe "Staff batch check-in", type: :system do
     expect(ticket.reload.checked_in_at).to be_empty
   end
 
+  it "decodes a QR image without BarcodeDetector using the bundled software decoder" do
+    ticket = create(:ticket, order:, attendee_name: "Software Decoder")
+    image_path = Rails.root.join("tmp", "checkin-fallback-#{ticket.id}.png")
+    RQRCode::QRCode.new(ticket.secret).as_png(size: 360).save(image_path)
+    open_desk
+    page.execute_script("window.BarcodeDetector = undefined")
+    find("span", text: "Scan an Image File", exact_text: true).click
+    find("input[type='file']", visible: :all).set(image_path)
+    expect(page).to have_css(".checkin-result--success", text: "Software Decoder")
+    expect(ticket.reload.checked_in_at).to have_key("2026-10-08")
+  ensure
+    File.delete(image_path) if image_path && File.exist?(image_path)
+  end
+
+  it "keeps denied camera permission user-driven and manual check-in available" do
+    ticket = create(:ticket, order:, attendee_name: "Manual Fallback")
+    open_desk
+    page.execute_script(<<~JS)
+      window.cameraRequests = 0;
+      navigator.mediaDevices.getUserMedia = () => {
+        window.cameraRequests += 1;
+        return Promise.reject(new DOMException('Permission denied', 'NotAllowedError'));
+      };
+    JS
+    expect(page.evaluate_script("window.cameraRequests")).to eq(0)
+    click_button "Request Camera Permissions"
+    expect(page).to have_content("Permission denied")
+    expect(page.evaluate_script("window.cameraRequests")).to eq(1)
+    expect(page).to have_content("use attendee search below")
+    find("button[data-ticket-id='#{ticket.id}']").click
+    expect(page).to have_css(".checkin-result--success", text: "Manual Fallback")
+  end
+
+  it "pauses scans after phone rotation and requires an explicit restart" do
+    ticket = create(:ticket, order:, attendee_name: "Rotation Test")
+    open_desk
+    page.execute_script(<<~JS, ticket.secret)
+      window.dispatchEvent(new Event('orientationchange'));
+      window.Stimulus.getControllerForElementAndIdentifier(document.querySelector('[data-controller="checkin"]'), 'checkin').scan(arguments[0]);
+    JS
+    expect(page).to have_content("Camera paused after leaving the page or rotating your phone")
+    expect(ticket.reload.checked_in_at).to be_empty
+    click_button "Restart camera"
+    expect(page).to have_button("Request Camera Permissions")
+    expect(page).to have_content("choose the back/rear camera")
+  end
+
   it "serializes repeat clicks and suppresses repeated camera frames while allowing the next QR" do
     first = create(:ticket, order:, attendee_name: "Test First")
     second = create(:ticket, order:, attendee_name: "Test Second")

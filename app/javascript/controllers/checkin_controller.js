@@ -2,16 +2,48 @@ import { Controller } from "@hotwired/stimulus"
 import "html5-qrcode"
 
 export default class extends Controller {
-  static targets = ["date", "result", "count", "selection", "batchButton", "dialog", "confirmation", "outcomes", "control"]
+  static targets = ["date", "result", "count", "selection", "batchButton", "dialog", "confirmation", "outcomes", "control", "cameraStatus"]
 
   connect() {
     this.connected = true
     this.busy = false
     this.updateSelection()
+    this.initializeScanner()
+  }
+
+  initializeScanner() {
+    this.cameraInterrupted = false
     const Scanner = window.__Html5QrcodeLibrary__?.Html5QrcodeScanner
     if (!Scanner) return this.show("error", "Camera scanner unavailable. Use attendee search below.")
-    this.scanner = new Scanner("checkin-reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false)
+    if (!window.isSecureContext) {
+      this.cameraStatusTarget.textContent = "Camera requires HTTPS. Use attendee search below."
+      return
+    }
+    this.scanner = new Scanner("checkin-reader", {
+      fps: 10, rememberLastUsedCamera: false, useBarCodeDetectorIfSupported: false,
+      qrbox: (width, height) => { const side = Math.min(250, Math.floor(Math.min(width, height) * 0.7)); return { width: side, height: side } }
+    }, false)
     this.scanner.render(secret => this.scan(secret), () => {})
+  }
+
+  visibilityChanged() {
+    if (document.hidden) this.interruptCamera()
+  }
+
+  interruptCamera() {
+    this.cameraInterrupted = true
+    this.pauseScanner()
+    this.cameraStatusTarget.textContent = "Camera paused after leaving the page or rotating your phone. Tap Restart camera, then choose the back/rear camera. Attendee search remains available."
+  }
+
+  async restartCamera() {
+    if (this.busy) return
+    try { await this.scanner?.clear() } catch (_) {}
+    if (!this.connected) return
+    this.scanner = null
+    this.lastSecret = null
+    this.initializeScanner()
+    this.cameraStatusTarget.textContent = "Tap Request Camera Permissions and choose the back/rear camera. If access is denied, allow camera access in browser settings or use attendee search below."
   }
 
   disconnect() {
@@ -39,7 +71,7 @@ export default class extends Controller {
   }
 
   scan(secret) {
-    if (this.busy || this.dialogTarget.open) return
+    if (this.busy || document.hidden || this.cameraInterrupted || this.dialogTarget.open) return
     if (secret === this.lastSecret && Date.now() - this.lastScan < 3000) return
     this.lastSecret = secret
     this.lastScan = Date.now()
@@ -179,7 +211,7 @@ export default class extends Controller {
   }
 
   pauseScanner() { try { this.scanner?.pause(true) } catch (_) {} }
-  resumeScanner() { if (this.connected && !this.busy && !this.dialogTarget.open) { try { this.scanner?.resume() } catch (_) {} } }
+  resumeScanner() { if (this.connected && !document.hidden && !this.cameraInterrupted && !this.busy && !this.dialogTarget.open) { try { this.scanner?.resume() } catch (_) {} } }
 
   show(state, message) {
     if (!this.connected) return
