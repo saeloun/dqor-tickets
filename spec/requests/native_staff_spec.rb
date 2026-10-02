@@ -143,6 +143,38 @@ RSpec.describe "Native staff API", type: :request do
     expect(CheckinAudit.where(outcome: "success", admin_user: operator).count).to eq(1)
   end
 
+  it "serializes stable codes for every mixed outcome while preserving the v1 fields" do
+    login
+    good = ticket
+    duplicate = create(:ticket, order: create(:order, :paid))
+    confirm([ duplicate.id ])
+    original = duplicate.reload.checked_in_at
+    pending = create(:ticket, order: create(:order))
+    wrong_day = create(:ticket, order: create(:order, :paid),
+      ticket_type: create(:ticket_type, event_starts_on: "2026-10-09", event_ends_on: "2026-10-09"))
+    canceled = create(:ticket, order: create(:order, :paid), canceled_at: Time.current)
+    missing_id = Ticket.maximum(:id) + 1
+    ids = [ good.id, duplicate.id, missing_id, pending.id, wrong_day.id, canceled.id ]
+
+    confirm(ids)
+
+    expect(response).to have_http_status(:ok)
+    results = response.parsed_body.fetch("results")
+    expect(results.pluck("ticket_id")).to eq(ids.map(&:to_s))
+    expect(results.pluck("code")).to eq(%w[success duplicate not_found unconfirmed wrong_date canceled])
+    expect(results.pluck("state")).to eq(%w[success warning error error error error])
+    results.each do |result|
+      expect(result.fetch("message")).to be_present
+      expect(result).not_to have_key("status")
+    end
+    expect(results.first).to include("attendee" => good.attendee_name,
+      "checked_in_at" => good.reload.checked_in_at.fetch(date))
+    expect(results.third).not_to have_key("attendee")
+    expect(duplicate.reload.checked_in_at).to eq(original)
+    [ pending, wrong_day, canceled ].each { |rejected| expect(rejected.reload.checked_in_at).to be_empty }
+    expect(CheckinAudit.order(:id).last(6).map(&:outcome)).to eq(results.pluck("code"))
+  end
+
   it "denies replay after logout, expiry, password change, or role change" do
     login
     delete "/api/staff/session", headers:, as: :json

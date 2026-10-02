@@ -64,6 +64,31 @@ The native confirmation transaction commits accepted attendance and audits toget
 an unexpected exception rolls back that request. Expected individual rejections
 remain per-ticket outcomes, so 200 does not mean every attendee was admitted.
 
+### Additive v1 outcome codes
+
+Each confirmation result now includes `code`, matching its audit outcome:
+
+| code | state | Meaning |
+| --- | --- | --- |
+| `success` | `success` | Admission recorded; `checked_in_at` is returned. |
+| `duplicate` | `warning` | Previously admitted on this date; attendance is unchanged. |
+| `not_found` | `error` | Requested ticket does not exist. |
+| `unconfirmed` | `error` | Order is not confirmed/paid. |
+| `wrong_date` | `error` | Ticket is invalid on the requested event date. |
+| `canceled` | `error` | Ticket or order is canceled. |
+
+This is an additive v1 response change: existing `state`, `message`, identity fields,
+and success timestamp retain their meaning. Older clients may ignore `code`.
+New clients must use the exact code/state pairs above, never parse display messages,
+and fail closed for missing codes (including older servers), unknown future codes,
+or mismatched code/state pairs: show an unsupported/unverified outcome and require
+staff resolution, without displaying a new admission success. Only `success` records
+a new admission; `duplicate` must be shown as already admitted. HTTP 200 alone is
+not admission authorization. Codes apply to individual confirmation results, not
+request-level authentication/validation errors or read-only QR previews. Client-side
+enforcement belongs in the mobile adapters and must be tested there before live use.
+The native feature remains disabled by default; this addition does not enable it.
+
 Repeated confirmation is idempotent for attendance: same ticket/day retains its
 original timestamp, returns a duplicate warning and never adds another success.
 Duplicate attempts may add duplicate audit rows. A timeout can follow a commit:
