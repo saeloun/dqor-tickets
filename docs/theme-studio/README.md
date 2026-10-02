@@ -1,5 +1,7 @@
 # DQOR theme studio — integration review
 
+**Persisted follow-up:** authenticated server draft/save/preview/publication is now implemented separately at `/organizer/branding`. See [persisted configuration](PERSISTED_CONFIGURATION.md). The static studio described below remains a browser-only prototype.
+
 Provisional branding, three original event directions, and a browser-only no-code editor. This is an isolated design prototype, not a connected event-management feature. No domain choice is assumed.
 
 ## Review locally
@@ -35,7 +37,7 @@ All sample dates, programme descriptions, race distances and venues are illustra
 
 Working previews survive same-tab navigation/reload using sessionStorage. Switching themes retains in-progress edits in memory. A saved draft is restored explicitly, not automatically. Browser storage is origin-specific, can be cleared, and is not an account backup. Storage failures are caught; saving reports failure. If sessionStorage is unavailable, the embedded live preview works but the full-page preview falls back to defaults. Drafts do not sync across devices or accounts.
 
-The existing app has **no persisted event-branding settings**. Date/venue are currently constants in `app/models/conference.rb`; identity and artwork are rendered from existing application views/assets. The prototype deliberately does not claim otherwise. Ticket tiers, capacity, schedule and other existing records are outside this change.
+At the prototype baseline, the app had **no persisted event-branding settings**. The follow-up adds the isolated configuration described above. Date/venue are currently constants in `app/models/conference.rb`; identity and artwork are rendered from existing application views/assets. The prototype deliberately does not claim otherwise. Ticket tiers, capacity, schedule and other existing records are outside this change.
 
 ## Integration boundary
 

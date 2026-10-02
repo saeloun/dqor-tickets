@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title><%= @snapshot_label %> · DQOR</title>
+    <link rel="stylesheet" href="/theme-studio/preview.css" />
+
+  <% if (favicon = @configuration.to_h.fetch("assets")["favicon"]) %><link rel="icon" href="<%= asset_organizer_branding_path(id: favicon) %>" type="image/webp"><% end %>
+  </head>
+  <body class="dq-event" data-theme="<%= @configuration.to_h.fetch("theme") %>" style="<%= @configuration.tokens.map { |key, value| "#{key}:#{value}" }.join(";") %>">
+    <a class="skip" href="#main">Skip to event content</a>
+    <div class="demo-bar">
+      <%= @snapshot_label %>
+      <span>Private preview · Public activation off</span>
+    </div>
+    <header class="event-header">
+      <a class="event-brand" href="#main">
+        <% if (logo = @configuration.to_h.fetch("assets")["logo"]) %>
+          <img id="brand-logo" src="<%= asset_organizer_branding_path(id: logo) %>" alt="">
+        <% else %>
+          <span id="brand-mark" aria-hidden="true">✳</span>
+        <% end %>
+        <span id="event-name">Deccan Queen on Rails</span>
+      </a>
+      <nav aria-label="Event navigation">
+        <a href="#about">About</a><a href="#programme">Programme</a
+        ><a href="#visit">Visit</a>
+      </nav>
+    </header>
+    <main id="main">
+      <section class="hero">
+        <div class="hero-copy">
+          <p id="category" class="eyebrow">A GATHERING OF CURIOUS MINDS</p>
+          <h1 id="headline">Good people.<br>Great conversations.</h1>
+          <p id="intro">A gathering of the Ruby and Rails community in Pune. Explore the event programme and meet your fellow attendees.</p>
+          <a class="event-cta" href="#programme"
+            >Explore the programme <span aria-hidden="true">↗</span></a
+          >
+          <div class="hero-meta">
+            <span id="event-date"><%= Conference::DATE_RANGE_LABEL %></span><span id="event-place"><%= Conference::VENUE %></span>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-conference">
+            <span class="arch arch-one"></span
+            ><span class="arch arch-two"></span
+            ><span class="arch arch-three"></span><span class="art-sun">✳</span
+            ><span class="art-caption"
+              >THE BEST IDEAS<br />BEGIN WITH HELLO.</span
+            >
+          </div>
+          <div class="art-marathon">
+            <span class="track track-one"></span
+            ><span class="track track-two"></span
+            ><span class="track track-three"></span
+            ><span class="run-type">GO<br />BEYOND<span>↗</span></span
+            ><span class="art-caption">ONE CITY. A THOUSAND STORIES.</span>
+          </div>
+          <div class="art-campus">
+            <span class="book book-one"></span
+            ><span class="book book-two"></span
+            ><span class="book book-three"></span
+            ><span class="campus-type">Aa<span>“</span></span
+            ><span class="art-caption"
+              >COME WITH QUESTIONS.<br />LEAVE WITH POSSIBILITIES.</span
+            >
+          </div>
+          <% if (cover = @configuration.to_h.fetch("assets")["cover"]) %><img id="cover-image" src="<%= asset_organizer_branding_path(id: cover) %>" alt=""><% end %>
+        </div>
+      </section>
+      <div id="sections">
+        <% @configuration.to_h.fetch("sections").each_with_index do |section, index| %>
+          <section id="<%= section %>" class="content-section <%= section %>">
+            <div><p class="eyebrow">0<%= index + 1 %> / <%= section.upcase %></p>
+            <% if section == "about" %>
+              <h2>Better, together.</h2><p>Deccan Queen on Rails brings the community together in Pune.</p><%= link_to "Visit the current event site ↗", root_path, target: "_top" %>
+            <% elsif section == "programme" %>
+              <h2>Make room for discovery.</h2><p>The event schedule is maintained in the existing application.</p><%= link_to "Explore the event schedule ↗", schedule_path, target: "_top" %>
+            <% elsif section == "visit" %>
+              <h2>Meet us in Pune.</h2><p><%= Conference::VENUE %></p><p><%= Conference::DATE_RANGE_LABEL %></p>
+            <% end %></div>
+          </section>
+        <% end %>
+      </div>
+    </main>
+    <footer class="event-footer">
+      <strong id="footer-name">Deccan Queen on Rails</strong
+      ><span>Made for gathering. Powered by DQOR.</span
+      ><a href="<%= organizer_branding_path %>" target="_top">Back to saved branding ↗</a>
+    </footer>
+  </body>
+</html>
