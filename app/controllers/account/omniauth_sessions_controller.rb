@@ -2,8 +2,22 @@ class Account::OmniauthSessionsController < ApplicationController
   allow_unauthenticated_access
 
   def create
-    info = request.env["omniauth.auth"]&.info
+    auth = request.env["omniauth.auth"]
+    info = auth&.info
     email = info&.email.to_s.strip.downcase
+    chat_state = session.delete(:chat_login_state)
+
+    if chat_state
+      response.headers["Cache-Control"] = "no-store"
+      if ChatLoginGrant::STATE_FORMAT.match?(chat_state) && email.match?(URI::MailTo::EMAIL_REGEXP) &&
+          auth&.dig("extra", "raw_info", "email_verified") == true
+        code = ChatLoginGrant.issue!(email: email, name: info.name, state: chat_state)
+        redirect_to "https://chat.deccanqueenonrails.com/session/google/callback?#{ { login_code: code, state: chat_state }.to_query }", allow_other_host: true
+      else
+        redirect_to account_sign_in_path, alert: "Google must verify your email before you can join conference chat."
+      end
+      return
+    end
 
     if email.match?(URI::MailTo::EMAIL_REGEXP)
       user = User.find_or_create_by!(email: email)
@@ -16,6 +30,7 @@ class Account::OmniauthSessionsController < ApplicationController
   end
 
   def failure
+    session.delete(:chat_login_state)
     redirect_to account_sign_in_path, alert: "Google sign-in didn’t complete. Try again or use the email link."
   end
 end

@@ -1,0 +1,22 @@
+name: dqor-campfire-monitoring
+services:
+  prometheus:
+    image: prom/prometheus:v3.13.4@sha256:87861b8cf91579109319ebc300f3f1060e6da9c05d6ae8ad15a20c879e84e32e
+    container_name: dqor-campfire-prometheus
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=14d
+      - --storage.tsdb.retention.size=2GB
+      - --web.listen-address=127.0.0.1:4313
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - metrics:/prometheus
+    mem_limit: 256m
+    cpus: 0.5
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  metrics:
