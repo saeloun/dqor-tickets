@@ -123,7 +123,7 @@ struct StaffRootView: View {
             Text("Scan tickets, review a batch, and confirm every arrival.").font(.title3).foregroundStyle(.primary)
             Label { Text("Demo mode · synthetic attendees only").fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: "testtube.2") }.font(.headline)
             Text("Explore staff check-in using sample attendees. This preview does not connect to a live event.").foregroundStyle(.primary)
-            NavigationLink("Explore sample event") { AttendeeEventView(day: DemoStaffAPI.days[0]) }
+            NavigationLink("Explore sample event") { AttendeeEventView(day: DemoCompanion.previewDay) }
                 .font(.headline).frame(minHeight: 48).accessibilityIdentifier("exploreSampleEvent")
             Button("Enter demo") { Task { await store.signIn() } }
                 .buttonStyle(.borderedProminent).controlSize(.large).disabled(store.busy).accessibilityIdentifier("enterDemo")

@@ -24,7 +24,15 @@ for target,folder,kind in [('DQORStaff','Sources','application'),('DQORStaffTest
     ext='app' if kind=='application' else 'xctest'
     prod=add(target+'/product','{isa = PBXFileReference; explicitFileType = '+('wrapper.application' if ext=='app' else 'wrapper.cfbundle')+'; path = '+target+'.'+ext+'; sourceTree = BUILT_PRODUCTS_DIR;}'); products.append(prod)
     phase=add(target+'/sources','{isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = '+seq(builds)+'; runOnlyForDeploymentPostprocessing = 0;}')
-    settings={'PRODUCT_NAME':'"$(TARGET_NAME)"','PRODUCT_BUNDLE_IDENTIFIER':'org.dqor.staff'+('' if ext=='app' else '.'+folder.lower()),'GENERATE_INFOPLIST_FILE':'YES','TARGETED_DEVICE_FAMILY':'"1,2"','CODE_SIGN_STYLE':'Automatic','CURRENT_PROJECT_VERSION':'1','MARKETING_VERSION':'0.1.0','ENABLE_TESTABILITY':'YES'}
+    phases = [phase]
+    if ext == 'app':
+        resources = []; resource_builds = []
+        for resource in sorted((root/'Resources').glob('*.png')):
+            f = add('Resources/'+resource.name, '{isa = PBXFileReference; lastKnownFileType = image.png; path = "'+resource.name+'"; sourceTree = "<group>";}')
+            resources.append(f); resource_builds.append(add('resource-build/'+resource.name, '{isa = PBXBuildFile; fileRef = '+f+';}'))
+        groups.append(add('Resources', '{isa = PBXGroup; children = '+seq(resources)+'; path = Resources; sourceTree = "<group>";}'))
+        phases.append(add(target+'/resources', '{isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = '+seq(resource_builds)+'; runOnlyForDeploymentPostprocessing = 0;}'))
+    settings={'PRODUCT_NAME' :'"$(TARGET_NAME)"','PRODUCT_BUNDLE_IDENTIFIER':'org.dqor.staff'+('' if ext=='app' else '.'+folder.lower()),'GENERATE_INFOPLIST_FILE':'YES','TARGETED_DEVICE_FAMILY':'"1,2"','CODE_SIGN_STYLE':'Automatic','CURRENT_PROJECT_VERSION':'1','MARKETING_VERSION':'0.1.0','ENABLE_TESTABILITY':'YES'}
     if ext=='app': settings.update({'INFOPLIST_KEY_NSCameraUsageDescription':'"Scan attendee ticket QR codes to prepare a check-in batch."','INFOPLIST_KEY_UIApplicationSceneManifest_Generation':'YES','INFOPLIST_KEY_UILaunchScreen_Generation':'YES','INFOPLIST_KEY_CFBundleDisplayName':'"DQOR Staff"','INFOPLIST_KEY_UISupportedInterfaceOrientations':'"UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"'})
     elif folder=='Tests': settings.update({'TEST_HOST':'"$(BUILT_PRODUCTS_DIR)/DQORStaff.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DQORStaff"','BUNDLE_LOADER':'"$(TEST_HOST)"'})
     else: settings['TEST_TARGET_NAME']='DQORStaff'
@@ -32,7 +40,7 @@ for target,folder,kind in [('DQORStaff','Sources','application'),('DQORStaffTest
     if ext!='app':
         proxy=add(target+'/proxy','{isa = PBXContainerItemProxy; containerPortal = '+ref('project')+'; proxyType = 1; remoteGlobalIDString = '+ref('DQORStaff/target')+'; remoteInfo = DQORStaff;}')
         deps=[add(target+'/dependency','{isa = PBXTargetDependency; target = '+ref('DQORStaff/target')+'; targetProxy = '+proxy+';}')]
-    targets.append(add(target+'/target','{isa = PBXNativeTarget; buildConfigurationList = '+cfg+'; buildPhases = '+seq([phase])+'; buildRules = (); dependencies = '+seq(deps)+'; name = '+target+'; productName = '+target+'; productReference = '+prod+'; productType = "com.apple.product-type.'+kind+'";}'))
+    targets.append(add(target+'/target','{isa = PBXNativeTarget; buildConfigurationList = '+cfg+'; buildPhases = '+seq(phases)+'; buildRules = (); dependencies = '+seq(deps)+'; name = '+target+'; productName = '+target+'; productReference = '+prod+'; productType = "com.apple.product-type.'+kind+'";}'))
 products_group=add('products','{isa = PBXGroup; children = '+seq(products)+'; name = Products; sourceTree = "<group>";}')
 main=add('main','{isa = PBXGroup; children = '+seq(groups+[products_group])+'; sourceTree = "<group>";}')
 add('project','{isa = PBXProject; attributes = {LastUpgradeCheck = 2700;}; buildConfigurationList = '+project_configs+'; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = '+main+'; productRefGroup = '+products_group+'; projectDirPath = ""; projectRoot = ""; targets = '+seq(targets)+';}')

@@ -20,15 +20,21 @@ struct DemoPass: Identifiable {
     let party: DemoEntitlementStatus
 }
 enum DemoCompanion {
+    static let previewDay = EventDay(id: "afterhours-preview", event: "Deccan After Hours", day: "Saturday, 14 November · 2026")
     static func schedule(for day: EventDay) -> [DemoScheduleItem] {
-        guard DemoStaffAPI.days.contains(day) else { return [] }
+        guard DemoStaffAPI.days.contains(day) || day == previewDay else { return [] }
+        if day == previewDay {
+            return [DemoScheduleItem(id: "afterhours-welcome", time: "18:00–18:30", title: "Settle in", location: "The Courtyard · sample venue"),
+                    DemoScheduleItem(id: "afterhours-ideas", time: "18:30–20:00", title: "Ideas & encounters", location: "The Courtyard · sample venue"),
+                    DemoScheduleItem(id: "afterhours-evening", time: "20:00–21:00", title: "Stay a little longer", location: "The Courtyard · sample venue")]
+        }
         let workshop = day.id == "workshop-1"
         return [DemoScheduleItem(id: day.id + "-welcome", time: "09:00–09:30", title: "Doors and welcome", location: "Welcome desk"),
                 DemoScheduleItem(id: day.id + "-session", time: "09:30–12:00", title: workshop ? "Hands-on design studio" : "Community talks", location: workshop ? "Studio A" : "Main hall"),
                 DemoScheduleItem(id: day.id + "-lunch", time: "12:00–13:00", title: "Lunch break", location: "Dining area")]
     }
     static func passes(for day: EventDay) -> [DemoPass] {
-        guard DemoStaffAPI.days.contains(day) else { return [] }
+        guard DemoStaffAPI.days.contains(day) || day == previewDay else { return [] }
         return [DemoPass(id: day.id + "-sample", name: "Sample attendee pass", admission: .available, meal: .redeemed, party: .notIncluded)]
     }
 }
@@ -50,7 +56,7 @@ struct EventCompanionView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 PreviewBadge()
-                Text(day.event).font(.system(.largeTitle, design: .serif).weight(.semibold))
+                AttendeeEventTitle(day: day)
                 Label(day.day, systemImage: "calendar").font(.subheadline)
                 Text("A day for good ideas.").font(.title2.weight(.medium))
                 Text("Sample agenda · illustrative local times.").font(.subheadline).foregroundStyle(AttendeeStyle.secondary)
@@ -65,28 +71,33 @@ struct EventCompanionView: View {
                         .background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 20))
                         .accessibilityElement(children: .combine)
                 }
-            }.padding(24).frame(maxWidth: 640)
+            }.padding(20).frame(maxWidth: 640)
         }.foregroundStyle(AttendeeStyle.ink)
     }
     private var passContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 PreviewBadge()
-                Text("Your place in\nthe gathering.").font(.system(.largeTitle, design: .serif).weight(.semibold))
                 ForEach(DemoCompanion.passes(for: day)) { pass in
                     VStack(alignment: .leading, spacing: 0) {
                         EventArtwork(showsHeadline: false).frame(height: 120).clipped().accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 20) {
-                            Text(day.event).font(.title2.weight(.semibold))
+                            AttendeeEventTitle(day: day)
                             Label(day.day, systemImage: "calendar").font(.subheadline)
                             Divider()
                             HStack(alignment: .top) {
                                 Image(systemName: "person.crop.circle").font(.title)
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Alex Morgan").font(.headline)
+                                    Text(day == DemoCompanion.previewDay ? "Aarav Shah" : "Alex Morgan").font(.headline)
                                     Text("Synthetic attendee · sample pass").font(.caption).foregroundStyle(AttendeeStyle.secondary)
                                 }
                             }
+                            VStack(spacing: 12) {
+                                Image(systemName: "sparkle").font(.largeTitle)
+                                Text("Entry code appears here").font(.headline)
+                                Text("SAMPLE · no scannable credential").font(.caption)
+                            }.frame(maxWidth: .infinity).padding(24)
+                                .background(AttendeeStyle.canvas, in: RoundedRectangle(cornerRadius: 16))
                             status("Admission", pass.admission)
                             Divider()
                             Text("Included with this sample").font(.subheadline.weight(.semibold))
@@ -99,7 +110,7 @@ struct EventCompanionView: View {
                     }.background(AttendeeStyle.card).clipShape(RoundedRectangle(cornerRadius: 24))
                 }
                 Text("Live passes and Apple Wallet export are not connected.").font(.footnote).foregroundStyle(AttendeeStyle.secondary)
-            }.padding(24).frame(maxWidth: 640)
+            }.padding(20).frame(maxWidth: 640)
         }.foregroundStyle(AttendeeStyle.ink)
     }
     private func status(_ name: String, _ value: DemoEntitlementStatus) -> some View {
