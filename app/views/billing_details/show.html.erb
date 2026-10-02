@@ -1,0 +1,11 @@
+<h1>Complete your invoice billing details</h1>
+<p>Order <strong><%= @order.code %></strong>. These details are private and used for your invoice, not your attendee profile.</p>
+<p>This link expires after seven days and closes after a successful submission. Your tickets and payment are unchanged.</p>
+<section class="panel">
+  <%= form_with url: billing_details_path, method: :patch, data: { turbo: false } do %>
+    <%= hidden_field_tag :token, params[:token] %>
+    <%= render "fields", details: @details, order: @order %>
+    <p>The captured GSTIN and billing state cannot be changed here. Contact the organizer if they are incorrect.</p>
+    <button type="submit">Save billing details</button>
+  <% end %>
+</section>

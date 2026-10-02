@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_160000) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_info_pages_on_slug", unique: true
+  end
+
+  create_table "invoice_policy_reviews", force: :cascade do |t|
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.datetime "configured_at"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.jsonb "policy_data", default: {}, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "supersedes_id"
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_invoice_policy_reviews_on_approved_by_id"
+    t.index ["created_by_id"], name: "index_invoice_policy_reviews_on_created_by_id"
+    t.index ["supersedes_id"], name: "index_invoice_policy_reviews_on_supersedes_id"
   end
 
   create_table "invoices", force: :cascade do |t|
@@ -535,6 +551,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_160000) do
   add_foreign_key "conversations", "users", column: "participant_one_id"
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "invoice_policy_reviews", "admin_users", column: "approved_by_id"
+  add_foreign_key "invoice_policy_reviews", "admin_users", column: "created_by_id"
+  add_foreign_key "invoice_policy_reviews", "invoice_policy_reviews", column: "supersedes_id"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "messages", "conversations"
