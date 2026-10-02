@@ -689,6 +689,9 @@ h2 {
   }
 }
 @media (max-width: 580px) {
+  [data-theme="marathon"] h1 {
+    font-size: clamp(30px, 10.5vw, 60px);
+  }
   .run-type {
     font-size: clamp(60px, 20vw, 90px);
   }
