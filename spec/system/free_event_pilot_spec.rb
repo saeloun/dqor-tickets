@@ -22,10 +22,10 @@ RSpec.describe "Free event pilot journey", type: :system do
     click_button "Create organization"
     click_link "Create draft event"
     page.driver.browser.resize(width: 390, height: 844)
-    page.save_screenshot(Rails.root.join("tmp/free-pilot-create-mobile.png"))
+    page.save_screenshot(Rails.root.join("tmp/free-pilot-create-mobile.png"), full: true)
     fill_in "Title", with: "Free Ruby Meetup"
-    fill_in "Slug", with: "free-meetup"
-    fill_in "IANA timezone (for display)", with: "UTC"
+    fill_in "Event URL name", with: "free-meetup"
+    fill_in "Display timezone", with: "UTC"
     fill_in "Start (UTC)", with: 1.hour.ago.utc.strftime("%Y-%m-%dT%H:%M")
     fill_in "End (UTC)", with: 1.day.from_now.utc.strftime("%Y-%m-%dT%H:%M")
     click_button "Create Event"
@@ -53,7 +53,7 @@ RSpec.describe "Free event pilot journey", type: :system do
     page.save_screenshot(Rails.root.join("tmp/free-pilot-ticket.png"))
     page.driver.browser.resize(width: 390, height: 844)
     expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
-    page.save_screenshot(Rails.root.join("tmp/free-pilot-ticket-mobile.png"))
+    page.save_screenshot(Rails.root.join("tmp/free-pilot-ticket-mobile.png"), full: true)
     page.driver.browser.resize(width: 1400, height: 1400)
     click_link "All my free tickets"
     click_link "Free Ruby Meetup"

@@ -1,9 +1,10 @@
+<p class="help">1 Details → 2 Publish event → 3 Free tickets</p>
 <%= form_with model: [ :organizer, @organization, @event ] do |form| %>
   <% @event.errors.full_messages.each do |message| %><p role="alert"><%= message %></p><% end %>
   <p><%= form.label :title %><%= form.text_field :title, required: true %></p>
-  <p><%= form.label :slug %><%= form.text_field :slug, required: true %></p>
-  <p><%= form.label :timezone, "IANA timezone (for display)" %><%= form.text_field :timezone, required: true, placeholder: "Asia/Kolkata" %></p>
-  <p>Enter start and end in UTC. Dates are required before publication.</p>
+  <p><%= form.label :slug, "Event URL name" %><%= form.text_field :slug, required: true, placeholder: "ruby-meetup" %><span class="help">Use lowercase words with hyphens, for example ruby-meetup.</span></p>
+  <p><%= form.label :timezone, "Display timezone" %><%= form.text_field :timezone, required: true, placeholder: "Asia/Kolkata" %></p>
+  <div class="notice"><p><strong>Enter dates and times in UTC.</strong> For example, 6:00 PM in India is 12:30 PM UTC. The display timezone changes how attendees see the dates; it does not convert what you enter below.</p><p class="help">You can save a draft without dates. Both dates are required before publication.</p></div>
   <p><%= form.label :starts_at, "Start (UTC)" %><%= form.datetime_local_field :starts_at, value: @event.starts_at&.utc&.strftime("%Y-%m-%dT%H:%M") %></p>
   <p><%= form.label :ends_at, "End (UTC)" %><%= form.datetime_local_field :ends_at, value: @event.ends_at&.utc&.strftime("%Y-%m-%dT%H:%M") %></p>
   <%= form.submit %>
