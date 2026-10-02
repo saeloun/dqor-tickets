@@ -14,26 +14,30 @@ class Refund < ApplicationRecord
     raise ArgumentError, "payment event belongs to another order" unless payment_event.order_id == order_id
     raise ArgumentError, "payment event amount does not match refund" unless payment_event.amount_paise == amount_paise
 
-    with_lock do
-      if processed?
-        return order.invoices.credit_note.find_by!(number: credit_note_number) if credit_note_number.present?
-        return issue_credit_note
+    # Shared order lock precedes refund/ticket locks, matching admission and
+    # slot redemption and serializing retries with billing snapshot creation.
+    order.with_lock do
+      with_lock do
+        if processed?
+          return order.invoices.credit_note.find_by!(number: credit_note_number) if credit_note_number.present?
+          return issue_credit_note
+        end
+        raise InvalidTransition, "a failed refund cannot be processed" if failed?
+
+        invoice = order.invoices.invoice.first
+        purchase_lines = invoice&.line_items || order.metadata["invoice_purchase_lines"]
+        raise AlreadyRefunded, "order #{order.code} has no invoice or captured purchase lines to credit" unless purchase_lines
+        owned = order.tickets.where(id: ticket_ids)
+        raise AlreadyRefunded, "tickets on order #{order.code} were already refunded" if owned.any? && owned.where(canceled_at: nil).count != owned.count
+
+        line_items = purchase_lines.select { |line_item| ticket_ids.include?(line_item.fetch("ticket_id")) }
+        raise ArgumentError, "refund has no selected tickets" if line_items.empty?
+        raise ArgumentError, "refund amount does not match selected tickets" unless line_items.sum { |line_item| line_item.fetch("total_paise") } == amount_paise
+
+        order.tickets.where(id: ticket_ids, canceled_at: nil).update_all(canceled_at: Time.current, updated_at: Time.current)
+        update!(status: "processed")
+        issue_credit_note
       end
-      raise InvalidTransition, "a failed refund cannot be processed" if failed?
-
-      invoice = order.invoices.invoice.first
-      purchase_lines = invoice&.line_items || order.metadata["invoice_purchase_lines"]
-      raise AlreadyRefunded, "order #{order.code} has no invoice or captured purchase lines to credit" unless purchase_lines
-      owned = order.tickets.where(id: ticket_ids)
-      raise AlreadyRefunded, "tickets on order #{order.code} were already refunded" if owned.any? && owned.where(canceled_at: nil).count != owned.count
-
-      line_items = purchase_lines.select { |line_item| ticket_ids.include?(line_item.fetch("ticket_id")) }
-      raise ArgumentError, "refund has no selected tickets" if line_items.empty?
-      raise ArgumentError, "refund amount does not match selected tickets" unless line_items.sum { |line_item| line_item.fetch("total_paise") } == amount_paise
-
-      order.tickets.where(id: ticket_ids, canceled_at: nil).update_all(canceled_at: Time.current, updated_at: Time.current)
-      update!(status: "processed")
-      issue_credit_note
     end
   end
 

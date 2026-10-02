@@ -1,0 +1,40 @@
+<h1>Finance review · <%= @order.code %></h1>
+<p><%= @order.buyer_name %> · <%= @order.email %> · Order status: <strong><%= @order.status %></strong></p>
+<p>Registered name: <%= @order.gst_legal_name.presence || "Not supplied" %> · GSTIN: <%= @order.gstin.presence || "Not supplied" %></p>
+<% if @billing_link %><div class="notice"><label for="billing-followup-link">Private billing follow-up link</label><input id="billing-followup-link" value="<%= @billing_link %>" readonly><p>Share privately with the buyer using your approved communication channel. Expires in seven days, single use. Previous links are now invalid. No message has been sent.</p></div><% end %>
+<section class="panel">
+<h2>Buyer billing facts</h2>
+<% if @order.invoices.exists? %>
+  <p>An invoice already exists. Its billing snapshot cannot be edited here. Refer corrections to finance.</p>
+  <dl><dt>Billing address</dt><dd><%= @details.billing_address.presence || "Not captured" %></dd><dt>Billing state</dt><dd><%= @details.billing_state_name.presence || "Not captured" %> (<%= @details.billing_state_code %>)</dd></dl>
+<% else %>
+  <%= form_with url: finance_document_path(@order), method: :patch, data: { turbo: false } do %>
+    <%= render "billing_details/fields", details: @details, order: @order %>
+    <label class="check"><%= check_box_tag :verified, "1", false, required: true %><span>I verified these billing facts with the buyer. Captured GSTIN/state, purchase amounts and issued documents will not be changed.</span></label>
+    <button type="submit">Save verified billing details</button>
+  <% end %>
+  <%= button_to "Create private buyer follow-up link", request_details_finance_document_path(@order), method: :post %>
+<% end %>
+</section>
+<section class="panel">
+<h2>Document remediation</h2>
+<p>Invoice reason: <%= document_pending_description(@order.metadata["invoice_pending_reason"]) %>.</p>
+<% @order.invoices.each do |invoice| %><p><strong><%= invoice.kind.humanize %> <%= invoice.number %></strong> · <%= invoice.pdf.attached? ? "Archived PDF present" : "PDF missing" %><%= " · Historical seller snapshot unavailable; locate the original artifact. Do not reconstruct or renumber." unless invoice.snapshot_version == 2 %></p><% end %>
+<p><%= link_to "Review seller policy facts", finance_policies_path %>. A saved approval does not activate issuance; document retries require matching, separately configured runtime policy.</p>
+<% if @order.paid? %><%= form_with url: retry_document_finance_document_path(@order), method: :post, data: { turbo: false } do %>
+  <label class="check"><%= check_box_tag :confirmed, "1", false, required: true %><span>I reviewed this case and authorize an invoice document retry.</span></label>
+  <button type="submit" <%= "disabled" unless @review&.runtime_matches? %>>Queue invoice document retry</button>
+<% end %><% end %>
+<% @order.refunds.processed.each do |refund| %>
+  <h3>Refund #<%= refund.id %> · processed</h3><p>Credit note: <%= refund.credit_note_number.presence || "Pending document" %> · <%= document_pending_description(@order.metadata.fetch("credit_notes_pending", {})[refund.id.to_s]) %></p>
+  <% if refund.credit_note_pending? %><%= form_with url: retry_document_finance_document_path(@order), method: :post, data: { turbo: false } do %>
+    <%= hidden_field_tag :refund_id, refund.id %>
+    <% events = @refund_events.fetch(refund.id) %>
+    <%= label_tag "payment-event-#{refund.id}", "Confirmed refund to reconcile" %>
+    <%= select_tag :payment_event_id, options_for_select(events.map { |event| [ "Confirmed #{event.created_at.to_fs(:long)}", event.id ] }), id: "payment-event-#{refund.id}", required: true %>
+    <% if events.empty? %><p class="alert">No matching processed refund confirmation is available. Finance must reconcile the original gateway confirmation before retrying this document.</p><% end %>
+    <label class="check"><%= check_box_tag :confirmed, "1", false, required: true, id: "confirm-refund-#{refund.id}" %><span>Retry the accounting document only. Do not send another gateway refund.</span></label>
+    <button type="submit" <%= "disabled" unless @review&.runtime_matches? && events.any? %>>Queue credit document retry</button>
+  <% end %><% end %>
+<% end %>
+</section>

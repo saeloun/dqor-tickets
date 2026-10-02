@@ -1,5 +1,6 @@
 class Order < ApplicationRecord
   require "csv"
+  self.filter_attributes += [ :metadata ]
 
   CODE_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ379"
 
@@ -11,6 +12,10 @@ class Order < ApplicationRecord
   has_many :payment_events, dependent: :restrict_with_exception
   has_many :refunds, dependent: :restrict_with_exception
   has_many :invoices, dependent: :restrict_with_exception
+
+  generates_token_for :billing_details, expires_in: 7.days do
+    metadata["billing_request_nonce"]
+  end
 
   enum :status, { pending: 0, paid: 1, expired: 2, canceled: 3 }
 

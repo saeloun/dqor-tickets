@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["quantity", "total", "addOnGate", "coupon", "discount"]
+  static targets = ["quantity", "total", "addOnGate", "coupon", "discount", "billingDetails", "billingField", "billingRequested", "billingNotice", "gstin", "legalName"]
   static values = { previewUrl: String }
 
   connect() {
@@ -54,7 +54,9 @@ export default class extends Controller {
   }
 
   showSubtotal() {
+    this.quotedTotal = this.subtotal
     this.totalTarget.textContent = this.formatMoney(this.subtotal)
+    this.updateBilling()
   }
 
   queuePreview(delay = 0) {
@@ -90,7 +92,9 @@ export default class extends Controller {
       const preview = await response.json()
       if (request !== this.previewRequest) return
 
+      this.quotedTotal = preview.total_paise
       this.totalTarget.textContent = this.formatMoney(preview.total_paise)
+      this.updateBilling()
       this.discountTarget.textContent = preview.coupon.applied
         ? `Coupon ${preview.coupon.code} applied · −${this.formatMoney(preview.discount_paise)}`
         : preview.coupon.message
@@ -104,6 +108,16 @@ export default class extends Controller {
       this.showSubtotal()
       this.discountTarget.hidden = true
     }
+  }
+
+  updateBilling() {
+    if (!this.hasBillingDetailsTarget) return
+    const registered = this.gstinTarget.value.trim().length > 0
+    const required = registered || this.quotedTotal >= 5000000 || this.billingRequestedTarget.checked || this.billingFieldTargets.some(field => field.value.trim())
+    this.billingFieldTargets.forEach(field => { field.required = required })
+    this.legalNameTarget.required = registered
+    this.billingNoticeTarget.textContent = required ? "Please include billing address, state name and state code before continuing." : "Optional for this personal booking."
+    if (required) this.billingDetailsTarget.open = true
   }
 
   formatMoney(paise) {

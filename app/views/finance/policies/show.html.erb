@@ -1,0 +1,48 @@
+<h1><%= @policy.persisted? ? "Seller policy review ##{@policy.id}" : "New seller policy draft" %></h1>
+<p><span class="status"><%= @policy.status.capitalize %></span> · Live activation is separate.</p>
+<p>Draft: facts may be incomplete. Configured: required facts passed structural checks. Approved: an administrator reviewed those exact facts. Approval is not tax-registry verification or legal certification.</p>
+<% if @policy.errors.any? %><div class="alert" role="alert"><%= @policy.errors.full_messages.to_sentence %></div><% end %>
+<% if @policy.supersedes %><p>Based on <%= link_to "review ##{@policy.supersedes_id}", finance_policy_path(@policy.supersedes) %>.</p><% end %>
+<section class="panel">
+<% if @policy.approved? || @policy.configured? %>
+  <h2><%= @policy.status.capitalize %> facts</h2>
+  <dl><% InvoicePolicyReview::FIELDS.each do |key, label| %><dt><strong><%= label %></strong></dt><dd><%= @policy.policy_data[key] %></dd><% end %></dl>
+  <% if @policy.approved? %>
+  <p>Approved by <%= @policy.approved_by.display_name %> at <%= @policy.approved_at.to_fs(:long) %>.</p>
+  <p><%= @policy.runtime_matches? ? "Runtime configuration matches these reviewed facts." : "Runtime configuration does not match this review. Issuance has not been activated by this approval." %></p>
+  <%= button_to "Start a new draft from this review", duplicate_finance_policy_path(@policy), method: :post %>
+  <% else %>
+    <%= button_to "Reopen as draft to edit facts", reopen_finance_policy_path(@policy), params: { lock_version: @policy.lock_version }, method: :post %>
+    <%= form_with url: approve_finance_policy_path(@policy), method: :post, data: { turbo: false } do %>
+      <%= hidden_field_tag :lock_version, @policy.lock_version %>
+      <label class="check"><%= check_box_tag :review_confirmed, "1", false, required: true %><span>I reviewed these exact seller, tax, series and policy facts. I understand approval does not activate live issuance.</span></label>
+      <button type="submit">Approve reviewed facts</button>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= form_with url: @policy.persisted? ? finance_policy_path(@policy) : finance_policies_path, method: @policy.persisted? ? :patch : :post, data: { turbo: false } do %>
+    <%= hidden_field_tag :lock_version, @policy.lock_version %>
+    <div class="grid">
+      <% InvoicePolicyReview::FIELDS.each do |key, label| %>
+        <div><%= label_tag "policy_data_#{key}", label %>
+          <% if key == "reverse_charge" %>
+            <%= select_tag "policy_data[#{key}]", options_for_select([ [ "Choose a reviewed value", "" ], [ "No", "false" ], [ "Yes (unsupported)", "true" ] ], @policy.policy_data[key]) %>
+          <% elsif key == "place_of_supply_policy" %>
+            <%= select_tag "policy_data[#{key}]", options_for_select([ [ "Choose after finance review", "" ], [ "Existing domestic 18% policy (domestic-18-v1)", "domestic-18-v1" ] ], @policy.policy_data[key]) %>
+          <% elsif %w[seller_address review_notes].include?(key) %>
+            <%= text_area_tag "policy_data[#{key}]", @policy.policy_data[key], maxlength: 2000 %>
+          <% else %>
+            <%= text_field_tag "policy_data[#{key}]", @policy.policy_data[key], maxlength: 2000, autocomplete: "off" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <p class="muted">The existing calculator supports a Maharashtra seller, 18% inclusive GST (9% CGST + 9% SGST, or 18% IGST), and no reverse charge. Enter only finance-reviewed values. Other policies require implementation; no defaults are supplied.</p>
+    <button type="submit">Save draft<%= " and require review again" if @policy.configured? %></button>
+  <% end %>
+  <% if @policy.persisted? && @policy.draft? %>
+    <%= button_to "Check facts and mark configured", configure_finance_policy_path(@policy), params: { lock_version: @policy.lock_version }, method: :post %>
+
+  <% end %>
+<% end %>
+</section>

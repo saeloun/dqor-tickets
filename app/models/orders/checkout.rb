@@ -10,8 +10,9 @@ module Orders
       new(...).call
     end
 
-    def initialize(order_attributes:, items:, coupon_code: nil, conference_order_code: nil, conference_order_email: nil)
-      @order_attributes = order_attributes
+    def initialize(order_attributes:, items:, coupon_code: nil, conference_order_code: nil, conference_order_email: nil, billing_attributes: {})
+      @order_attributes = order_attributes.symbolize_keys
+      @billing_attributes = billing_attributes.symbolize_keys
       @items = items
       @coupon_code = coupon_code
       @conference_order_code = conference_order_code
@@ -34,6 +35,9 @@ module Orders
         coupon = find_coupon
         discount = coupon ? coupon.discount_for(subtotals) : 0
         metadata = coupon ? { "coupon_code" => coupon.code, "discount_paise" => discount, "coupon_ticket_type_id" => coupon.ticket_type_id } : {}
+        billing = BillingDetails.new(**@billing_attributes.slice(:billing_address, :billing_state_name, :delivery_address, :requested),
+          **@order_attributes.slice(:gstin, :gst_legal_name, :billing_state_code), total_paise: subtotals.values.sum - discount)
+        metadata.merge!(billing.metadata!)
         order = Order.create!(**@order_attributes, coupon:, total_paise: subtotals.values.sum - discount, expires_at: 30.minutes.from_now, metadata:)
 
         selections.each do |selection|

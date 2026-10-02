@@ -8,6 +8,7 @@ class OrdersController < ApplicationController
     order = Orders::Checkout.call(
       order_attributes: order_attributes(checkout),
       items: items(checkout),
+      billing_attributes: checkout.slice(:billing_address, :billing_state_name, :delivery_address).to_h.merge(requested: checkout[:billing_details_requested]),
       coupon_code: checkout[:coupon_code],
       conference_order_code: checkout[:conference_order_code],
       conference_order_email: checkout[:conference_order_email]
@@ -23,7 +24,7 @@ class OrdersController < ApplicationController
     end
     @order = order
     render :checkout, status: :created
-  rescue Orders::Checkout::SoldOut, Orders::Checkout::InvalidSelection, Orders::Checkout::ConferencePassRequired, Coupon::Invalid => error
+  rescue BillingDetails::Invalid, Orders::Checkout::SoldOut, Orders::Checkout::InvalidSelection, Orders::Checkout::ConferencePassRequired, Coupon::Invalid => error
     render_checkout_error(error.message)
   rescue ActionController::UnfilteredParameters
     render_checkout_error("Please review your ticket selection and try again.")
@@ -76,6 +77,7 @@ class OrdersController < ApplicationController
     def checkout_params
       params.expect(checkout: [
         :email, :buyer_name, :buyer_phone, :gstin, :gst_legal_name, :billing_state_code,
+        :billing_address, :billing_state_name, :delivery_address, :billing_details_requested,
         :coupon_code, :conference_order_code, :conference_order_email, { quantities: {} }
       ])
     end

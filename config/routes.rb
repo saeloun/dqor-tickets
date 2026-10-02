@@ -6,6 +6,20 @@ Rails.application.routes.draw do
 
   resource :checkin, only: %i[show create]
 
+  namespace :finance do
+    resources :documents, only: %i[index show update] do
+      post :request_details, on: :member
+      post :retry_document, on: :member
+    end
+    resources :policies, only: %i[index new create show update] do
+      post :configure, on: :member
+      post :approve, on: :member
+      post :duplicate, on: :member
+      post :reopen, on: :member
+    end
+  end
+  resource :billing_details, only: %i[show update], controller: "billing_details"
+
   resource :checkout_preview, only: :create
   resources :orders, param: :code, only: [ :create, :show ]
   get "tickets/find", to: "ticket_access#new", as: :find_tickets

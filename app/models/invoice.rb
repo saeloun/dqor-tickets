@@ -1,4 +1,5 @@
 class Invoice < ApplicationRecord
+  self.filter_attributes += [ :buyer_snapshot, :seller_snapshot ]
   class LegacySnapshotUnavailable < StandardError; end
   class DocumentPending < StandardError; end
   ISSUANCE_ERRORS = [ InvoicePolicy::NotConfigured, LegacySnapshotUnavailable, ActiveRecord::RecordInvalid, RangeError ].freeze
@@ -34,7 +35,11 @@ class Invoice < ApplicationRecord
     pdf.attach(io: StringIO.new(PdfRenderer.render(self, template: :invoice)), filename: "#{number.tr('/', '-')}.pdf", content_type: "application/pdf")
   end
 
-  def self.issue_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil)
+  def self.issue_for!(order, **options)
+    order.with_lock { issue_locked_for!(order, **options) }
+  end
+
+  def self.issue_locked_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil)
     existing = order.invoices.invoice.first if kind.to_s == "invoice"
     return existing if existing
 
@@ -81,6 +86,8 @@ class Invoice < ApplicationRecord
       raise
     end
   end
+
+  private_class_method :issue_locked_for!
 
   def self.financial_year(date)
     year = date.month >= 4 ? date.year : date.year - 1
