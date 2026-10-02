@@ -92,7 +92,39 @@ if (form) {
   });
   const dialog = document.getElementById("saved-preview-dialog");
   const frame = dialog.querySelector("iframe");
-  let opener;
+  const feedback = document.getElementById("preview-feedback");
+  const previewStatus = document.getElementById("preview-status");
+  const retry = document.getElementById("retry-preview");
+  let opener, previewUrl, previewTimer;
+  function previewFailure(message) {
+    clearTimeout(previewTimer);
+    frame.hidden = true;
+    feedback.hidden = false;
+    dialog.setAttribute("aria-busy", "false");
+    previewStatus.textContent = message;
+    retry.hidden = false;
+  }
+  function loadPreview() {
+    clearTimeout(previewTimer);
+    frame.hidden = true;
+    feedback.hidden = false;
+    retry.hidden = true;
+    previewStatus.textContent = "Loading saved preview…";
+    dialog.setAttribute("aria-busy", "true");
+    frame.src = previewUrl;
+    previewTimer = setTimeout(
+      () =>
+        previewFailure(
+          "Preview is taking longer than expected. Your edits are safe.",
+        ),
+      12000,
+    );
+  }
+  retry.addEventListener("click", loadPreview);
+  dialog.addEventListener("close", () => {
+    clearTimeout(previewTimer);
+    frame.removeAttribute("src");
+  });
   const close = () => {
     if (history.state?.brandingPreview) history.back();
     else {
@@ -117,15 +149,30 @@ if (form) {
         return;
       event.preventDefault();
       opener = link;
-      frame.src = link.href;
+      previewUrl = link.href;
+      document.getElementById("preview-title").textContent =
+        new URL(previewUrl).searchParams.get("snapshot") === "published"
+          ? "Published preview"
+          : "Saved draft preview";
+      loadPreview();
       history.pushState({ brandingPreview: true }, "", "#saved-preview");
       dialog.showModal();
       document.getElementById("close-preview").focus();
     }),
   );
   frame.addEventListener("load", () => {
+    if (!dialog.open || !frame.hasAttribute("src")) return;
     const doc = frame.contentDocument;
-    if (!doc) return;
+    if (!doc?.querySelector("body[data-theme]")) {
+      previewFailure(
+        "Preview unavailable. Check your session or connection, then try again. Your edits are safe.",
+      );
+      return;
+    }
+    clearTimeout(previewTimer);
+    feedback.hidden = true;
+    frame.hidden = false;
+    dialog.setAttribute("aria-busy", "false");
     doc.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -172,7 +219,9 @@ if (form) {
           ".workspace input, .workspace select, .workspace button, .editor-actions button",
         )
         .forEach((button) => (button.disabled = true));
-      status.textContent = "Saving to the server…";
+      mutation.setAttribute("aria-busy", "true");
+      status.textContent =
+        mutation.dataset.pendingLabel || "Saving draft to the server…";
       try {
         const response = await fetch(mutation.action, {
           method: "POST",
@@ -195,6 +244,7 @@ if (form) {
       } catch (failure) {
         showError(`${failure.message} Your entered values have been kept.`);
         busy = false;
+        mutation.setAttribute("aria-busy", "false");
         document
           .querySelectorAll(
             ".workspace input, .workspace select, .workspace button, .editor-actions button",
