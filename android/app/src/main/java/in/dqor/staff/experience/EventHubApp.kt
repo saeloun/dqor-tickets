@@ -21,6 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import `in`.dqor.staff.programme.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
@@ -135,6 +137,12 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
 }
 
 @Composable private fun ScheduleScreen(event: Event,content: EventExperience,saved: List<String>,toggle: (String)->Unit) {
+    val context=LocalContext.current
+    val demo=remember {DemoProgrammeTransport(context.assets.open("public_programme_example.json").bufferedReader().use {it.readText()})}
+    val client=remember {PublicProgrammeClient(demo)}
+    var preview by rememberSaveable {mutableStateOf(false)}
+    BackHandler(enabled=preview) {preview=false}
+    if(preview) {ProgrammePreview(client,demo) {preview=false}; return}
     var date by rememberSaveable(event.id) {mutableStateOf(event.dates.first())}
     var query by rememberSaveable(event.id) {mutableStateOf("")}
     var savedOnly by rememberSaveable(event.id) {mutableStateOf(false)}
@@ -145,6 +153,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
         item {OutlinedTextField(query,{query=it},label={Text("Find a session or speaker")},modifier=Modifier.fillMaxWidth(),singleLine=true,shape=RoundedCornerShape(12.dp)); FilterChip(selected=savedOnly,onClick={savedOnly=!savedOnly},label={Text("Saved sessions")},modifier=Modifier.heightIn(min=48.dp))}
         if(sessions.isEmpty()) item {Column(Modifier.padding(vertical=24.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {Text("No sessions match",style=MaterialTheme.typography.titleMedium); Text("Try another day or clear your filters.",color=MaterialTheme.colorScheme.onSurfaceVariant); TextButton(onClick={query=""; savedOnly=false}) {Text("Reset filters")}}}
         items(sessions,key={it.id}) {session -> SessionCard(session,session.id in saved) {toggle(session.id)}}
+        if(event.id=="dqor-2026") item {TextButton(onClick={preview=true}) {Text("Public feed preview")}}
         item {Text("Saved sessions are local bookmarks, not seat reservations.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
     }
 }

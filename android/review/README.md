@@ -26,10 +26,12 @@ the staff test fixture uses the shortened event title “DQOR”.
 ## Local checks
 
 - Debug app and Android test APK assembled successfully with existing JDK 21 and SDK 35.
-- 52 JVM tests passed: 23 typed client, 18 desk workflow, 5 event/wallet, 6 legacy mock.
+- 67 JVM tests passed: 23 typed staff client, 18 desk workflow, 5 event/wallet,
+  6 legacy mock and 15 public programme tests.
 - Lint passed with no errors; inherited target/dependency update warnings remain.
-- 14 emulator tests passed: 3 attendee journeys, 1 bundled-cover decoding check, 5 staff journeys, 1 staff large-text
-  journey and 4 Android Keystore tests. Exact instrumentation result: `OK (14 tests)`.
+- 17 emulator tests passed: 3 attendee journeys, 1 bundled-cover decoding check, 5 staff journeys, 1 staff large-text
+  journey, 4 Android Keystore tests and 3 public programme journeys. Full suite result:
+  `OK (17 tests)`; final programme screenshot-harness rerun: `OK (3 tests)`.
 - Actual protected launcher cold-started successfully and its UI hierarchy showed
   the event catalogue and Staff workspace. No new SDK/license/security grants.
 - Camera decoding on a physical device, TalkBack audio and live integration were
@@ -47,3 +49,18 @@ See [EVENT_EXPERIENCE.md](../EVENT_EXPERIENCE.md) for provenance and API needs.
 The shared generated cover from design PR #175 is bundled directly in the APK as
 `deccan_cover.png`. Event and pass captures verify actual rendering; an emulator
 resource decoding assertion guards against the blank/missing image regression.
+
+## Disconnected public programme increment
+
+New captures use the same attendee theme/surface and synthetic contract fixture.
+Existing attendee/staff journeys were rerun; their reviewed screenshots are retained.
+
+| State | Screenshot |
+| --- | --- |
+| Revalidated synthetic programme | [16-public-current](screenshots/16-public-current.png) |
+| Cached programme with explicit offline warning | [17-public-stale](screenshots/17-public-stale.png) |
+| Authoritative empty snapshot | [18-public-empty](screenshots/18-public-empty.png) |
+| Initial offline error without fabricated sessions | [19-public-error](screenshots/19-public-error.png) |
+| Status and refresh at 200% text | [20-public-large-text](screenshots/20-public-large-text.png) |
+
+See [public client behavior and integration gates](../PUBLIC_PROGRAMME_CLIENT.md).
