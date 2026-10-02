@@ -11,7 +11,7 @@ The backend owner published `docs/NATIVE_STAFF_API.md` during this review. Nativ
 - `POST /api/staff/checkins/resolve`: secret/date body; `state: resolved`, canonical date, minimal ticket fields, `eligible`, and `checked_in_at`; no attendance or attendance audit writes. `GET /api/staff/checkins` provides bounded search.
 - `POST /api/staff/checkins/confirm`: explicit IDs/date/confirmation; locks and rechecks eligibility; per-ticket results; one transaction rolls back unexpected errors; safe attendance retries with duplicate outcomes.
 
-These routes resolve the earlier absence of native session/preview operations. They do **not** establish approved live integration. Remaining decisions/evidence include the authorized staging origin and fixtures, Keychain accessibility/backup policy, end-to-end expiry/revocation/logout and timeout recovery tests, precise nested outcome classification (avoid parsing message prose), physical-device checks, and release authorization. The local mock role matrix is not production policy. A future universal-event adapter must retain `dqor-2026` as the canonical single-event mapping until multi-event authorization exists.
+These routes resolve the earlier absence of native session/preview operations. They do **not** establish approved live integration. Remaining decisions/evidence include the authorized staging origin and fixtures, Keychain accessibility/backup policy, end-to-end expiry/revocation/logout and timeout recovery tests, physical-device checks, and release authorization. The local mock role matrix is not production policy. A future universal-event adapter must retain `dqor-2026` as the canonical single-event mapping until multi-event authorization exists.
 
 ## Nonmutating QR resolution — required for continuous batch scanning
 
@@ -47,10 +47,10 @@ Verify the concrete auth specification and authorized test environment against:
 - Preserve `GET /checkin.json`'s returned `date`, `event_dates`, `max_batch_size`, and `more_results`. The current native catalog is configurable fixtures, not proof of multi-event backend support. No hidden all-results selection; load/selection limits are explicit.
 - Submit only reviewed ticket IDs and canonical event/date with `confirmed: true`. Cap at 50 or the lower server-issued limit.
 - Validate every batch result against the selected stable IDs. Mixed success/warning/error results remain independent. HTTP 200 alone is not success. Unknown/missing/unexpected results leave the batch unconfirmed.
-- Clarify whether every nested result includes a stable outcome code/status; HTTP status only applies to the outer batch. Map duplicate versus ineligible versus unknown without parsing prose.
+- Backend revision `26d5a1eddfb64960b29abd58412da5965b50bb45` supplies stable per-ticket outcome codes. The adapter requires the exact documented code/state pairs and rejects missing/unknown/mismatched codes without publishing success. HTTP status and human message text are not admission authorization.
 - The local UUID is a client request seam, not an assumed Rails idempotency header. The reviewed server safely retries the same IDs/date with duplicate outcomes. Preserve that behavior, server counts, and operator attribution; never increment attendance optimistically.
 - Reconcile partial commits after timeout/offline/5xx. Do not automatically retry or queue attendance while offline. Explicitly describe whether a duplicate response provides enough canonical timestamp/context to show “already checked in.”
 
 Signing/team/App Store Connect provisioning and distribution are outside these requirements and remain separately approval-gated.
 
-The disabled adapter implements these seams in `NativeStaffAPI.swift`; see [NATIVE_ADAPTER.md](NATIVE_ADAPTER.md) for structural DTO mapping and the remaining stable-outcome-code request. No provider access, live credentials, or production mutations were authorized by implementing this adapter.
+The disabled adapter implements these seams in `NativeStaffAPI.swift`; see [NATIVE_ADAPTER.md](NATIVE_ADAPTER.md) for the pinned DTO/code validation contract and mocked regressions. No provider access, live credentials, or production mutations were authorized by implementing this adapter.

@@ -69,7 +69,7 @@ enum NativeAPIError: Error, LocalizedError, Equatable {
         switch self {
         case .disabled: "Live staff access is disabled. Use the demo until staging integration is approved."
         case .invalidConfiguration: "The staff server configuration is not valid."
-        case .invalidResponse: "The server response could not be verified. Check-in is not confirmed."
+        case .invalidResponse: "The server response could not be verified. Check-in is not confirmed. Ask an event administrator to verify attendance before retrying."
         case .secureStorage: "Secure session storage is unavailable. Sign-in or local session removal could not be completed."
         case .sessionChanged: "The session changed while the request was running. Sign in again."
         case .sessionAlreadyActive: "Sign out of the current staff session before signing in again."

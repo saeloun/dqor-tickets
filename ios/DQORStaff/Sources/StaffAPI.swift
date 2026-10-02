@@ -42,13 +42,15 @@ struct AttendeeSearchPage: Sendable {
     init(attendees: [Attendee], moreResults: Bool = false) { self.attendees = attendees; self.moreResults = moreResults }
 }
 enum CheckInOutcome: String, Sendable {
-    case checkedIn, duplicate, ineligible, invalid
+    case checkedIn, duplicate, ineligible, invalid, unconfirmed, canceled
     var label: String {
         switch self {
         case .checkedIn: "Checked in"
         case .duplicate: "Already checked in"
         case .ineligible: "Not eligible for this day"
         case .invalid: "Ticket not found"
+        case .unconfirmed: "Order not confirmed · do not admit"
+        case .canceled: "Ticket canceled · do not admit"
         }
     }
 }

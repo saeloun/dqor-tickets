@@ -136,28 +136,67 @@ final class NativeAPITests: XCTestCase {
     }
     func testMixedConfirmationResultsMapByStableIDWithoutMessageParsing() async throws {
         let results: [[String: Any]] = [
-            ["ticket_id": "2", "state": "warning", "attendee": "Sample", "message": "Localized prose"],
-            ["ticket_id": 1, "state": "success", "attendee": "Sample", "checked_in_at": "2026-10-08T09:00:00.123Z"],
-            ["ticket_id": "3", "state": "error", "attendee": "Sample", "message": "Localized prose"],
-            ["ticket_id": "4", "state": "error", "message": "Localized prose"]]
+            ["ticket_id": "2", "code": "duplicate", "state": "warning", "attendee": "Sample", "message": "Localized prose"],
+            ["ticket_id": 1, "code": "success", "state": "success", "attendee": "Sample", "checked_in_at": "2026-10-08T09:00:00.123Z"],
+            ["ticket_id": "3", "code": "unconfirmed", "state": "error", "message": "Checked in"],
+            ["ticket_id": "4", "code": "not_found", "state": "error", "attendee": "Sample", "message": "Localized prose"],
+            ["ticket_id": "5", "code": "wrong_date", "state": "error", "message": "Localized prose"],
+            ["ticket_id": "6", "code": "canceled", "state": "error", "message": "Localized prose"]]
         let transport = MockNativeTransport([Reply(status: 200, body: scopeFixture()), Reply(status: 200, body: ["date": day.id, "results": results])]); let api = api(transport, storage: MemoryTokenStore(savedFixture()))
         _ = try await api.signIn()
-        let attendees = (1...4).map { Attendee(id: String($0), name: "Synthetic", email: "sample@example.test") }
+        let attendees = (1...6).map { Attendee(id: String($0), name: "Synthetic", email: "sample@example.test") }
         let response = try await api.checkIn(attendees, day: day, requestID: UUID())
-        XCTAssertEqual(response.map(\.outcome), [.checkedIn, .duplicate, .ineligible, .invalid])
+        XCTAssertEqual(response.map(\.outcome), [.checkedIn, .duplicate, .unconfirmed, .invalid, .ineligible, .canceled])
         let requests = await transport.requests; let request = requests.last!
         XCTAssertEqual(request.url?.path, "/api/staff/checkins/confirm")
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: request.httpBody!) as? [String: Any])
-        XCTAssertEqual(body["confirmed"] as? Bool, true); XCTAssertEqual(body["ticket_ids"] as? [String], ["1", "2", "3", "4"])
+        XCTAssertEqual(body["confirmed"] as? Bool, true); XCTAssertEqual(body["ticket_ids"] as? [String], ["1", "2", "3", "4", "5", "6"])
         XCTAssertNil(request.value(forHTTPHeaderField: "Idempotency-Key"))
     }
     func testIncompleteUnknownAndTimestampFreeSuccessFailClosed() async throws {
-        let malformed: [[[String: Any]]] = [[], [["ticket_id": "1", "state": "success", "attendee": "Sample"]], [["ticket_id": "1", "state": "unknown"]], [["ticket_id": "999", "state": "warning", "attendee": "Sample"]]]
+        let malformed: [[[String: Any]]] = [[], [["ticket_id": "1", "code": "success", "state": "success", "attendee": "Sample"]], [["ticket_id": "1", "code": "success", "state": "unknown"]], [["ticket_id": "999", "code": "duplicate", "state": "warning", "attendee": "Sample"]]]
         for results in malformed {
             let transport = MockNativeTransport([Reply(status: 200, body: scopeFixture()), Reply(status: 200, body: ["date": day.id, "results": results])]); let api = api(transport, storage: MemoryTokenStore(savedFixture()))
             _ = try await api.signIn()
             await assertNativeError(.invalidResponse) { _ = try await api.checkIn([Attendee(id: "1", name: "Sample", email: "sample@example.test")], day: day, requestID: UUID()) }
         }
+    }
+
+    func testMissingUnknownNullAndNonStringCodesFailClosed() async throws {
+        let badCodes: [Any?] = [nil, "future_code", NSNull(), 42, "SUCCESS", ""]
+        for code in badCodes {
+            var result: [String: Any] = ["ticket_id": "1", "state": "success", "attendee": "Sample", "checked_in_at": "2026-10-08T09:00:00Z", "message": "Checked in"]
+            if let code { result["code"] = code }
+            let transport = MockNativeTransport([Reply(status: 200, body: scopeFixture()), Reply(status: 200, body: ["date": day.id, "results": [result]])])
+            let api = api(transport, storage: MemoryTokenStore(savedFixture()))
+            _ = try await api.signIn()
+            await assertNativeError(.invalidResponse) { _ = try await api.checkIn([Attendee(id: "1", name: "Sample", email: "sample@example.test")], day: day, requestID: UUID()) }
+        }
+    }
+    func testEveryMismatchedCodeStatePairFailsClosed() async throws {
+        let expectedStates = ["success": "success", "duplicate": "warning", "not_found": "error", "unconfirmed": "error", "wrong_date": "error", "canceled": "error"]
+        for (code, expected) in expectedStates {
+            for state in ["success", "warning", "error", "future_state"] where state != expected {
+                let result: [String: Any] = ["ticket_id": "1", "code": code, "state": state, "attendee": "Sample", "checked_in_at": "2026-10-08T09:00:00Z", "message": "Checked in"]
+                let transport = MockNativeTransport([Reply(status: 200, body: scopeFixture()), Reply(status: 200, body: ["date": day.id, "results": [result]])])
+                let api = api(transport, storage: MemoryTokenStore(savedFixture()))
+                _ = try await api.signIn()
+                await assertNativeError(.invalidResponse) { _ = try await api.checkIn([Attendee(id: "1", name: "Sample", email: "sample@example.test")], day: day, requestID: UUID()) }
+            }
+        }
+    }
+    func testUnverifiedCodeInMixedBatchPublishesNoSuccess() async {
+        let results: [[String: Any]] = [
+            ["ticket_id": "1", "code": "success", "state": "success", "attendee": "Sample", "checked_in_at": "2026-10-08T09:00:00Z"],
+            ["ticket_id": "2", "code": "future_code", "state": "success", "attendee": "Sample", "checked_in_at": "2026-10-08T09:00:00Z"]]
+        let transport = MockNativeTransport([Reply(status: 200, body: scopeFixture()), Reply(status: 200, body: scopeFixture()), Reply(status: 200, body: ["date": day.id, "results": results])])
+        let store = StaffStore(api: api(transport, storage: MemoryTokenStore(savedFixture())))
+        await store.signIn(); store.choose(day)
+        for id in ["1", "2"] { store.toggle(Attendee(id: id, name: "Sample", email: "sample@example.test")) }
+        await store.confirm()
+        XCTAssertTrue(store.results.isEmpty); XCTAssertEqual(store.selection.count, 2)
+        XCTAssertTrue(store.message?.contains("not confirmed") == true)
+        XCTAssertTrue(store.message?.contains("administrator") == true)
     }
     func testResponseOriginAndRedirectStatusAreRejected() async throws {
         for reply in [Reply(status: 200, body: scopeFixture(), url: URL(string: "https://other.example.test/api/staff/session")), Reply(status: 302, body: [:])] {

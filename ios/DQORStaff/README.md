@@ -62,3 +62,7 @@ The follow-up suite passes **13 unit tests and 9 UI tests** (22 total), includin
 ## Disabled adapter checkpoint
 
 [Native adapter details](NATIVE_ADAPTER.md) describe the implemented HTTP/DTO and Keychain boundaries. The native unit suite now passes **40 tests**; the full regression run also passed all **9 UI tests** before the final native-only lifecycle tightening, followed by the 40-unit rerun. No live server was called and the Keychain tests use an injected client. The original requested head `049f2baf34358d6b40757496a1fd59f7ff9c9c62` completed remote CI successfully.
+
+## Pinned outcome-code update
+
+Backend contract revision `26d5a1eddfb64960b29abd58412da5965b50bb45` adds per-ticket result codes. The native adapter now requires the exact documented code/state pairs and rejects missing/unknown/mismatched values, including older-server responses, without publishing admission success. Errors direct staff to an event administrator for verification. **43 focused unit tests pass**, including all six valid codes, all mismatched combinations, malformed/missing codes, and a mixed-batch unverified-result regression. Demo launch and native-disabled configuration remain unchanged.

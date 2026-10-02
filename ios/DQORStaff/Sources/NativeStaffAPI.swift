@@ -127,14 +127,17 @@ actor NativeStaffAPI: StaffAPI {
         return try attendees.map { attendee in
             guard let result = results[attendee.id] else { throw NativeAPIError.invalidResponse }
             let outcome: CheckInOutcome
-            switch result.state {
-            case "success":
+            switch (result.code, result.state) {
+            case ("success", "success"):
                 guard let timestamp = result.checkedInAt, result.attendee?.isEmpty == false else { throw NativeAPIError.invalidResponse }
                 _ = try parseDate(timestamp); outcome = .checkedIn
-            case "warning":
+            case ("duplicate", "warning"):
                 guard result.attendee?.isEmpty == false else { throw NativeAPIError.invalidResponse }
-                outcome = .duplicate // The reviewed Record service emits warning only for AlreadyCheckedIn.
-            case "error": outcome = result.attendee == nil ? .invalid : .ineligible
+                outcome = .duplicate
+            case ("not_found", "error"): outcome = .invalid
+            case ("unconfirmed", "error"): outcome = .unconfirmed
+            case ("wrong_date", "error"): outcome = .ineligible
+            case ("canceled", "error"): outcome = .canceled
             default: throw NativeAPIError.invalidResponse
             }
             return CheckInResult(attendee: attendee, outcome: outcome)
@@ -251,7 +254,7 @@ private struct TicketDTO: Decodable {
 private struct SearchDTO: Decodable { let date: String; let moreResults: Bool; let tickets: [TicketDTO] }
 private struct ResolveDTO: Decodable { let state: String; let date: String; let ticket: TicketDTO }
 private struct ResultDTO: Decodable {
-    let ticketId: TicketID; let state: String; let attendee: String?; let checkedInAt: String?
+    let ticketId: TicketID; let code: String; let state: String; let attendee: String?; let checkedInAt: String?
     var ticketID: TicketID { ticketId }
 }
 private struct ConfirmationDTO: Decodable { let date: String; let results: [ResultDTO] }
