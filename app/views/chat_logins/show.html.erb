@@ -1,0 +1,9 @@
+<% content_for :title, "Join conference chat · Deccan Queen on Rails" %>
+
+<main class="account-page">
+  <section class="account-section">
+    <h1>Join conference chat</h1>
+    <p>Verify your Google account to continue to Deccan Queen on Rails chat.</p>
+    <%= button_to "Continue with Google", "/auth/google_oauth2", class: "btn btn-primary", data: { turbo: false } %>
+  </section>
+</main>
