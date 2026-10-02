@@ -3,11 +3,13 @@
 `nativeapi/NativeStaffClient.kt` now implements the proposed **native v1** DTOs
 from the backend branch's `docs/NATIVE_STAFF_API.md`. It is separate from
 `CheckInService`: the demo scanner's immediate mutation interface must never be
-used as a production preview. MainActivity still exclusively uses mocks.
+used as a production preview. MainActivity uses the typed client through `NativeDeskWorkflow` and an in-process
+`MockNativeTransport`. No UI action reaches a real network transport.
 
 ## Three independent gates
 
-- `NativeConfig` defaults to disabled and has no default origin.
+- `NativeConfig` defaults to disabled and has no default origin. The demo explicitly
+  enables it only for the socket-free mock transport at `https://mock.invalid`.
 - `NativeIntegrationGate.ENABLED` is a compiled `false`; even an enabled config
   cannot instantiate `ApprovedNativeTransport` in this build.
 - The Android application has **no INTERNET permission**.
@@ -69,8 +71,14 @@ exercise actual Android Keystore encryption, store recreation, deletion, fresh
 nonces and corrupted storage. They do not authenticate against any server.
 
 Before staging: review final backend fixtures and target origin; approve the gate
-changes; wire a separate resolve-preview-confirm UI; verify device session expiry,
+changes; verify the wired resolve-preview-confirm UI against staging; verify device session expiry,
 role/password revocation, TLS and logout against the approved staging server.
+The distributed UI now resolves read-only, accumulates explicit selections,
+reviews an immutable event/date/identity snapshot, and only confirms after the
+operator presses Confirm. An ambiguous mutation retains that snapshot for explicit
+retry; stale eligibility is rechecked by the transport/server. Login/expiry/logout
+clear previews appropriately; no raw QR enters UI state or saved state.
+
 Before release: physical camera, TalkBack, process-death/rotation during a real
 request and stale eligibility between preview/confirm. There is no offline queue.
 Multi-event discovery/branding remains a separate contract; this API is scoped

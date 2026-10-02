@@ -1,96 +1,87 @@
-# DQOR Android staff demo
+# DQOR Android staff workflow
 
-Native Kotlin / Jetpack Compose entrance check-in slice. **Demo only:** no live
-login, server requests or real attendance. A typed native adapter and encrypted
-session store exist behind disabled integration gates; the UI still uses mocks. Application ID `in.dqor.staff.demo`.
-Only files under `android/` are owned by this project; Rails and iOS are unchanged.
+Native Kotlin / Compose staff app, application ID `in.dqor.staff.demo`.
+**In-process mock transport only.** The app collects no real credentials, makes
+no live requests and changes no real attendance. Rails and iOS are unchanged.
 
-## Build and verification
+## Build and tests
 
-Requires ARM-compatible JDK 17, Android SDK platform 35 / build tools 35 and an
-existing accepted SDK license. No tooling bootstrap or license acceptance runs.
+Requires JDK 17 (or compatible 21), installed Android platform/build tools 35 and
+an existing accepted SDK license. No SDK bootstrap/license acceptance runs.
 
 ```sh
 cd android
-export JAVA_HOME=/path/to/jdk17
+export JAVA_HOME=/path/to/jdk
 export ANDROID_HOME=/path/to/android/sdk
 ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+# Existing emulator/device; synthetic credentials only:
+./gradlew :app:connectedDebugAndroidTest
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`. This is a debug APK, not a
-store-ready build. Gradle wrapper is pinned to 8.14.3. Unit tests exercise duplicate
-handling, date/event isolation, partial outcomes, malformed batches, confirmation,
-role denial, expired sessions, offline failures and lookup eligibility.
+Debug APK: `app/build/outputs/apk/debug/app-debug.apk`. No production signing or
+store release. Path-scoped `.github/workflows/android.yml` builds, unit-tests,
+lints and retains APK/reports for 14 days; existing Rails CI is unchanged.
+Device tests run locally, not in hosted CI. Gradle is pinned to 8.14.3.
 
-## Explore
+## Usable preview → review → confirm flow
 
-1. Enter the explicitly labelled demo as Desk, Admin or Viewer.
-2. Pick an event and date. Search by name, email or ticket ID.
-3. Select visible attendees, review their names/count/date, then confirm.
-4. Scan QR text `demo-101`, `demo-102`, `demo-103`; `demo-104` is ineligible.
-   Any other QR returns unknown. Camera permission is requested on demand;
-   search remains available if denied. The camera pauses with the activity.
-5. Scan multiple different QRs continuously. Consecutive identical frames are
-   suppressed; restart the scanner to retry the same QR after an uncertain result.
-6. Toggle offline to see explicit unconfirmed outcomes. Nothing is queued.
+1. Sign in with the synthetic demo Desk or read-only identity. No password field
+   accepts real credentials. Sign-in uses the typed adapter and mock session API.
+2. Choose the authorized DQOR event/date. The configurable catalog also shows a
+   clearly marked sample event without access; backend v1 is single-event.
+3. Scan QR text `demo-101`, `demo-102`, `demo-103` or `demo-105`; `demo-104` is
+   ineligible. “Preview sample QR” exercises the same resolve path as the camera.
+4. Scanning is **read-only**. Eligible identities are added to a bounded preview
+   selection. A preview is never admission. Search adds only explicit tickets;
+   names, email and ticket ID distinguish duplicate names.
+5. Review the selected names/IDs and date, then tap **Confirm check-in**.
+   Only that action calls `/api/staff/checkins/confirm`. Cancel does not submit.
+   Read every per-ticket result; a mixed batch is not all-success.
+6. Use demo controls to expire the session, invalidate a selected preview, go
+   offline, or simulate a timeout after the mock server committed. An uncertain
+   response retains the exact reviewed IDs/date for explicit retry; duplicate
+   outcomes do not add attendance. Nothing is queued or automatically retried.
+7. Sign out revokes the mock session and clears encrypted local storage. Offline
+   logout explicitly says server revocation was not confirmed.
 
-Attendance stays in memory, survives rotation through a ViewModel and is lost on
-process death. Event/date/query survive recreation, but unsubmitted selections
-clear. An interrupted mutation restores a not-confirmed notice; no request is
-automatically replayed. Back stops scanning first, and leaving selected tickets
-requires confirmation. Backgrounding stops the scanner.
-Only returned counts are displayed; a transport error cannot imply admission.
-Names/emails are synthetic. Raw scan values are never logged or persisted.
-Screenshots/recents capture and backup are disabled. No INTERNET permission exists.
+Native API responses provide **no attendance totals**. The UI does not invent a
+counter. In-memory mock attendance resets on process death; the restarted mock
+server rejects the old stored demo token, prompting sign-in. Rotation retains
+workflow state and in-flight operations in the ViewModel. Backgrounding stops
+the camera; returning revalidates the session. Unsubmitted selection discard is
+confirmed. Uncertain results require explicit retry or dismissal without admitting.
 
-## Configuration and service boundary
+## Configuration and integration boundary
 
-`app/src/main/assets/events.json` is the configurable local event catalog. Each
-entry supplies an ID, title, subtitle, location, explicit ISO event dates and theme
-(`heritage` or `midnight`). Both themes are Android-local Material 3 palettes.
-The second event is clearly identified as a sample. This is not remote universal
-event discovery; the existing backend is single-event and supplies no catalog API.
+`app/src/main/assets/events.json` configures event IDs, titles, subtitle, location,
+ISO dates and Android-local `heritage`/`midnight` palettes. No shared theme files
+are changed. Server session event/date/capabilities restrict available controls.
 
-`StaffApp(events, service, demo)` accepts an injectable `CheckInService`; the
-launcher uses `MockCheckInService`. The demo role picker is not authorization.
-Desk and Admin may check in; Viewer is read-only. Real authorization must come
-from a verified staff session and be enforced server-side.
+`NativeDeskWorkflow` owns the UI state machine. It calls `NativeStaffClient` for
+session, lookup, resolve and confirm. `NativeDemoModel` injects
+`MockNativeTransport` and `KeystoreCredentialStore`; the `.invalid` mock origin
+cannot make network requests because the transport has no socket implementation.
+The original `MockCheckInService` is retained only as a legacy test fixture;
+its immediate scanner is not connected to the launcher.
 
-The proposed contract in `docs/STAFF_CHECKIN_API.md` on the separate backend
-check-in branch is the integration target. It requires native auth approval
-before live integration can be enabled. The separate `nativeapi` adapter implements
-the proposed bearer-only `docs/NATIVE_STAFF_API.md` contract behind a compiled
-false gate, disabled configuration and absent INTERNET permission. Production
-scanning preview must use its read-only resolve endpoint, then require explicit
-confirmation before the confirm endpoint. The
-current scanner directly performs demo-only mutations and is not a preview flow.
-Do not invent bearer tokens or reuse
-attendee cookies. Production integration must validate the payload schema,
-use the canonical date and every per-ticket result. Native responses contain no
-counts; the web DTO is not interchangeable. The adapter must
-handle 401/403/404/422/429 and ambiguous transport errors, enforce secure session
-storage/expiry/revocation/logout, and preserve explicit IDs + `confirmed: true`
-for batches of at most 50. Never infer success from HTTP 200 alone.
+Real transport remains blocked by a compiled false gate and absent INTERNET
+permission. `NativeConfig` defaults to disabled; only the in-process mock client
+is explicitly enabled. Staging needs approved origin/accounts, reviewed gate
+changes and real session/TLS verification; see [INTEGRATION.md](INTEGRATION.md).
 
-## Release gates
+## Verification and release gates
 
-Approved staging authentication/UI integration, remote event configuration,
-device camera/accessibility/rotation testing, signing and store
-review remain required. The separate `.github/workflows/android.yml` runs APK build, unit tests and lint
-for Android/workflow changes and publishes the debug APK plus reports for 14 days.
-It uses read-only repository permission and the runner's preinstalled SDK, without
-a license-acceptance command. Existing Rails CI is unchanged. See
-[INTEGRATION.md](INTEGRATION.md) for exact DTO needs and pending staging/UI integration gates.
+JVM tests cover the typed adapter and UI state transitions: login/restore/logout,
+local/server expiry, read-only roles, scan-without-confirmation, canceled reviews,
+explicit snapshot confirmation, date changes, stale eligibility, duplicates and
+retry after ambiguous commit. Compose device tests exercise actual sign-in,
+preview/cancel/confirm/logout, expiry, stale-preview rejection and retry buttons.
+Separate device tests exercise Android Keystore ciphertext, restoration, fresh
+nonces, deletion and corruption handling with synthetic credentials.
 
-## Accessibility review
-
-Ticket selection labels include name, email and ticket ID to distinguish duplicate
-names. Confirmation lists the same identity fields; results include ticket ID.
-Status text uses a polite accessibility live region for scan/response updates.
-Entry and confirmation content scroll at large font sizes. Camera permission
-denial leaves search available. TalkBack audio and physical-camera testing remain
-release gates; semantic labels alone are not proof of a full accessibility audit.
-
-Run Android Keystore tests on an existing emulator/device with
-`./gradlew :app:connectedDebugAndroidTest`. These tests only use synthetic
-credentials. Staging access is not enabled by running them.
+Status uses a polite accessibility live region. Identity labels include email/ID;
+entry and confirmation scroll at large text sizes. Camera permission is requested
+on demand, and search works without it. Screenshots/recents capture and backup are
+disabled. Physical camera, TalkBack audio, approved staging integration and full
+real-device interruption testing remain release gates. No live integration is
+claimed from in-process mocks or emulator tests.
