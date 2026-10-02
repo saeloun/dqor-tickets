@@ -65,3 +65,25 @@ RSpec.describe "Event slots", type: :request do
     expect(response).to redirect_to(account_sign_in_path)
   end
 end
+
+RSpec.describe "Slot manual fallback", type: :request do
+  it "requires staff authentication for lookup and redemption" do
+    slot = EventSlot.create!(name: "Draft", starts_at: 1.hour.ago, ends_at: 1.hour.from_now)
+    get event_slot_path(slot), params: { q: "someone" }
+    expect(response).to redirect_to(new_session_path)
+    post redeem_event_slot_path(slot), params: { ticket_id: 1, request_key: SecureRandom.uuid }
+    expect(response).to redirect_to(new_session_path)
+  end
+
+  it "returns bounded secret-free lookup and enforces identical eligibility for manual redemption" do
+    sign_in_admin(create(:admin_user, role: :desk))
+    ticket = create(:ticket, attendee_name: "Synthetic Manual", order: create(:order, :paid))
+    slot = EventSlot.create!(name: "Draft lunch", starts_at: 1.hour.ago, ends_at: 1.hour.from_now)
+    get event_slot_path(slot), params: { q: "Synthetic Manual" }
+    expect(response.body).to include(ticket.attendee_name)
+    expect(response.body).not_to include(ticket.secret, ticket.claim_token)
+    post redeem_event_slot_path(slot), params: { ticket_id: ticket.id, request_key: SecureRandom.uuid }, as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(EventSlotRedemption.count).to eq(0)
+  end
+end

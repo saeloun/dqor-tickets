@@ -13,7 +13,10 @@ verified with organizers before activating. There are deliberately no live seeds
 or defaults assigning meals/party access to all attendees. Times in the form are
 Asia/Kolkata; limits default to one redemption per ticket per slot.
 
-POST `/event_slots/:id/redeem` accepts `secret` (the existing QR value) and a
+GET `/event_slots/:id?q=...` provides staff-only attendee-name/email lookup (minimum
+two characters, maximum 20 confirmed tickets), without QR/claim secrets.
+POST `/event_slots/:id/redeem` accepts `secret` (the existing QR value), or the
+explicitly selected `ticket_id` from manual lookup, and a
 16–100 character alphanumeric/hyphen `request_key`. Use one UUID per deliberate
 scan, retaining it across unknown-result retries. The response contains `state`,
 `message`, `redeemed_at`, `redemption_id` on success; 422 rejects invalid eligibility,
@@ -21,7 +24,11 @@ window, capacity, duplicate entitlement or request-key reuse. Existing staff
 session and CSRF rules apply. Never log/persist QR input on the client. The same
 camera library as admission is used in an isolated Stimulus adapter. Pending
 uncertain requests block new scans until retried. Repeated frames are suppressed;
-explicit “Allow a new scan” supports configured multiple redemptions.
+explicit “Allow a new scan” supports configured multiple redemptions. Visibility
+changes and orientation pause camera processing until an explicit restart. HTTPS,
+permission and rear-camera guidance is visible; authorized manual lookup remains
+available when camera access is unavailable. Lost-response retry coverage simulates
+a committed redemption whose response is dropped, then checks no second use.
 
 Admission state is never changed. Slot, order and ticket row locks serialize
 capacity and per-ticket limits. QR request replay returns the original redemption

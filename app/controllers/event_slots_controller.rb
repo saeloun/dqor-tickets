@@ -9,6 +9,15 @@ class EventSlotsController < ApplicationController
 
   def show
     @slot = EventSlot.find(params[:id])
+    @query = params[:q].to_s.strip
+    @tickets = if @query.length >= 2
+      term = "%#{ActiveRecord::Base.sanitize_sql_like(@query.downcase)}%"
+      Ticket.confirmed.includes(:ticket_type)
+        .where("lower(tickets.attendee_name) LIKE :term OR lower(tickets.attendee_email) LIKE :term", term:).order(:id).limit(20)
+    else
+      []
+    end
+    response.headers["Cache-Control"] = "no-store"
   end
 
   def new
@@ -41,7 +50,8 @@ class EventSlotsController < ApplicationController
 
   def redeem
     slot = EventSlot.find(params[:id])
-    redemption = EventSlots::Redeem.call(slot:, ticket: Ticket.find_by(secret: params[:secret]), operator: Current.admin_user, request_key: params[:request_key])
+    ticket = params[:ticket_id].present? ? Ticket.find_by(id: params[:ticket_id]) : Ticket.find_by(secret: params[:secret])
+    redemption = EventSlots::Redeem.call(slot:, ticket:, operator: Current.admin_user, request_key: params[:request_key])
     render json: { state: "success", message: "#{slot.name}: redeemed at #{redemption.redeemed_at.iso8601}", redeemed_at: redemption.redeemed_at, redemption_id: redemption.id }
   rescue EventSlots::Redeem::Rejected => error
     render json: { state: "error", message: error.message }, status: :unprocessable_content

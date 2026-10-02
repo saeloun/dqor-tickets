@@ -1,11 +1,23 @@
-<main style="max-width:40rem;margin:auto;padding:1rem" data-controller="slot-scanner" data-slot-scanner-url-value="<%= redeem_event_slot_path(@slot) %>">
+<main style="max-width:40rem;margin:auto;padding:1rem" data-controller="slot-scanner" data-action="visibilitychange@document->slot-scanner#visibilityChanged orientationchange@window->slot-scanner#interruptCamera turbo:before-cache@document->slot-scanner#beforeCache" data-slot-scanner-url-value="<%= redeem_event_slot_path(@slot) %>">
 <%= link_to "Change scan purpose", event_slots_path %>
 <h1>Scanning: <%= @slot.name %></h1><p><strong><%= @slot.active? ? "Active purpose" : "Draft — redemption disabled" %></strong></p>
 <p><%= @slot.starts_at.in_time_zone("Asia/Kolkata") %> — <%= @slot.ends_at.in_time_zone("Asia/Kolkata") %></p>
 <p>This scan records this purpose only. Regular entry is separate.</p>
-<div id="slot-reader"></div><p role="status" data-slot-scanner-target="result">Waiting for scan.</p>
-<button type="button" data-action="slot-scanner#retry">Retry last unconfirmed scan</button>
-<button type="button" data-action="slot-scanner#next">Allow a new scan of the same ticket</button>
+<p role="status" data-slot-scanner-target="cameraStatus">Allow camera access and choose the back/rear camera. If access is denied, change browser permissions or use attendee lookup below.</p>
+<button type="button" data-slot-scanner-target="control" data-action="slot-scanner#restartCamera">Restart camera</button>
+<div id="slot-reader" style="max-width:100%;overflow:hidden"></div><p role="status" data-slot-scanner-target="result">Waiting for scan.</p>
+<button type="button" data-slot-scanner-target="control" data-action="slot-scanner#retry">Retry last unconfirmed scan</button>
+<button type="button" data-slot-scanner-target="control" data-action="slot-scanner#next">Allow a new scan of the same ticket</button>
+<h2>Attendee lookup</h2>
+<%= form_with url: event_slot_path(@slot), method: :get do |f| %>
+<%= f.label :q, "Attendee name or email (at least 2 characters)" %><br>
+<%= f.search_field :q, value: @query, minlength: 2, required: true, style: "max-width:100%", data: { slot_scanner_target: "control" } %>
+<%= f.submit "Search attendees", data: { slot_scanner_target: "control" } %>
+<% end %>
+<p>Up to 20 confirmed tickets. Check the attendee and selected purpose before redeeming.</p>
+<% @tickets.each do |ticket| %><article><p><strong><%= ticket.attendee_name %></strong><br><%= ticket.attendee_email %><br><%= ticket.ticket_type.name %> · Ticket #<%= ticket.id %></p>
+<button type="button" data-slot-scanner-target="control" data-action="slot-scanner#manual" data-ticket-id="<%= ticket.id %>" data-attendee="<%= ticket.attendee_name %>">Redeem <%= @slot.name %> for <%= ticket.attendee_name %></button></article><% end %>
+<% if @query.present? && @tickets.empty? %><p>No matching confirmed tickets.</p><% end %>
 <% if Current.admin_user.admin? %><h2>Recent redemptions and corrections</h2>
 <% @slot.redemptions.order(id: :desc).limit(20).each do |redemption| %><p>Ticket #<%= redemption.ticket_id %> · <%= redemption.redeemed_at %> · <%= redemption.voided_at? ? "Corrected" : "Redeemed" %></p>
 <% unless redemption.voided_at? %><%= form_with url: correct_event_slot_path(@slot) do |f| %><%= f.hidden_field :redemption_id, value: redemption.id %><%= f.label :reason, "Correction reason" %><%= f.text_field :reason, required: true %><%= f.submit "Void redemption" %><% end %><% end %><% end %><% end %>
