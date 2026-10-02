@@ -1,4 +1,15 @@
 Rails.application.routes.draw do
+  resources :announcement_campaigns, only: [ :show ], param: :id do
+    member do
+      get :draft
+      post :retry_failed
+    end
+  end
+  post "announcement_campaigns/:id", to: "announcement_campaigns#create"
+  patch "account/announcement_preference", to: "announcement_preferences#update", as: :account_announcement_preference
+  get "announcement_unsubscribe/:token", to: "announcement_preferences#unsubscribe", as: :announcement_unsubscribe
+  post "announcement_unsubscribe/:token", to: "announcement_preferences#suppress"
+
   resources :event_slots, only: %i[index show new create edit update] do
     member do
       post :redeem

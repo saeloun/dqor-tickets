@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_170000) do
     t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_admin_users_on_lower_email", unique: true
+  end
+
+  create_table "announcement_campaigns", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.bigint "announcement_id", null: false
+    t.datetime "approved_at", null: false
+    t.integer "audience_count", null: false
+    t.text "body", null: false
+    t.string "content_digest", null: false
+    t.datetime "created_at", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_announcement_campaigns_on_admin_user_id"
+    t.index ["announcement_id"], name: "index_announcement_campaigns_on_announcement_id", unique: true
+  end
+
+  create_table "announcement_deliveries", force: :cascade do |t|
+    t.bigint "announcement_campaign_id", null: false
+    t.datetime "attempted_at"
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "error_class"
+    t.string "state", default: "pending", null: false
+    t.datetime "submitted_at"
+    t.datetime "updated_at", null: false
+    t.index ["announcement_campaign_id", "email"], name: "unique_announcement_recipient", unique: true
+    t.index ["announcement_campaign_id"], name: "index_announcement_deliveries_on_announcement_campaign_id"
+    t.index ["state", "id"], name: "index_announcement_deliveries_on_state_and_id"
+    t.check_constraint "state::text = ANY (ARRAY['pending'::character varying, 'preparing'::character varying, 'submitting'::character varying, 'submitted'::character varying, 'suppressed'::character varying, 'failed'::character varying, 'unknown'::character varying]::text[])", name: "announcement_delivery_state"
+  end
+
+  create_table "announcement_dispatch_limits", force: :cascade do |t|
+    t.integer "used", default: 0, null: false
+    t.datetime "window_started_at", null: false
+  end
+
+  create_table "announcement_preferences", force: :cascade do |t|
+    t.string "consent_source"
+    t.datetime "consented_at"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "suppressed_at"
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_announcement_preferences_on_email", unique: true
+    t.check_constraint "email::text = lower(btrim(email::text))", name: "announcement_email_normalized"
   end
 
   create_table "announcements", force: :cascade do |t|
@@ -585,6 +631,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_170000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "announcement_campaigns", "admin_users"
+  add_foreign_key "announcement_campaigns", "announcements"
+  add_foreign_key "announcement_deliveries", "announcement_campaigns"
   add_foreign_key "checkin_audits", "admin_users", on_delete: :nullify
   add_foreign_key "checkin_audits", "tickets", on_delete: :nullify
   add_foreign_key "connections", "users"
