@@ -28,6 +28,17 @@ struct StaffRootView: View {
             .navigationTitle(store.day == nil ? "DQOR Staff" : "Check-in")
             .toolbar {
                 if store.session != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        if let day = store.day {
+                            Menu("Explore", systemImage: "ellipsis.circle") {
+                                NavigationLink("Schedule") { EventCompanionView(day: day, wallet: false) }
+                                NavigationLink("Sample passes") { EventCompanionView(day: day, wallet: true) }
+                                if store.can(.searchAttendees) {
+                                    NavigationLink("Activity history") { StaffHistoryView(store: store) }
+                                }
+                            }.disabled(store.busy).accessibilityIdentifier("exploreEvent")
+                        }
+                    }
                     ToolbarItem(placement: .topBarLeading) {
                         Button(store.day == nil ? "Sign out" : "Events") {
                             if !store.selection.isEmpty { leaving = true }
