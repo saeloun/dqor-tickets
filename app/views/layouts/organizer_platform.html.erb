@@ -12,7 +12,7 @@
       <%= link_to "Event organizer", (FreeEvents::Access.enabled? ? free_organizations_path : account_root_path), class: "brand" %>
       <nav aria-label="Main navigation">
         <% if FreeEvents::Access.enabled? %><%= link_to "Organizations", free_organizations_path %><%= link_to "Free tickets", free_tickets_path %><% end %>
-        <%= link_to "My account", account_root_path %>
+        <% if FreeEvents::Access.enabled? && current_user.nil? %><%= link_to "Sign in", free_tickets_path %><% else %><%= link_to "My account", account_root_path %><% end %>
       </nav>
     </header>
     <% flash.each do |type, message| %><p class="flash" role="status"><%= message %></p><% end %>

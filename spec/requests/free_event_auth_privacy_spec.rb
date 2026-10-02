@@ -28,6 +28,17 @@ RSpec.describe "Free pilot authentication privacy", type: :request do
     get account_magic_path(token: Rails.application.message_verifier(:account_magic_link).generate(user.id, purpose: :account_magic_link, expires_in: 30.minutes))
   end
 
+  it "keeps the public event sign-in navigation inside the private pilot flow" do
+    org = Organization.create!(name: "Community", slug: "auth-community")
+    event = org.events.create!(title: "Meetup", slug: "meetup", status: :published, starts_at: Time.current, ends_at: 1.day.from_now)
+    get published_event_path(org.slug, event.slug)
+    link = Nokogiri::HTML(response.body).css("nav a").find { |item| item.text == "Sign in" }
+    expect(link["href"]).to eq(free_tickets_path)
+    get link["href"]
+    post account_sign_in_path, params: { email: email }
+    expect(User.find_by!(email: email)).to have_attributes(free_pilot_identity: true, discoverable: false)
+  end
+
   it "rejects fresh pilot Google callbacks without creating a discoverable identity and retains canceled/retried context" do
     pilot_origin
     get "/auth/failure"
