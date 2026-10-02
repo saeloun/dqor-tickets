@@ -11,7 +11,7 @@ def seq(values): return '(' + ', '.join(values) + (',' if values else '') + ')'
 def config(name, settings):
     return add(name, '{isa = XCBuildConfiguration; buildSettings = {' + ''.join(f'{k} = {v};' for k,v in settings.items()) + '}; name = ' + name.split('/')[-1] + ';}')
 def configs(name, settings):
-    ids = [config(name+'/'+kind, dict(settings, **({'SWIFT_OPTIMIZATION_LEVEL':'"-Onone"'} if kind == 'Debug' else {}))) for kind in ['Debug','Release']]
+    ids = [config(name+'/'+kind, dict(settings, **({'SWIFT_OPTIMIZATION_LEVEL':'"-Onone"','SWIFT_ACTIVE_COMPILATION_CONDITIONS':'DEBUG'} if kind == 'Debug' else {}))) for kind in ['Debug','Release']]
     return add(name+'/configs', '{isa = XCConfigurationList; buildConfigurations = '+seq(ids)+'; defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;}')
 project_configs = configs('project', {'SDKROOT':'iphoneos','IPHONEOS_DEPLOYMENT_TARGET':'17.0','SWIFT_VERSION':'5.0','CLANG_ENABLE_MODULES':'YES','SWIFT_STRICT_CONCURRENCY':'targeted','DEBUG_INFORMATION_FORMAT':'dwarf'})
 products=[]; groups=[]; targets=[]

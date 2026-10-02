@@ -39,46 +39,74 @@ struct EventCompanionView: View {
     @State private var query = ""
     var body: some View {
         Group {
-            if wallet { content }
-            else { content.searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Find a session or room") }
-        }.navigationTitle(wallet ? "Sample passes" : "Schedule")
+            if wallet { passContent }
+            else { scheduleContent.searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Find a session or room") }
+        }
+        .navigationTitle(wallet ? "Sample passes" : "Schedule")
+        .navigationBarTitleDisplayMode(.inline)
+        .background(AttendeeStyle.canvas).tint(AttendeeStyle.accent)
     }
-    private var content: some View {
-        List {
-            Section {
-                Text(day.event).font(.headline)
-                Text(day.day)
-                Label("Synthetic preview", systemImage: "testtube.2")
-                Text(wallet ? "These sample passes are not your tickets and cannot be used for entry or redemption." : "Sample agenda · times are illustrative local event times, not a published schedule.")
-                    .font(.subheadline)
-            }
-            if wallet {
-                ForEach(DemoCompanion.passes(for: day)) { pass in
-                    Section(header: Text(pass.name).font(.headline).foregroundStyle(.primary)) {
-                        status("Admission", pass.admission)
-                        status("Meal", pass.meal)
-                        status("Party", pass.party)
-                        Text("Admission and each redemption are tracked separately. This preview cannot change any status.").font(.caption)
-                    }
-                }
-                Section { Text("Live passes and Apple Wallet export are not connected.") }
-            } else {
+    private var scheduleContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                PreviewBadge()
+                Text(day.event).font(.system(.largeTitle, design: .serif).weight(.semibold))
+                Label(day.day, systemImage: "calendar").font(.subheadline)
+                Text("A day for good ideas.").font(.title2.weight(.medium))
+                Text("Sample agenda · illustrative local times.").font(.subheadline).foregroundStyle(AttendeeStyle.secondary)
                 let sessions = DemoCompanion.schedule(for: day).filter { query.isEmpty || "\($0.title) \($0.location)".localizedCaseInsensitiveContains(query) }
                 if sessions.isEmpty { ContentUnavailableView.search(text: query) }
                 ForEach(sessions) { item in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(item.time).font(.subheadline.monospacedDigit())
-                        Text(item.title).font(.headline)
-                        Label(item.location, systemImage: "mappin")
-                    }.padding(.vertical, 6).accessibilityElement(children: .combine)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(item.time).font(.subheadline.monospacedDigit()).foregroundStyle(AttendeeStyle.secondary)
+                        Text(item.title).font(.title3.weight(.semibold))
+                        Label(item.location, systemImage: "mappin").font(.subheadline)
+                    }.frame(maxWidth: .infinity, alignment: .leading).padding(24)
+                        .background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 20))
+                        .accessibilityElement(children: .combine)
                 }
-            }
-        }
+            }.padding(24).frame(maxWidth: 640)
+        }.foregroundStyle(AttendeeStyle.ink)
+    }
+    private var passContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                PreviewBadge()
+                Text("Your place in\nthe gathering.").font(.system(.largeTitle, design: .serif).weight(.semibold))
+                ForEach(DemoCompanion.passes(for: day)) { pass in
+                    VStack(alignment: .leading, spacing: 0) {
+                        EventArtwork(showsHeadline: false).frame(height: 120).clipped().accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text(day.event).font(.title2.weight(.semibold))
+                            Label(day.day, systemImage: "calendar").font(.subheadline)
+                            Divider()
+                            HStack(alignment: .top) {
+                                Image(systemName: "person.crop.circle").font(.title)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Alex Morgan").font(.headline)
+                                    Text("Synthetic attendee · sample pass").font(.caption).foregroundStyle(AttendeeStyle.secondary)
+                                }
+                            }
+                            status("Admission", pass.admission)
+                            Divider()
+                            Text("Included with this sample").font(.subheadline.weight(.semibold))
+                            status("Meal", pass.meal)
+                            status("Party", pass.party)
+                            Divider()
+                            Label("Preview only · not valid for entry", systemImage: "lock").font(.subheadline.weight(.semibold))
+                            Text("No admission QR is issued. Each status is independent; nothing can be redeemed from this preview.").font(.caption).foregroundStyle(AttendeeStyle.secondary)
+                        }.padding(24)
+                    }.background(AttendeeStyle.card).clipShape(RoundedRectangle(cornerRadius: 24))
+                }
+                Text("Live passes and Apple Wallet export are not connected.").font(.footnote).foregroundStyle(AttendeeStyle.secondary)
+            }.padding(24).frame(maxWidth: 640)
+        }.foregroundStyle(AttendeeStyle.ink)
     }
     private func status(_ name: String, _ value: DemoEntitlementStatus) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(name).font(.headline)
             Label(value.rawValue, systemImage: value == .available ? "ticket" : value == .redeemed ? "checkmark.circle" : "minus.circle")
+                .font(.subheadline).foregroundStyle(AttendeeStyle.secondary)
         }.accessibilityElement(children: .combine)
     }
 }
