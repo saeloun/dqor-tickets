@@ -25,6 +25,13 @@ class EventHubUiTest {
     private val events=listOf(Event("dqor-2026","Deccan Queen on Rails","Pune, India","A meeting of curious minds",listOf("2026-10-08","2026-10-09","2026-10-10","2026-10-11"),"heritage"),Event("studio-demo","The Design Assembly","Bengaluru, India · sample event","Ideas deserve a gathering",listOf("2026-11-14"),"midnight"))
     private fun content()=EventExperience.parse(InstrumentationRegistry.getInstrumentation().targetContext.assets.open("experience.json").bufferedReader().use {it.readText()})
     private fun tap(list: String,text: String) {compose.onNodeWithTag(list).performScrollToNode(hasText(text)); compose.onNodeWithText(text).performClick(); compose.waitForIdle()}
+    @Test fun sharedCoverIsBundledAndDecodable() {
+        val resources=InstrumentationRegistry.getInstrumentation().targetContext.resources
+        val bitmap=android.graphics.BitmapFactory.decodeResource(resources,R.drawable.deccan_cover)
+        org.junit.Assert.assertNotNull("Shared cover must be packaged in the native APK",bitmap)
+        org.junit.Assert.assertTrue(bitmap.width>0 && bitmap.height>0)
+        bitmap.recycle()
+    }
     @Test fun eventScheduleBookmarksAndIndependentWalletJourney() {
         compose.setContent {EventHubApp(events,content()) {}}
         compose.captureDemo("01-events")

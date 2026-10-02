@@ -48,7 +48,8 @@ Operations use warm canvas `#F6F5EF`, ink `#243024`, forest `#334B28`, 12dp card
 white cards, restrained dividers and artwork-led event identity. The 56dp header,
 square 16dp-radius art, 46/50sp title with native serif italic accents, compact metadata and one ticket action follow
 the design owner's fresh public Luma reference review. No Luma assets or branding
-are used. DQOR art copies the repository's public `public/dqor/hero-bg.jpg` unchanged;
+are used. DQOR art bundles the original generated `deccan-cover.png` from design PR #175
+(`c0847da`) unchanged as Android resource `deccan_cover.png`;
 the second event uses an original Compose geometric motif. Cropped art carries into
 the pass above its white credential area. Poster typography is decorative, while
 all real labels and actions scale with the system font setting.
@@ -106,7 +107,7 @@ JVM tests and lint.
 
 The subsequent rendered attendee handoff (`docs/theme-studio/attendee/event-mobile.png`
 and `pass-mobile.png` in the design owner's checkout) was inspected before aligning
-the final palette and display hierarchy. Android retains its DQOR conference artwork
-rather than relabeling that conference as the separate fictional After Hours event.
+the final palette and display hierarchy. Android bundles the supplied original generated cover and retains the configured
+event identity. The imaginary courtyard artwork is not a venue photograph.
 Pass codes remain clearly invalid synthetic fixtures because no approved attendee
 credential contract is connected; QR pixels stay on white with an untouched quiet zone.

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import `in`.dqor.staff.R
 import `in`.dqor.staff.Event
 
-/** DQOR uses the repository's existing public event illustration, copied unchanged.
+/** DQOR uses the shared original generated Deccan cover, copied unchanged from design PR #175.
  * The assembly motif is an original native geometric drawing, not a third-party asset. */
 @Composable internal fun EventArtwork(event: Event, modifier: Modifier=Modifier, compact: Boolean=false) {
     // Poster typography is part of decorative artwork. Accessible event text outside
@@ -35,7 +35,7 @@ import `in`.dqor.staff.Event
     CompositionLocalProvider(LocalDensity provides Density(density.density,1f)) {
     Box(modifier.clearAndSetSemantics {}) {
         if(event.theme=="heritage") {
-            Image(painterResource(R.drawable.dqor_cover),contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.matchParentSize())
+            Image(painterResource(R.drawable.deccan_cover),contentDescription=null,contentScale=ContentScale.Crop,modifier=Modifier.matchParentSize())
             Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color(0x22170F09),Color(0x05170F09),Color(0xD9170F09)))))
             if(!compact) {
                 Text("${event.location.substringBefore(",").uppercase()}   /   ${event.dates.first().take(4)}",Modifier.align(Alignment.TopStart).padding(24.dp),color=Color.White,fontSize=12.sp,letterSpacing=3.sp,fontWeight=FontWeight.Medium)

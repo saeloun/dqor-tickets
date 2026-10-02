@@ -28,8 +28,8 @@ the staff test fixture uses the shortened event title “DQOR”.
 - Debug app and Android test APK assembled successfully with existing JDK 21 and SDK 35.
 - 52 JVM tests passed: 23 typed client, 18 desk workflow, 5 event/wallet, 6 legacy mock.
 - Lint passed with no errors; inherited target/dependency update warnings remain.
-- 13 emulator tests passed: 3 attendee journeys, 5 staff journeys, 1 staff large-text
-  journey and 4 Android Keystore tests. Exact instrumentation result: `OK (13 tests)`.
+- 14 emulator tests passed: 3 attendee journeys, 1 bundled-cover decoding check, 5 staff journeys, 1 staff large-text
+  journey and 4 Android Keystore tests. Exact instrumentation result: `OK (14 tests)`.
 - Actual protected launcher cold-started successfully and its UI hierarchy showed
   the event catalogue and Staff workspace. No new SDK/license/security grants.
 - Camera decoding on a physical device, TalkBack audio and live integration were
@@ -43,3 +43,7 @@ art above a white credential area. No Luma artwork/branding was copied. Forest
 remains in the staff workspace. The images cover normal and 200% font-scale
 layouts, empty states, separate benefit statuses and confirmation outcomes.
 See [EVENT_EXPERIENCE.md](../EVENT_EXPERIENCE.md) for provenance and API needs.
+
+The shared generated cover from design PR #175 is bundled directly in the APK as
+`deccan_cover.png`. Event and pass captures verify actual rendering; an emulator
+resource decoding assertion guards against the blank/missing image regression.
