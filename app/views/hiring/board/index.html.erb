@@ -13,6 +13,8 @@
 <section><h2>Your applications</h2>
 <% @applications.each do |application| %>
   <p><%= application.job.title %> — <%= application.withdrawn_at? ? "Withdrawn" : "Submitted" %></p>
+  <% if application.share_request && !application.withdrawn_at? %><p>Recruiting share expires: <%= application.share_request.expires_at.utc.iso8601 %></p><%= button_to "Revoke recruiting consent", hiring_revoke_share_path(application.share_request), method: :delete %><% end %>
+  <% if application.resume_releasable? %><%= link_to "Download my checked PDF", hiring_resume_path(application) %><% end %>
   <% unless application.withdrawn_at? %><%= button_to "Withdraw and delete profile snapshot", hiring_withdraw_path(application), method: :delete %><% end %>
 <% end %></section>
 <section><h2>Your company affiliations</h2><p>Self-reported and private in this first slice. These do not grant employer permissions.</p>

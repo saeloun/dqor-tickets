@@ -65,7 +65,7 @@ class Hiring::BoardController < ApplicationController
 
   def applicants
     @job = Hiring::Job.joins(:company).where(recruiter: current_user, hiring_companies: { status: "approved", claimant_id: current_user.id }).find(params[:id])
-    @applications = Hiring::Application.where(job: @job, withdrawn_at: nil)
+    @applications = Hiring::Application.where(job: @job, withdrawn_at: nil).includes(share_request: { job: :company }).select(&:consent_active?)
   end
 
   def remove_affiliation
@@ -87,6 +87,7 @@ class Hiring::BoardController < ApplicationController
     def private_response
       response.headers["Cache-Control"] = "no-store"
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
+      response.headers["Referrer-Policy"] = "no-referrer"
     end
 
     def save_and_return(record)
