@@ -12,6 +12,12 @@ final class StaffStore: ObservableObject {
     @Published private(set) var busy = false
     @Published var message: String?
     @Published var confirming = false
+    @Published private(set) var activity: [StaffActivity] = []
+    private func record(_ summary: String, attendeeID: String? = nil) {
+        guard let day else { return }
+        activity.append(StaffActivity(dayID: day.id, attendeeID: attendeeID, summary: summary))
+        if activity.count > 100 { activity.removeFirst(activity.count - 100) }
+    }
     private let api: any StaffAPI
     private var generation = UUID()
     private var scanGate = ScanGate()
@@ -22,7 +28,7 @@ final class StaffStore: ObservableObject {
 
     private func handle(_ error: Error) {
         if let staffError = error as? StaffError, staffError == .signedOut || staffError == .forbidden {
-            generation = UUID(); session = nil; days = []; day = nil; matches = []; selection = []; results = []
+            activity = []; generation = UUID(); session = nil; days = []; day = nil; matches = []; selection = []; results = []
             confirming = false; pendingRequestID = nil; scanGate.reset()
         }
         message = error.localizedDescription
@@ -40,7 +46,7 @@ final class StaffStore: ObservableObject {
     }
     func signOut() async {
         guard !busy else { return }
-        generation = UUID(); clearDay(); session = nil; days = []
+        activity = []; generation = UUID(); clearDay(); session = nil; days = []
         busy = true
         defer { busy = false }
         do { try await api.signOut() } catch { handle(error) }
@@ -82,10 +88,11 @@ final class StaffStore: ObservableObject {
         do {
             let attendee = try await api.resolveQR(payload, day: day)
             guard generation == current else { return }
+            record("Ticket resolved · check-in not confirmed", attendeeID: attendee.id)
             if selection.contains(where: { $0.id == attendee.id }) { message = "This attendee is already in your batch." }
             else if selection.count >= batchLimit { message = "Review this batch before adding more attendees. Limit: \(batchLimit)." }
             else { pendingRequestID = nil; selection.append(attendee); message = "Added \(attendee.name) to the batch. Check-in is not yet confirmed." }
-        } catch { if generation == current { handle(error) } }
+        } catch { if generation == current { record("Scan failed · check-in not confirmed"); handle(error) } }
     }
     func cancelBatch() { guard !busy else { return }; selection = []; confirming = false; scanGate.reset(); pendingRequestID = nil }
     func confirm() async {
@@ -100,7 +107,8 @@ final class StaffStore: ObservableObject {
             guard Set(response.map(\.id)) == Set(selection.map(\.id)), response.count == selection.count else {
                 throw StaffError.offline
             }
+            for result in response { record(result.outcome.label, attendeeID: result.attendee.id) }
             results = response; selection = []; scanGate.reset(); pendingRequestID = nil
-        } catch { handle(error) }
+        } catch { record("Submission failed · verify attendance before retrying"); handle(error) }
     }
 }

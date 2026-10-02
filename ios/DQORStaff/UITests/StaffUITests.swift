@@ -154,4 +154,64 @@ final class StaffUITests: XCTestCase {
         capture(app, name: "Duplicate-name review")
     }
 
+    @MainActor
+    func testCompanionNavigationPreservesBatchAndIndependentPassStatuses() {
+        let app = XCUIApplication(); app.launch()
+        app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
+        app.buttons["Search attendees"].tap(); app.buttons["demo-001"].tap()
+        app.buttons["exploreEvent"].tap(); app.buttons["Schedule"].tap()
+        XCTAssertTrue(app.staticTexts["Community talks"].waitForExistence(timeout: 5))
+        capture(app, name: "Companion schedule")
+        let search = app.searchFields.firstMatch
+        search.tap(); search.typeText("no-such-session")
+        XCTAssertFalse(app.staticTexts["Community talks"].exists)
+        capture(app, name: "Schedule empty search")
+        if app.buttons["Close"].exists { app.buttons["Close"].tap() }
+        app.navigationBars.buttons["BackButton"].tap()
+        app.buttons["exploreEvent"].tap(); app.buttons["Sample passes"].tap()
+        XCTAssertTrue(app.staticTexts["Admission"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Available · sample only"].exists)
+        XCTAssertTrue(app.staticTexts["Already redeemed · sample only"].exists)
+        XCTAssertTrue(app.staticTexts["Not included"].exists)
+        capture(app, name: "Companion sample pass")
+        if app.buttons["Close"].exists { app.buttons["Close"].tap() }
+        app.navigationBars.buttons["BackButton"].tap()
+        app.swipeUp(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
+        app.buttons["exploreEvent"].tap(); app.buttons["Activity history"].tap()
+        XCTAssertTrue(app.staticTexts["Checked in"].waitForExistence(timeout: 5))
+        capture(app, name: "Companion activity history")
+        app.buttons["Look up attendee"].tap()
+        XCTAssertTrue(app.buttons["demo-001"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["demo-001"].value as? String, "Not selected")
+    }
+
+    @MainActor
+    func testCompanionLargestTextAndEmptyHistory() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        func reveal(_ element: XCUIElement) {
+            for _ in 0..<8 { if element.isHittable { return }; app.swipeUp() }
+        }
+        reveal(app.buttons["enterDemo"]); app.buttons["enterDemo"].tap()
+        reveal(app.buttons["day-1"]); app.buttons["day-1"].tap()
+        app.buttons["exploreEvent"].tap(); app.buttons["Sample passes"].tap()
+        capture(app, name: "Largest text sample pass header")
+        reveal(app.staticTexts["Not included"])
+        XCTAssertTrue(app.staticTexts["Not included"].isHittable)
+        capture(app, name: "Largest text independent entitlements")
+        app.navigationBars.buttons["BackButton"].tap()
+        app.buttons["exploreEvent"].tap(); app.buttons["Activity history"].tap()
+        reveal(app.staticTexts["No activity for this day"])
+        XCTAssertTrue(app.staticTexts["No activity for this day"].exists)
+        capture(app, name: "Largest text empty history")
+        app.navigationBars.buttons["BackButton"].tap()
+        app.buttons["Events"].tap()
+        reveal(app.buttons["workshop-1"]); app.buttons["workshop-1"].tap()
+        app.buttons["exploreEvent"].tap(); app.buttons["Schedule"].tap()
+        reveal(app.staticTexts["Hands-on design studio"])
+        XCTAssertTrue(app.staticTexts["Hands-on design studio"].exists)
+        capture(app, name: "Largest text workshop schedule")
+    }
+
 }
