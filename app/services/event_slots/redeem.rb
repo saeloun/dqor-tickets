@@ -17,7 +17,7 @@ module EventSlots
               return prior
             end
             now = Time.current
-            day = slot.starts_at.in_time_zone("Asia/Kolkata").to_date
+            day = now.in_time_zone("Asia/Kolkata").to_date
             raise Rejected, "Slot is closed or draft" unless slot.active? && now >= slot.starts_at && now < slot.ends_at
             raise Rejected, "Ticket is not confirmed" unless ticket.order.paid? && !ticket.canceled_at?
             raise Rejected, "Ticket is not valid on this day" unless Ticket::EVENT_DATES.include?(day) && ticket.ticket_type.valid_on?(day)

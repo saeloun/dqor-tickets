@@ -47,6 +47,13 @@ RSpec.describe EventSlots::Redeem do
     expect { redeem }.to raise_error(described_class::Rejected, /capacity/)
   end
 
+  it "enforces the actual scan day for a window spanning midnight" do
+    slot.update!(ends_at: Time.zone.parse("2026-10-09 09:00"))
+    ticket.ticket_type.update!(event_starts_on: "2026-10-08", event_ends_on: "2026-10-08")
+    travel_to(Time.zone.parse("2026-10-09 07:00"))
+    expect { redeem }.to raise_error(described_class::Rejected, /not valid/)
+  end
+
   it "allows configured repeats and authorized audited correction" do
     slot.update!(redemption_limit: 2)
     first = redeem
