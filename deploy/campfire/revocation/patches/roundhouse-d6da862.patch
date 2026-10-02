@@ -1,0 +1,172 @@
+diff --git a/runtime/spinel/action_cable.rb b/runtime/spinel/action_cable.rb
+index b3170307..216e511d 100644
+--- a/runtime/spinel/action_cable.rb
++++ b/runtime/spinel/action_cable.rb
+@@ -73,16 +73,8 @@ module ActionCable
+     # campfire calls it from `User#deactivate` and
+     # `User#reset_remote_connections`.
+     #
+-    # The set it selects is EMPTY here, and that is a fact about this
+-    # runtime rather than a stub: a remote connection is identified by
+-    # its connection identifiers (`current_user`), and no connection in
+-    # this runtime ever registers one — see the subscription-dispatch
+-    # note in the header.
+-    #
+-    # THE DIVERGENCE THAT COSTS: once subscription dispatch lands, a
+-    # deactivated or banned user's live socket must actually be closed,
+-    # and this method is where that happens. Recorded in
+-    # docs/pipeline/runtime.md rather than left as a silent no-op.
++    # Selection is implemented by Cable's per-process live-driver registry.
++    # The existing single-worker deployment contract still applies.
+     def remote_connections
+       raise STUB_RAISE[0] if STUB_RAISE_ON[0]
+       RemoteConnections.new
+@@ -195,10 +187,8 @@ module ActionCable
+     end
+   end
+ 
+-  # The `where(…)` half of the above: a selection over connections
+-  # identified by their connection identifiers. Holds no state because
+-  # the selection is always empty; `disconnect` is what a caller does
+-  # with it.
++  # A selection by stable user id over the live transport registry.
++  # The driver owns socket retirement; fd numbers alone are never retained.
+   #
+   # `current_user:` is spelled out rather than taken as a bag of
+   # identifiers — a strict target types a parameter, and this is the one
+@@ -209,11 +199,15 @@ module ActionCable
+         admitted = Server::EXPECT_USERS.length == 1 && current_user == Server::EXPECT_USERS[0]
+         raise "unexpected invocation: remote_connections.where(current_user: #{current_user.id})" unless admitted
+       end
+-      RemoteConnection.new
++      RemoteConnection.new(current_user.id)
+     end
+   end
+ 
+   class RemoteConnection
++    def initialize(user_id)
++      @user_id = user_id
++    end
++
+     def disconnect(reconnect:)
+       if Server::EXPECT_COUNT[0] >= 0
+         if reconnect != Server::EXPECT_RECONNECT[0]
+@@ -221,6 +215,7 @@ module ActionCable
+         end
+         Server::EXPECT_CALLS[0] += 1
+       end
++      Cable.disconnect_user(@user_id, reconnect)
+       nil
+     end
+   end
+diff --git a/runtime/spinel/cable.rb b/runtime/spinel/cable.rb
+index c3ff2914..2794c3a3 100644
+--- a/runtime/spinel/cable.rb
++++ b/runtime/spinel/cable.rb
+@@ -249,6 +249,19 @@ module Cable
+     0
+   end
+ 
++  # Snapshot drivers, not fd numbers, and never hold the registry across IO.
++  def self.disconnect_user(user_id, reconnect)
++    selected = [Tep::WebSocket::Driver.new(-1)]
++    selected.pop
++    Tep::APP.cable_conns_lock.synchronize do
++      Tep::APP.cable_conns.each do |ws|
++        selected << ws if ws.cable_user_id == user_id
++      end
++    end
++    selected.each { |ws| ws.revoke(reconnect) }
++    selected.length
++  end
++
+   # Drop a connection from the heartbeat's registry. Called from the
+   # on-close handler, BEFORE the fd is closed, while its number still
+   # names only this connection -- the same contract, and the same
+@@ -552,6 +565,9 @@ module Cable
+     end
+ 
+     drv = Tep::WebSocket::Driver.new(0)
++    unless conn.current_user.nil?
++      drv.cable_user_id = conn.current_user.id
++    end
+     # Echo the Action Cable subprotocol. The browser's ActionCable client
+     # opens with `Sec-WebSocket-Protocol: actioncable-v1-json` and, per its
+     # isProtocolSupported() check, IGNORES every frame (welcome,
+diff --git a/runtime/spinel/tep/net.rb b/runtime/spinel/tep/net.rb
+index 39b247ec..22f5e2e3 100644
+--- a/runtime/spinel/tep/net.rb
++++ b/runtime/spinel/tep/net.rb
+@@ -12,6 +12,7 @@
+ # (websocket/connection.rb) read via `sp_net_recv_some(:binstr)` directly.
+ # No `ffi_cflags` / `@TEP_SPHTTP_O@`: nothing links sphttp.o anymore.
+ module Sock
++  ffi_func :shutdown, [:int, :int], :int
+   # ── Socket + process layer: spinel's maintained sp_net (auto-linked) ──
+   # recv uses the `:binstr` return mode (matz/spinel ac1e0d2c) — builds a
+   # binary-safe String from (ptr, sp_net_bin_len) rather than strlen, so a
+diff --git a/runtime/spinel/tep/websocket/connection.rb b/runtime/spinel/tep/websocket/connection.rb
+index 1db5f55e..6cb9c03a 100644
+--- a/runtime/spinel/tep/websocket/connection.rb
++++ b/runtime/spinel/tep/websocket/connection.rb
+@@ -90,6 +90,10 @@ module Tep
+               Connection.dispatch_close(@driver, r.close_code, "protocol error")
+               return 0
+             end
++            if @driver.retired?
++              Connection.dispatch_close(@driver, Tep::WebSocket::CLOSE_POLICY_VIOLATION, "authorization revoked")
++              return 0
++            end
+             Connection.dispatch_frame(@driver, r.frame)
+             if r.consumed >= inbuf.bytesize
+               inbuf = +""
+diff --git a/runtime/spinel/tep/websocket/driver.rb b/runtime/spinel/tep/websocket/driver.rb
+index d60af203..a7242103 100644
+--- a/runtime/spinel/tep/websocket/driver.rb
++++ b/runtime/spinel/tep/websocket/driver.rb
+@@ -24,7 +24,7 @@
+ module Tep
+   module WebSocket
+     class Driver
+-      attr_accessor :fd, :max_frame_size, :subprotocol
++      attr_accessor :fd, :max_frame_size, :subprotocol, :cable_user_id
+       # Callback slots. Each holds a subclass of Tep::WebSocket::Handler
+       # (or the base) that gets `handle_event(event)` called when the
+       # corresponding wire event arrives. Defaults to a no-op base
+@@ -32,6 +32,7 @@ module Tep
+       attr_accessor :h_open, :h_message, :h_close, :h_ping, :h_pong, :h_error
+ 
+       def initialize(fd)
++        @cable_user_id  = 0
+         @fd             = fd
+         @closed         = false
+         @wlock          = Mutex.new
+@@ -139,6 +140,28 @@ module Tep
+         0
+       end
+ 
++      # Revoke while holding the same lock as broadcast/heartbeat writers.
++      # shutdown wakes the receive owner; only that owner closes the fd.
++      def revoke(reconnect)
++        @wlock.synchronize do
++          unless @closed
++            Driver.send_frame(@fd, Tep::WebSocket::OPCODE_TEXT,
++              "{\"type\":\"disconnect\",\"reason\":\"remote\",\"reconnect\":" + reconnect.to_s + "}")
++            Driver.send_frame(@fd, Tep::WebSocket::OPCODE_CLOSE,
++              Driver.encode_close_payload(Tep::WebSocket::CLOSE_POLICY_VIOLATION, "authorization revoked"))
++            @closed = true
++            Sock.shutdown(@fd, 2)
++          end
++        end
++        0
++      end
++
++      def retired?
++        closed = false
++        @wlock.synchronize { closed = @closed }
++        closed
++      end
++
+       # Build the frame bytes (unmasked, server-side) and write via
+       # sphttp_write_bytes (binary-safe, explicit length). The raw write
+       # behind `write_frame`; nothing else should reach an fd directly.

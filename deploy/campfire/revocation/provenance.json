@@ -1,0 +1,22 @@
+{
+  "status": "local-native-candidate-not-release-approved",
+  "tested_on": "2026-10-03",
+  "architecture": "macOS arm64",
+  "roundhouse": "d6da862ccefb7e712af14ea144975512d4df2eb0",
+  "spinel": "ed603ed595db42626c747988a091c07f54532b94",
+  "campfire": "90b330024dec3e757c79b6a7e6568f93da8e3148",
+  "packages": {
+    "rubys/spinel-bcrypt": "a78ea0bfae6760c3143ea3b96bcd1594c82d6b7d",
+    "rubys/spinel-ruby-vips": "040eabab7dc2e51b6d876680d6e134bf4aaa9396",
+    "rubys/spinel-rqrcode": "37a2d805980b0adc730ecdf2be3b6cf8facd3fcf",
+    "rubys/spinel-nokogiri": "2071baa00bed0e0591a559d36fe88266572e801e"
+  },
+  "baseline_executable_sha256": "be52933d3a8523456b76c97471b240b387592c11b02f7a1a6a80e398d74c50f9",
+  "candidate_executable_sha256": "150180c668a948651a9f2446d44a468b4d67cccd3be45f3cfb07655ff1f75fdb",
+  "recorded_deployed_archive_sha256": "a91496ff7aad9232a79ba72017656698388ea02976b97c48cf0921f7205d921e",
+  "available_local_archive_sha256": "c8673c3e4e70598ab9806992fd51ac1d8c5a78e7d7cbcba8805f5076d8566c3d",
+  "test_only_overlay": "Sock.sphttp_listen uses existing sp_net_listen_host(127.0.0.1, port, 1024) in both emitted trees; authorization and revocation unchanged by overlay",
+  "compile_flags": ["--jobs=2", "-O", "1"],
+  "runtime_environment": {"WORKERS":"1", "SPINEL_WORKERS":"2"},
+  "artifact_notes": "Reconstructed from public source pins and recorded package revisions, not the installed Linux AMD64 binary. Executables are not distributed in this patch PR. The link step ignored an incompatible /usr/local x86_64 jemalloc library; local otool output shows no jemalloc dependency. No performance or deployment equivalence claim."
+}
