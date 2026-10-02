@@ -5,6 +5,8 @@ import java.time.Instant
 data class Event(val id: String, val name: String, val location: String, val subtitle: String, val dates: List<String>, val theme: String)
 enum class Role { DESK, ADMIN, VIEWER }
 data class Ticket(val id: Int, val name: String, val email: String, val type: String, val eligible: Boolean = true)
+fun Ticket.selectionLabel() = "Select $name, $email, ticket $id"
+
 enum class OutcomeState { SUCCESS, DUPLICATE, ERROR }
 data class Outcome(val ticketId: Int?, val attendee: String?, val state: OutcomeState, val message: String, val checkedInAt: String? = null)
 data class Lookup(val date: String, val tickets: List<Ticket>, val checkedInCount: Int, val moreResults: Boolean, val maxBatchSize: Int = 50)
@@ -24,7 +26,7 @@ class MockCheckInService : CheckInService {
     var expired = false
     var role = Role.DESK
     private val attendance = mutableMapOf<Triple<String, String, Int>, String>()
-    private val tickets = listOf(Ticket(101,"Asha Rao","asha@example.test","Conference"), Ticket(102,"Grace Shah","grace@example.test","Complimentary"), Ticket(103,"Kabir Desai","kabir@example.test","Workshop"), Ticket(104,"Mira Patel","mira@example.test","Canceled", false))
+    private val tickets = listOf(Ticket(101,"Asha Rao","asha@example.test","Conference"), Ticket(102,"Grace Shah","grace@example.test","Complimentary"), Ticket(103,"Kabir Desai","kabir@example.test","Workshop"), Ticket(104,"Mira Patel","mira@example.test","Canceled", false), Ticket(105,"Grace Shah","grace.second@example.test","Conference"))
     private fun guard(event: Event, date: String, mutation: Boolean = false) {
         if (offline) throw NotConfirmed()
         if (expired) throw SessionExpired()

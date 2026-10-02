@@ -33,8 +33,11 @@ role denial, expired sessions, offline failures and lookup eligibility.
    suppressed; restart the scanner to retry the same QR after an uncertain result.
 6. Toggle offline to see explicit unconfirmed outcomes. Nothing is queued.
 
-Attendance stays in memory and is lost on process death. Rotation returns to the
-demo entry screen; this prototype does not restore an in-progress workflow.
+Attendance stays in memory, survives rotation through a ViewModel and is lost on
+process death. Event/date/query survive recreation, but unsubmitted selections
+clear. An interrupted mutation restores a not-confirmed notice; no request is
+automatically replayed. Back stops scanning first, and leaving selected tickets
+requires confirmation. Backgrounding stops the scanner.
 Only returned counts are displayed; a transport error cannot imply admission.
 Names/emails are synthetic. Raw scan values are never logged or persisted.
 Screenshots/recents capture and backup are disabled. No INTERNET permission exists.
@@ -69,6 +72,17 @@ for batches of at most 50. Never infer success from HTTP 200 alone.
 
 Approved native authentication, remote event configuration, production adapter
 contract tests, device camera/accessibility/rotation testing, signing and store
-review remain required. The repository's existing CI covers Rails; Android CI
-wiring needs a separate shared-workflow change by its owner. This directory does
-not modify repository workflows.
+review remain required. The separate `.github/workflows/android.yml` runs APK build, unit tests and lint
+for Android/workflow changes and publishes the debug APK plus reports for 14 days.
+It uses read-only repository permission and the runner's preinstalled SDK, without
+a license-acceptance command. Existing Rails CI is unchanged. See
+[INTEGRATION.md](INTEGRATION.md) for exact DTO needs and pending resolve/auth gates.
+
+## Accessibility review
+
+Ticket selection labels include name, email and ticket ID to distinguish duplicate
+names. Confirmation lists the same identity fields; results include ticket ID.
+Status text uses a polite accessibility live region for scan/response updates.
+Entry and confirmation content scroll at large font sizes. Camera permission
+denial leaves search available. TalkBack audio and physical-camera testing remain
+release gates; semantic labels alone are not proof of a full accessibility audit.

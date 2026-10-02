@@ -39,10 +39,16 @@ class MockCheckInServiceTest {
         try {service.scan(event,event.dates[0],"demo-101"); fail("Expected role rejection")} catch(_: IllegalStateException) {}
         assertEquals(0,service.lookup(event,event.dates[0],"").checkedInCount)
     }
+    @Test fun `duplicate names expose distinct selection identities`() = runBlocking {
+        val matches=MockCheckInService().lookup(event,event.dates[0],"Grace").tickets
+        assertEquals(2,matches.size)
+        assertEquals(2,matches.map { it.selectionLabel() }.distinct().size)
+        matches.forEach { assertTrue(it.selectionLabel().contains(it.email)); assertTrue(it.selectionLabel().contains(it.id.toString())) }
+    }
     @Test fun `unknown QR fails and lookup excludes ineligible tickets`() = runBlocking {
         val service=MockCheckInService()
         assertEquals(OutcomeState.ERROR,service.scan(event,event.dates[0],"arbitrary-secret").results.single().state)
         assertEquals(0,service.lookup(event,event.dates[0],"Mira").tickets.size)
-        assertEquals("Grace Shah",service.lookup(event,event.dates[0],"grace").tickets.single().name)
+        assertEquals("Grace Shah",service.lookup(event,event.dates[0],"grace@example.test").tickets.single().name)
     }
 }
