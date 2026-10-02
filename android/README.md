@@ -1,7 +1,8 @@
 # DQOR Android staff demo
 
 Native Kotlin / Jetpack Compose entrance check-in slice. **Demo only:** no live
-login, server requests or real attendance. Application ID `in.dqor.staff.demo`.
+login, server requests or real attendance. A typed native adapter and encrypted
+session store exist behind disabled integration gates; the UI still uses mocks. Application ID `in.dqor.staff.demo`.
 Only files under `android/` are owned by this project; Rails and iOS are unchanged.
 
 ## Build and verification
@@ -57,26 +58,29 @@ from a verified staff session and be enforced server-side.
 
 The proposed contract in `docs/STAFF_CHECKIN_API.md` on the separate backend
 check-in branch is the integration target. It requires native auth approval
-before a network adapter can be added. The backend owner is adding a separate
-read-only QR resolve endpoint: production scanning preview must use that endpoint,
-then require confirmation before calling the mutating check-in endpoint. The
+before live integration can be enabled. The separate `nativeapi` adapter implements
+the proposed bearer-only `docs/NATIVE_STAFF_API.md` contract behind a compiled
+false gate, disabled configuration and absent INTERNET permission. Production
+scanning preview must use its read-only resolve endpoint, then require explicit
+confirmation before the confirm endpoint. The
 current scanner directly performs demo-only mutations and is not a preview flow.
 Do not invent bearer tokens or reuse
 attendee cookies. Production integration must validate the payload schema,
-display the returned lookup date, use server counts and every per-ticket result,
-handle 401/409/404/422 and ambiguous transport errors, enforce secure session
+use the canonical date and every per-ticket result. Native responses contain no
+counts; the web DTO is not interchangeable. The adapter must
+handle 401/403/404/422/429 and ambiguous transport errors, enforce secure session
 storage/expiry/revocation/logout, and preserve explicit IDs + `confirmed: true`
 for batches of at most 50. Never infer success from HTTP 200 alone.
 
 ## Release gates
 
-Approved native authentication, remote event configuration, production adapter
-contract tests, device camera/accessibility/rotation testing, signing and store
+Approved staging authentication/UI integration, remote event configuration,
+device camera/accessibility/rotation testing, signing and store
 review remain required. The separate `.github/workflows/android.yml` runs APK build, unit tests and lint
 for Android/workflow changes and publishes the debug APK plus reports for 14 days.
 It uses read-only repository permission and the runner's preinstalled SDK, without
 a license-acceptance command. Existing Rails CI is unchanged. See
-[INTEGRATION.md](INTEGRATION.md) for exact DTO needs and pending resolve/auth gates.
+[INTEGRATION.md](INTEGRATION.md) for exact DTO needs and pending staging/UI integration gates.
 
 ## Accessibility review
 
@@ -86,3 +90,7 @@ Status text uses a polite accessibility live region for scan/response updates.
 Entry and confirmation content scroll at large font sizes. Camera permission
 denial leaves search available. TalkBack audio and physical-camera testing remain
 release gates; semantic labels alone are not proof of a full accessibility audit.
+
+Run Android Keystore tests on an existing emulator/device with
+`./gradlew :app:connectedDebugAndroidTest`. These tests only use synthetic
+credentials. Staging access is not enabled by running them.

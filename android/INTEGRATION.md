@@ -1,60 +1,77 @@
-# Native integration gate and exact DTO needs
+# Disabled native adapter and integration gates
 
-No production authentication or network adapter is implemented. The types in
-`CheckIn.kt` are demo domain models, **not wire DTOs**. Backend implementation and
-native authentication both need approval before integration.
+`nativeapi/NativeStaffClient.kt` now implements the proposed **native v1** DTOs
+from the backend branch's `docs/NATIVE_STAFF_API.md`. It is separate from
+`CheckInService`: the demo scanner's immediate mutation interface must never be
+used as a production preview. MainActivity still exclusively uses mocks.
 
-## Confirmed proposed wire fields
+## Three independent gates
 
-- Lookup response: `date: ISO-date`, `event_dates: [ISO-date]`,
-  `max_batch_size: integer`, `more_results: boolean`, `stats`, `tickets`.
-- Ticket: `id: positive integer`, `attendee_name: string`,
-  `attendee_email: string`, `ticket_type: string`, `order_code: string`,
-  `order_status: string`, `event_starts_on/event_ends_on: ISO-date or null`,
-  `canceled: boolean`, `checked_in_at: ISO timestamp or null`.
-- Stats: `total`, `checked_in`, `by_type: [{name, total, checked_in}]`.
-- Single result: `ticket_id` and `attendee` when found, `state` with values
-  `success|warning|error`, `message`, `checked_in_at` on success,
-  `checked_in_count`, `stats`. Missing-ticket fields must be nullable.
-- Batch result: ordered `results` plus `checked_in_count`; every result is
-  independently inspected. Request is `ticket_ids`, `date`, `confirmed: true`.
+- `NativeConfig` defaults to disabled and has no default origin.
+- `NativeIntegrationGate.ENABLED` is a compiled `false`; even an enabled config
+  cannot instantiate `ApprovedNativeTransport` in this build.
+- The Android application has **no INTERNET permission**.
 
-Android's `DUPLICATE` enum must map from documented warning/HTTP 409, never be
-serialized as a wire value. Use the returned lookup date and server counts.
-Keep bounded integer validation and reject malformed/missing required fields;
-HTTP 200 alone cannot prove success. Confirm exact field nullability/types with
-backend fixtures, especially attendee shape and errors without ticket fields.
+Opening these gates requires reviewed staging approval and an explicit, fixed
+HTTPS origin. No remote config or UI switch can turn them on. No credentials,
+staff grants, live requests or attendance were created during implementation.
 
-## Pending read-only resolve DTO
+## Exact native wire DTOs
 
-Backend owner is adding a **separate read-only QR resolve** operation. Its route,
-method and schema were not in the API document available during this revision.
-Do not invent them. We need fixtures specifying:
+- POST `/api/staff/session`: `{email,password}` → 201 `{access_token,
+  token_type: "Bearer", expires_at, event, event_dates, capabilities,
+  max_batch_size}`. GET returns the scope without the token; DELETE returns 204.
+- POST `/api/staff/checkins/resolve`: `{secret,date}` →
+  `{state:"resolved",date,ticket}`. Resolution is read-only, never admission.
+- GET `/api/staff/checkins?date=...&q=...` → `{date,more_results,tickets}`.
+- Ticket: positive `id`, `attendee_name`, `attendee_email`, `ticket_type`,
+  `order_code`, boolean `eligible`, nullable `checked_in_at` timestamp.
+- POST `/api/staff/checkins/confirm`: `{ticket_ids,date,confirmed:true}` →
+  `{date,results}`. Results contain `ticket_id`, optional `attendee`,
+  `state: success|warning|error`, `message`, timestamp on success.
+  Rails currently serializes confirmation IDs as strings; the adapter validates
+  and accepts positive integer IDs or decimal strings, rejecting fractional IDs.
 
-- Input location for QR secret (HTTPS body only), event/day scope and validation.
-- Resolved ticket identity/display fields, eligibility status and reason,
-  existing attendance timestamp, canonical date and any count/stats fields.
-- Whether confirmation submits a ticket ID or a short-lived resolve handle;
-  mutation still rechecks eligibility and authorization server-side.
-- Status/schema for unknown, wrong-event, expired/ineligible and duplicate QRs,
-  401/403, rate limit, malformed input, timeout and 5xx.
-- Proof that resolve never changes attendance/audit success counts.
+**Native endpoints provide no attendance counts/stats.** Do not infer totals from
+successful results or reuse the legacy web lookup DTO. Confirmation preserves
+ordered per-ticket states and validates returned IDs against the explicit request.
+Malformed 2xx, unexpected dates, missing success timestamps or missing results
+are not admissions. Resolve does not call the legacy POST `/checkin`.
 
-The current mock scanner directly performs a labelled demo check-in. It is not a
-production preview implementation. Production must resolve, display identity,
-then explicitly confirm before mutation. Clear raw QR memory after resolve and
-never store it in saved state, logs, analytics or URLs.
+## Session lifecycle and storage
 
-## Other missing contracts
+Sign-in clears any prior local session and wipes the supplied password character
+array after the attempt; no password is persisted. JSON/HTTP libraries necessarily
+create short-lived immutable strings in process memory. Never log request bodies.
+The token and expiry are encrypted with AES-256-GCM under a per-app, non-exportable
+Android Keystore key and written atomically inside `noBackupFilesDir`. Fresh IVs
+are generated for every write; AAD binds the storage format. No plaintext fallback.
+Keystore hardware backing depends on the device and is not claimed from tests.
 
-Authentication needs approved session establishment, staff role/capabilities,
-CSRF handling (if cookie-based), expiry, revocation, logout and secure-storage
-rules. Multi-event discovery needs stable event IDs, authorized endpoints,
-canonical time zone/dates and approved branding schema; the current backend is
-single-event. Do not trust an arbitrary catalog URL with staff credentials.
+Restoration calls GET session before any ticket action to obtain current scope.
+Local expiry/origin mismatch and server 401 clear the session. Capability/event/
+date scope is checked locally and must still be enforced server-side on every
+request. No refresh token exists. Logout clears local data/key first, then requests
+revocation; transport failure returns `LOCAL_ONLY`, never a claim of server logout.
+Operations are serialized to avoid local logout/sign-in races.
 
-Required integration tests: two same-name attendees; stale eligibility between
-resolve and mutation; expired session; partial batch response; timeout after
-commit; malformed 2xx; response date differs; concurrent scanners; process death
-while awaiting response. Every uncertain mutation remains “not confirmed”; no
-offline queue or optimistic attendance count.
+The real transport uses platform TLS validation, a fixed validated HTTPS origin,
+no cookies/cache/redirects/automatic retries, bounded timeouts and a 1 MiB response
+limit. Credentials are only in Authorization or sign-in JSON; QR is only in the
+resolve JSON body. Diagnostic string forms redact sensitive request contents.
+
+## Tests and release gates
+
+JVM tests use injected fake transport/storage and synthetic values to test scope,
+expiry, restore, revocation, logout uncertainty, duplicate/mixed outcomes, strict
+schema validation, explicit confirmation and disabled transport. Device tests
+exercise actual Android Keystore encryption, store recreation, deletion, fresh
+nonces and corrupted storage. They do not authenticate against any server.
+
+Before staging: review final backend fixtures and target origin; approve the gate
+changes; wire a separate resolve-preview-confirm UI; verify device session expiry,
+role/password revocation, TLS and logout against the approved staging server.
+Before release: physical camera, TalkBack, process-death/rotation during a real
+request and stale eligibility between preview/confirm. There is no offline queue.
+Multi-event discovery/branding remains a separate contract; this API is scoped
+to the single DQOR event. Never send staff credentials to event-supplied URLs.
