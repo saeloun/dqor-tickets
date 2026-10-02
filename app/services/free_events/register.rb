@@ -15,8 +15,8 @@ module FreeEvents
           raise Unavailable, "Registration is no longer active" unless existing.paid? && existing.tickets.where(canceled_at: nil).exists?
           return existing
         end
-        raise Unavailable, "Registration has closed" unless event.ends_at > Time.current
-        raise Unavailable, "This event is full" unless type.capacity && Ticket.where(event_id: event.id, ticket_type_id: type.id, canceled_at: nil).count < type.capacity
+        availability = Availability.call(event: event, ticket_type: type)
+        raise Unavailable, availability.message unless availability.available?
 
         form = FreeEvents::Form.find_by(ticket_type_id: type.id, event_id: event.id)
         version = form&.published_version

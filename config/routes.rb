@@ -10,6 +10,8 @@ Rails.application.routes.draw do
   post "free/organizations/:organization_id/events/:event_id/inventory", to: "free_events/inventory#create", as: :free_event_inventory
   get "free/organizations/:organization_id/events/:event_id/attendees", to: "free_events/attendees#index", as: :free_event_attendees
   post "free/organizations/:organization_id/events/:event_id/attendees", to: "free_events/attendees#create"
+  get "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/window", to: "free_events/registration_windows#show", as: :free_event_window
+  patch "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/window", to: "free_events/registration_windows#update"
   get "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/questions", to: "free_events/question_forms#show", as: :free_event_questions
   patch "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/questions", to: "free_events/question_forms#update"
   get "free/organizations/:organization_id/events/:event_id/types/:ticket_type_id/questions/preview", to: "free_events/question_forms#preview", as: :preview_free_event_questions
