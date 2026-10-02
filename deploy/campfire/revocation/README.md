@@ -79,12 +79,20 @@ for each run; never point it at retained or production storage.
 
 ## Release gates still open
 
-The available local archive is **not** the recorded deployed archive. No host access,
-production probe, credentials, trust settings, grants, deploy or merge were performed.
-This proves the specific source candidate on macOS ARM64, not the installed binary or
-Linux AMD64. Before release, obtain the retained archive through an already authorized
-route; reconcile package/compiler/native-library provenance; build and test the exact
-Linux candidate; retain its immutable image/artifact digest and dependency notices.
+The exact official upstream archive has now been recovered: its SHA-256 matches
+`recorded_deployed_archive_sha256`. The retained emitted app/runtime and native
+sources were reconciled against this candidate. The candidate was compiled and
+passed all four sequential synthetic scenarios on Linux AMD64 with jemalloc linked.
+This does not identify the currently running production image.
+
+**Release remains blocked by reproduced adversarial failures.** A handshake identified
+before revocation can register afterward; a reconnect in the modeled pre-commit ban
+window survives; a non-reading peer blocks revocation. The first two are deterministic
+source-level contract probes (the commit seam is not a real DB isolation test).
+Backpressure also fails in a compiled Linux AMD64 Spinel/Driver regression. These
+commands deliberately exit nonzero. Green DQOR CI does not certify these release gates.
+See [Linux verification and remaining gates](LINUX_VERIFICATION.md) for exact evidence,
+provenance, reproduction and scope. The original macOS provenance is retained in `provenance.json`.
 
 The runtime remains single-process for Cable fan-out. Multi-worker/distributed
 revocation, reconnect/commit races, adversarial socket backpressure, and comprehensive

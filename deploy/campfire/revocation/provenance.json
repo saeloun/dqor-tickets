@@ -1,5 +1,5 @@
 {
-  "status": "local-native-candidate-not-release-approved",
+  "status": "linux-sequential-verified-adversarial-release-gates-fail",
   "tested_on": "2026-10-03",
   "architecture": "macOS arm64",
   "roundhouse": "d6da862ccefb7e712af14ea144975512d4df2eb0",
@@ -16,7 +16,50 @@
   "recorded_deployed_archive_sha256": "a91496ff7aad9232a79ba72017656698388ea02976b97c48cf0921f7205d921e",
   "available_local_archive_sha256": "c8673c3e4e70598ab9806992fd51ac1d8c5a78e7d7cbcba8805f5076d8566c3d",
   "test_only_overlay": "Sock.sphttp_listen uses existing sp_net_listen_host(127.0.0.1, port, 1024) in both emitted trees; authorization and revocation unchanged by overlay",
-  "compile_flags": ["--jobs=2", "-O", "1"],
-  "runtime_environment": {"WORKERS":"1", "SPINEL_WORKERS":"2"},
-  "artifact_notes": "Reconstructed from public source pins and recorded package revisions, not the installed Linux AMD64 binary. Executables are not distributed in this patch PR. The link step ignored an incompatible /usr/local x86_64 jemalloc library; local otool output shows no jemalloc dependency. No performance or deployment equivalence claim."
+  "compile_flags": [
+    "--jobs=2",
+    "-O",
+    "1"
+  ],
+  "runtime_environment": {
+    "WORKERS": "1",
+    "SPINEL_WORKERS": "2"
+  },
+  "artifact_notes": "Reconstructed from public source pins and recorded package revisions, not the installed Linux AMD64 binary. Executables are not distributed in this patch PR. The link step ignored an incompatible /usr/local x86_64 jemalloc library; local otool output shows no jemalloc dependency. No performance or deployment equivalence claim.",
+  "recovered_upstream_archive": {
+    "run_url": "https://github.com/rubys/roundhouse/actions/runs/36983264271",
+    "artifact_name": "campfire-archive",
+    "artifact_id": 11216594365,
+    "docker_tgz_sha256": "a91496ff7aad9232a79ba72017656698388ea02976b97c48cf0921f7205d921e",
+    "spinel_tgz_sha256": "ed6d27cba9ee2300f0f1336f60528bbb37f79730d530bea0bfb5169c7f0971c7",
+    "matches_recorded_deployed_archive": true,
+    "proves_current_production_image": false
+  },
+  "linux_validation": {
+    "architecture": "Linux AMD64, Docker Desktop emulation on ARM64",
+    "base_image": "debian:trixie-slim",
+    "base_digest": "sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a",
+    "base_image_id": "sha256:ec92d6b34c6a7e6372d87dc9ef2fd6e8ca8125353fe7d033c676f51cf923a13b",
+    "candidate_elf_sha256": "bcbf3f26dd99489664360c0431e0184d35c2e5b01cecce0d24de80a3d6ee1dcf",
+    "candidate_c_sha256": "36cd6becfad3c626a7e5dfa9f3bac57abae2a464b731693d6fe043fdc50fb5cb",
+    "build": "retained pack Makefile; make -j2 CC=clang; -O2; retained native/runtime sources; candidate C emitted by pinned Spinel",
+    "limits": {
+      "cpus": 2,
+      "memory": "8g",
+      "pids": 256,
+      "published_ports": 0
+    },
+    "runtime": {
+      "WORKERS": "1",
+      "SPINEL_WORKERS": "2",
+      "listener": "127.0.0.1:4318 inside container",
+      "storage": "fresh synthetic SQLite database"
+    },
+    "sequential_scenarios": "logout, membership, role, ban: all pass",
+    "adversarial_source_contracts": "3 failures: delayed registration, ban commit seam, blocked writer",
+    "native_backpressure": "FAIL: no completion within 500ms before peer close; cleanup completed",
+    "jemalloc_linked": true,
+    "dependency_manifest": "evidence/linux-dpkg-manifest.txt",
+    "release_approved": false
+  }
 }

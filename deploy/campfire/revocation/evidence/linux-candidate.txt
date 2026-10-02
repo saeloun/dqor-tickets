@@ -1,0 +1,9 @@
+logout: both_closed=true, post_revocation_delivery=false, unaffected_observer=true, stock_guard=true
+logout: replay_rejected=true
+membership: both_closed=true, post_revocation_delivery=false, unaffected_observer=true, stock_guard=true
+membership: replay_rejected=true
+role: both_closed=true, post_revocation_delivery=false, unaffected_observer=true, stock_guard=true
+role: admin_http_status=403
+ban: both_closed=true, post_revocation_delivery=false, unaffected_observer=true, stock_guard=true
+ban: replay_rejected=true
+PASS: all existing sockets revoked; unauthorized replays rejected
