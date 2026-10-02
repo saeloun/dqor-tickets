@@ -3,14 +3,14 @@
   <p class="eyebrow"><%= @event.title %> · <%= @ticket_type.name %> · Free</p>
   <h1>Registration window</h1>
   <p>Choose when people can register. Saving a draft does not change the public window.</p>
-  <% if @error %><p role="alert"><%= @error %></p><% end %>
+  <% if @error && !@close_error %><p role="alert"><%= @error %></p><% end %>
   <section class="card"><h2>Draft window · Private</h2>
     <p id="window-zone">Enter local times in <strong><%= @event.timezone %></strong>.</p>
     <% if @window.persisted? && @window.draft_timezone != @event.timezone %><p role="alert">The event timezone changed. Review these times in the new timezone and save before publishing.</p><% end %>
     <%= form_with url: free_event_window_path(@event.organization, @event, @ticket_type), method: :patch, scope: :window do |form| %>
       <%= hidden_field_tag :revision, @window.lock_version %><%= hidden_field_tag :operation, "save" %>
       <p><%= form.label :opens_local, "Registration opens (optional)" %><%= form.datetime_local_field :opens_local, value: @input ? @input["opens_local"] : window_input(@window.draft_opens_at, @event.timezone), aria: { describedby: "window-zone open-help" } %><span class="help" id="open-help">Leave blank to allow registration immediately when the category and window are published.</span></p>
-      <p><%= form.label :closes_local, "Registration closes (optional)" %><%= form.datetime_local_field :closes_local, value: @input ? @input["closes_local"] : window_input(@window.draft_closes_at, @event.timezone), aria: { describedby: "window-zone close-help" } %><span class="help" id="close-help">Leave blank to close at the event’s end. Registration stops exactly at this time.</span></p>
+      <p><%= form.label :closes_local, "Registration closes (optional)" %><%= form.datetime_local_field :closes_local, value: @input ? @input["closes_local"] : window_input(@window.draft_closes_at, @event.timezone), aria: { describedby: "window-zone close-help#{" close-error" if @close_error}", invalid: @close_error.present? } %><span class="help" id="close-help">Leave blank to close at the event’s end. Registration stops exactly at this time.</span><% if @close_error %><span id="close-error" role="alert"><%= @close_error %></span><% end %></p>
       <%= form.submit "Save window draft" %>
     <% end %>
   </section>
@@ -18,7 +18,7 @@
     <p>If published now: <strong><%= registration_state_label(@preview.state) %></strong>. <%= @preview.message %></p>
     <p>Opens: <%= @window.draft_opens_at ? window_time(@window.draft_opens_at, @window.draft_timezone) : "Immediately" %><br>Closes: <%= @preview.closes_at ? window_time(@preview.closes_at, @window.draft_timezone) : "Set event dates first" %><br><%= @window.draft_timezone %></p>
     <p class="help">This preview uses the saved draft. Unsaved edits above are not included. Ticket capacity and published question requirements still apply.</p>
-    <%= button_to "Publish registration window", free_event_window_path(@event.organization, @event, @ticket_type), method: :patch, params: { revision: @window.lock_version, operation: "publish" } %>
+    <%= button_to "Publish saved draft", free_event_window_path(@event.organization, @event, @ticket_type), method: :patch, params: { revision: @window.lock_version, operation: "publish" } %>
   </section><% end %>
   <section class="card" style="margin-top: 24px"><h2>Current public window</h2>
     <% if @window.published_at %><p>Opens: <%= @window.opens_at ? window_time(@window.opens_at, @window.timezone) : "Immediately" %><br>Closes: <%= window_time([@window.closes_at, @event.ends_at].compact.min, @window.timezone) %><br><%= @window.timezone %></p><% else %><p>No custom window has been published. The category’s existing registration rules apply until you publish a window.</p><% end %>

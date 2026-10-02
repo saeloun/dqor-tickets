@@ -9,6 +9,7 @@ class FreeEvents::RegistrationWindowsController < FreeEvents::BaseController
     redirect_to free_event_window_path(params[:organization_id], params[:event_id], params[:ticket_type_id]), notice: params[:operation] == "publish" ? "Registration window published." : "Registration window draft saved."
   rescue FreeEvents::Windows::Invalid => error
     @error = error.message
+    @close_error = @error if @error.start_with?("Registration must close", "Registration cannot close")
     load_window
     render :show, status: :unprocessable_content
   end

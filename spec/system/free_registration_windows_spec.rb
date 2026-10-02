@@ -20,7 +20,8 @@ RSpec.describe "Registration window journey", type: :system do
     click_button "Save window draft"
     fill_in "Registration closes (optional)", with: "2027-01-01T15:00"
     click_button "Save window draft"
-    expect(page).to have_content("Registration must close after it opens")
+    expect(page).to have_css("#close-error", text: "Registration must close after it opens")
+    expect(page).to have_button("Publish saved draft")
     expect(page).to have_field("Registration opens (optional)", with: "2027-01-01T16:00")
     expect(page).to have_field("Registration closes (optional)", with: "2027-01-01T15:00")
     page.save_screenshot(Rails.root.join("tmp/windows-organizer-error-mobile.png"), full: true)
@@ -31,7 +32,7 @@ RSpec.describe "Registration window journey", type: :system do
     expect(page).to have_content("+05:30")
     expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
     page.save_screenshot(Rails.root.join("tmp/windows-organizer-mobile.png"), full: true)
-    click_button "Publish registration window"
+    click_button "Publish saved draft"
     expect(page).to have_content("Registration window published")
     visit published_event_path(org.slug, event.slug)
     expect(page).to have_content("Upcoming")
