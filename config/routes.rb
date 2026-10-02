@@ -3,6 +3,11 @@ Rails.application.routes.draw do
     resources :organizations, only: [] do
       resources :events, except: :destroy do
         post :publish, on: :member
+        patch "operations/deals/:id/commit", to: "operations#commit_deal", as: :commit_operation_deal
+        get "operations", to: "operations#index", as: :operations
+        post "operations/:kind", to: "operations#create", as: :operation_records
+        patch "operations/tasks/:id", to: "operations#complete", as: :complete_operation_task
+        get "operations/contacts/:id/draft", to: "operations#draft", as: :operation_draft
       end
     end
   end
