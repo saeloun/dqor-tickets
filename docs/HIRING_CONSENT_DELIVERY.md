@@ -27,3 +27,7 @@ The applicant can revoke from their applications list; revocation erases the sna
 Focused request/foundation/mobile suite: 30 examples, zero failures. Includes unavailable/error/mismatched/stale scanner results; exact-byte gated downloads; anonymous, other-org and sibling-event recruiter denial; withdrawal; named recipient binding; no-consent denial; expiry; replay; wrong-user revocation denial; entry-token rejection; and browser consent/revocation at 390×844 without horizontal overflow. Brakeman: zero warnings. Scanner success is simulated only in tests.
 
 Remaining scope: actual antivirus integration and operations, resume upload through QR (deliberately excluded), automated retention, broader company identity lifecycle, additional recruiter grants and partner-only LinkedIn import. No hiring decisions, live invitations, real users, provider imports or production activation occurred. The broader hiring request is not complete.
+
+## Follow-up: optional local scanner adapter
+
+The subsequent local-scanner slice adds a bounded, opt-in `Hiring::ClamavScanner`; see `HIRING_CLAMAV.md`. The unavailable adapter remains the default. Homebrew installation failed on this host's unsupported macOS version, so real-engine/signature validation is still blocked and no actual scan success is claimed. Process-protocol tests and opt-in real-engine tests are kept distinct.
