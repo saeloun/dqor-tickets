@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -186,17 +186,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
     t.integer "coupon_id"
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.bigint "event_id"
     t.datetime "expires_at"
     t.string "gst_legal_name"
     t.string "gstin"
     t.json "metadata", default: {}, null: false
+    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
     t.string "razorpay_order_id"
     t.integer "status", default: 0, null: false
     t.integer "total_paise", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_orders_on_code", unique: true
     t.index ["coupon_id"], name: "index_orders_on_coupon_id"
+    t.index ["event_id"], name: "index_orders_on_event_id"
+    t.index ["id", "ownership_key"], name: "index_orders_on_id_and_ownership_key", unique: true
     t.index ["razorpay_order_id"], name: "index_orders_on_razorpay_order_id", unique: true
+    t.check_constraint "event_id IS NULL OR event_id > 0", name: "orders_positive_event"
   end
 
   create_table "organizations", force: :cascade do |t|
@@ -502,11 +507,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.date "event_ends_on"
+    t.bigint "event_id"
     t.date "event_starts_on"
     t.boolean "hidden", default: false, null: false
     t.integer "max_per_order"
     t.integer "min_per_order", default: 1, null: false
     t.string "name", null: false
+    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
     t.integer "position", default: 0, null: false
     t.integer "price_paise", null: false
     t.boolean "requires_conference_pass", default: false, null: false
@@ -516,7 +523,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
     t.datetime "updated_at", null: false
     t.string "venue_address"
     t.string "venue_name"
+    t.index ["event_id"], name: "index_ticket_types_on_event_id"
+    t.index ["id", "ownership_key"], name: "index_ticket_types_on_id_and_ownership_key", unique: true
     t.index ["slug"], name: "index_ticket_types_on_slug", unique: true
+    t.check_constraint "event_id IS NULL OR event_id > 0", name: "ticket_types_positive_event"
+    t.check_constraint "event_id IS NULL OR hidden = true AND active = false", name: "event_ticket_types_staged"
   end
 
   create_table "tickets", force: :cascade do |t|
@@ -529,16 +540,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
     t.string "claim_token"
     t.datetime "created_at", null: false
     t.string "dietary_preference"
+    t.bigint "event_id"
     t.integer "order_id", null: false
+    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
     t.integer "price_paise", null: false
     t.string "secret", null: false
     t.integer "ticket_type_id", null: false
     t.string "tshirt_size"
     t.datetime "updated_at", null: false
     t.index ["claim_token"], name: "index_tickets_on_claim_token", unique: true
+    t.index ["event_id"], name: "index_tickets_on_event_id"
     t.index ["order_id"], name: "index_tickets_on_order_id"
     t.index ["secret"], name: "index_tickets_on_secret", unique: true
     t.index ["ticket_type_id"], name: "index_tickets_on_ticket_type_id"
+    t.check_constraint "event_id IS NULL OR event_id > 0", name: "tickets_positive_event"
   end
 
   create_table "users", force: :cascade do |t|
@@ -577,6 +592,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "orders", "coupons"
+  add_foreign_key "orders", "events"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "refunds", "orders"
@@ -594,6 +610,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
   add_foreign_key "talk_questions", "talks"
   add_foreign_key "talk_questions", "users"
   add_foreign_key "talks", "speakers"
+  add_foreign_key "ticket_types", "events"
+  add_foreign_key "tickets", "events"
   add_foreign_key "tickets", "orders"
+  add_foreign_key "tickets", "orders", column: ["order_id", "ownership_key"], primary_key: ["id", "ownership_key"], name: "tickets_order_ownership"
   add_foreign_key "tickets", "ticket_types"
+  add_foreign_key "tickets", "ticket_types", column: ["ticket_type_id", "ownership_key"], primary_key: ["id", "ownership_key"], name: "tickets_type_ownership"
 end
