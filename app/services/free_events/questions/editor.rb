@@ -12,6 +12,9 @@ module FreeEvents::Questions
     def self.change(action:, revision:, question_id: nil, fields: {}, **access)
       read(**access) do |_event, _type, form|
         raise Invalid, { "form" => "Another organizer changed this draft. Reload and try again." } unless revision.to_s == form.lock_version.to_s
+        # Revision zero belongs only to an unsaved form. First persistence must
+        # invalidate every other organizer viewing the untouched category.
+        form.lock_version = 1 if form.new_record?
         questions = form.draft_questions.deep_dup
         index = questions.index { |q| q["id"] == question_id }
         raise ActiveRecord::RecordNotFound if action != "add" && action != "publish" && index.nil?

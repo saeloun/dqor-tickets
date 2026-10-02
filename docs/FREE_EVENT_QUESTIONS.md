@@ -34,4 +34,6 @@ Not included: additional active ticket categories, sales windows, conditional/re
 
 ## Verification checkpoint
 
-Local full suite: 729 examples, 0 failures (seed 26963). RuboCop: 407 files, no offenses. Brakeman: 0 warnings. Disposable-database rollback/reapply and schema load passed. Browser evidence for the 390px error/submit and 320px submit views is committed under `docs/free-event-questions/`; the design owner reviewed both 390px captures without a layout blocker.
+Local full suite after revision fix: 730 examples, 0 failures (seeds 45558 and 28542). RuboCop: 407 files, no offenses. Brakeman: 0 warnings. Disposable-database rollback/reapply and schema load passed. Browser evidence for the 390px error/submit and 320px submit views is committed under `docs/free-event-questions/`; the design owner reviewed both 390px captures without a layout blocker.
+
+Independent review found and fixed a first-save revision collision: zero now identifies only an untouched category; first persistence advances to one, rejecting stale save/publish/reorder without modifying the draft. Independent connections verify one first-save winner. Initial hosted CI failed an existing Avo selection test; local targeted and full seed 28542 passed. The test now waits for actual selector-controller readiness and asserts checkbox, retained selection and enabled action before its unchanged navigation/no-attendance checks. This improves diagnostic coverage; it does not establish the original failure cause.

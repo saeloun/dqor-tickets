@@ -70,6 +70,26 @@ RSpec.describe "Free event registration questions", type: :request do
     expect { FreeEvents::Questions::Editor.change(**access, action: "remove", revision: -1, question_id: first["id"]) }.to raise_error(FreeEvents::Questions::Invalid, /Another organizer/)
   end
 
+  it "rejects stale untouched-category save, publish and ordering without changing the saved draft" do
+    login(owner)
+    get free_event_questions_path(org, event, type)
+    expect(response.body).to include('name="revision" value="0"')
+    form = add_question
+    expect(form.lock_version).to eq(1)
+    saved = form.draft_questions.deep_dup
+    %w[add publish up].each do |operation|
+      patch free_event_questions_path(org, event, type), params: {
+        operation: operation, revision: 0, question_id: saved.first["id"],
+        question: { label: "Unseen overwrite", type: "short_text", required: "0" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Another organizer changed this draft")
+      expect(form.reload.draft_questions).to eq(saved)
+      expect(form.versions.count).to eq(0)
+    end
+    expect(publish.questions).to eq(saved)
+  end
+
   it "enforces required typed answers and rejects unknown, nested and overlong values before issuing tickets" do
     add_question
     add_question(label: "Years using Ruby", kind: "integer")

@@ -18,8 +18,18 @@ RSpec.describe "Staff batch check-in", type: :system do
     create(:ticket, order:, attendee_name: "Other Attendee")
     open_desk
     visit "/avo/resources/tickets"
-    within("tr", text: "Selected Attendee") { check "Select item" }
+    # A visible checkbox can precede Stimulus connection; wait for the actual
+    # selector controller before interacting, then verify its retained state.
+    expect(page).to have_css('[data-controller~="item-selector"]') { |node|
+      page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'item-selector')?.stateHolderElement)", node)
+    }
+    within("tr", text: "Selected Attendee") do
+      check "Select item"
+      expect(page).to have_checked_field("Select item")
+    end
+    expect(page).to have_css("[data-selected-resources='[\"#{selected.id}\"]']")
     click_button "Actions"
+    expect(page).to have_css('a[data-disabled="false"]', text: "Check in selected tickets")
     click_link "Check in selected tickets"
     expect(page).to have_current_path(checkin_path(ticket_ids: [ selected.id ]))
     expect(page).to have_content("Selected Attendee")
