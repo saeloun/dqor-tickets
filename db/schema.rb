@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_230000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -126,6 +126,59 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
     t.string "question", null: false
     t.datetime "updated_at", null: false
     t.index ["published", "position"], name: "index_faqs_on_published_and_position"
+  end
+
+  create_table "hiring_affiliations", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["company_id", "user_id"], name: "index_hiring_affiliations_on_company_id_and_user_id", unique: true
+    t.index ["company_id"], name: "index_hiring_affiliations_on_company_id"
+    t.index ["user_id"], name: "index_hiring_affiliations_on_user_id"
+  end
+
+  create_table "hiring_applications", force: :cascade do |t|
+    t.bigint "applicant_id", null: false
+    t.datetime "consented_at", null: false
+    t.datetime "created_at", null: false
+    t.bigint "job_id", null: false
+    t.binary "quarantined_pdf"
+    t.jsonb "snapshot", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.datetime "withdrawn_at"
+    t.index ["applicant_id"], name: "index_hiring_applications_on_applicant_id"
+    t.index ["job_id", "applicant_id"], name: "index_hiring_applications_on_job_id_and_applicant_id", unique: true
+    t.index ["job_id"], name: "index_hiring_applications_on_job_id"
+  end
+
+  create_table "hiring_companies", force: :cascade do |t|
+    t.bigint "claimant_id", null: false
+    t.datetime "created_at", null: false
+    t.text "evidence", null: false
+    t.string "name", null: false
+    t.bigint "organization_id", null: false
+    t.bigint "reviewer_id"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.string "website", null: false
+    t.index ["claimant_id"], name: "index_hiring_companies_on_claimant_id"
+    t.index ["organization_id"], name: "index_hiring_companies_on_organization_id"
+    t.index ["reviewer_id"], name: "index_hiring_companies_on_reviewer_id"
+  end
+
+  create_table "hiring_jobs", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description", null: false
+    t.bigint "event_id"
+    t.boolean "open", default: true, null: false
+    t.bigint "recruiter_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_hiring_jobs_on_company_id"
+    t.index ["event_id"], name: "index_hiring_jobs_on_event_id"
+    t.index ["recruiter_id"], name: "index_hiring_jobs_on_recruiter_id"
   end
 
   create_table "info_pages", force: :cascade do |t|
@@ -570,6 +623,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_180000) do
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
   add_foreign_key "events", "organizations"
+  add_foreign_key "hiring_affiliations", "hiring_companies", column: "company_id"
+  add_foreign_key "hiring_affiliations", "users"
+  add_foreign_key "hiring_applications", "hiring_jobs", column: "job_id"
+  add_foreign_key "hiring_applications", "users", column: "applicant_id"
+  add_foreign_key "hiring_companies", "organizations"
+  add_foreign_key "hiring_companies", "users", column: "claimant_id"
+  add_foreign_key "hiring_companies", "users", column: "reviewer_id"
+  add_foreign_key "hiring_jobs", "events"
+  add_foreign_key "hiring_jobs", "hiring_companies", column: "company_id"
+  add_foreign_key "hiring_jobs", "users", column: "recruiter_id"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
   add_foreign_key "memberships", "organizations"
