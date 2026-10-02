@@ -102,7 +102,7 @@ RSpec.describe "Community", type: :request do
     end
 
     [
-      nil, "", "javascript:alert(1)", "data:text/html,<script>alert(1)</script>",
+      nil, "", "javascript:alert(1)", "javascript://example.com/%0Aalert(1)", "data:text/html,<script>alert(1)</script>",
       "ftp://ada.dev", "//ada.dev", "/profile", "https:profile", "https:///profile",
       "https://", "https://ada.dev/\nprofile", "https://exa mple.test"
     ].each do |url|
