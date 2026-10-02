@@ -1,12 +1,23 @@
 # Native staff integration requirements
 
-Status: requirements for the backend owner, not an implemented or approved authentication contract. The native app remains mock-only. This document is confined to the iOS change; it does not edit or authorize backend work.
+Status: integration acceptance requirements for the backend/native owners. The native app remains mock-only. This document is confined to the iOS change; it does not edit or authorize backend work.
+
+## Latest backend handoff received
+
+The backend owner published `docs/NATIVE_STAFF_API.md` during this review. Native v1 is implemented for integration testing, disabled by default, not deployed/enabled for production, and scoped to the existing single `dqor-2026` event. It now provides:
+
+- `POST /api/staff/session`: existing admin/desk credentials; a 256-bit opaque Bearer token (digest-only server storage), 8-hour expiry, no refresh token, event/date scope, `tickets:read` and `checkins:write`, and a 50-ticket maximum. No web-cookie fallback.
+- `GET /api/staff/session`: current scope/expiry. `DELETE /api/staff/session`: revoke the current native session. Password/role/account/session changes revoke replay; web logout does not revoke native sessions.
+- `POST /api/staff/checkins/resolve`: secret/date body; `state: resolved`, canonical date, minimal ticket fields, `eligible`, and `checked_in_at`; no attendance or attendance audit writes. `GET /api/staff/checkins` provides bounded search.
+- `POST /api/staff/checkins/confirm`: explicit IDs/date/confirmation; locks and rechecks eligibility; per-ticket results; one transaction rolls back unexpected errors; safe attendance retries with duplicate outcomes.
+
+These routes resolve the earlier absence of native session/preview operations. They do **not** establish approved live integration. Remaining decisions/evidence include the authorized staging origin and fixtures, Keychain accessibility/backup policy, end-to-end expiry/revocation/logout and timeout recovery tests, precise nested outcome classification (avoid parsing message prose), physical-device checks, and release authorization. The local mock role matrix is not production policy. A future universal-event adapter must retain `dqor-2026` as the canonical single-event mapping until multi-event authorization exists.
 
 ## Nonmutating QR resolution — required for continuous batch scanning
 
 The proposed `POST /checkin` is a mutation and must never implement `StaffAPI.resolveQR`. A scan in DQOR Staff adds a ticket to a review list; only **Confirm check-in** submits attendance.
 
-The backend owner should publish an explicit read-only resolution operation with these guarantees:
+Verify the new read-only resolution operation against these guarantees before connecting the native adapter:
 
 - An authenticated staff session and the same scoped authorization as attendee lookup are required. Anonymous or attendee sessions cannot enumerate staff records.
 - The opaque secret is supplied only in an HTTPS JSON request body, never a URL/query string, response, analytics, or log. Redact both parameter values and error dumps. Apply input-size limits and rate limits.
@@ -17,13 +28,13 @@ The backend owner should publish an explicit read-only resolution operation with
 - Repeated resolution is safe. Ticket revocation between resolve and confirm is still enforced by the existing batch mutation. Resolution never reserves entry or promises eligibility at submission time.
 - Regression evidence should assert unchanged attendance count/timestamp and unchanged success-audit count after repeated/concurrent lookups, plus staff auth, CSRF, eligibility, unknown-ticket, and log-redaction behavior.
 
-No route name is assumed by the app. Once the backend publishes the route/schema, a wire adapter can translate it to `Attendee` without changing the scanner or review UX.
+The app has no network route configured. The proposed `/api/staff/checkins/resolve` response can map to `Attendee` after the above verification without changing the scanner/review semantics.
 
-## Native authentication — requires a selected, approved approach
+## Native authentication — proposed first-party flow requires integration verification
 
-Current web behavior is GET `/session/new`, POST `/session` with CSRF/cookies, and DELETE `/session`. Native JSON bootstrap does not exist in the reviewed contract. Choose an approved hosted handoff or dedicated first-party JSON flow before implementation; do not scrape attendee cookies or invent bearer credentials.
+The proposed native flow is now first-party JSON session creation, separate from web CSRF/cookies. Preserve that isolation. The native app has not implemented login, token persistence, or live calls; do not scrape attendee cookies or create credentials. Hosted-handoff-specific requirements below apply only if the approved approach later changes.
 
-Provide a concrete auth specification and test environment covering:
+Verify the concrete auth specification and authorized test environment against:
 
 1. Authorized HTTPS host(s), staff issuer/audience, native bundle/callback target if applicable, and CSRF/PKCE/state/nonce rules for the selected mechanism. Credentials and secrets must never appear in URLs or source.
 2. Success/error payloads, staff identity and server-issued capabilities, authorized event catalog, canonical date/timezone, and max batch size. Admin/desk are the existing backend roles. Owner/admin/organizer/team-lead/volunteer/finance/AV in this app are future fixture labels only; server-issued capabilities govern access.

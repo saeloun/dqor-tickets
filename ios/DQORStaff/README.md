@@ -28,13 +28,11 @@ Camera permission is requested only when the user opens scanning. `NSCameraUsage
 
 `StaffAPI` is injectable and asynchronous. It separates sign-in/session, authorized event days, attendee search, opaque QR resolution, and confirmed batch submission. `DemoStaffAPI` is an actor with synthetic fixtures. `StaffStore` owns selection, request lifecycle, errors, and confirmation; camera input goes through a separately testable `ScanGate`.
 
-The proposed `docs/STAFF_CHECKIN_API.md` from the separate backend checkout was reviewed on 2026-10-02. It specifies staff-cookie/CSRF authentication, `GET /checkin.json`, `POST /checkin`, and `POST /checkin/batch`, a 50-ticket limit, 20 visible search results, returned-date authority, and per-result success/warning/error outcomes. Native JSON sign-in is explicitly unimplemented. Existing backend roles are admin/desk; the expanded mock role matrix below is not the backend policy.
+The backend owner's current `docs/NATIVE_STAFF_API.md` was reviewed on 2026-10-02. It proposes disabled-by-default, bearer-only native sessions and separate read-only QR resolution, search, and explicit confirmation endpoints. Tokens expire after 8 hours without refresh; current-session logout revokes the token. The API is scoped to the single `dqor-2026` event with server-authorized dates and admin/desk accounts. It is not enabled or exercised in production.
 
-**Blocking QR contract mismatch:** `POST /checkin` with a scanned secret mutates attendance immediately. This app's `resolveQR` deliberately does not check in; it builds a batch for later confirmation. Do not map that method to the mutating endpoint. A security-approved nonmutating QR-resolution endpoint (or an explicitly revised user flow) is needed for real continuous batch scanning.
+`POST /api/staff/checkins/resolve` now resolves a QR without attendance/audit mutation, addressing the original batch-preview mismatch. Never use legacy `POST /checkin` for preview because it mutates attendance immediately. The native app still has no live adapter or credential store. Before enabling integration, verify the authorized staging origin/fixtures, Keychain policy, session expiry/revocation/logout, canonical event/date mapping, secure transport, per-ticket outcome classification, and physical-device behavior. See [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) for exact acceptance requirements and the received contract snapshot.
 
-The local request UUID is an API seam, not a claim that Rails accepts an idempotency header. The proposed server safely retries the same ticket IDs/date by returning duplicates; a live adapter must preserve that behavior and validate all per-ticket outcomes.
-
-Before a live adapter is enabled, the backend owner must supply or verify:
+The local request UUID is an API seam, not a claim that Rails accepts an idempotency header. The proposed server safely retries the same ticket IDs/date by returning duplicates. The integration team must supply or verify:
 
 - Authentication/session creation, refresh, revocation, and secure token-storage requirements.
 - Authorized event/day IDs and timezone/eligibility semantics.
