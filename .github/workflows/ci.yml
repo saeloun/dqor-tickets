@@ -155,12 +155,13 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/dqor_clamav_test
       HIRING_CLAMAV_INTEGRATION: "true"
       HIRING_CLAMSCAN_PATH: /usr/bin/clamscan
-      HIRING_CLAMAV_DATABASE: ${{ runner.temp }}/hiring-clamav-db
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - name: Configure private temporary database path
+        run: echo "HIRING_CLAMAV_DATABASE=$RUNNER_TEMP/hiring-clamav-db" >> "$GITHUB_ENV"
       - name: Install distro CLI without starting services
         timeout-minutes: 3
         run: |
