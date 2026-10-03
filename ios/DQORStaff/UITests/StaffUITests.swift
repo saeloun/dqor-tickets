@@ -1,13 +1,76 @@
 import XCTest
 final class StaffUITests: XCTestCase {
     @MainActor
+    private func launchDemo(_ app: XCUIApplication) {
+        if !app.launchArguments.contains("--demo") { app.launchArguments.append("--demo") }
+        app.launch()
+    }
+    @MainActor
     private func capture(_ app: XCUIApplication, name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
     @MainActor
+    func testContinuousScannerRehearsalPreviewRepeatCancelMixedAndBackground() {
+        let app = XCUIApplication(); app.launchArguments = ["--scanner-rehearsal"]; launchDemo(app)
+        app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap(); app.buttons["Scan tickets"].tap()
+        XCTAssertTrue(app.buttons["Scan sample Alex"].waitForExistence(timeout: 5))
+        app.buttons["Scan sample Alex"].tap()
+        XCTAssertTrue(app.staticTexts["1 in batch"].waitForExistence(timeout: 5))
+        app.buttons["Scan sample Alex"].tap()
+        XCTAssertTrue(app.staticTexts["1 in batch"].exists)
+        XCTAssertFalse(app.staticTexts["Checked in"].exists)
+        app.buttons["Scan invalid sample"].tap()
+        XCTAssertTrue(app.staticTexts["Ticket not recognized. Try attendee search or ask an administrator."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["1 in batch"].exists)
+        app.buttons["Scan sample Taylor"].tap()
+        XCTAssertTrue(app.staticTexts["2 in batch"].waitForExistence(timeout: 5))
+        capture(app, name: "Synthetic continuous scanner rehearsal")
+        defer { XCUIDevice.shared.orientation = .portrait }
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let landscapeReady = NSPredicate { _, _ in
+            app.frame.width > app.frame.height && app.buttons["Done"].isHittable
+        }
+        let landscapeExpectation = expectation(for: landscapeReady, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [landscapeExpectation], timeout: 5), .completed)
+        XCTAssertTrue(app.buttons["Done"].exists)
+        let landscapeAttachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscapeAttachment.name = "Synthetic scanner landscape layout"
+        landscapeAttachment.lifetime = .keepAlways
+        add(landscapeAttachment)
+        XCUIDevice.shared.orientation = .portrait
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(app.staticTexts["2 in batch"].exists)
+        app.buttons["Done"].tap(); app.swipeUp(); app.buttons["reviewBatch"].tap()
+        XCTAssertTrue(app.staticTexts["Confirm event admission and day"].exists)
+        app.buttons["Cancel"].tap(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
+        app.swipeUp()
+        XCTAssertTrue(app.staticTexts["Checked in"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Not eligible for this day"].exists)
+        capture(app, name: "Synthetic scanner explicit admission outcomes")
+        app.swipeDown(); app.swipeDown(); app.buttons["Scan tickets"].tap()
+        app.buttons["Scan sample Alex"].tap(); app.buttons["Done"].tap(); app.swipeUp(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
+        app.swipeUp(); XCTAssertTrue(app.staticTexts["Already checked in"].waitForExistence(timeout: 5))
+        app.buttons["Events"].tap(); app.buttons["Sign out"].tap()
+        XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Checked in"].exists)
+    }
+    @MainActor
+    func testDeniedScannerRetryAndManualFallbackRemainFailClosed() {
+        let app = XCUIApplication(); app.launchArguments = ["--scanner-camera-denied", "--offline"]; launchDemo(app)
+        app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap(); app.buttons["Scan tickets"].tap()
+        XCTAssertTrue(app.buttons["Open camera settings"].waitForExistence(timeout: 5))
+        app.buttons["Retry camera"].tap()
+        XCTAssertTrue(app.buttons["Use attendee search"].exists)
+        capture(app, name: "Synthetic camera permission denied")
+        app.buttons["Use attendee search"].tap(); app.buttons["Search attendees"].tap()
+        XCTAssertTrue(app.staticTexts["statusMessage"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Checked in"].exists)
+        XCTAssertFalse(app.buttons["reviewBatch"].exists)
+    }
+    @MainActor
     func testSearchCancelConfirmAndBack() {
-        let app = XCUIApplication(); app.launch()
+        let app = XCUIApplication(); launchDemo(app)
         XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
         capture(app, name: "Welcome")
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
@@ -28,7 +91,7 @@ final class StaffUITests: XCTestCase {
     }
     @MainActor
     func testOfflineSearchShowsFailure() {
-        let app = XCUIApplication(); app.launchArguments = ["--offline"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--offline"]; launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
         app.buttons["Search attendees"].tap()
         XCTAssertTrue(app.staticTexts["statusMessage"].waitForExistence(timeout: 5))
@@ -37,7 +100,7 @@ final class StaffUITests: XCTestCase {
     }
     @MainActor
     func testFailedCheckInRetainsBatch() {
-        let app = XCUIApplication(); app.launchArguments = ["--fail-checkin"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--fail-checkin"]; launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
         app.buttons["Search attendees"].tap(); app.buttons["demo-001"].tap()
         app.swipeUp(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
@@ -49,7 +112,7 @@ final class StaffUITests: XCTestCase {
     }
     @MainActor
     func testRoleWithoutCapability() {
-        let app = XCUIApplication(); app.launchArguments = ["--finance"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--finance"]; launchDemo(app)
         app.buttons["staffDemoShortcut"].tap(); app.buttons["day-1"].tap()
         XCTAssertTrue(app.staticTexts["Check-in access unavailable"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Scan tickets"].exists)
@@ -58,7 +121,7 @@ final class StaffUITests: XCTestCase {
 
     @MainActor
     func testBackRequiresDiscardingUnsubmittedBatch() {
-        let app = XCUIApplication(); app.launch()
+        let app = XCUIApplication(); launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
         app.buttons["Search attendees"].tap(); app.buttons["demo-001"].tap()
         app.buttons["Events"].tap()
@@ -73,7 +136,7 @@ final class StaffUITests: XCTestCase {
 
     @MainActor
     func testReadOnlyAccessibilityAudit() throws {
-        let app = XCUIApplication(); app.launch()
+        let app = XCUIApplication(); launchDemo(app)
         XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
         func audit(_ name: String) throws {
             var issues: [String] = []
@@ -99,7 +162,7 @@ final class StaffUITests: XCTestCase {
 
     @MainActor
     func testScannerFallbackAndMixedResults() {
-        let app = XCUIApplication(); app.launch()
+        let app = XCUIApplication(); launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
         app.buttons["Scan tickets"].tap()
         XCTAssertTrue(app.buttons["Use attendee search"].waitForExistence(timeout: 5))
@@ -116,7 +179,7 @@ final class StaffUITests: XCTestCase {
     func testLargestDynamicTypeKeyboardAndCameraFallback() {
         let app = XCUIApplication()
         app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
-        app.launch()
+        launchDemo(app)
         func reveal(_ element: XCUIElement) {
             for _ in 0..<8 { if element.isHittable { return }; app.swipeUp() }
         }
@@ -142,7 +205,7 @@ final class StaffUITests: XCTestCase {
 
     @MainActor
     func testDuplicateNamesRemainDistinguishable() {
-        let app = XCUIApplication(); app.launchArguments = ["--duplicate-names"]; app.launch()
+        let app = XCUIApplication(); app.launchArguments = ["--duplicate-names"]; launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
         app.buttons["Search attendees"].tap()
         XCTAssertTrue(app.buttons["demo-001"].label.contains("alex@example.test"))
@@ -156,7 +219,7 @@ final class StaffUITests: XCTestCase {
 
     @MainActor
     func testCompanionNavigationPreservesBatchAndIndependentPassStatuses() {
-        let app = XCUIApplication(); app.launch()
+        let app = XCUIApplication(); launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
         app.buttons["Search attendees"].tap(); app.buttons["demo-001"].tap()
         app.buttons["exploreEvent"].tap(); app.buttons["Schedule"].tap()
@@ -189,7 +252,7 @@ final class StaffUITests: XCTestCase {
     func testCompanionLargestTextAndEmptyHistory() {
         let app = XCUIApplication()
         app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
-        app.launch()
+        launchDemo(app)
         func reveal(_ element: XCUIElement) {
             for _ in 0..<8 { if element.isHittable { return }; app.swipeUp() }
         }
@@ -216,7 +279,7 @@ final class StaffUITests: XCTestCase {
 
     @MainActor
     func testAttendeeEventAndPassDesignJourney() {
-        let app = XCUIApplication(); app.launch()
+        let app = XCUIApplication(); launchDemo(app)
         capture(app, name: "Premium attendee welcome")
         app.buttons["exploreSampleEvent"].tap()
         XCTAssertTrue(app.staticTexts["Synthetic preview"].waitForExistence(timeout: 5))
@@ -240,7 +303,7 @@ final class StaffUITests: XCTestCase {
     func testAttendeeLargestTextDarkNavigation() {
         let app = XCUIApplication()
         app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL", "--dark-preview"]
-        app.launch()
+        launchDemo(app)
         func reveal(_ element: XCUIElement) {
             for _ in 0..<12 { if element.isHittable { return }; app.swipeUp() }
         }
@@ -259,7 +322,7 @@ final class StaffUITests: XCTestCase {
     func testSavedScheduleRepeatedTapsBackAndReducedMotion() {
         let app = XCUIApplication()
         app.launchArguments = ["--reduce-motion-preview", "--offline"]
-        app.launch()
+        launchDemo(app)
         app.buttons["exploreSampleEvent"].tap()
         app.swipeUp()
         app.buttons["eventSchedule"].tap()
@@ -287,7 +350,7 @@ final class StaffUITests: XCTestCase {
         app.navigationBars.buttons["BackButton"].tap()
         app.navigationBars.buttons["BackButton"].tap()
         app.terminate()
-        app.launch()
+        launchDemo(app)
         app.buttons["exploreSampleEvent"].tap()
         app.swipeUp()
         app.buttons["eventSchedule"].tap()

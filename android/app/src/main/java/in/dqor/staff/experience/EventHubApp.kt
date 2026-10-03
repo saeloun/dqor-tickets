@@ -54,13 +54,20 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
     var section by rememberSaveable {mutableStateOf(EventSection.OVERVIEW)}
     var passId by rememberSaveable {mutableStateOf<String?>(null)}
     var saved by rememberSaveable {mutableStateOf(emptyList<String>())}
+    var expandedSessions by rememberSaveable(eventId) {mutableStateOf(emptyList<String>())}
+    var programmePreview by rememberSaveable(eventId) {mutableStateOf(false)}
     val screenState=rememberSaveableStateHolder()
     val event=events.find {it.id==eventId}
     fun save(id: String) {saved=if(id in saved) saved-id else saved+id}
+    fun toggleExpanded(id: String) {expandedSessions=if(id in expandedSessions) expandedSessions-id else expandedSessions+id}
     BackHandler(enabled=event!=null) {
-        if(passId!=null) passId=null
-        else if(section!=EventSection.OVERVIEW) section=EventSection.OVERVIEW
-        else eventId=null
+        when {
+            passId!=null -> passId=null
+            section==EventSection.SCHEDULE && programmePreview -> programmePreview=false
+            section==EventSection.SCHEDULE && expandedSessions.isNotEmpty() -> expandedSessions=expandedSessions.dropLast(1)
+            section!=EventSection.OVERVIEW -> section=EventSection.OVERVIEW
+            else -> eventId=null
+        }
     }
     AttendeeTheme {
         Surface(Modifier.fillMaxSize()) {
@@ -121,7 +128,8 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                         item {Text("About the gathering",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold); Spacer(Modifier.height(12.dp)); Text(event.subtitle+". Find a conversation, learn something new, and enjoy the company."); Spacer(Modifier.height(12.dp)); TextButton(onClick={section=EventSection.SCHEDULE}) {Text("Plan your day")}}
                         item {DemoNote("Illustrative programme, not an announced schedule. All passes and people are synthetic.")}
                     }
-                    EventSection.SCHEDULE -> ScheduleScreen(event,content,saved,::save)
+                    EventSection.SCHEDULE -> ScheduleScreen(event,content,saved,::save,expandedSessions,::toggleExpanded,
+                        clearExpanded={expandedSessions=emptyList()},preview=programmePreview,onPreview={programmePreview=it})
                     EventSection.PASSES -> WalletScreen(event,content) {passId=it}
                 }}}
             }
@@ -143,37 +151,34 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
     }
 }
 
-@Composable private fun ScheduleScreen(event: Event,content: EventExperience,saved: List<String>,toggle: (String)->Unit) {
+@Composable private fun ScheduleScreen(event: Event,content: EventExperience,saved: List<String>,toggle: (String)->Unit,
+    expandedSessions: List<String>,toggleExpanded: (String)->Unit,clearExpanded: ()->Unit,preview: Boolean,onPreview: (Boolean)->Unit) {
     val context=LocalContext.current
     val demo=remember {DemoProgrammeTransport(context.assets.open("public_programme_example.json").bufferedReader().use {it.readText()})}
     val client=remember {PublicProgrammeClient(demo)}
-    var preview by rememberSaveable {mutableStateOf(false)}
-    BackHandler(enabled=preview) {preview=false}
-    if(preview) {ProgrammePreview(client,demo) {preview=false}; return}
     var date by rememberSaveable(event.id) {mutableStateOf(event.dates.first())}
     var query by rememberSaveable(event.id) {mutableStateOf("")}
     var savedOnly by rememberSaveable(event.id) {mutableStateOf(false)}
+    if(preview) {ProgrammePreview(client,demo) {onPreview(false)}; return}
     val sessions=content.program(event.id,date,query).filter {!savedOnly || it.id in saved}
     LazyColumn(Modifier.fillMaxSize().testTag("schedule-list"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
         item {EventMiniHeader(event,"A day to remember"); Spacer(Modifier.height(14.dp)); DemoNote("Sample programme · ${content.timeZone}")}
-        item {Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {event.dates.forEach {day -> FilterChip(selected=day==date,onClick={date=day},label={Text(dayLabel(day))},modifier=Modifier.heightIn(min=48.dp))}}}
-        item {OutlinedTextField(query,{query=it},label={Text("Find a session or speaker")},modifier=Modifier.fillMaxWidth(),singleLine=true,shape=RoundedCornerShape(12.dp),trailingIcon={if(query.isNotEmpty()) TextButton(onClick={query=""}) {Text("Clear")}})
+        item {Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {event.dates.forEach {day -> FilterChip(selected=day==date,onClick={if(date!=day) {date=day; clearExpanded()}},label={Text(dayLabel(day))},modifier=Modifier.heightIn(min=48.dp))}}}
+        item {OutlinedTextField(query,{query=it; clearExpanded()},label={Text("Find a session or speaker")},modifier=Modifier.fillMaxWidth(),singleLine=true,shape=RoundedCornerShape(12.dp),trailingIcon={if(query.isNotEmpty()) TextButton(onClick={query=""; clearExpanded()}) {Text("Clear")}})
             Spacer(Modifier.height(8.dp))
-            FilterChip(selected=savedOnly,onClick={savedOnly=!savedOnly},label={Text("Saved sessions")},modifier=Modifier.heightIn(min=48.dp),trailingIcon={Text(content.program(event.id,date).count {it.id in saved}.toString())})
+            FilterChip(selected=savedOnly,onClick={savedOnly=!savedOnly; clearExpanded()},label={Text("Saved sessions")},modifier=Modifier.heightIn(min=48.dp),trailingIcon={Text(content.program(event.id,date).count {it.id in saved}.toString())})
             Text("${sessions.size} ${if(sessions.size==1) "session" else "sessions"} · ${dayLabel(date)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.semantics {liveRegion=LiveRegionMode.Polite})}
         if(sessions.isEmpty()) item {AttendeeEmptyState(
             title=if(savedOnly && query.isBlank()) "No saved sessions for this day" else "No sessions match",
             message=if(savedOnly && query.isBlank()) "Save a session from this day to keep it close. Bookmarks belong to this preview, not a seat reservation." else "Try another day or clear your filters.",
-            action="Reset filters",onAction={query=""; savedOnly=false})}
-        items(sessions,key={it.id}) {session -> SessionCard(session,session.id in saved) {toggle(session.id)}}
-        if(event.id=="dqor-2026") item {TextButton(onClick={preview=true}) {Text("Public feed preview")}}
+            action="Reset filters",onAction={query=""; savedOnly=false; clearExpanded()})}
+        items(sessions,key={it.id}) {session -> SessionCard(session,session.id in saved,session.id in expandedSessions,{toggleExpanded(session.id)}) {if(savedOnly) clearExpanded(); toggle(session.id)}}
+        if(event.id=="dqor-2026") item {TextButton(onClick={onPreview(true)}) {Text("Public feed preview")}}
         item {Text("Saved sessions are local bookmarks, not seat reservations.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
     }
 }
 
-@Composable private fun SessionCard(session: ProgramSession,saved: Boolean,onSave: ()->Unit) {
-    var expanded by rememberSaveable(session.id) {mutableStateOf(false)}
-    BackHandler(enabled=expanded) {expanded=false}
+@Composable private fun SessionCard(session: ProgramSession,saved: Boolean,expanded: Boolean,toggleExpanded: ()->Unit,onSave: ()->Unit) {
     val motion=LocalAttendeeMotion.current
     val border by animateColorAsState(if(saved) MaterialTheme.colorScheme.primary.copy(alpha=.55f) else MaterialTheme.colorScheme.outlineVariant,tween(motion.feedbackMillis),label="bookmark-border")
     val surface by animateColorAsState(if(saved) Color(0xFFF8EFF2) else Color.White,tween(motion.feedbackMillis),label="bookmark-surface")
@@ -189,7 +194,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                 Text(session.speaker,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${session.venue}  ·  until ${session.endsAt}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 if(expanded) Text(session.description,Modifier.semantics {liveRegion=LiveRegionMode.Polite})
-                val detail: @Composable ()->Unit={TextButton(onClick={expanded=!expanded},modifier=Modifier.heightIn(min=48.dp)) {Text(if(expanded) "Less detail" else "Session details")}}
+                val detail: @Composable ()->Unit={TextButton(onClick=toggleExpanded,modifier=Modifier.heightIn(min=48.dp)) {Text(if(expanded) "Less detail" else "Session details")}}
                 val bookmark: @Composable ()->Unit={TextButton(onClick=onSave,modifier=Modifier.heightIn(min=48.dp).semantics {contentDescription="${if(saved) "Unsave" else "Save"} ${session.title}"; stateDescription=if(saved) "Saved" else "Not saved"; liveRegion=LiveRegionMode.Polite}) {Text(if(saved) "✓ Saved" else "+ Save")}}
                 if(LocalDensity.current.fontScale>1.3f) Column {detail(); bookmark()} else Row {detail(); Spacer(Modifier.weight(1f)); bookmark()}
             }

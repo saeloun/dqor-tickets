@@ -3,20 +3,22 @@
 `nativeapi/NativeStaffClient.kt` now implements the proposed **native v1** DTOs
 from the backend branch's `docs/NATIVE_STAFF_API.md`. It is separate from
 `CheckInService`: the demo scanner's immediate mutation interface must never be
-used as a production preview. MainActivity uses the typed client through `NativeDeskWorkflow` and an in-process
-`MockNativeTransport`. No UI action reaches a real network transport.
+used as a production preview. The optional staff rehearsal uses the typed client through `NativeDeskWorkflow`
+and an in-process `MockNativeTransport`. No staff UI action reaches a real network
+transport. The separate default public programme performs an approved anonymous GET.
 
-## Three independent gates
+## Staff integration gates
 
 - `NativeConfig` defaults to disabled and has no default origin. The demo explicitly
   enables it only for the socket-free mock transport at `https://mock.invalid`.
 - `NativeIntegrationGate.ENABLED` is a compiled `false`; even an enabled config
   cannot instantiate `ApprovedNativeTransport` in this build.
-- The Android application has **no INTERNET permission**.
+- The normal INTERNET permission serves only the fixed official public origin.
+  It does not enable the compiled-false staff transport gate.
 
 Opening these gates requires reviewed staging approval and an explicit, fixed
 HTTPS origin. No remote config or UI switch can turn them on. No credentials,
-staff grants, live requests or attendance were created during implementation.
+staff grants, staff requests or real attendance were created during implementation.
 
 ## Exact native wire DTOs
 

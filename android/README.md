@@ -1,8 +1,10 @@
-# DQOR Android event and staff preview
+# DQOR Android public programme and scanner rehearsal
 
 Native Kotlin / Compose app, application ID `in.dqor.staff.demo`.
-**In-process mock transport only.** The app collects no real credentials, makes
-no live requests and changes no real attendance. Rails and iOS are unchanged.
+The launcher reads the official published-only public programme over HTTPS.
+Attendee tickets open in the system browser. Optional event, wallet and staff
+previews are explicitly synthetic; no live staff credentials or attendance writes
+are enabled. Rails and iOS are unchanged.
 
 ## Build and tests
 
@@ -25,7 +27,13 @@ Device tests run locally, not in hosted CI. Gradle is pinned to 8.14.3.
 
 ## Event and attendee preview
 
-The launcher opens the event catalogue. Browse the sample programme, bookmark
+The launcher opens the published programme with verified/stale/loading/error
+states, day/search filters and durable local bookmarks containing only opaque
+public session IDs. The downloaded snapshot is memory-only. Clear local data
+removes the snapshot, validator and bookmarks, including pending response ownership.
+See [PUBLIC_PROGRAMME_CLIENT.md](PUBLIC_PROGRAMME_CLIENT.md).
+
+Choose **Demo preview** to open the synthetic event catalogue. Browse the sample programme, bookmark
 sessions and open a read-only sample pass with separate admission, meal and party
 redemption states. See [EVENT_EXPERIENCE.md](EVENT_EXPERIENCE.md) for boundaries,
 review screenshots and API needs. Choose **Staff workspace** for the desk flow.
@@ -71,8 +79,8 @@ cannot make network requests because the transport has no socket implementation.
 The original `MockCheckInService` is retained only as a legacy test fixture;
 its immediate scanner is not connected to the launcher.
 
-Real transport remains blocked by a compiled false gate and absent INTERNET
-permission. `NativeConfig` defaults to disabled; only the in-process mock client
+Real staff transport remains blocked by `NativeIntegrationGate.ENABLED = false`.
+The normal INTERNET permission is used only by the fixed-origin public GET transport. `NativeConfig` defaults to disabled; only the in-process mock client
 is explicitly enabled. Staging needs approved origin/accounts, reviewed gate
 changes and real session/TLS verification; see [INTEGRATION.md](INTEGRATION.md).
 
@@ -88,7 +96,9 @@ nonces, deletion and corruption handling with synthetic credentials.
 
 Status uses a polite accessibility live region. Identity labels include email/ID;
 entry and confirmation scroll at large text sizes. Camera permission is requested
-on demand, and search works without it. Screenshots/recents capture and backup are
+on demand, with denial/retry/settings and manual lookup alternatives. The rehearsal
+selects the rear camera, suppresses repeated frames and pauses while offline,
+reviewing, uncertain or backgrounded. Explicit same-code retry never confirms attendance. Screenshots/recents capture and backup are
 disabled. Physical camera, TalkBack audio, approved staging integration and full
 real-device interruption testing remain release gates. No live integration is
 claimed from in-process mocks or emulator tests.

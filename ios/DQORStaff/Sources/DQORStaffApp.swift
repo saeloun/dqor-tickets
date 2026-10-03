@@ -14,7 +14,14 @@ struct DQORStaffApp: App {
         return nil
         #endif
     }
-    var body: some Scene { WindowGroup { StaffRootView(store: store).preferredColorScheme(previewColorScheme) } }
+    var body: some Scene {
+        WindowGroup {
+            Group {
+                if ProcessInfo.processInfo.arguments.contains("--demo") { StaffRootView(store: store) }
+                else { PublicEventRootView(demoStore: store) }
+            }.preferredColorScheme(previewColorScheme)
+        }
+    }
 }
 
 struct StaffRootView: View {
@@ -66,6 +73,8 @@ struct StaffRootView: View {
                     ScrollView { VStack(spacing: 20) {
                         CameraScanner { payload in Task { await store.scan(payload) } }
                             .frame(height: cameraHeight).accessibilityLabel("Ticket camera preview")
+                        Text("Event admission · scanner rehearsal").font(.headline)
+                        Text("Demo environment · no live attendance changes").font(.caption)
                         Text("\(store.selection.count) in batch").font(.title2.bold()).accessibilityAddTraits(.updatesFrequently)
                         Text(store.message ?? "Point at a ticket QR code. Attendees are added to a batch for review.")
                             .padding().accessibilityIdentifier("scanStatus")
@@ -77,7 +86,7 @@ struct StaffRootView: View {
             .sheet(isPresented: $store.confirming) {
                 NavigationStack {
                     List {
-                        Section(header: Text("Confirm event and day").foregroundStyle(Color(uiColor: .label)).font(.headline)) {
+                        Section(header: Text("Confirm event admission and day").foregroundStyle(Color(uiColor: .label)).font(.headline)) {
                             Text(store.day?.event ?? "").font(.headline)
                             Text(store.day?.day ?? "")
                             Text("Demo environment · no live attendance changes").font(.caption)

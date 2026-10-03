@@ -3,6 +3,19 @@ import XCTest
 
 @MainActor
 final class StaffTests: XCTestCase {
+    func testCameraLifecycleInvalidatesQueuedStartsOnBackgroundAndReplacement() {
+        let state = CameraCaptureState()
+        let first = state.activate()
+        XCTAssertTrue(state.current(first))
+        state.stop()
+        XCTAssertFalse(state.current(first))
+        let second = state.activate()
+        XCTAssertTrue(state.current(second))
+        XCTAssertFalse(state.current(first))
+        let third = state.activate()
+        XCTAssertFalse(state.current(second))
+        XCTAssertTrue(state.current(third))
+    }
     private func store(offline: Bool = false) async -> StaffStore {
         let store = StaffStore(api: DemoStaffAPI(offline: offline))
         await store.signIn(); store.choose(DemoStaffAPI.days[0]); return store
