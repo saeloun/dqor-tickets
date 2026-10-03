@@ -61,22 +61,33 @@ class AttendeeAuthUiTest {
         } }
     }
     private fun show(text: String) { compose.onNodeWithTag("attendee-account").performScrollToNode(hasText(text)); compose.onNodeWithText(text).assertIsDisplayed() }
+    private fun showAt(index: Int,text: String) { compose.onNodeWithTag("attendee-account").performScrollToIndex(index); compose.onNodeWithText(text).assertIsDisplayed() }
     private fun capture(name: String) {
         compose.waitForIdle()
         val instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
         val rendered=java.util.concurrent.CountDownLatch(1)
-        val listener=android.view.Window.OnFrameMetricsAvailableListener { _, _, _ -> rendered.countDown() }
+        val listener=android.view.ViewTreeObserver.OnDrawListener {rendered.countDown()}
         compose.activityRule.scenario.onActivity { activity ->
-            activity.window.addOnFrameMetricsAvailableListener(listener,android.os.Handler(android.os.Looper.getMainLooper()))
+            activity.window.decorView.viewTreeObserver.addOnDrawListener(listener)
             activity.window.decorView.postInvalidateOnAnimation()
         }
         try { assertTrue("Synthetic state did not render a fresh frame",rendered.await(5,java.util.concurrent.TimeUnit.SECONDS)) }
-        finally {compose.activityRule.scenario.onActivity {it.window.removeOnFrameMetricsAvailableListener(listener)}}
+        finally {compose.activityRule.scenario.onActivity {it.window.decorView.viewTreeObserver.removeOnDrawListener(listener)}}
         instrumentation.waitForIdleSync()
-        val bitmap=instrumentation.uiAutomation.takeScreenshot() ?: throw AssertionError("Synthetic screen capture unavailable")
-        val directory=java.io.File(instrumentation.targetContext.filesDir,"review-shots").apply {mkdirs()}
-        java.io.File(directory,"$name.png").outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
-        bitmap.recycle()
+        val copied=java.util.concurrent.CountDownLatch(1)
+        var copyResult=android.view.PixelCopy.ERROR_UNKNOWN
+        lateinit var bitmap: android.graphics.Bitmap
+        compose.activityRule.scenario.onActivity { activity ->
+            val view=activity.window.decorView
+            bitmap=android.graphics.Bitmap.createBitmap(view.width,view.height,android.graphics.Bitmap.Config.ARGB_8888)
+            android.view.PixelCopy.request(activity.window,bitmap,{result -> copyResult=result;copied.countDown()},android.os.Handler(android.os.Looper.getMainLooper()))
+        }
+        try {
+            assertTrue("Synthetic window pixels were not copied",copied.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            assertEquals(android.view.PixelCopy.SUCCESS,copyResult)
+            val directory=java.io.File(instrumentation.targetContext.filesDir,"review-shots").apply {mkdirs()}
+            java.io.File(directory,"$name.png").outputStream().use {bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
+        } finally {bitmap.recycle()}
     }
     private fun complete() {
         val auth = authorization!!
@@ -122,14 +133,14 @@ class AttendeeAuthUiTest {
                 }
                 val bounded=(controller.state.value as AttendeeState.Ready).snapshot
                 assertEquals(verified.identity,bounded.identity);assertEquals(verified.passes,bounded.passes);assertEquals(verified.checkedAt,bounded.checkedAt)
-                show("synthetic@example.invalid");show("Synthetic conference status $total")
-                show("More pass status is available on the official website.")
+                showAt(3,"synthetic@example.invalid");showAt(total+3,"Synthetic conference status $total")
+                showAt(total+4,"More pass status is available on the official website.")
                 compose.onNodeWithText("Load more pass status").assertDoesNotExist()
                 capture("auth-synthetic-pass-limit-$total")
                 val stopped=bridge.pageReads
                 runBlocking {controller.nextPage()};assertEquals(stopped,bridge.pageReads)
                 bridge.pageSizes=listOf(20)
-                show("Refresh account status");compose.onNodeWithText("Refresh account status").performClick()
+                showAt(3,"Refresh account status");compose.onNodeWithText("Refresh account status").performClick()
                 compose.waitUntil(5_000) {(controller.state.value as? AttendeeState.Ready)?.snapshot?.passes?.size==20}
                 show("Load more pass status");assertEquals(stopped+1,bridge.pageReads)
                 show("Sign out and clear account");compose.onNodeWithText("Sign out and clear account").performClick()
