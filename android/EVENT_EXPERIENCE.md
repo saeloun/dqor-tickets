@@ -1,7 +1,7 @@
 # Android event and wallet preview
 
 This increment is stacked on the Android staff foundation (PR #145). It owns only
-`android/` files. The launcher now opens a configurable event catalogue, followed
+`android/` files. The optional **Demo preview** opens a configurable synthetic event catalogue, followed
 by an event overview, programme and attendee pass wallet. Staff operations remain
 a separate workspace using the established typed native staff client.
 
@@ -21,7 +21,8 @@ QR payload which the staff mock rejects. The wallet fixtures are intentionally
 independent of staff mock attendance, not a synchronized account.
 
 There is no attendee login, checkout, booking, payment or redemption mutation.
-No INTERNET permission, credentials, native transport gate, signing configuration,
+The approved anonymous public programme uses INTERNET permission in the default
+launcher. No credentials, native staff transport gate, signing configuration,
 production attendance or distribution policy is changed. The existing production
 transport gate remains compiled false; only an in-process synthetic transport is
 injected into the staff workflow.
@@ -76,14 +77,15 @@ fixtures, coordinate and approve:
   retention, pagination and authority semantics. Local history cannot prove
   attendance or replace audit records.
 
-The feed owner has proposed PR #171 (`675f4f1`) at
+The published public contract is deployed at
 `GET /api/public/v1/dqor/programme`, with checked-in JSON Schema and synthetic
 example. Android has no blocking shape objection. A future adapter must handle
 string IDs, nullable timestamps/local dates/rooms/speaker fields, explicit timezone,
 ETag/304, authoritative empty arrays and `programme_unavailable` on 503. Track is
 omitted from that public contract; the demo's local track categories must not be
-assumed to exist on the wire. This increment does not consume that undeployed API
-or claim that the local fixture parser implements its schema.
+assumed to exist on the wire. The default launcher consumes the verified official public feed; the older
+preview remains an isolated synthetic contract exercise. See
+[PUBLIC_PROGRAMME_CLIENT.md](PUBLIC_PROGRAMME_CLIENT.md).
 
 No backend writes are part of this increment. Live/staging validation, attendee
 identity, real QR security and physical-camera testing remain release gates.
