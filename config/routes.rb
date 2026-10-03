@@ -86,7 +86,24 @@ Rails.application.routes.draw do
     post :batch
   end
 
+  get "account/native/authorize", to: "account/native/authorizations#new", as: :native_attendee_authorize
+  post "account/native/email", to: "account/native/authorizations#email", as: :native_attendee_email
+  get "account/native/verify", to: "account/native/authorizations#verify", as: :native_attendee_verify
+  get "account/native/consent", to: "account/native/authorizations#consent", as: :native_attendee_consent
+  post "account/native/consent", to: "account/native/authorizations#approve"
+  post "account/native/cancel", to: "account/native/authorizations#cancel", as: :native_attendee_cancel
+
   namespace :api do
+    namespace :native do
+      namespace :attendee do
+        namespace :v1 do
+          resource :account, only: :show
+          resources :passes, only: :index
+          resource :session, only: %i[show destroy]
+          resource :token, only: :create
+        end
+      end
+    end
     namespace :attendee do
       namespace :v1 do
         resource :account, only: :show

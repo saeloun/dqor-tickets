@@ -1,0 +1,6 @@
+<h1>Approve <%= NativeAttendee::Clients.name(@authorization.client_id) %>?</h1>
+<p>Verified account: <%= @authorization.email_snapshot %></p>
+<p>This app may read your account identity and your assigned DQOR pass status for 30 minutes.</p>
+<p>This does not grant purchases, admission, food or party benefits, or access to another attendee.</p>
+<%= button_to "Approve account and pass reads", native_attendee_consent_path, data: { turbo: false } %>
+<%= button_to "Cancel request", native_attendee_cancel_path, data: { turbo: false } %>

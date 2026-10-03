@@ -1,0 +1,8 @@
+<h1>Connect <%= NativeAttendee::Clients.name(@authorization.client_id) %></h1>
+<p>Verify the email of your existing DQOR account. Your browser login alone cannot approve this request.</p>
+<%= form_with url: native_attendee_email_path, local: true, data: { turbo: false } do |form| %>
+  <%= form.label :email, "Account email" %>
+  <%= form.email_field :email, required: true, autocomplete: "email" %>
+  <%= form.submit "Send verification link" %>
+<% end %>
+<%= button_to "Cancel request", native_attendee_cancel_path, data: { turbo: false } %>
