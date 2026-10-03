@@ -1,6 +1,10 @@
 package `in`.dqor.staff.experience
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -61,11 +65,13 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
     AttendeeTheme {
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.safeDrawingPadding()) {
-                Row(Modifier.fillMaxWidth().heightIn(min=56.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
-                    if(event!=null) TextButton(onClick={if(passId!=null) passId=null else {eventId=null; section=EventSection.OVERVIEW}}) {Text(if(passId!=null) "← My passes" else "← All events")}
+                val back: @Composable () -> Unit = {
+                    if(event!=null) TextButton(onClick={if(passId!=null) passId=null else {eventId=null; section=EventSection.OVERVIEW}},modifier=Modifier.heightIn(min=48.dp)) {Text(if(passId!=null) "← My passes" else "← All events")}
                     else Text("dqor",Modifier.padding(horizontal=8.dp),fontSize=24.sp,fontWeight=FontWeight.Bold,letterSpacing=(-1).sp)
-                    TextButton(onClick=onStaff) {Text("Staff workspace",style=MaterialTheme.typography.labelLarge)}
                 }
+                val staff: @Composable () -> Unit = {TextButton(onClick=onStaff,modifier=Modifier.heightIn(min=48.dp)) {Text("Staff workspace",style=MaterialTheme.typography.labelLarge)}}
+                if(LocalDensity.current.fontScale>1.3f) Column(Modifier.fillMaxWidth().padding(horizontal=12.dp)) {back(); staff()}
+                else Row(Modifier.fillMaxWidth().heightIn(min=56.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {back(); staff()}
                 if(event!=null && passId==null) ScrollableTabRow(selectedTabIndex=section.ordinal,edgePadding=8.dp,divider={},containerColor=Color.Transparent,
                     indicator={positions -> if(positions.isNotEmpty()) TabRowDefaults.SecondaryIndicator(Modifier.tabIndicatorOffset(positions[section.ordinal]),height=2.dp)}) {
                     EventSection.entries.forEach {tab -> Tab(selected=section==tab,onClick={section=tab},text={Text(tab.label,softWrap=false)},modifier=Modifier.heightIn(min=48.dp))}
@@ -78,7 +84,8 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                             Spacer(Modifier.height(12.dp)); DemoNote("Sample events · native preview")
                         }
                         items(events,key={it.id}) {item ->
-                            Card(onClick={eventId=item.id; section=EventSection.OVERVIEW},colors=CardDefaults.cardColors(containerColor=Color.Transparent),modifier=Modifier.fillMaxWidth()) {
+                            val interaction=remember {MutableInteractionSource()}
+                            Card(onClick={eventId=item.id; section=EventSection.OVERVIEW},interactionSource=interaction,colors=CardDefaults.cardColors(containerColor=Color.Transparent),modifier=Modifier.fillMaxWidth().attendeePress(interaction)) {
                                 EventArtwork(item,Modifier.fillMaxWidth().aspectRatio(1f).clip(PosterShape))
                                 Column(Modifier.padding(top=16.dp,bottom=4.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                                     Text("${dayLabel(item.dates.first())}  ·  ${item.location.substringBefore(" · ")}",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -91,8 +98,8 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                     }
                 } else if(passId!=null) {
                     val pass=content.wallet(event.id).find {it.id==passId}
-                    if(pass!=null) PassDetail(event,pass) else Text("Sample pass unavailable",Modifier.padding(24.dp))
-                } else Box(Modifier.weight(1f)) {screenState.SaveableStateProvider("${event.id}-${section.name}") {when(section) {
+                    if(pass!=null) Box(Modifier.weight(1f).attendeeReveal(pass.id)) {PassDetail(event,pass)} else Text("Sample pass unavailable",Modifier.padding(24.dp))
+                } else Box(Modifier.weight(1f).attendeeReveal("${event.id}-${section.name}")) {screenState.SaveableStateProvider("${event.id}-${section.name}") {when(section) {
                     EventSection.OVERVIEW -> LazyColumn(Modifier.fillMaxSize().testTag("event-overview"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
                         item {EventArtwork(event,Modifier.fillMaxWidth().aspectRatio(1f).clip(PosterShape))}
                         item {
@@ -150,8 +157,14 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
     LazyColumn(Modifier.fillMaxSize().testTag("schedule-list"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
         item {EventMiniHeader(event,"A day to remember"); Spacer(Modifier.height(14.dp)); DemoNote("Sample programme · ${content.timeZone}")}
         item {Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {event.dates.forEach {day -> FilterChip(selected=day==date,onClick={date=day},label={Text(dayLabel(day))},modifier=Modifier.heightIn(min=48.dp))}}}
-        item {OutlinedTextField(query,{query=it},label={Text("Find a session or speaker")},modifier=Modifier.fillMaxWidth(),singleLine=true,shape=RoundedCornerShape(12.dp)); FilterChip(selected=savedOnly,onClick={savedOnly=!savedOnly},label={Text("Saved sessions")},modifier=Modifier.heightIn(min=48.dp))}
-        if(sessions.isEmpty()) item {Column(Modifier.padding(vertical=24.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {Text("No sessions match",style=MaterialTheme.typography.titleMedium); Text("Try another day or clear your filters.",color=MaterialTheme.colorScheme.onSurfaceVariant); TextButton(onClick={query=""; savedOnly=false}) {Text("Reset filters")}}}
+        item {OutlinedTextField(query,{query=it},label={Text("Find a session or speaker")},modifier=Modifier.fillMaxWidth(),singleLine=true,shape=RoundedCornerShape(12.dp),trailingIcon={if(query.isNotEmpty()) TextButton(onClick={query=""}) {Text("Clear")}})
+            Spacer(Modifier.height(8.dp))
+            FilterChip(selected=savedOnly,onClick={savedOnly=!savedOnly},label={Text("Saved sessions")},modifier=Modifier.heightIn(min=48.dp),trailingIcon={Text(content.program(event.id,date).count {it.id in saved}.toString())})
+            Text("${sessions.size} ${if(sessions.size==1) "session" else "sessions"} · ${dayLabel(date)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.semantics {liveRegion=LiveRegionMode.Polite})}
+        if(sessions.isEmpty()) item {AttendeeEmptyState(
+            title=if(savedOnly && query.isBlank()) "No saved sessions for this day" else "No sessions match",
+            message=if(savedOnly && query.isBlank()) "Save a session from this day to keep it close. Bookmarks belong to this preview, not a seat reservation." else "Try another day or clear your filters.",
+            action="Reset filters",onAction={query=""; savedOnly=false})}
         items(sessions,key={it.id}) {session -> SessionCard(session,session.id in saved) {toggle(session.id)}}
         if(event.id=="dqor-2026") item {TextButton(onClick={preview=true}) {Text("Public feed preview")}}
         item {Text("Saved sessions are local bookmarks, not seat reservations.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
@@ -160,20 +173,24 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
 
 @Composable private fun SessionCard(session: ProgramSession,saved: Boolean,onSave: ()->Unit) {
     var expanded by rememberSaveable(session.id) {mutableStateOf(false)}
+    BackHandler(enabled=expanded) {expanded=false}
+    val motion=LocalAttendeeMotion.current
+    val border by animateColorAsState(if(saved) MaterialTheme.colorScheme.primary.copy(alpha=.55f) else MaterialTheme.colorScheme.outlineVariant,tween(motion.feedbackMillis),label="bookmark-border")
+    val surface by animateColorAsState(if(saved) Color(0xFFF8EFF2) else Color.White,tween(motion.feedbackMillis),label="bookmark-surface")
     Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(session.startsAt,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold)
             HorizontalDivider(Modifier.weight(1f),color=MaterialTheme.colorScheme.outlineVariant)
             Text(session.track.label,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
-            Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+        Surface(shape=MaterialTheme.shapes.medium,color=surface,border=androidx.compose.foundation.BorderStroke(1.dp,border)) {
+            Column(Modifier.animateContentSize(tween(motion.revealMillis)).padding(18.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 Text(session.title,fontSize=20.sp,lineHeight=25.sp,fontWeight=FontWeight.SemiBold)
                 Text(session.speaker,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${session.venue}  ·  until ${session.endsAt}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                if(expanded) Text(session.description)
+                if(expanded) Text(session.description,Modifier.semantics {liveRegion=LiveRegionMode.Polite})
                 val detail: @Composable ()->Unit={TextButton(onClick={expanded=!expanded},modifier=Modifier.heightIn(min=48.dp)) {Text(if(expanded) "Less detail" else "Session details")}}
-                val bookmark: @Composable ()->Unit={TextButton(onClick=onSave,modifier=Modifier.heightIn(min=48.dp).semantics {contentDescription="${if(saved) "Unsave" else "Save"} ${session.title}"; stateDescription=if(saved) "Saved" else "Not saved"}) {Text(if(saved) "✓ Saved" else "+ Save")}}
+                val bookmark: @Composable ()->Unit={TextButton(onClick=onSave,modifier=Modifier.heightIn(min=48.dp).semantics {contentDescription="${if(saved) "Unsave" else "Save"} ${session.title}"; stateDescription=if(saved) "Saved" else "Not saved"; liveRegion=LiveRegionMode.Polite}) {Text(if(saved) "✓ Saved" else "+ Save")}}
                 if(LocalDensity.current.fontScale>1.3f) Column {detail(); bookmark()} else Row {detail(); Spacer(Modifier.weight(1f)); bookmark()}
             }
         }
@@ -183,8 +200,10 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
 @Composable private fun WalletScreen(event: Event,content: EventExperience,open: (String)->Unit) {
     LazyColumn(Modifier.fillMaxSize().testTag("wallet-list"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
         item {EventMiniHeader(event,"Your passes"); Spacer(Modifier.height(14.dp)); DemoNote("Sample wallet · not valid for entry")}
-        if(content.wallet(event.id).isEmpty()) item {Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {Text("No sample passes for this event",style=MaterialTheme.typography.titleMedium); Text("Try the DQOR event to explore admission and redemption states.",color=MaterialTheme.colorScheme.onSurfaceVariant)}}}
-        items(content.wallet(event.id),key={it.id}) {pass -> Card(onClick={open(pass.id)},modifier=Modifier.fillMaxWidth(),colors=CardDefaults.cardColors(containerColor=Color.White),border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
+        if(content.wallet(event.id).isEmpty()) item {AttendeeEmptyState("No sample passes for this event","Try the DQOR event to explore admission and redemption states.")}
+        items(content.wallet(event.id),key={it.id}) {pass ->
+            val interaction=remember {MutableInteractionSource()}
+            Card(onClick={open(pass.id)},interactionSource=interaction,modifier=Modifier.fillMaxWidth().attendeePress(interaction),colors=CardDefaults.cardColors(containerColor=Color.White),border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
             EventArtwork(event,Modifier.fillMaxWidth().height(112.dp),compact=true)
             Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
                 Text(event.name,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -224,6 +243,17 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
         item {HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant); Spacer(Modifier.height(20.dp)); Text("Meals & community",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold); Spacer(Modifier.height(8.dp)); Text("Admission and benefit redemption are separate.",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)}
         items(pass.entitlements,key={it.id}) {entitlement -> Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.fillMaxWidth().padding(20.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {Text(entitlement.title,style=MaterialTheme.typography.titleMedium); Text("${entitlement.kind.label} · ${dayLabel(entitlement.date)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant); StatusLine("Redemption",entitlement.status.label)}}}
         item {DemoNote("Read-only demo. No live account or redemption access.")}
+    }
+}
+
+@Composable private fun AttendeeEmptyState(title: String,message: String,action: String?=null,onAction: () -> Unit={}) {
+    Surface(shape=MaterialTheme.shapes.large,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
+        Column(Modifier.fillMaxWidth().padding(24.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+            GatheringMotif(Modifier.size(112.dp,80.dp))
+            Text(title,style=MaterialTheme.typography.titleLarge)
+            Text(message,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            if(action!=null) TextButton(onClick=onAction,modifier=Modifier.heightIn(min=48.dp)) {Text(action)}
+        }
     }
 }
 

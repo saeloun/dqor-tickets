@@ -25,6 +25,7 @@ class FreeEvents::RegistrationsController < FreeEvents::BaseController
   def index
     @orders = Order.paid.where(user_id: current_user.id).where.not(event_id: nil).order(created_at: :desc)
     @events = Event.where(id: @orders.map(&:event_id)).index_by(&:id)
+    render :index, layout: "free_event_public"
   end
 
   def show
@@ -32,6 +33,7 @@ class FreeEvents::RegistrationsController < FreeEvents::BaseController
     order = Order.paid.find_by!(event_id: @event.id, user_id: current_user.id)
     @ticket = order.tickets.where(canceled_at: nil).find_by!(event_id: @event.id)
     @checkin = FreeCheckin.find_by(event_id: @event.id, ticket: @ticket)
+    render :show, layout: "free_event_public"
   end
   private
     def answer_params

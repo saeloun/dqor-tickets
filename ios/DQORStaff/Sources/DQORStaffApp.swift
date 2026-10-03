@@ -19,6 +19,7 @@ struct DQORStaffApp: App {
 
 struct StaffRootView: View {
     @ObservedObject var store: StaffStore
+    @StateObject private var agenda = AttendeeAgenda()
     @State private var query = ""
     @State private var scanning = false
     @State private var leaving = false
@@ -33,6 +34,7 @@ struct StaffRootView: View {
                 } else { checkIn }
             }
             .navigationTitle(store.day == nil ? "DQOR Staff" : "Check-in")
+            .navigationBarTitleDisplayMode(store.session == nil ? .inline : .automatic)
             .toolbar {
                 if store.session != nil {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -51,7 +53,7 @@ struct StaffRootView: View {
                         Button(store.day == nil ? "Sign out" : "Events") {
                             if !store.selection.isEmpty { leaving = true }
                             else { leave() }
-                        }.font(.body).disabled(store.busy)
+                        }.font(.body).foregroundStyle(Color(uiColor: .label)).disabled(store.busy)
                     }
                 }
             }
@@ -99,7 +101,7 @@ struct StaffRootView: View {
                         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { store.confirming = false }.font(.body) } }
                 }
             }
-        }.tint(store.day?.theme.color ?? .indigo)
+        }.environmentObject(agenda).tint(store.day?.theme.color ?? .indigo)
             .onChange(of: store.message) { _, message in
                 if UIAccessibility.isVoiceOverRunning, let message {
                     UIAccessibility.post(notification: .announcement, argument: message)
@@ -117,22 +119,60 @@ struct StaffRootView: View {
         else { store.clearDay() }
     }
     private var signIn: some View {
-        ScrollView { VStack(alignment: .leading, spacing: 24) {
-            Image(systemName: "qrcode.viewfinder").font(.system(size: 54)).foregroundStyle(.indigo).accessibilityHidden(true)
-            Text("Welcome your attendees.").font(.largeTitle.bold())
-            Text("Scan tickets, review a batch, and confirm every arrival.").font(.title3).foregroundStyle(.primary)
-            Label { Text("Demo mode · synthetic attendees only").fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: "testtube.2") }.font(.headline)
-            Text("Explore staff check-in using sample attendees. This preview does not connect to a live event.").foregroundStyle(.primary)
-            NavigationLink("Explore sample event") { AttendeeEventView(day: DemoCompanion.previewDay) }
-                .font(.headline).frame(minHeight: 48).accessibilityIdentifier("exploreSampleEvent")
-            Button("Enter demo") { Task { await store.signIn() } }
-                .buttonStyle(.borderedProminent).controlSize(.large).disabled(store.busy).accessibilityIdentifier("enterDemo")
-            if let message = store.message { Text(message).foregroundStyle(.red) }
-        }.padding(24).frame(maxWidth: 600) }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack {
+                    Text("DQOR").font(.title3.weight(.bold)).tracking(2)
+                    Spacer()
+                    Button("Staff demo") { Task { await store.signIn() } }
+                        .font(.body).frame(minHeight: 48)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .buttonStyle(.bordered).disabled(store.busy)
+                        .accessibilityIdentifier("staffDemoShortcut")
+                }
+                Text("Good company.\nGreat possibilities.")
+                    .font(.system(.largeTitle, design: .serif).weight(.medium))
+                Text("A place for the moments that bring us together.")
+                    .font(.body).foregroundStyle(AttendeeStyle.secondary)
+                PreviewBadge()
+                NavigationLink { AttendeeEventView(day: DemoCompanion.previewDay) } label: {
+                    VStack(alignment: .leading, spacing: 0) {
+                        EventArtwork(showsHeadline: false).aspectRatio(1.25, contentMode: .fit)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 16) {
+                            AttendeeEventTitle(day: DemoCompanion.previewDay)
+                            HStack {
+                                Text("Explore sample event").font(.headline)
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                            }.frame(minHeight: 48)
+                        }.padding(24)
+                    }.background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 24))
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("exploreSampleEvent")
+                Text("14 November 2026 · Pune").font(.subheadline)
+                    .foregroundStyle(AttendeeStyle.secondary).fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 16) {
+                    Label("For the welcome desk", systemImage: "qrcode.viewfinder").font(.headline)
+                    Text("Scan sample tickets, review a batch, and confirm every arrival in the staff demo.")
+                        .font(.body).foregroundStyle(AttendeeStyle.secondary)
+                    Label("Demo mode · synthetic attendees only", systemImage: "testtube.2")
+                        .font(.subheadline).fixedSize(horizontal: false, vertical: true)
+                    Button("Enter demo") { Task { await store.signIn() } }
+                        .buttonStyle(.borderedProminent).controlSize(.large).disabled(store.busy)
+                        .accessibilityIdentifier("enterDemo")
+                    if let message = store.message { Text(message).foregroundStyle(.red) }
+                }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 20))
+                Text("This native preview uses fictional content. Registration, live passes, and attendance are not connected.")
+                    .font(.footnote).foregroundStyle(AttendeeStyle.secondary)
+            }.padding(24).frame(maxWidth: 640).modifier(AttendeeReveal())
+        }.frame(maxWidth: .infinity).background(AttendeeStyle.canvas)
+            .foregroundStyle(AttendeeStyle.ink).tint(AttendeeStyle.accent)
     }
     private var eventPicker: some View {
         List {
-            Section { Text("Demo environment").fixedSize(horizontal: false, vertical: true) }
+            Section { Text("Demo environment").foregroundStyle(Color(uiColor: .label)).fixedSize(horizontal: false, vertical: true) }
             Section(header: Text("Choose an event and day").foregroundStyle(Color(uiColor: .label)).font(.headline)) {
                 ForEach(store.days) { day in
                     Button { store.choose(day) } label: {

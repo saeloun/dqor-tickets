@@ -8,6 +8,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -23,7 +26,7 @@ fun ProgrammePreview(client: PublicProgrammeClient, demo: DemoProgrammeTransport
     LazyColumn(Modifier.fillMaxSize().testTag("public-programme"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         item {TextButton(onClick=onBack) {Text("← Sample schedule")}; Text("Public programme preview",style=MaterialTheme.typography.headlineMedium); Text("Synthetic transport · no live connection",style=MaterialTheme.typography.bodyMedium)}
         item {Surface(color=MaterialTheme.colorScheme.surfaceVariant,shape=MaterialTheme.shapes.medium) {Column(Modifier.fillMaxWidth().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Text(when {state.loading -> "Refreshing sample programme…"; state.stale -> "Cached programme · may be outdated"; state.problem!=null -> "Programme unavailable"; snapshot!=null -> "Sample programme revalidated"; else -> "No programme loaded"},style=MaterialTheme.typography.titleMedium)
+            Text(when {state.loading -> "Refreshing sample programme…"; state.stale -> "Cached programme · may be outdated"; state.problem!=null -> "Programme unavailable"; snapshot!=null -> "Sample programme revalidated"; else -> "No programme loaded"},style=MaterialTheme.typography.titleMedium,modifier=Modifier.semantics {liveRegion=LiveRegionMode.Polite})
             if(state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
             state.problem?.let {Text(when(it) {ProgrammeProblem.OFFLINE -> "Offline. Reconnect and retry to check for changes."; ProgrammeProblem.UNAVAILABLE -> "The programme service is temporarily unavailable. Try again later."; ProgrammeProblem.INVALID_RESPONSE -> "The programme response could not be read. Try again later."})}
             if(state.stale) Text("Cached sessions may have been changed or withdrawn. This is not a confirmed current schedule.")

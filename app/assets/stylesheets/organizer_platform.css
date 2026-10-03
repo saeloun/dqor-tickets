@@ -83,3 +83,58 @@ select:focus-visible, textarea:focus-visible { outline: 3px solid #896514; outli
 .operations input { margin-bottom: 12px; }
 .operations input[type=checkbox] { width: auto; }
 .operations dd { margin: 0 0 12px; font-weight: bold; }
+
+:root { --motion-state: 220ms; --motion-ease: cubic-bezier(.2,.8,.2,1); }
+.attendee-registration { --canvas: #f8f5f2; --ink: #332631; --muted: #6e606a; --forest: #642f47; --line: #d4c8ce; }
+body { font-family: "Inter", system-ui, -apple-system, sans-serif; line-height: 1.45; }
+main { border-radius: 20px; }
+.attendee-registration main { box-shadow: 0 16px 48px -40px #642f47; }
+.site-header { padding-top: 28px; padding-bottom: 20px; }
+.brand { color: var(--forest); letter-spacing: -.025em; }
+.button, button, input[type=submit] { border-radius: 12px; transition: background-color var(--motion-state) var(--motion-ease), transform var(--motion-state) var(--motion-ease); }
+.attendee-registration .button:hover, .attendee-registration button:hover, .attendee-registration input[type=submit]:hover { background: #4d2337; }
+.button.secondary:hover { background: #f2f5ed; color: var(--forest); }
+.attendee-registration .button.secondary:hover { background: #f5ecef; }
+.button:active, button:active, input[type=submit]:active { transform: scale(.985); }
+button:disabled, input[type=submit]:disabled { opacity: .65; cursor: progress; }
+a:focus-visible, input:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visible { outline-color: var(--forest); }
+.attendee-registration a:focus-visible, .attendee-registration input:focus-visible, .attendee-registration button:focus-visible, .attendee-registration select:focus-visible, .attendee-registration textarea:focus-visible { outline-color: #8b4e6a; }
+.attendee-registration .badge { color: #642f47; background: #f3e8e6; }
+.flash { line-height: 1.45; }
+.attendee-registration .flash { background: #f0e8ee; border-color: #d4c8ce; }
+.attendee-registration .notice { background: #f8f5f2; }
+.attendee-registration .empty { border-color: #d4c8ce; background: #fcfaf8; }
+.card-list .card { transition: border-color var(--motion-state) var(--motion-ease); }
+.card-list .card:focus-within { border-color: var(--forest); }
+.card-list .card h2 a { display: inline-block; min-height: 44px; }
+.page-heading .muted { max-width: 65ch; }
+.attendee-registration main { max-width: 800px; }
+.attendee-registration .site-header { max-width: 880px; }
+.attendee-registration .brand { font: 600 21px/1.2 Georgia, serif; }
+.attendee-registration .ticket { max-width: 720px; }
+.free-ticket-credential { position: relative; overflow: hidden; background: #fcfaf8; border-radius: 16px; padding: 28px; }
+.free-ticket-credential::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; background: linear-gradient(90deg, #642f47, #b77248); }
+.free-ticket-title { margin-top: 20px; font: 400 28px/1.2 Georgia, serif; }
+.free-ticket-help { margin-top: 24px; }
+.ticket-details { line-height: 1.45; }
+.ticket-details dd { font-size: 16px; }
+[data-registration-dialog] { border-radius: 24px; box-shadow: 0 24px 80px rgb(35 16 29 / 22%); }
+[data-registration-dialog] .help { line-height: 1.45; }
+[data-registration-dialog] h2 { letter-spacing: -.025em; }
+.attendee-registration .event-monogram { border-radius: 20px; background: #642f47; color: #fff4df; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-registration-dialog][open] { animation: registration-arrive 240ms var(--motion-ease); }
+}
+@keyframes registration-arrive { from { transform: translateY(8px); } to { transform: none; } }
+@media (max-width: 720px) {
+  main { border-radius: 16px; }
+  .attendee-registration .site-header { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+  .attendee-registration .brand { font-size: 18px; }
+  .free-ticket-credential { padding: 24px 20px; }
+  .free-ticket-title { font-size: 25px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-state: 0ms; }
+  *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; }
+  .button:active, button:active, input[type=submit]:active { transform: none; }
+}

@@ -9,6 +9,17 @@
     <p>Conference afterparty: Thursday, October 8, 2026 (Day 1).</p>
   </section>
 
+  <nav class="schedule-toolbar" aria-label="Schedule actions">
+    <%= link_to "Add conference dates to calendar", calendar_path, class: "btn btn-secondary" %>
+    <% if user_signed_in? && (current_user.legacy_network_eligible? || !FreeEvents::Access.enabled?) %>
+      <%= link_to "My saved schedule", account_root_path(anchor: "my-schedule"), class: "btn btn-secondary" %>
+    <% elsif user_signed_in? %>
+      <%= link_to "Your free tickets", free_tickets_path, class: "btn btn-secondary" %>
+    <% else %>
+      <%= link_to "Sign in to save talks", account_sign_in_path, class: "btn btn-secondary" %>
+    <% end %>
+  </nav>
+
   <% if Conference.status == :during && (@now_talk || @next_talk) %>
     <section class="schedule-live" aria-label="Now and next">
       <% if @now_talk %>
@@ -46,9 +57,9 @@
                 <% if talk.abstract.present? %><p class="schedule-talk__abstract"><%= talk.abstract %></p><% end %>
                 <% if user_signed_in? %>
                   <% if @bookmarked_ids.include?(talk.id) %>
-                    <%= button_to "★ Saved", talk_bookmark_path(talk), method: :delete, class: "schedule-talk__save schedule-talk__save--on" %>
+                    <%= button_to "★ Saved", talk_bookmark_path(talk), method: :delete, class: "schedule-talk__save schedule-talk__save--on", data: { turbo_submits_with: "Updating…" }, aria: { label: "Remove #{talk.title} from my schedule" } %>
                   <% else %>
-                    <%= button_to "☆ Save to my schedule", talk_bookmark_path(talk), method: :post, class: "schedule-talk__save" %>
+                    <%= button_to "☆ Save to my schedule", talk_bookmark_path(talk), method: :post, class: "schedule-talk__save", data: { turbo_submits_with: "Saving…" }, aria: { label: "Save #{talk.title} to my schedule" } %>
                   <% end %>
                 <% end %>
                 <%= render "schedule/feedback", talk: talk %>
