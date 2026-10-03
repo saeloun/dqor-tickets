@@ -4,7 +4,7 @@ module EventSlots
 
     def self.call(slot:, ticket:, operator:, request_key:)
       raise Rejected, "Staff permission required" unless operator&.admin? || operator&.desk?
-      raise Rejected, "Ticket not found" unless ticket
+      raise Rejected, "Ticket not found" unless ticket && ticket.event_id.nil?
       raise Rejected, "Request key required" unless request_key.to_s.match?(/\A[a-zA-Z0-9-]{16,100}\z/)
 
       slot.with_lock do
@@ -32,6 +32,7 @@ module EventSlots
 
     def self.correct!(redemption:, operator:, reason:)
       raise Rejected, "Organizer permission required" unless operator&.admin?
+      raise Rejected, "Ticket not found" if redemption.ticket.event_id.present?
       raise Rejected, "Correction reason required" if reason.to_s.strip.empty?
       redemption.event_slot.with_lock do
         redemption.with_lock do

@@ -1,0 +1,44 @@
+<h1>Find your next role</h1>
+<p>Any approved hiring company can post. Sponsorship is not required.</p>
+<%= form_with url: hiring_root_path, method: :get do |f| %>
+  <%= f.label :event_id, "Event board (leave blank for all roles)" %>
+  <%= f.collection_select :event_id, Event.published.order(:title), :id, :title, include_blank: "All events and global roles", selected: params[:event_id] %>
+  <%= f.submit "Show roles" %>
+<% end %>
+<% @jobs.each do |job| %><article>
+  <h2><%= link_to job.title, hiring_job_path(job) %></h2>
+  <p><%= job.company.name %> · <%= job.event&.title || "Global" %></p>
+  <% if job.recruiter == current_user %><%= link_to "Review applicants", hiring_applicants_path(job) %><% end %>
+</article><% end %>
+<section><h2>Your applications</h2>
+<% @applications.each do |application| %>
+  <p><%= application.job.title %> — <%= application.withdrawn_at? ? "Withdrawn" : "Submitted" %></p>
+  <% if application.share_request && !application.withdrawn_at? %><p>Recruiting share expires: <%= application.share_request.expires_at.utc.iso8601 %></p><%= button_to "Revoke recruiting consent", hiring_revoke_share_path(application.share_request), method: :delete %><% end %>
+  <% if application.resume_releasable? %><%= link_to "Download my checked PDF", hiring_resume_path(application) %><% end %>
+  <% unless application.withdrawn_at? %><%= button_to "Withdraw and delete profile snapshot", hiring_withdraw_path(application), method: :delete %><% end %>
+<% end %></section>
+<section><h2>Your company affiliations</h2><p>Self-reported and private in this first slice. These do not grant employer permissions.</p>
+<% @affiliations.each do |affiliation| %><p><%= affiliation.company.name %></p><%= button_to "Remove affiliation", hiring_remove_affiliation_path(affiliation), method: :delete %><% end %></section>
+<section><h2>Claim your hiring company</h2><p>An organization owner or admin must verify your evidence before you can post. This does not grant organization administration.</p>
+<%= form_with url: hiring_claims_path, scope: :company do |f| %>
+  <%= f.label :organization_id, "Host organization" %><%= f.collection_select :organization_id, @organizations, :id, :name %>
+  <%= f.label :name, "Company name" %><%= f.text_field :name, required: true, maxlength: 255 %>
+  <%= f.label :website, "Company website (https)" %><%= f.url_field :website, required: true %>
+  <%= f.label :evidence, "Evidence that you are authorized to recruit for this company" %><%= f.text_area :evidence, required: true, maxlength: 5000 %>
+  <%= f.submit "Submit claim for review" %>
+<% end %></section>
+<% @companies.each do |company| %><section><h2><%= company.name %></h2><p>Claim: <%= company.status %></p>
+<% if company.status == "approved" %>
+  <%= form_with url: hiring_jobs_path(company_id: company.id), scope: :job do |f| %>
+    <%= f.label :title, "Role title" %><%= f.text_field :title, required: true, maxlength: 255 %>
+    <%= f.label :description, "Role description and location" %><%= f.text_area :description, required: true, maxlength: 10000 %>
+    <%= f.label :event_id, "Visibility" %><%= f.collection_select :event_id, company.organization.events.published, :id, :title, include_blank: "Global job board" %>
+    <%= f.submit "Publish role" %>
+  <% end %>
+<% end %></section><% end %>
+<% @claims.each do |company| %><section><h2>Review claim: <%= company.name %></h2>
+<p><%= company.website %></p><p>Claimant: <%= company.claimant.email %></p><p><%= company.evidence %></p>
+<p>Verify this identity independently before approving. Approval permits this claimant to post and review their own jobs only.</p>
+<%= button_to "Approve verified claim", hiring_review_claim_path(company), params: { decision: "approve" } %>
+<%= button_to "Reject claim", hiring_review_claim_path(company), params: { decision: "reject" } %>
+</section><% end %>

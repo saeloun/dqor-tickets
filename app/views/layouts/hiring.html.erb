@@ -1,0 +1,3 @@
+<!DOCTYPE html>
+<html lang="en"><head><title>Hiring board</title><meta name="viewport" content="width=device-width,initial-scale=1"><%= csrf_meta_tags %><%= stylesheet_link_tag "hiring" %></head>
+<body><main><nav><%= link_to "Hiring board", hiring_root_path %></nav><% flash.each do |_kind, message| %><p role="status"><%= message %></p><% end %><%= yield %></main></body></html>

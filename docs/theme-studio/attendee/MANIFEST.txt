@@ -1,0 +1,6 @@
+Chromium rendered captures, synthetic attendee prototype, 2026-10-02 UTC.
+4a0411c6fb516b42f7c944257489d0ab9c830107298b5daab4f21c1f0573d531  event-desktop.png
+f0584cc2506bf2382c86a43328dfad581d9f015477d699ee663b58af45e7364f  event-mobile.png
+1fb5e8695d81739f20e681eae891a80ca252084e86bca2111ad1fe695a162b8f  pass-desktop.png
+0f7248ce11c3597b35531d1ef4d115fa88786ef9c1467ea3820f0f687062e27d  pass-mobile.png
+cb831eca57a158e50138f389936e535c9b0eb2214770144b451bc5079d8409ce  registration-mobile.png

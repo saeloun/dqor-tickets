@@ -1,0 +1,18 @@
+<main>
+  <%= link_to "← Back to event", organizer_organization_event_path(params[:organization_id], @event), class: "back" %>
+  <p class="eyebrow">Event day</p>
+  <div class="page-heading"><div><h1><%= @event.title %> attendees</h1><p class="muted"><%= @rows.size %> registered · <%= @rows.count { |row| row["checked_in_at"] } %> checked in</p></div>
+    <%= link_to "Download attendee CSV", free_event_attendees_path(params[:organization_id], @event, format: :csv), class: "button secondary" %>
+  </div>
+  <p class="help">Match the attendee’s name and ticket number before checking them in.</p>
+  <div class="card-list">
+  <% @rows.each do |row| %>
+    <article class="attendee"><div><h2><%= row["attendee_name"] %></h2><p><%= row["attendee_email"] %></p><p class="help">Ticket #<%= row["id"] %></p></div>
+      <% if row["checked_in_at"] %><div><span class="badge">Checked in</span><p class="help"><%= row["checked_in_at"].in_time_zone(@event.timezone).strftime("%-d %b · %-I:%M %p") %></p></div><% else %>
+        <%= button_to "Check in ticket ##{row['id']}", free_event_attendees_path(params[:organization_id], @event), params: { ticket_id: row["id"] } %>
+      <% end %>
+    </article>
+  <% end %>
+  </div>
+  <% if @rows.empty? %><div class="empty"><h2>No registrations yet</h2><p>Once free registration is open, share your public event page. Attendees will appear here as they register.</p></div><% end %>
+</main>

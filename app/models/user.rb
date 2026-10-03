@@ -1,4 +1,14 @@
 class User < ApplicationRecord
+  scope :legacy_network, -> {
+    where(free_pilot_identity: false)
+      .or(where(email: Order.legacy.paid.select(:email)))
+      .or(where(email: Ticket.confirmed.select(:attendee_email)))
+  }
+
+  def legacy_network_eligible?
+    persisted? && self.class.legacy_network.exists?(id: id)
+  end
+
   SOCIAL_PROFILE_FIELDS = %i[website x_username bluesky github mastodon linkedin].freeze
 
   has_secure_password validations: false
@@ -40,26 +50,26 @@ class User < ApplicationRecord
   # Opted-in, named users who actually hold a confirmed pass — the only people
   # shown on the public "who's coming" wall. Opt-in is off by default.
   scope :publicly_attending, -> {
-    emails = Ticket.confirmed.where.not(attendee_email: [ nil, "" ]).distinct.pluck(Arel.sql("lower(attendee_email)"))
+    emails = Ticket.legacy.confirmed.where.not(attendee_email: [ nil, "" ]).distinct.pluck(Arel.sql("lower(attendee_email)"))
     where(public_attendee: true).where.not(name: [ nil, "" ]).where(email: emails)
   }
 
   def paid_orders
-    Order.paid.where("lower(orders.email) = ?", email)
+    Order.legacy.paid.where("lower(orders.email) = ?", email)
   end
 
   def tickets
-    Ticket.joins(:order).merge(paid_orders)
+    Ticket.legacy.joins(:order).merge(paid_orders)
   end
 
   # Holds a confirmed pass (bought one, or is named on one).
   def attending?
-    paid_orders.exists? || Ticket.confirmed.where("lower(attendee_email) = ?", email).exists?
+    paid_orders.exists? || Ticket.legacy.confirmed.where("lower(attendee_email) = ?", email).exists?
   end
 
   # Paid orders placed via this user's referral link.
   def referrals_count
-    Order.paid.where("metadata ->> 'referred_by' = ?", referral_code).count
+    Order.legacy.paid.where("metadata ->> 'referred_by' = ?", referral_code).count
   end
 
   def assign_referral_code
@@ -76,12 +86,14 @@ class User < ApplicationRecord
   end
 
   def conversations
-    Conversation.for_user(self)
+    return Conversation.none unless legacy_network_eligible?
+    Conversation.for_user(self).where(participant_one_id: User.legacy_network.select(:id), participant_two_id: User.legacy_network.select(:id))
   end
 
   # You can DM anyone you've connected with, or who has connected with you.
   def can_message?(other)
     return false if other.nil? || other == self
+    return false unless legacy_network_eligible? && other.legacy_network_eligible? && discoverable? && other.discoverable?
 
     connected_to?(other) || other.connected_to?(self)
   end

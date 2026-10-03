@@ -1,0 +1,8 @@
+<div class="grid">
+  <% if order.gstin.present? %><div><%= label_tag "billing_gst_legal_name", "Registered company name" %><%= text_field_tag "billing[gst_legal_name]", details.gst_legal_name, maxlength: 200, required: true, readonly: order.gst_legal_name.present? %></div><% end %>
+  <div><%= label_tag "billing_billing_address", "Billing address" %><%= text_area_tag "billing[billing_address]", details.billing_address, maxlength: 1000, autocomplete: "street-address", required: details.required? %></div>
+  <div><%= label_tag "billing_billing_state_name", "State or union territory name" %><%= text_field_tag "billing[billing_state_name]", details.billing_state_name, maxlength: 100, autocomplete: "address-level1", required: details.required? %></div>
+  <div><%= label_tag "billing_billing_state_code", "Two-digit GST state code" %><%= text_field_tag "billing[billing_state_code]", details.billing_state_code, maxlength: 2, pattern: "[0-9]{2}", inputmode: "numeric", required: details.required?, readonly: order.billing_state_code.present? %></div>
+  <div><%= label_tag "billing_delivery_address", "Delivery address, if different (optional)" %><%= text_area_tag "billing[delivery_address]", details.delivery_address, maxlength: 1000, autocomplete: "off" %></div>
+</div>
+<%= hidden_field_tag :billing_revision, order.metadata.fetch("billing_revision", 0) %>

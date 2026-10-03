@@ -1,11 +1,13 @@
 class Coupon < ApplicationRecord
   class Invalid < StandardError; end
+  scope :legacy, -> { left_joins(:ticket_type).where(ticket_types: { event_id: nil }) }
+  validate { errors.add(:ticket_type, "must belong to legacy checkout") if ticket_type&.event_id.present? }
 
   def self.find_by_code(code)
     code = code.to_s.strip
     return if code.blank?
 
-    find_by("lower(code) = ?", code.downcase) || raise(Invalid, "Coupon not valid")
+    legacy.find_by("lower(code) = ?", code.downcase) || raise(Invalid, "Coupon not valid")
   end
 
   belongs_to :ticket_type, optional: true

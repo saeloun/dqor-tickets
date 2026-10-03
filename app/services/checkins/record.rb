@@ -3,6 +3,7 @@ module Checkins
     def self.call(ticket:, date:, operator:, source:)
       raise ArgumentError, "Check-in operator required" unless operator&.admin? || operator&.desk?
 
+      ticket = nil if ticket&.event_id.present?
       if ticket.nil?
         CheckinAudit.create!(admin_user: operator, event_date: date, source:, outcome: "not_found")
         return { state: "error", code: "not_found", message: "Ticket not found", status: :not_found }

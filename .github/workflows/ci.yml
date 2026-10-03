@@ -5,9 +5,14 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      real_clamav:
+        description: Run bounded Linux ClamAV validation with official signatures
+        type: boolean
+        default: false
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -127,3 +132,76 @@ jobs:
           name: capybara-screenshots
           path: ${{ github.workspace }}/tmp/capybara
           if-no-files-found: ignore
+
+  real_clamav:
+    if: github.event_name == 'workflow_dispatch' && inputs.real_clamav
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/dqor_clamav_test
+      HIRING_CLAMAV_INTEGRATION: "true"
+      HIRING_CLAMSCAN_PATH: /usr/bin/clamscan
+      HIRING_CLAMAV_DATABASE: /var/lib/clamav
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install distro CLI without starting services
+        timeout-minutes: 3
+        run: |
+          sudo systemctl mask clamav-freshclam.service clamav-daemon.service
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clamav clamav-freshclam libvips-dev
+      - name: Fetch official signatures once, with bounded retries
+        timeout-minutes: 4
+        run: |
+          sudo install -d -m 755 -o clamav -g clamav "$HIRING_CLAMAV_DATABASE"
+          sudo tee /etc/clamav/freshclam.conf > /dev/null <<EOF
+          DatabaseDirectory $HIRING_CLAMAV_DATABASE
+          DatabaseOwner clamav
+          DatabaseMirror database.clamav.net
+          DNSDatabaseInfo current.cvd.clamav.net
+          ConnectTimeout 10
+          ReceiveTimeout 30
+          MaxAttempts 1
+          EOF
+          sudo timeout 180s freshclam --config-file=/etc/clamav/freshclam.conf --stdout
+      - name: Record engine and official signature versions
+        run: |
+          {
+            echo '### Linux ClamAV validation versions'
+            clamscan --database="$HIRING_CLAMAV_DATABASE" --version
+            dpkg-query -W clamav clamav-freshclam
+            for database in "$HIRING_CLAMAV_DATABASE"/*.cvd "$HIRING_CLAMAV_DATABASE"/*.cld; do
+              if [ -f "$database" ]; then
+                sigtool --info "$database"
+              fi
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Prepare synthetic database
+        run: bin/rails db:test:prepare
+      - name: Real engine — synthetic PDF and harmless EICAR only
+        timeout-minutes: 2
+        run: timeout 90s bundle exec rspec spec/services/hiring/clamav_integration_spec.rb --format documentation
+      - name: Remove task signatures and temporary config
+        if: always()
+        run: sudo rm -rf -- "$HIRING_CLAMAV_DATABASE" /etc/clamav/freshclam.conf

@@ -1,0 +1,6 @@
+<main><%= link_to "← Back to event", organizer_organization_event_path(params[:organization_id], @event), class: "back" %><p class="eyebrow">Registration setup</p><h1>Open free registration</h1><p><%= @event.title %> · One ticket per verified attendee. No payment is collected.</p>
+<% if @error %><p role="alert"><%= @error %></p><% end %>
+<%= form_with url: free_event_inventory_path(params[:organization_id], @event), scope: :ticket_type do |form| %>
+<p><%= form.label :name, "Ticket name" %><%= form.text_field :name, required: true, maxlength: 120, value: @fields&.[](:name) || "Free admission" %></p>
+<p><%= form.label :capacity %><%= form.number_field :capacity, required: true, min: 1, max: 10000, value: @fields&.[](:capacity) %></p>
+<%= form.submit "Publish free tickets" %><% end %></main>

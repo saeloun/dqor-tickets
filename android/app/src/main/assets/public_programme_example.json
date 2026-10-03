@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "event": {
+    "id": "dqor-2026",
+    "title": "Deccan Queen on Rails 2026",
+    "start_date": "2026-10-08",
+    "end_date": "2026-10-11",
+    "timezone": "Asia/Kolkata",
+    "venue": "Hyatt Regency, Pune",
+    "public_url": "https://deccanqueenonrails.com"
+  },
+  "sessions": [
+    {
+      "id": "101",
+      "title": "Synthetic published session",
+      "abstract": "Synthetic fixture for typed-client development.",
+      "starts_at": "2026-10-08T10:20:00+05:30",
+      "ends_at": "2026-10-08T10:30:00+05:30",
+      "local_date": "2026-10-08",
+      "speaker_id": "201",
+      "speaker_name": "Synthetic Speaker",
+      "room": "Synthetic room"
+    },
+    {
+      "id": "102",
+      "title": "Synthetic unscheduled session",
+      "abstract": null,
+      "starts_at": null,
+      "ends_at": null,
+      "local_date": null,
+      "speaker_id": null,
+      "speaker_name": null,
+      "room": null
+    }
+  ],
+  "speakers": [
+    {
+      "id": "201",
+      "name": "Synthetic Speaker",
+      "title": "Synthetic public title",
+      "bio": "Synthetic public biography.",
+      "profile_url": "https://deccanqueenonrails.com/speakers/201"
+    }
+  ],
+  "content_version": "28bc83433fa434cb444b03936ff4a8683a9860c0a25ffa276f37b683c875a1dd"
+}

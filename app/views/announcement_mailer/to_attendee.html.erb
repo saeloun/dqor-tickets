@@ -6,6 +6,10 @@
 
 <%= mail_divider %>
 
-<%= mail_note "You’re receiving this because you have a ticket to Deccan Queen on Rails — October 8–11, 2026, Pune." %>
+<%= mail_note "You’re receiving this because you opted in to announcement emails and have a ticket to Deccan Queen on Rails — October 8–11, 2026, Pune." %>
 
 <p style="margin:0 0 20px;"><%= mail_button "See all updates", updates_url %></p>
+
+<% if @unsubscribe_token %>
+<%= mail_link "Unsubscribe from announcement emails", announcement_unsubscribe_url(token: @unsubscribe_token) %>
+<% end %>

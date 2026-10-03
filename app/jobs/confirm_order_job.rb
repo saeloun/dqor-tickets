@@ -1,6 +1,6 @@
 class ConfirmOrderJob < ApplicationJob
   def perform(razorpay_order_id, payment_event_id)
-    order = Order.find_by!(razorpay_order_id:)
+    order = Order.legacy.find_by!(razorpay_order_id:)
     payment_event = order.payment_events.find(payment_event_id)
 
     order.mark_paid!(payment_event)

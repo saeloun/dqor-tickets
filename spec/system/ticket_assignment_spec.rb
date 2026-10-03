@@ -4,7 +4,7 @@ RSpec.describe "Ticket assignment", type: :system do
   before { allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test") }
 
   let(:order) do
-    create(:order, :paid).tap { |paid_order| Invoice.issue_for!(paid_order) }
+    create(:order, :paid)
   end
 
   def unassigned_ticket(attributes = {})

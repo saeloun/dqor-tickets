@@ -8,6 +8,7 @@ class InitiateRefundJob < ApplicationJob
   private_constant :RefundRequest
 
   def perform(refund, payment_id)
+    LegacyCommerce.assert!(refund)
     return if refund.razorpay_refund_id?
 
     gateway_refund = RefundRequest.new("dqor-refund-#{refund.id}").post("#{payment_id}/refund", amount: refund.amount_paise)

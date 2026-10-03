@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Event organizer</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "organizer_platform" %>
+    <%= yield :page_scripts %>
+  </head>
+  <body>
+    <header class="site-header">
+      <%= link_to "Event organizer", (FreeEvents::Access.enabled? ? free_organizations_path : account_root_path), class: "brand" %>
+      <nav aria-label="Main navigation">
+        <% if FreeEvents::Access.enabled? %><%= link_to "Organizations", free_organizations_path %><%= link_to "Free tickets", free_tickets_path %><% end %>
+        <% if FreeEvents::Access.enabled? && current_user.nil? %><%= link_to "Sign in", free_tickets_path %><% else %><%= link_to "My account", account_root_path %><% end %>
+      </nav>
+    </header>
+    <% flash.each do |type, message| %><p class="flash" role="status"><%= message %></p><% end %>
+    <%= yield %>
+  </body>
+</html>

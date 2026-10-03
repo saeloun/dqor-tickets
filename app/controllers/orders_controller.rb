@@ -8,6 +8,7 @@ class OrdersController < ApplicationController
     order = Orders::Checkout.call(
       order_attributes: order_attributes(checkout),
       items: items(checkout),
+      billing_attributes: checkout.slice(:billing_address, :billing_state_name, :delivery_address).to_h.merge(requested: checkout[:billing_details_requested]),
       coupon_code: checkout[:coupon_code],
       conference_order_code: checkout[:conference_order_code],
       conference_order_email: checkout[:conference_order_email]
@@ -23,7 +24,7 @@ class OrdersController < ApplicationController
     end
     @order = order
     render :checkout, status: :created
-  rescue Orders::Checkout::SoldOut, Orders::Checkout::InvalidSelection, Orders::Checkout::ConferencePassRequired, Coupon::Invalid => error
+  rescue BillingDetails::Invalid, Orders::Checkout::SoldOut, Orders::Checkout::InvalidSelection, Orders::Checkout::ConferencePassRequired, Coupon::Invalid => error
     render_checkout_error(error.message)
   rescue ActionController::UnfilteredParameters
     render_checkout_error("Please review your ticket selection and try again.")
@@ -35,7 +36,7 @@ class OrdersController < ApplicationController
   end
 
   def show
-    @order = Order.find_by!(code: params.expect(:code))
+    @order = Order.legacy.find_by!(code: params.expect(:code))
     @order.confirm_from_razorpay_if_stalled!
     regenerate_documents
   rescue ActiveRecord::RecordNotFound
@@ -49,7 +50,7 @@ class OrdersController < ApplicationController
       code = session[:ref].to_s
       return if code.blank?
 
-      referrer = User.find_by(referral_code: code)
+      referrer = User.legacy_network.find_by(referral_code: code)
       return unless referrer
       return if order.email.to_s.casecmp?(referrer.email.to_s)
 
@@ -68,7 +69,7 @@ class OrdersController < ApplicationController
     end
 
     def render_checkout_error(message)
-      @ticket_types = TicketType.where(hidden: false).order(:position, :id)
+      @ticket_types = TicketType.legacy.where(hidden: false).order(:position, :id)
       flash.now[:alert] = message
       render "tickets/index", status: :unprocessable_content
     end
@@ -76,6 +77,7 @@ class OrdersController < ApplicationController
     def checkout_params
       params.expect(checkout: [
         :email, :buyer_name, :buyer_phone, :gstin, :gst_legal_name, :billing_state_code,
+        :billing_address, :billing_state_name, :delivery_address, :billing_details_requested,
         :coupon_code, :conference_order_code, :conference_order_email, { quantities: {} }
       ])
     end
@@ -93,7 +95,7 @@ class OrdersController < ApplicationController
 
         { ticket_type_id:, quantity: }
       end
-      hidden_ids = TicketType.where(id: items.pluck(:ticket_type_id), hidden: true).ids
+      hidden_ids = TicketType.legacy.where(id: items.pluck(:ticket_type_id), hidden: true).ids
       raise Orders::Checkout::InvalidSelection, "ticket type not found" if hidden_ids.any?
 
       items

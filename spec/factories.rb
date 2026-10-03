@@ -1,4 +1,7 @@
 FactoryBot.define do
+  factory :user_for_free_pilot, class: "User" do
+    email { generate(:email) }
+  end
   sequence(:email) { |number| "person#{number}@example.com" }
   sequence(:slug) { |number| "ticket-type-#{number}" }
   sequence(:coupon_code) { |number| "CODE#{number}" }

@@ -309,7 +309,7 @@ RSpec.describe TicketType, type: :model do
     end
 
     it "does not limit a type with nil capacity" do
-      unlimited = create(:ticket_type, capacity: nil, max_per_order: 50)
+      unlimited = create(:ticket_type, capacity: nil, max_per_order: 50, price_paise: 100)
 
       expect { checkout(unlimited, quantity: 40) }.to change(Ticket, :count).by(40)
       expect(unlimited.available_quantity).to eq(Float::INFINITY)

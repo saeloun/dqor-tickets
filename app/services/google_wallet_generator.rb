@@ -25,6 +25,7 @@ class GoogleWalletGenerator
   end
 
   def initialize(ticket)
+    LegacyCommerce.assert!(ticket)
     @ticket = ticket
   end
 

@@ -1,0 +1,53 @@
+<nav class="editor-actions" aria-label="Branding actions"><a href="#branding-editor">Edit</a><%= link_to "Saved preview", preview_organizer_branding_path, target: "_blank", rel: "noopener", data: { saved_preview: true } %><button type="submit" form="branding-draft-form" class="primary">Save draft</button><span id="draft-status" role="status">Saved draft · public activation off</span></nav>
+<p id="editor-error" class="error" role="alert" tabindex="-1" hidden></p>
+<section class="intro"><div><p class="eyebrow">DECCAN QUEEN ON RAILS · EXISTING EVENT</p><h1>Your event.<br>Your expression.</h1><p>Choose a look, add your brand, then save a private draft.</p></div><aside><strong>Public activation is off</strong><p>Drafts and published configurations stay private. The live site, tickets, emails and invoices stay unchanged.</p></aside></section>
+<div class="workspace">
+  <section class="editor" id="branding-editor" tabindex="-1">
+    <h2>Branding draft</h2><p class="hint">Server revision <%= @setting.lock_version %>. This editor applies to DQOR only. Event identity, dates, venue and ticketing are unchanged.</p>
+    <% config = @configuration.to_h %>
+    <%= form_with url: organizer_branding_path, method: :patch, scope: :branding, multipart: true, id: "branding-draft-form", data: { turbo: false } do |form| %>
+      <%= form.hidden_field :lock_version, value: @setting.lock_version %>
+      <fieldset><legend>01 · Choose your look</legend>
+        <%= form.label :theme, "Theme direction" %><%= form.select :theme, [["The Gathering — conference", "conference"], ["The Movement — energetic", "marathon"], ["The Commons — editorial", "campus"]], selected: config.fetch("theme") %>
+        <p class="hint">Direction changes the artwork and layout treatment. Choose the colors below independently.</p>
+        <div class="colors"><% [["accent", "Accent"], ["surface", "Background"]].each do |key, label| %><div><%= form.label key, "#{label} hex" %><div class="color-pair"><input type="color" disabled id="<%= key %>-swatch" value="<%= config.fetch(key) %>" aria-label="<%= label %> color picker" data-color-for="branding_<%= key %>"><%= form.text_field key, value: config.fetch(key), required: true, pattern: "#[0-9a-fA-F]{6}", maxlength: 7, spellcheck: false %></div></div><% end %></div>
+        <%= form.label :font, "Heading style" %><%= form.select :font, [["Editorial serif", "editorial"], ["Modern sans", "modern"], ["Humanist sans", "humanist"]], selected: config.fetch("font") %>
+        <p class="hint">Foreground contrast adapts automatically. Custom CSS, scripts and remote font URLs are not accepted.</p>
+      </fieldset>
+      <fieldset><legend>02 · Add your images</legend><p class="hint">Optional PNG, JPEG or WebP, up to 1 MB and 4096 pixels per side. Images are cleaned and stored privately for admins.</p>
+        <% EventBranding::Configuration::ASSETS.each do |slot| %>
+          <div class="image-choice"><%= form.label slot, slot.capitalize %><%= form.file_field slot, accept: "image/png,image/jpeg,image/webp" %>
+          <% if (asset_id = config.fetch("assets")[slot]) %>
+            <div class="asset"><%= image_tag asset_organizer_branding_path(id: asset_id), alt: "Saved #{slot} preview" %><label><%= check_box_tag "branding[remove_assets][]", slot, false %> Remove saved <%= slot %></label></div>
+          <% else %>
+            <p class="hint image-empty"><%= { "logo" => "Using the theme mark. Add a logo to make it yours.", "cover" => "Using the theme artwork. A cover image is optional.", "favicon" => "No custom browser icon. Add one if you have it." }.fetch(slot) %></p>
+          <% end %>
+          <div class="selection" hidden><canvas role="img" aria-label="Selected image preview"></canvas><span></span><button type="button">Cancel selection</button></div></div>
+        <% end %>
+      </fieldset>
+      <fieldset><legend>03 · Arrange your page</legend><p class="hint">Hero stays first. Choose each section once, then save and review your draft.</p>
+        <% config.fetch("sections").each_with_index do |section, index| %>
+          <label for="branding_section_<%= index %>">Position <%= index + 1 %></label><%= select_tag "branding[sections][]", options_for_select([["About", "about"], ["Programme", "programme"], ["Venue", "visit"]], section), id: "branding_section_#{index}" %>
+        <% end %>
+      </fieldset>
+      <%= form.submit "Save draft", class: "primary" %>
+      <p class="hint">Save before previewing or publishing. Unsaved form edits are not shown in the preview.</p>
+    <% end %>
+  </section>
+  <section class="preview-column" aria-label="Saved configuration preview">
+    <div class="preview-heading"><div><p class="eyebrow">SAVED ON THE SERVER</p><h2>Draft preview</h2></div><%= link_to "Open saved draft ↗", preview_organizer_branding_path, target: "_blank", rel: "noopener", data: { saved_preview: true } %></div>
+    <iframe class="inline-preview" title="Saved DQOR branding draft preview" src="<%= preview_organizer_branding_path %>"></iframe>
+    <section class="publication"><h2>Publication</h2>
+      <% if @setting.published_at %><p>Configuration published <%= @setting.published_at.utc.strftime("%d %b %Y, %H:%M UTC") %> by <%= @setting.published_by&.display_name || "a previous admin" %>.</p><%= link_to "Inspect published configuration ↗", preview_organizer_branding_path(snapshot: "published"), target: "_blank", rel: "noopener", data: { saved_preview: true } %><% else %><p>No configuration has been published.</p><% end %>
+      <%= form_with url: publish_organizer_branding_path, data: { turbo: false, pending_label: "Publishing saved configuration…" } do |form| %>
+        <%= form.hidden_field :lock_version, value: @setting.lock_version %><label class="confirmation"><%= form.check_box :confirmed, { required: true }, "1", "0" %> I reviewed the saved draft and want to publish this configuration. Public activation remains off.</label><%= form.submit "Publish saved configuration", class: "primary" %>
+      <% end %>
+      <% if @setting.previous_published %>
+        <%= form_with url: rollback_organizer_branding_path, data: { turbo: false, pending_label: "Restoring previous publication…" } do |form| %><%= form.hidden_field :lock_version, value: @setting.lock_version %><label class="confirmation"><%= form.check_box :confirmed, { required: true, id: "rollback_confirmed" }, "1", "0" %> Restore the previous published configuration. Keep the current draft.</label><%= form.submit "Restore previous publication" %><% end %>
+      <% end %>
+      <p class="hint">Publication keeps one previous snapshot for rollback. This is configuration publication, not a public-site deployment.</p>
+    </section>
+  </section>
+</div>
+
+<dialog id="saved-preview-dialog" aria-labelledby="preview-title"><div class="dialog-bar"><div><h2 id="preview-title">Saved preview</h2><p>Your unsaved edits stay in the editor.</p></div><button type="button" id="close-preview">Back to editing</button></div><div class="preview-feedback" id="preview-feedback"><p id="preview-status" role="status">Loading saved preview…</p><button type="button" id="retry-preview" hidden>Try preview again</button></div><iframe title="Full saved branding preview" hidden></iframe></dialog>

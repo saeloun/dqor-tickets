@@ -8,7 +8,7 @@ class Avo::Resources::Announcement < Avo::BaseResource
     field :published, as: :boolean
     field :published_at, as: :date_time
     field :emailed_at, as: :date_time, readonly: true,
-      help: "Set automatically when this announcement is emailed to ticket holders."
+      help: "Legacy sent marker. Use Preview and approve email for current delivery status."
   end
 
   def actions

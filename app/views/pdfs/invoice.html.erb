@@ -1,3 +1,4 @@
+<% invoice.require_renderable_snapshot! %>
 <!doctype html>
 <html lang="en">
   <head>
@@ -71,7 +72,7 @@
           <div class="invoice-number"><%= invoice.number %></div>
           <div><span class="label">Issued</span> <%= invoice.issued_on.to_fs(:long) %></div>
           <% if invoice.refers_to %>
-            <div><span class="label">Refers to</span> <%= invoice.refers_to.number %></div>
+            <div><span class="label">Refers to</span> <%= invoice.refers_to.number %> · <%= invoice.refers_to.issued_on.to_fs(:long) %></div>
           <% end %>
         </div>
       </header>
@@ -79,19 +80,23 @@
       <section class="parties">
         <div class="party">
           <h2>Seller</h2>
-          <div class="party-name"><%= ENV.fetch("SELLER_NAME", "Saeloun Software Pvt Ltd") %></div>
-          <div class="address"><%= ENV.fetch("SELLER_ADDRESS", "Pune, Maharashtra") %></div>
-          <div class="tax-id"><span class="label">GSTIN</span> <%= ENV.fetch("SELLER_GSTIN", "") %></div>
+          <div class="party-name"><%= invoice.seller_snapshot.fetch("name") %></div>
+          <div class="address"><%= invoice.seller_snapshot.fetch("address") %></div>
+          <div class="tax-id"><span class="label">GSTIN</span> <%= invoice.seller_snapshot.fetch("gstin") %></div>
         </div>
         <div class="party">
           <h2>Buyer</h2>
           <div class="party-name"><%= invoice.buyer_snapshot["gst_legal_name"].presence || invoice.buyer_snapshot.fetch("buyer_name") %></div>
           <div><%= invoice.buyer_snapshot.fetch("email") %></div>
+          <div class="address"><%= invoice.buyer_snapshot["billing_address"] %></div>
+          <% if invoice.buyer_snapshot["delivery_address"].present? %>
+            <div class="address">Delivery: <%= invoice.buyer_snapshot["delivery_address"] %></div>
+          <% end %>
           <% if invoice.buyer_snapshot["gstin"].present? %>
             <div class="tax-id"><span class="label">GSTIN</span> <%= invoice.buyer_snapshot["gstin"] %></div>
           <% end %>
           <% if invoice.buyer_snapshot["billing_state_code"].present? %>
-            <div><span class="label">Place of supply</span> State <%= invoice.buyer_snapshot["billing_state_code"] %></div>
+            <div><span class="label">Place of supply</span> <%= invoice.buyer_snapshot["billing_state_name"] %> (<%= invoice.buyer_snapshot["billing_state_code"] %>)</div>
           <% end %>
         </div>
       </section>
@@ -114,7 +119,8 @@
             <tr>
               <td>
                 <div class="line-name"><%= line_item.fetch("name") %></div>
-                <div class="line-sac">SAC <%= ENV.fetch("SELLER_SAC", "998596") %> · GST inclusive</div>
+                <div class="line-sac">SAC <%= line_item.fetch("sac") %> · GST inclusive</div>
+                <div class="line-sac">CGST <%= line_item.fetch("cgst_rate") %>% · SGST <%= line_item.fetch("sgst_rate") %>% · IGST <%= line_item.fetch("igst_rate") %>%</div>
               </td>
               <% %w[price_paise discount_paise taxable cgst sgst igst total_paise].each do |key| %>
                 <td><%= number_to_currency(line_item.fetch(key) / 100.0, unit: "₹", precision: 2) %></td>
@@ -124,6 +130,7 @@
         </tbody>
       </table>
 
+      <div>Reverse charge: <%= invoice.tax_snapshot.fetch("reverse_charge") ? "Yes" : "No" %></div>
       <section class="summary">
         <div class="summary-row"><span>Taxable total</span><strong><%= number_to_currency(totals["taxable"] / 100.0, unit: "₹", precision: 2) %></strong></div>
         <div class="summary-row"><span>CGST</span><strong><%= number_to_currency(totals["cgst"] / 100.0, unit: "₹", precision: 2) %></strong></div>

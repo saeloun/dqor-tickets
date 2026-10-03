@@ -4,6 +4,7 @@ class ApplicationJob < ActiveJob::Base
   class TransientRazorpayError < StandardError; end
 
   DOCUMENT_ERRORS = [
+    Invoice::DocumentPending,
     Ferrum::ProcessTimeoutError,
     Ferrum::TimeoutError,
     Ferrum::DeadBrowserError,
