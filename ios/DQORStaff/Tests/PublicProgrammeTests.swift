@@ -40,6 +40,16 @@ final class PublicProgrammeTests: XCTestCase {
         let validators = await transport.validators
         XCTAssertEqual(validators, [nil, "W/\"synthetic\""])
     }
+    func testMismatched304ValidatorCannotMarkCacheFresh() async throws {
+        let transport = ProgrammeFixtureTransport([response(sessions: unscheduled), ProgrammeResponse(status: 304, etag: "W/\"different\"", data: Data())])
+        let client = PublicProgrammeClient(transport: transport)
+        let first = try await client.refresh()
+        do { _ = try await client.refresh(); XCTFail("Expected validator rejection") }
+        catch { XCTAssertEqual(error as? ProgrammeError, .invalidResponse) }
+        let state = await client.state()
+        XCTAssertEqual(state.snapshot, first.snapshot)
+        XCTAssertTrue(state.isStale)
+    }
     func test304WithoutSnapshotRetriesUnconditionally() async throws {
         let transport = ProgrammeFixtureTransport([ProgrammeResponse(status: 304, etag: nil, data: Data()), response()])
         let client = PublicProgrammeClient(transport: transport)

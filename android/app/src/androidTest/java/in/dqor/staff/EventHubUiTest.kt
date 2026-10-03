@@ -24,7 +24,14 @@ class EventHubUiTest {
     @get:Rule val compose=createComposeRule()
     private val events=listOf(Event("dqor-2026","Deccan Queen on Rails","Pune, India","A meeting of curious minds",listOf("2026-10-08","2026-10-09","2026-10-10","2026-10-11"),"heritage"),Event("studio-demo","The Design Assembly","Bengaluru, India · sample event","Ideas deserve a gathering",listOf("2026-11-14"),"midnight"))
     private fun content()=EventExperience.parse(InstrumentationRegistry.getInstrumentation().targetContext.assets.open("experience.json").bufferedReader().use {it.readText()})
-    private fun tap(list: String,text: String) {compose.onNodeWithTag(list).performScrollToNode(hasText(text)); compose.onNodeWithText(text).performClick(); compose.waitForIdle()}
+    private fun show(list: String,text: String) {
+        compose.waitUntil(5_000) {
+            compose.onNodeWithTag(list).performScrollToNode(hasText(text))
+            compose.onNodeWithText(text).performScrollTo().isDisplayed()
+        }
+        compose.onNodeWithText(text).assertIsDisplayed()
+    }
+    private fun tap(list: String,text: String) {show(list,text); compose.onNodeWithText(text).performClick(); compose.waitForIdle()}
     @Test fun sharedCoverIsBundledAndDecodable() {
         val resources=InstrumentationRegistry.getInstrumentation().targetContext.resources
         val bitmap=android.graphics.BitmapFactory.decodeResource(resources,R.drawable.deccan_cover)
@@ -77,7 +84,7 @@ class EventHubUiTest {
         tap("event-list","Deccan Queen on Rails"); compose.onNodeWithText("Schedule").performScrollTo().performClick()
         compose.onNodeWithText("Find a session or speaker").performTextInput("no such sample")
         tap("schedule-list","Reset filters")
-        compose.onNodeWithTag("schedule-list").performScrollToNode(hasText("Small teams, remarkable software"))
+        show("schedule-list","Small teams, remarkable software")
         compose.onNodeWithText("Small teams, remarkable software").assertIsDisplayed()
     }
 }

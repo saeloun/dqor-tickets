@@ -1,68 +1,57 @@
-# DQOR Staff — native iOS preview
+# DQOR iOS — programme, account client and scanner rehearsal
 
-A focused SwiftUI iPhone/iPad staff check-in app. This is a **mock-only, synthetic-data preview**, not a production attendance client. All changes are contained in `ios/DQORStaff`. No Rails or dashboard code is included.
+The default app connects anonymously to the deployed official DQOR public programme. It presents real event dates, venue and published sessions, local saved-session preferences, search/day filters, details, retry and clearly marked cached/offline states. The original bundled Deccan artwork and warm/plum presentation remain. Public reads do not authenticate, download private tickets or alter attendance.
+
+The separate labeled staff/design demo uses synthetic data only. The disabled native staff adapter remains disconnected. Backend PR #189 is merged and deployed at main `6842a5b0b6224f24f78332593aff3b9b56d62be8`, with account/pass cookie JSON disabled by default. The attendee account client implements the separate undeployed draft PR #192 behind a fixed closed production gate, with Debug-only synthetic journeys and intercepted HTTP tests. Your account uses the existing official system-browser account and ticket routes in production. There is no scannable native attendee pass API or live private identity in the app. See [NATIVE_ATTENDEE_AUTH.md](NATIVE_ATTENDEE_AUTH.md) for the exact contract, memory-only lifecycle and platform gates.
 
 ## Run and test
 
-Open `DQORStaff.xcodeproj`, select the shared DQORStaff scheme and an iOS 17+ simulator, then Run. No third-party dependencies, real credentials, or signing team are required for the simulator.
+Open `DQORStaff.xcodeproj`, select the shared scheme and an available iOS 17+ simulator. No third-party dependencies or signing team is required for simulator tests.
 
 ```sh
 xcodebuild -project ios/DQORStaff/DQORStaff.xcodeproj -scheme DQORStaff \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
-  -derivedDataPath /tmp/dqor-staff-build CODE_SIGNING_ALLOWED=NO test
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+  -derivedDataPath /tmp/dqor-public-ios-build CODE_SIGNING_ALLOWED=NO test
 ```
 
-`python3 ios/DQORStaff/generate_project.py` reproducibly regenerates the checked-in project using Python's standard library. No XcodeGen or runtime replacement is needed.
+`python3 ios/DQORStaff/generate_project.py` reproducibly regenerates the project with Python's standard library.
 
-Demo launch arguments: `--offline` makes lookup/scanning/submission fail; `--fail-checkin` permits search but rejects submission; `--finance` demonstrates a role without attendance capabilities. These flags only select synthetic fixtures. The app still constructs DemoStaffAPI exclusively. A separate disabled NativeStaffAPI adapter is covered by mocked transport tests; no production origin or runtime activation switch is configured.
+Demo launch arguments include `--demo`, with optional `--offline`, `--fail-checkin`, `--finance` and `--duplicate-names`. The first explicitly opens the demo; the others affect synthetic fixtures only. Debug `--public-fixture` provides labeled public-feed fixtures and scenario controls; `--public-offline` makes the initial fixture read fail. Release uses the official public feed. There is no staff API activation flag or credential-entry UI.
 
-## Staff flow
+Live XCTest reads are explicitly opt-in with `DQOR_RUN_LIVE_PUBLIC_SMOKE=1` in the test runner environment. Without it, those tests skip instead of substituting fixtures or claiming live results. They only GET the approved public programme; they never log in, retrieve private tickets, send email or submit attendance.
 
-Enter demo → choose event/day → scan tickets continuously or search by name/email/ticket ID → select multiple attendees → review the explicit event, day, and names → confirm → inspect per-attendee results. Cancel preserves the batch; clear/back discard unsubmitted selections. Leaving a nonempty batch asks for confirmation. Search supports keyboard submission; native controls expose VoiceOver labels and semantic status text. Layout uses Dynamic Type and system colors.
+See [PUBLIC_PROGRAMME_CLIENT.md](PUBLIC_PROGRAMME_CLIENT.md) for the exact network, cache, bookmark, withdrawal and privacy-clearing behavior.
 
-Synthetic QR payloads: `dqor-demo:demo-001`, `dqor-demo:demo-002`, `dqor-demo:demo-003`. The third fixture is ineligible for Day 1. Repeating a successful check-in reports “Already checked in”; another day has independent attendance. Unknown codes produce an actionable lookup error. Repeated camera frames are throttled and selected attendees are deduplicated. The batch limit is 50, aligned with the proposed Rails contract. Each event/day carries a configurable lower limit and a semantic presentation theme (indigo, forest, ember). The catalog includes three synthetic event fixtures; production event discovery and richer branded experiences remain future integration work.
+## Scanner rehearsal
 
-Camera permission is requested only when the user opens scanning. `NSCameraUsageDescription` is generated into the app Info.plist. Capture stops on dismissal/background. Denied/restricted/no-camera states provide attendee-search fallback. Simulator tests do not grant camera permission, create credentials, or change live attendance. Physical camera focus/orientation, interrupted capture, and real QR performance still need device validation.
+Open the labeled demo, choose an event/day, then scan or search. Resolution adds an attendee to an explicit review batch. Only confirmation produces per-attendee synthetic admission results. The purpose is event entrance attendance; there are no invented meal, party or session redemption operations. Review shows the selected event/day, names and count. Cancel preserves the batch; leaving a nonempty batch asks before discarding. No offline mutation queue or optimistic admission exists. Invalid, duplicate, ineligible, canceled, unconfirmed and uncertain results remain distinct, with server-coded results enforced by the disabled adapter's mocked tests.
 
-## Rails integration seam — pending verified contract
+Camera capture explicitly selects the rear wide-angle camera. Permission is requested only on opening the scanner. Denial provides Settings, retry and manual lookup. Capture stops on dismissal/background, queued starts are invalidated, foregrounding retries permission, partially failed configuration is cleaned up, and preview rotation uses the platform rotation coordinator. Raw QR payloads are never logged or persisted. Continuous frames go through `ScanGate`, with size/cooldown limits and stable attendee deduplication.
 
-`StaffAPI` is injectable and asynchronous. It separates sign-in/session, authorized event days, bounded attendee search, opaque QR resolution, and confirmed batch submission. NativeStaffAPI implements the proposed v1 wire contract behind a disabled configuration, with an ephemeral transport and injectable Keychain storage. `DemoStaffAPI` is an actor with synthetic fixtures. `StaffStore` owns selection, request lifecycle, errors, and confirmation; camera input goes through a separately testable `ScanGate`.
+Simulator camera capture is unavailable. Debug `--demo --scanner-rehearsal` exposes clearly labeled synthetic code buttons through the same camera callback to test preview, repeat suppression, explicit confirmation and outcomes. `--scanner-camera-denied` rehearses denial/retry/manual fallback. These buttons are absent from Release and real-device camera builds. No camera permission or system setting is changed by tests.
 
-The backend owner's current `docs/NATIVE_STAFF_API.md` was reviewed on 2026-10-02. It proposes disabled-by-default, bearer-only native sessions and separate read-only QR resolution, search, and explicit confirmation endpoints. Tokens expire after 8 hours without refresh; current-session logout revokes the token. The API is scoped to the single `dqor-2026` event with server-authorized dates and admin/desk accounts. It is not enabled or exercised in production.
+## Required approvals for private live integration
 
-`POST /api/staff/checkins/resolve` now resolves a QR without attendance/audit mutation, addressing the original batch-preview mismatch. Never use legacy `POST /checkin` for preview because it mutates attendance immediately. The app remains demo-only; the disabled native adapter and token-only Keychain implementation are present but never instantiated by the app entry point. Before enabling integration, verify the authorized staging origin/fixtures, Keychain policy, session expiry/revocation/logout, canonical event/date mapping, secure transport, per-ticket outcome classification, and physical-device behavior. See [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) for exact acceptance requirements and the received contract snapshot.
+The public feed needs no new authentication or activation. Staff API production reads currently fail closed while activation is disabled. Any activation requires a separately approved exact host, existing named admin/desk identity, authorized subset of October 8–11, session creation/read/write scope and backend release owner. Do not provision staff accounts, widen roles, copy browser credentials, issue tokens or turn on production flags implicitly.
 
-The local request UUID is an API seam, not a claim that Rails accepts an idempotency header. The proposed server safely retries the same ticket IDs/date by returning duplicates. The integration team must supply or verify:
+Before staff login: verify the approved secure credential-entry flow, event/date capabilities, eight-hour expiry, origin-bound token-only Keychain policy, logout/revocation, 401/403 clearing and lost-network recovery against approved synthetic staging fixtures. Before any real confirmation: explicitly authorize the named event/day, test attendees and attendance mutation; verify read-only QR resolution writes nothing, and require explicit review/confirmation. Legacy web `POST /checkin` must never implement native preview.
 
-- Authentication/session creation, refresh, revocation, and secure token-storage requirements.
-- Authorized event/day IDs and timezone/eligibility semantics.
-- Search pagination, minimal attendee fields, and opaque QR resolution format.
-- Server-authoritative capabilities, check-in eligibility, duplicate/conflict outcomes, and audit rules.
-- Batch request/response schema and idempotency behavior, including uncertain response recovery.
-- Authorized staging host and synthetic test credentials; no production credentials in source.
+Before native attendee activation: PR #189's merged and deployed cookie-authenticated account/pass JSON remains disabled by default and separate from the undeployed bearer draft. Review draft PR #192 (`2839e33961e9c6a9b95ea78c8b477265471e8bca`), provision the owner-approved canonical `dqor-ios` client/callback mapping, independently verify webcredentials/applinks associations and secure real-device browser return. The client gate is fixed off. The synthetic account/pass UI has no QR; a scannable-pass contract and secure display/storage policy still require review. Staff identity, payments, email and redemption remain separately scoped.
 
-The native session carries capability values; the mock role matrix includes owner/admin/organizer/team lead/volunteer with attendance capabilities and finance/AV without them. This is a **fixture policy only**, not an assertion about production permissions. The live server must enforce authorization for every action.
+[NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) and [NATIVE_ADAPTER.md](NATIVE_ADAPTER.md) describe the existing disabled adapter and acceptance requirements.
 
-Unchanged failed batches retain their request UUID for retry. Editing a batch creates a new request ID. Incomplete responses and transport failures never become success. No offline queue exists. After an uncertain live response, reconcile server attendance before retrying according to the verified backend contract. Ticket payloads are neither logged nor persisted. Attendee/session state is cleared on sign-out, and event context changes clear the batch.
+## Device and distribution gates
 
-## Release gates
+Read-only inspection on 2026-10-03 found an Apple Development signing identity, but no connected physical iPhone. The app project has no selected development team; its bundle identifier, provisioning profile, device authorization and distribution target have not been approved or verified. No signing assets, profiles, permissions, registrations or uploads were created.
 
-Local inspection on 2026-10-02 found Xcode 27.0 (27A266a), iOS 26.1/26.2/27.0 simulators, and **zero valid local code-signing identities**. `DEVELOPMENT_TEAM` is unset; `org.dqor.staff` is a provisional local bundle identifier, not a registered App ID. Apple team membership and App Store Connect permissions have not been verified.
+Physical rear-camera capture, real QR focus/rotation/interruption, permission behavior on a real phone, locked-device token storage and actual staff auth/revocation still require an approved device build and test scope. Simulator fixtures cannot prove those behaviors. TestFlight/App Store distribution requires an approved team, App ID, provisioning/distribution target and explicit release authorization; no upload has occurred.
 
-Before device/TestFlight distribution: integrate and test the verified Rails contract; obtain the approved Apple team/account, bundle ID, signing assets and App Store Connect target; approve branding/app icon and privacy disclosures; perform physical-camera and accessibility validation; then obtain exact distribution approval. No certificates, profiles, App IDs, account grants, agreements, or uploads were created.
+## Attendee client validation
 
-## Verification checkpoint
+The isolated auth lane passed a full candidate unit run of 105 reported tests, one explicit opt-in public-live skip and zero failures. After the final timer/copy delta, all 39 affected auth tests passed with no skips/failures. Five selected simulator UI journeys passed before that last timer/copy delta: four auth rehearsals and the existing public navigation/save/offline/clear fixture journey. After grafting the auth-only diff onto landed main `c70f5e41f3737c00fe8460227d81a41d71b4f9de`, the combined unit suite reported 106 tests, one intentional public-live opt-in skip and zero failures (105 actually ran); the unchanged public fixture UI journey also passed. Clean Debug and unsigned Release simulator builds on that base passed. Screenshots were inspected; first-run assertion failures and two rejected transition captures remain retained. [NATIVE_ATTENDEE_AUTH.md](NATIVE_ATTENDEE_AUTH.md) distinguishes exact source/test provenance and remaining gates. No private production calls were made.
 
-On 2026-10-02, the iPhone 17 Pro / iOS 26.2 simulator suite passed **13 unit tests and 5 UI tests** (18 total), covering mixed/duplicate/day eligibility results, repeated/invalid QR input, cooldown/length limits, cancellation, offline and failed submissions, incomplete server responses, stable retry IDs, stable attendee identity, event configuration limits, capability denial, sign-out cleanup, empty search, review cancellation/confirmation, and back/discard behavior. XCTest screenshots captured the welcome, event catalog, lookup, review, and result screens. Small subsequent UI text/color edits were compiler-validated. VoiceOver behavior, largest accessibility sizes, physical camera capture, and production authentication require additional validation before release.
+## Public/scanner evidence
 
-## Accessibility follow-up
+The final 2026-10-03 live-enabled unit run passed all 67 tests with zero skips/failures, including an actual simulator URLSession 200 followed by exact weak-ETag 304. The observed publication had 34 sessions and 14 speakers. The controlled full UI replay passed all 20 tests with zero skips/failures, including real programme content, local saving/cold restart, foreground/privacy clear and labeled scanner rehearsal. After a test-only settled-landscape/whole-screen capture refinement, the focused scanner journey passed its one test; the runtime app binary remained unchanged. Actual screenshot pixels were inspected.
 
-The follow-up suite passes **13 unit tests and 9 UI tests** (22 total), including read-only accessibility audits, largest accessibility text size, keyboard search, simulator camera fallback, and duplicate-name confirmation. See [ACCESSIBILITY_REVIEW.md](ACCESSIBILITY_REVIEW.md) for findings and limits, and [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) for the precise backend handoff. `--duplicate-names` adds a synthetic second Alex Morgan to validate identity disambiguation. The app remains mock-only.
-
-## Disabled adapter checkpoint
-
-[Native adapter details](NATIVE_ADAPTER.md) describe the implemented HTTP/DTO and Keychain boundaries. The native unit suite now passes **40 tests**; the full regression run also passed all **9 UI tests** before the final native-only lifecycle tightening, followed by the 40-unit rerun. No live server was called and the Keychain tests use an injected client. The original requested head `049f2baf34358d6b40757496a1fd59f7ff9c9c62` completed remote CI successfully.
-
-## Pinned outcome-code update
-
-Backend contract revision `26d5a1eddfb64960b29abd58412da5965b50bb45` adds per-ticket result codes. The native adapter now requires the exact documented code/state pairs and rejects missing/unknown/mismatched values, including older-server responses, without publishing admission success. Errors direct staff to an event administrator for verification. **43 focused unit tests pass**, including all six valid codes, all mismatched combinations, malformed/missing codes, and a mixed-batch unverified-result regression. Demo launch and native-disabled configuration remain unchanged.
+One preceding full UI run retained an automated contrast finding on the existing Demo environment row. The same unchanged audit passed in a focused run and the controlled full replay; the cause remains unconfirmed, and no audit assertion was removed. Earlier recovery failures, an interrupted SpringBoard preflight run and an intermediate screenshot-API compile failure are retained with exact provenance in the accompanying review handoff. These results do not establish physical-camera, live staff-authentication or distribution readiness.

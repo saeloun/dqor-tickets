@@ -26,8 +26,6 @@ struct ProgrammeResponse: Sendable {
     let data: Data
 }
 
-/// Deliberately no production implementation or URL. An approved deployment is required
-/// before introducing HTTP wiring; this boundary accepts only injected transport.
 protocol ProgrammeTransport: Sendable {
     func fetch(ifNoneMatch: String?) async throws -> ProgrammeResponse
 }
@@ -44,27 +42,38 @@ actor PublicProgrammeClient {
     private let transport: any ProgrammeTransport
     private var cached = State()
     private var etag: String?
-    private var refreshing = false
+    private var refreshingGeneration: Int?
+    private var generation = 0
     init(transport: any ProgrammeTransport) { self.transport = transport }
     func state() -> State { cached }
+    func clear() {
+        generation += 1
+        cached = State()
+        etag = nil
+        refreshingGeneration = nil
+    }
 
     @discardableResult
     func refresh() async throws -> State {
-        guard !refreshing else { throw ProgrammeError.refreshInProgress }
-        refreshing = true
-        defer { refreshing = false }
+        guard refreshingGeneration == nil else { throw ProgrammeError.refreshInProgress }
+        let requestGeneration = generation
+        refreshingGeneration = requestGeneration
+        defer { if refreshingGeneration == requestGeneration { refreshingGeneration = nil } }
         do {
             let validator = cached.snapshot == nil ? nil : etag
             var response = try await transport.fetch(ifNoneMatch: validator)
             try Task.checkCancellation()
+            guard requestGeneration == generation else { throw CancellationError() }
             if response.status == 304 {
-                if validator != nil, cached.snapshot != nil {
+                if let validator, cached.snapshot != nil {
+                    guard response.etag == nil || response.etag == validator else { throw ProgrammeError.invalidResponse }
                     cached.isStale = false
                     return cached
                 }
                 // A bodyless 304 cannot establish a snapshot. Retry unconditionally once.
                 response = try await transport.fetch(ifNoneMatch: nil)
                 try Task.checkCancellation()
+                guard requestGeneration == generation else { throw CancellationError() }
             }
             guard response.status == 200 else {
                 throw response.status == 503 ? ProgrammeError.unavailable : ProgrammeError.invalidResponse
@@ -86,7 +95,7 @@ actor PublicProgrammeClient {
             etag = response.etag
             return cached
         } catch {
-            cached.isStale = true
+            if requestGeneration == generation { cached.isStale = true }
             throw error
         }
     }
