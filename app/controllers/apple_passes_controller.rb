@@ -4,7 +4,7 @@ class ApplePassesController < ApplicationController
   def show
     return head :not_found unless PkpassGenerator.configured?
 
-    ticket = Ticket.legacy.confirmed.find_by!(secret: params[:secret])
+    ticket = Ticket.confirmed.find_by!(secret: params[:secret])
 
     send_data PkpassGenerator.new(ticket).generate,
       filename: "deccan-queen-on-rails.pkpass",

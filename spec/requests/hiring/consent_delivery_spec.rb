@@ -73,9 +73,9 @@ RSpec.describe "Hiring consent delivery", type: :request do
     expect(response).to redirect_to(account_sign_in_path)
     [ org, other_org ].each do |organization|
       Membership.create!(organization: organization, user: intruder, role: "owner")
-      employer = Hiring::Company.create!(organization: organization, claimant: intruder, name: "Other employer", website: "https://other.test", evidence: "Offline", status: "approved")
+      fixture_company = Hiring::Company.create!(organization: organization, claimant: intruder, name: "Other employer", website: "https://other.test", evidence: "Offline", status: "approved")
       event = organization.events.create!(title: "Sibling event", slug: "sibling")
-      Hiring::Job.create!(company: employer, recruiter: intruder, event: event, title: "Other job", description: "Other")
+      Hiring::Job.create!(company: fixture_company, recruiter: intruder, event: event, title: "Other job", description: "Other")
     end
     login(intruder)
     get hiring_resume_path(application)

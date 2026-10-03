@@ -83,9 +83,9 @@ RSpec.describe "Private hiring", type: :request do
     apply_to_job
     [ org, other_org ].each do |scope|
       Membership.create!(organization: scope, user: other_recruiter, role: "owner")
-      employer = Hiring::Company.create!(organization: scope, claimant: other_recruiter, name: "Other", website: "https://other.test", evidence: "Evidence", status: "approved")
+      fixture_company = Hiring::Company.create!(organization: scope, claimant: other_recruiter, name: "Other", website: "https://other.test", evidence: "Evidence", status: "approved")
       sibling = scope.events.create!(title: "Sibling", slug: "sibling")
-      Hiring::Job.create!(company: employer, recruiter: other_recruiter, event: sibling, title: "Other role", description: "Other")
+      Hiring::Job.create!(company: fixture_company, recruiter: other_recruiter, event: sibling, title: "Other role", description: "Other")
     end
     login(other_recruiter)
     get hiring_applicants_path(job)

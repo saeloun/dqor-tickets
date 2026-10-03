@@ -37,7 +37,14 @@ export default class extends Controller {
   }
 
   changeDate(event) {
-    if (!this.busy) event.currentTarget.form.requestSubmit()
+    if (this.busy) return
+    this.busy = true
+    this.element.setAttribute("aria-busy", "true")
+    this.pauseScanner()
+    this.show("warning", "Loading the selected date. Wait before checking in.")
+    this.element.querySelectorAll("button").forEach(button => { button.disabled = true })
+    this.selectionTargets.forEach(input => { input.disabled = true })
+    event.currentTarget.form.requestSubmit()
   }
 
   scanTicket(event) {

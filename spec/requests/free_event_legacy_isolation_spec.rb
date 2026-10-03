@@ -24,6 +24,18 @@ RSpec.describe "Legacy rejects event-owned commerce", type: :request do
     expect(response.body).not_to include(type.name)
   end
 
+  it "rejects event-owned wallet identities before configured generators run" do
+    allow(PkpassGenerator).to receive(:configured?).and_return(true)
+    allow(GoogleWalletGenerator).to receive(:configured?).and_return(true)
+    expect(PkpassGenerator).not_to receive(:new)
+    expect(GoogleWalletGenerator).not_to receive(:new)
+    [ apple_pass_path(ticket.secret), google_wallet_pass_path(ticket.secret) ].each do |path|
+      get path
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include(user.name, user.email)
+    end
+  end
+
   it "excludes account, magic-link retrieval, marketing counts and exports" do
     token = Rails.application.message_verifier(:account_magic_link).generate(user.id, purpose: :account_magic_link, expires_in: 30.minutes)
     get account_magic_path(token: token)
