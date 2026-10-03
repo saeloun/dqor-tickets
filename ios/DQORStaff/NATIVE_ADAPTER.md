@@ -1,6 +1,6 @@
 # Disabled native adapter
 
-`NativeStaffAPI` now implements the reviewed native v1 routes behind an explicit configuration gate and injectable transport/storage. **DQORStaffApp still constructs DemoStaffAPI exclusively.** There is no live origin, credential-entry UI, runtime activation flag, provider grant, or production token in this change. Do not instantiate an enabled real transport until staging is approved.
+`NativeStaffAPI` now implements the reviewed native v1 routes behind an explicit configuration gate and injectable transport/storage. **Staff rehearsal still uses DemoStaffAPI exclusively; the default public programme has its own anonymous transport.** There is no live staff origin, credential-entry UI, runtime activation flag, provider grant, or production token in this change. Do not instantiate an enabled real transport until staging is approved.
 
 ## Wire behavior
 
