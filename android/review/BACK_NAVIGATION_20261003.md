@@ -24,7 +24,7 @@ On a separate owned API35 emulator, baseline reproduces the offscreen-card failu
 | Independent review council | Security, testing, architecture, quality and performance approve |
 | Patch hygiene | `git diff --check` passes |
 
-Device journeys cover offscreen expansion in a 23-session fixture; latest-first handling of multiple expansions; preview priority; repeated save/unsave; pass/wallet/overview/catalogue Back; date and Saved-only removal; actual OS Back with system animations disabled; loading with repeated refresh; and synthetic offline/stale/304/error/empty recovery. Existing 200% text, staff confirmation/cancel/retry, role gating and Keystore cases pass in both full suites.
+Device journeys cover offscreen expansion in a 23-session fixture; latest-first handling of multiple expansions; preview priority; repeated save/unsave; pass/wallet/overview/catalogue Back; date and Saved-only removal; actual OS Back with system animations disabled; loading with repeated refresh; and synthetic offline/stale/304/error/empty recovery. Existing 200% text, staff confirmation/cancel/retry and Keystore cases pass in both full suites. The JVM suite also verifies role gating.
 
 The first extended API35 full run exposed two existing search-test viewport/focus failures (23 tests, two failures). Untouched main reproduced the standalone public-search assertion failure in its full run (20 tests, one failure), while focused baseline search tests passed. Test helpers now re-scroll and reacquire visible fields with a five-second bound, retaining all visibility and exact search-value assertions. They use no sleeps, skipped assertions or exception suppression. Failed runs remain in the evidence alongside final passing runs.
 
