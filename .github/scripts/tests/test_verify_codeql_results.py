@@ -20,7 +20,10 @@ class ResultVerificationTest(unittest.TestCase):
 
     def analysis(self, results=None, invocations=None):
         return {"runs": [{"tool": {"driver": {"rules": []}},
-                          "results": results or [], "invocations": invocations or []}]}
+                          "results": results or [], "invocations": invocations or [],
+                          "properties": {"metricResults": [{
+                              "ruleId": "java/summary/lines-of-code-kotlin", "value": 1
+                          }]}}]}
 
     def test_clean_analysis(self):
         self.assertEqual(self.verify([self.analysis(), self.analysis()]).returncode, 0)
@@ -47,3 +50,22 @@ class ResultVerificationTest(unittest.TestCase):
             "toolConfigurationNotifications": [{"level": "error"}]
         }}
         self.assertNotEqual(self.verify([document]).returncode, 0)
+
+    def test_missing_or_zero_kotlin_coverage(self):
+        for metrics in [[], [{"ruleId": "java/summary/lines-of-code-kotlin", "value": 0}]]:
+            with self.subTest(metrics=metrics):
+                document = self.analysis()
+                document["runs"][0]["properties"]["metricResults"] = metrics
+                self.assertNotEqual(self.verify([document]).returncode, 0)
+
+    def test_optional_extension_rules_and_security_rating(self):
+        document = self.analysis()
+        document["runs"][0]["tool"]["extensions"] = [{"name": "empty-pack"}]
+        self.assertEqual(self.verify([document]).returncode, 0)
+        document["runs"][0]["tool"]["extensions"].append({"rules": [{
+            "id": "java/example", "properties": {"security-severity": "8.0"}
+        }]})
+        document["runs"][0]["results"] = [{"ruleId": "java/example"}]
+        result = self.verify([document])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("security severity 8.0", result.stdout)
