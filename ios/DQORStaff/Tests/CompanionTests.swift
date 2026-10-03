@@ -20,6 +20,20 @@ final class CompanionTests: XCTestCase {
         XCTAssertTrue(DemoCompanion.passes(for: live).isEmpty)
         XCTAssertTrue(DemoCompanion.schedule(for: live).isEmpty)
     }
+    func testSavedSessionsRemainScopedAndRejectUnknownFixtures() {
+        let agenda = AttendeeAgenda()
+        let day = DemoCompanion.previewDay
+        let session = DemoCompanion.schedule(for: day)[0]
+        agenda.toggle(session, for: day)
+        XCTAssertTrue(agenda.isSaved(session))
+        agenda.toggle(session, for: DemoStaffAPI.days[0])
+        XCTAssertTrue(agenda.isSaved(session))
+        let unknown = DemoScheduleItem(id: "unknown-live-session", time: "18:00", title: "Unknown", location: "Unknown")
+        agenda.toggle(unknown, for: day)
+        XCTAssertFalse(agenda.isSaved(unknown))
+        agenda.toggle(session, for: day)
+        XCTAssertTrue(agenda.savedSessionIDs.isEmpty)
+    }
     func testHistoryScanRepeatFailureAndSignOut() async {
         let store = StaffStore(api: DemoStaffAPI())
         await store.signIn(); store.choose(DemoStaffAPI.days[0])

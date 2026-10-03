@@ -3,6 +3,7 @@ package `in`.dqor.staff.experience
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -20,6 +21,8 @@ val AttendeeColors=lightColorScheme(
     outline=Color(0xFF918A82),outlineVariant=Color(0xFFE5E0D9),surfaceTint=Color.Transparent
 )
 @Composable fun AttendeeTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme=AttendeeColors,
-        shapes=Shapes(small=RoundedCornerShape(10.dp),medium=RoundedCornerShape(18.dp),large=RoundedCornerShape(24.dp)),content=content)
+    CompositionLocalProvider(LocalAttendeeMotion provides rememberAttendeeMotion()) {
+        MaterialTheme(colorScheme=AttendeeColors,
+            shapes=Shapes(small=RoundedCornerShape(10.dp),medium=RoundedCornerShape(18.dp),large=RoundedCornerShape(24.dp)),content=content)
+    }
 }

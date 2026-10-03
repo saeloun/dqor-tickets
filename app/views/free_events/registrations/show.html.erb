@@ -3,9 +3,9 @@
   <p class="eyebrow">Your event ticket</p>
   <h1>You’re registered</h1>
   <p class="muted">A place is reserved for you. Keep this page handy on event day.</p>
-  <div class="card">
+  <div class="card free-ticket-credential">
     <span class="badge"><%= @checkin ? "Checked in" : "Free admission" %></span>
-    <h2 style="margin-top: 16px"><%= @event.title %></h2>
+    <h2 class="free-ticket-title"><%= @event.title %></h2>
     <p class="muted">Hosted by <%= @event.organization.name %></p>
     <dl class="ticket-details">
       <div class="wide"><dt>When</dt><dd><%= @event.starts_at.in_time_zone(@event.timezone).strftime("%a, %-d %b %Y · %-I:%M %p") %> – <%= @event.ends_at.in_time_zone(@event.timezone).strftime("%a, %-d %b · %-I:%M %p") %></dd><dt><%= @event.timezone %></dt></div>
@@ -15,5 +15,6 @@
     </dl>
     <p><%= @checkin ? "You’re checked in. Enjoy the event." : "Show this page to the organizer at the event." %></p>
   </div>
-  <p class="help" style="margin-top: 24px">This ticket is available here when you sign in. No confirmation email is sent for this pilot.</p>
+  <div class="actions"><%= link_to "Event details", published_event_path(@event.organization.slug, @event.slug), class: "button secondary" %></div>
+  <p class="help free-ticket-help">This ticket is available here when you sign in. No confirmation email is sent for this pilot.</p>
 </main>

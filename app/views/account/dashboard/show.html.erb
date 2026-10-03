@@ -148,14 +148,14 @@
     <% end %>
   </section>
 
-  <% if @saved_talks.any? %>
-    <section class="account-section">
-      <h2>My schedule</h2>
+  <section class="account-section" aria-labelledby="my-schedule">
+      <h2 id="my-schedule">My schedule</h2>
+      <% if @saved_talks.any? %>
       <ul class="account-tickets">
         <% @saved_talks.each do |talk| %>
           <li class="account-ticket">
             <div class="account-ticket__row">
-              <span class="account-ticket__type"><%= talk.title %></span>
+              <span class="account-ticket__type"><%= link_to talk.title, talk_path(talk) %></span>
               <span class="account-ticket__meta"><%= talk.time_range %><%= " · #{talk.room}" if talk.room.present? %></span>
             </div>
           </li>
@@ -164,9 +164,11 @@
       <% if @saved_talks.any? { |talk| talk.starts_at.present? } %>
         <p><%= link_to "Add my schedule to calendar", account_calendar_path(format: :ics), class: "btn btn-secondary" %></p>
       <% end %>
+      <% else %>
+        <p>No saved talks yet. Save sessions from the programme to keep your plans together.</p>
+      <% end %>
       <p><%= link_to "Browse the full schedule", schedule_path %>.</p>
-    </section>
-  <% end %>
+  </section>
 
   <% if current_user.legacy_network_eligible? && current_user.discoverable? %>
   <% profile_url = attendee_url(current_user) %>

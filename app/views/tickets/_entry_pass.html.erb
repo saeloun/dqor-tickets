@@ -1,5 +1,7 @@
 <section class="entry-pass">
   <p class="section-label">Entry pass</p>
+  <p class="entry-pass__event">Deccan Queen on Rails</p>
+  <p class="entry-pass__date"><%= Conference::DATE_RANGE_LABEL %> · Pune</p>
   <div class="entry-pass__qr"><%= entry_qr_svg(ticket) %></div>
   <p class="entry-pass__name"><%= ticket.attendee_name.presence || ticket.ticket_type.name %></p>
   <p class="entry-pass__type"><%= ticket.ticket_type.name %></p>
