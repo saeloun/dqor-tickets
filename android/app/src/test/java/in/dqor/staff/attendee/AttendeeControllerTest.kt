@@ -21,6 +21,17 @@ class AttendeeControllerTest {
     private fun callback(auth: AttendeeAuthorization, code: String = "nac1_" + "c".repeat(43)) = "${AttendeeIntegration.CALLBACK}?code=$code&state=${auth.state}"
     private suspend fun signedIn(c: AttendeeController) { assertTrue(c.callback(callback(c.begin()!!))) }
 
+    private fun page(first: Int, size: Int, checkedAt: Instant = bridge.observation) = AttendeePassPage(
+        (first until first + size).map { id -> AttendeePass(id.toString(), "3", "Synthetic conference status", PassStatus.CONFIRMED, null, null,
+            listOf(AttendeeEntry(LocalDate.parse("2026-10-08"), true, null))) }, true, (first + size - 1).toString(), checkedAt)
+    private suspend fun fillPages(c: AttendeeController, total: Int) {
+        for (first in 1..total step 20) {
+            bridge.pageOverride = page(first, minOf(20, total - first + 1))
+            if (first == 1) signedIn(c) else c.nextPage()
+            assertEquals(minOf(first + 19, total), (c.state.value as AttendeeState.Ready).snapshot.passes.size)
+        }
+    }
+
     private inner class FixtureBridge : AttendeeBridge {
         var expires = base.plusSeconds(1800)
         var exchanges = 0
@@ -104,11 +115,55 @@ class AttendeeControllerTest {
         val c=controller(); val auth=c.begin()!!; now=base.minusSeconds(86400); elapsed=600_000
         assertFalse(c.callback(callback(auth))); assertEquals(AttendeeState.Failed(AttendeeProblem.EXPIRED),c.state.value)
     }
-    @Test fun tokenLeaseRejectsInvalidTokenAndOverlongLifetime() = runBlocking {
+    @Test fun tokenLeaseRejectsInvalidTokenAndAcceptsExactlyThirtyMinutes() = runBlocking {
         bridge.invalidToken=true; val c=controller(); signedIn(c); assertEquals(AttendeeState.Failed(AttendeeProblem.INVALID_RESPONSE),c.state.value)
-        bridge.invalidToken=false; now=base.minusSeconds(1); val c2=controller(); signedIn(c2); assertTrue(c2.state.value is AttendeeState.Ready)
+        assertEquals(0,bridge.reads); assertEquals(0,bridge.revokes)
+        bridge.invalidToken=false; val c2=controller(); signedIn(c2); assertTrue(c2.state.value is AttendeeState.Ready)
+        assertEquals(3,bridge.reads); assertEquals(0,bridge.revokes)
         elapsed=1_800_000; c2.expire(); assertEquals(AttendeeState.Failed(AttendeeProblem.EXPIRED),c2.state.value)
-        now=base; elapsed=0; bridge.expires=base.plusSeconds(1801); val c3=controller(); signedIn(c3); assertEquals(AttendeeState.Failed(AttendeeProblem.INVALID_RESPONSE),c3.state.value)
+        c.forget(); c2.forget()
+    }
+    @Test fun overlongExchangeIsRejectedBeforePrivateReadsAndValidCredentialIsRevoked() = runBlocking {
+        for (duration in listOf(1_800_001L,1_801_000L)) {
+            bridge.expires=base.plusMillis(duration)
+            val reads=bridge.reads; val revokes=bridge.revokes
+            val c=controller(); signedIn(c)
+            assertEquals(AttendeeState.Failed(AttendeeProblem.INVALID_RESPONSE),c.state.value)
+            assertEquals(reads,bridge.reads); assertEquals(revokes+1,bridge.revokes)
+            assertTrue(bridge.revokedTokens.contains(bridge.receivedTokens.last()))
+            c.refresh(); assertEquals(reads,bridge.reads)
+            c.forget()
+        }
+    }
+    @Test fun validOverflowPreservesVerifiedSnapshotAndStopsPaginationUntilRefresh() = runBlocking {
+        for (total in listOf(199,200)) {
+            val c=controller(); fillPages(c,total)
+            val verified=(c.state.value as AttendeeState.Ready).snapshot
+            assertEquals((1..total).map(Int::toString),verified.passes.map {it.id})
+            bridge.pageOverride=page(total+1,20,base.minusSeconds(1))
+            val before=bridge.reads
+            c.nextPage()
+            val bounded=(c.state.value as AttendeeState.Ready).snapshot
+            assertEquals(verified.identity,bounded.identity); assertEquals(verified.passes,bounded.passes)
+            assertEquals(verified.checkedAt,bounded.checkedAt); assertTrue(bounded.moreResults)
+            if (total==199) assertNull(bounded.nextCursor)
+            assertEquals(before + if (total==199) 3 else 0,bridge.reads)
+            val stopped=bridge.reads; c.nextPage(); assertEquals(stopped,bridge.reads)
+            bridge.pageOverride=page(1,20,base.minusSeconds(1)); c.refresh()
+            val refreshed=(c.state.value as AttendeeState.Ready).snapshot
+            assertEquals(20,refreshed.passes.size); assertEquals("20",refreshed.nextCursor)
+            assertEquals(base.minusSeconds(1),refreshed.checkedAt); assertEquals(stopped+3,bridge.reads)
+            c.forget()
+        }
+    }
+    @Test fun malformedOrDuplicateOverflowPagesStillClearPrivateState() = runBlocking {
+        for (badPage in listOf(page(200,21),page(199,20),page(200,20).copy(nextCursor="999"))) {
+            val c=controller(); fillPages(c,199)
+            bridge.pageOverride=badPage; c.nextPage()
+            assertEquals(AttendeeState.Failed(AttendeeProblem.INVALID_RESPONSE),c.state.value)
+            val stopped=bridge.reads; c.nextPage(); c.refresh(); assertEquals(stopped,bridge.reads)
+            c.forget()
+        }
     }
     @Test fun serverExpiryAndMonotonicExpiryClearPrivateData() = runBlocking {
         val c=controller(); signedIn(c); now=base.minusSeconds(86400); elapsed=1_800_000; c.expire()

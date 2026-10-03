@@ -30,6 +30,9 @@ class AttendeeAuthUiTest {
         private val consumed = mutableSetOf<String>()
         var empty = false
         var offline = false
+        var pageSizes: List<Int>? = null
+        var pageReads = 0
+        var observed = now.minusSeconds(5)
         val identity = AttendeeIdentity("11", "Synthetic Attendee", "synthetic@example.invalid")
         override suspend fun exchange(request: AttendeeExchange): AttendeeLease {
             if (request.code != expectedCode || AttendeePkce.challenge(request.verifier) != expectedChallenge || !consumed.add(request.code)) throw AttendeeFailure(AttendeeProblem.REVOKED)
@@ -37,9 +40,19 @@ class AttendeeAuthUiTest {
         }
         override suspend fun session(credential: AttendeeCredential) = AttendeeSession(AttendeeIntegration.CLIENT_ID, setOf("account:read", "passes:read"), now.plusSeconds(1800), now)
         override suspend fun account(credential: AttendeeCredential) = AttendeeAccountResult(identity, now.minusSeconds(5))
-        override suspend fun passes(credential: AttendeeCredential, cursor: String?) = AttendeePassPage(if (empty) emptyList() else listOf(
-            AttendeePass("21", "3", "Synthetic conference status", PassStatus.CONFIRMED, LocalDate.parse("2026-10-08"), LocalDate.parse("2026-10-11"),
-                listOf(AttendeeEntry(LocalDate.parse("2026-10-08"), true, null)))), false, null, now.minusSeconds(5))
+        override suspend fun passes(credential: AttendeeCredential, cursor: String?): AttendeePassPage {
+            pageReads++
+            pageSizes?.takeIf {it.isNotEmpty()}?.let {sizes ->
+                val first=(cursor?.toInt() ?: 0)+1
+                val last=first+sizes.first()-1
+                pageSizes=sizes.drop(1)
+                return AttendeePassPage((first..last).map {id -> AttendeePass(id.toString(),"3","Synthetic conference status $id",PassStatus.CONFIRMED,
+                    LocalDate.parse("2026-10-08"),LocalDate.parse("2026-10-11"),listOf(AttendeeEntry(LocalDate.parse("2026-10-08"),true,null)))},true,last.toString(),observed)
+            }
+            return AttendeePassPage(if (empty) emptyList() else listOf(
+                AttendeePass("21", "3", "Synthetic conference status", PassStatus.CONFIRMED, LocalDate.parse("2026-10-08"), LocalDate.parse("2026-10-11"),
+                    listOf(AttendeeEntry(LocalDate.parse("2026-10-08"), true, null)))), false, null, now.minusSeconds(5))
+        }
         override suspend fun revoke(credential: AttendeeCredential): AttendeeRevocation { if (offline) throw AttendeeFailure(AttendeeProblem.OFFLINE); return AttendeeRevocation.REVOKED }
     }
     private fun start(fontScale: Float = 1f) {
@@ -88,6 +101,41 @@ class AttendeeAuthUiTest {
         show("Status only · no QR or admission action"); compose.onNodeWithText("Confirm entry").assertDoesNotExist()
         compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         assertEquals(1,closes)
+    }
+    @Test fun boundedPassPagesPreserveAccountAndOfferWebsiteInsteadOfMoreReads() {
+        start()
+        try {
+            for(total in listOf(199,200)) {
+                bridge.pageSizes=List(9) {20}+listOf(total-180,20)
+                bridge.observed=now.minusSeconds(5)
+                show("Sign in through system browser");compose.onNodeWithText("Sign in through system browser").performClick();complete()
+                repeat(9) {index ->
+                    show("Load more pass status");compose.onNodeWithText("Load more pass status").performClick()
+                    compose.waitUntil(5_000) {(controller.state.value as? AttendeeState.Ready)?.snapshot?.passes?.size==minOf((index+2)*20,total)}
+                }
+                val verified=(controller.state.value as AttendeeState.Ready).snapshot
+                assertEquals((1..total).map(Int::toString),verified.passes.map {it.id})
+                bridge.observed=now.minusSeconds(1)
+                if(total==199) {
+                    show("Load more pass status");compose.onNodeWithText("Load more pass status").performClick()
+                    compose.waitUntil(5_000) {(controller.state.value as? AttendeeState.Ready)?.snapshot?.let {it.nextCursor==null}==true}
+                }
+                val bounded=(controller.state.value as AttendeeState.Ready).snapshot
+                assertEquals(verified.identity,bounded.identity);assertEquals(verified.passes,bounded.passes);assertEquals(verified.checkedAt,bounded.checkedAt)
+                show("synthetic@example.invalid");show("Synthetic conference status $total")
+                show("More pass status is available on the official website.")
+                compose.onNodeWithText("Load more pass status").assertDoesNotExist()
+                capture("auth-synthetic-pass-limit-$total")
+                val stopped=bridge.pageReads
+                runBlocking {controller.nextPage()};assertEquals(stopped,bridge.pageReads)
+                bridge.pageSizes=listOf(20)
+                show("Refresh account status");compose.onNodeWithText("Refresh account status").performClick()
+                compose.waitUntil(5_000) {(controller.state.value as? AttendeeState.Ready)?.snapshot?.passes?.size==20}
+                show("Load more pass status");assertEquals(stopped+1,bridge.pageReads)
+                show("Sign out and clear account");compose.onNodeWithText("Sign out and clear account").performClick()
+                show("Sign in through system browser")
+            }
+        } finally {controller.forget()}
     }
     @Test fun emptyPassesAndOfflineLogoutAreHonest() {
         bridge.empty=true; start()

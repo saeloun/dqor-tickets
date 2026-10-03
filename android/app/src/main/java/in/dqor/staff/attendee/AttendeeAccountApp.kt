@@ -85,8 +85,8 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
                                     }
                                 }
                             }
-                            if (current.snapshot.moreResults && current.snapshot.passes.size < 200) item { TextButton(onClick = { scope.launch { controller.nextPage() } }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Load more pass status") } }
-                            if (current.snapshot.moreResults && current.snapshot.passes.size >= 200) item { Text("More pass status is available on the official website.") }
+                            if (current.snapshot.moreResults && current.snapshot.nextCursor != null && current.snapshot.passes.size < 200) item { TextButton(onClick = { scope.launch { controller.nextPage() } }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Load more pass status") } }
+                            if (current.snapshot.moreResults && (current.snapshot.nextCursor == null || current.snapshot.passes.size >= 200)) item { Text("More pass status is available on the official website.") }
                             item { TextButton(onClick = { scope.launch { controller.logout() } }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Sign out and clear account") } }
                         }
                     }

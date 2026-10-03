@@ -136,7 +136,7 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
             val result = withTimeout(requestTimeoutMillis) { bridge.exchange(work.second) }
             val accepted = synchronized(lock) {
                 if (generation != work.first) false else {
-                    val remaining = java.time.Duration.between(wallTime(), result.expiresAt).toMillis().coerceAtMost(1_800_000L)
+                    val remaining = java.time.Duration.between(wallTime(), result.expiresAt).toMillis()
                     if (!result.credential.value.matches(Regex("na1_[A-Za-z0-9_-]{43}")) || remaining !in 1..1_800_000L) {
                         clearLocked(AttendeeState.Failed(AttendeeProblem.INVALID_RESPONSE))
                         false
@@ -180,12 +180,13 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
             val snapshot = (mutable.value as? AttendeeState.Ready)?.snapshot ?: return
             if (!snapshot.moreResults || snapshot.nextCursor == null || readInFlight || snapshot.passes.size >= 200) return
             mutable.value = AttendeeState.Loading
-            Triple(generation, snapshot.nextCursor, snapshot.passes)
+            Triple(generation, snapshot.nextCursor, snapshot)
         }
         read(work.first, work.second, work.third)
     }
 
-    private suspend fun read(version: Long, cursor: String?, previous: List<AttendeePass> = emptyList()) {
+    private suspend fun read(version: Long, cursor: String?, previous: AttendeeSnapshot? = null) {
+        val previousPasses = previous?.passes.orEmpty()
         val credential = synchronized(lock) {
             expireLocked()
             if (!foreground || generation != version || readInFlight) return
@@ -223,12 +224,16 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
                     if (!wallTime().isBefore(session.expiresAt) || session.expiresAt != lease?.expiresAt) {
                         throw AttendeeFailure(AttendeeProblem.EXPIRED)
                     }
-                    if (!validPage(page, cursor) || previous.size + page.passes.size > 200 ||
-                        page.passes.any { pass -> previous.any { it.id == pass.id } }) {
+                    if (!validPage(page, cursor) ||
+                        page.passes.any { pass -> previousPasses.any { it.id == pass.id } }) {
                         throw AttendeeFailure(AttendeeProblem.INVALID_RESPONSE)
                     }
-                    identity = account
-                    AttendeeSnapshot(account, previous + page.passes, page.moreResults, page.nextCursor, page.checkedAt)
+                    if (previous != null && previousPasses.size + page.passes.size > 200) {
+                        previous.copy(moreResults = true, nextCursor = null)
+                    } else {
+                        identity = account
+                        AttendeeSnapshot(account, previousPasses + page.passes, page.moreResults, page.nextCursor, page.checkedAt)
+                    }
                 }
             }
             synchronized(lock) {
