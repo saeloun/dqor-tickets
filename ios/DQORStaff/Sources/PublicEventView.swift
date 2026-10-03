@@ -41,6 +41,7 @@ final class PublicProgrammeStore: ObservableObject {
             } catch {
                 guard !Task.isCancelled, requestGeneration == generation else { return }
                 let state = await client.state()
+                guard !Task.isCancelled, requestGeneration == generation else { return }
                 snapshot = state.snapshot
                 isStale = state.isStale
                 if let error = error as? URLError, [.notConnectedToInternet, .networkConnectionLost, .timedOut, .cannotConnectToHost, .cannotFindHost].contains(error.code) {
