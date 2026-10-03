@@ -24,13 +24,20 @@ class PublicProgrammeUiTest {
         val client=PublicProgrammeClient(demo)
         compose.setContent {focusManager=androidx.compose.ui.platform.LocalFocusManager.current; val density=LocalDensity.current; CompositionLocalProvider(LocalDensity provides Density(density.density,if(large) 2f else 1f)) {AttendeeTheme {Surface(Modifier.fillMaxSize().safeDrawingPadding()) {ProgrammePreview(client,demo) {}}}}}
     }
-    private fun show(text: String) {compose.onNodeWithTag("public-programme").performScrollToNode(hasText(text)); compose.onNodeWithText(text).performScrollTo().assertIsDisplayed()}
+    private fun show(text: String) {
+        compose.waitUntil(5_000) {
+            compose.onNodeWithTag("public-programme").performScrollToNode(hasText(text))
+            compose.onNodeWithText(text).performScrollTo().isDisplayed()
+        }
+        compose.onNodeWithText(text).assertIsDisplayed()
+    }
     private fun tap(text: String) {show(text);compose.onNodeWithText(text).performClick();compose.waitForIdle()}
     @Test fun cachedErrorRetainsSearchAnd304RecoversThenEmptyReplaces() {
         setup(); show("Sample programme revalidated"); compose.captureDemo("16-public-current")
         show("Search public preview"); compose.onNodeWithText("Search public preview").performTextInput("unscheduled")
         compose.onNodeWithText("Search public preview").assertTextContains("unscheduled")
         compose.runOnIdle {focusManager.clearFocus()}
+        show("Search public preview")
         compose.onNodeWithText("Search public preview").assertTextContains("unscheduled")
         show("Synthetic unscheduled session"); show("Time to be announced")
         tap("Offline"); show("Cached programme · may be outdated"); compose.onNodeWithTag("public-programme").performScrollToIndex(0); compose.captureDemo("17-public-stale")
