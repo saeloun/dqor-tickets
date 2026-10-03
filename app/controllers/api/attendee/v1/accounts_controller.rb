@@ -3,7 +3,7 @@ module Api
     module V1
       class AccountsController < BaseController
         def show
-          render_private_json envelope.merge(account: { id: current_user.id.to_s, name: current_user.name, email: current_user.email })
+          render_private_json NativeAttendee::ReadSnapshot.new(current_user, checked_at: @checked_at).account
         end
       end
     end

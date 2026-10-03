@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_040000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_160100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -472,6 +472,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_040000) do
     t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["sender_id"], name: "index_messages_on_sender_id"
+  end
+
+  create_table "native_attendee_authorizations", force: :cascade do |t|
+    t.string "callback_uri", null: false
+    t.datetime "canceled_at"
+    t.string "client_id", null: false
+    t.string "code_challenge", null: false
+    t.string "code_digest"
+    t.datetime "code_expires_at"
+    t.string "consent_digest"
+    t.datetime "consumed_at"
+    t.datetime "created_at", null: false
+    t.string "creation_digest", null: false
+    t.string "email_request_digest"
+    t.string "email_snapshot"
+    t.datetime "expires_at", null: false
+    t.string "password_fingerprint"
+    t.string "state", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.string "verification_nonce_digest"
+    t.datetime "verified_at"
+    t.index ["code_digest"], name: "index_native_attendee_authorizations_on_code_digest", unique: true, where: "(code_digest IS NOT NULL)"
+    t.index ["user_id"], name: "index_native_attendee_authorizations_on_user_id"
+    t.check_constraint "(status <> ALL (ARRAY[1, 2, 3])) OR user_id IS NOT NULL AND email_snapshot IS NOT NULL AND password_fingerprint IS NOT NULL AND verified_at IS NOT NULL AND consent_digest IS NOT NULL", name: "native_attendee_verified_binding"
+    t.check_constraint "(status <> ALL (ARRAY[2, 3])) OR code_digest IS NOT NULL AND code_expires_at IS NOT NULL", name: "native_attendee_code_binding"
+    t.check_constraint "status = ANY (ARRAY[0, 1, 2, 3, 4, 5])", name: "native_attendee_authorization_status"
+  end
+
+  create_table "native_attendee_sessions", force: :cascade do |t|
+    t.string "client_id", null: false
+    t.datetime "created_at", null: false
+    t.string "email_snapshot", null: false
+    t.string "event", default: "dqor-2026", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "native_attendee_authorization_id", null: false
+    t.string "password_fingerprint", null: false
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["native_attendee_authorization_id"], name: "idx_on_native_attendee_authorization_id_527e7438fb", unique: true
+    t.index ["token_digest"], name: "index_native_attendee_sessions_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_native_attendee_sessions_on_user_id"
+    t.check_constraint "event::text = 'dqor-2026'::text", name: "native_attendee_session_event"
   end
 
   create_table "native_staff_sessions", force: :cascade do |t|
@@ -1038,6 +1084,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_040000) do
   add_foreign_key "memberships", "users"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users", column: "sender_id"
+  add_foreign_key "native_attendee_authorizations", "users", on_delete: :cascade
+  add_foreign_key "native_attendee_sessions", "native_attendee_authorizations", on_delete: :cascade
+  add_foreign_key "native_attendee_sessions", "users", on_delete: :cascade
   add_foreign_key "native_staff_sessions", "admin_users", on_delete: :cascade
   add_foreign_key "operations_audit_logs", "events"
   add_foreign_key "operations_audit_logs", "users"
