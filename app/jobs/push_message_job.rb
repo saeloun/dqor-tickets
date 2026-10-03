@@ -2,6 +2,7 @@ class PushMessageJob < ApplicationJob
   queue_as :default
 
   def perform(message)
+    return unless message.conversation.participants.all?(&:legacy_network_eligible?)
     return unless WebPushNotifier.configured?
 
     recipient = message.conversation.other_participant(message.sender)

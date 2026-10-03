@@ -1,0 +1,5 @@
+<main>
+  <p class="eyebrow">Your plans</p><h1>My free tickets</h1><p class="muted">Your registrations, ready for event day.</p>
+  <div class="card-list"><% @orders.each do |order| %><% event = @events.fetch(order.event_id) %><article class="card"><h2><%= link_to event.title, free_event_ticket_path(event.organization.slug, event.slug) %></h2><p class="help"><%= event.starts_at.in_time_zone(event.timezone).strftime("%a, %-d %b %Y · %-I:%M %p") %> · <%= event.timezone %></p><span class="badge">Free admission</span></article><% end %></div>
+  <% if @orders.empty? %><div class="empty"><h2>No tickets yet</h2><p>You haven’t registered for a free event yet. Use the event link shared by its organizer to reserve your place.</p></div><% end %>
+</main>

@@ -6,7 +6,7 @@ class Account::RedemptionsController < ApplicationController
   def index
     response.headers["Cache-Control"] = "no-store"
     @checked_at = Time.current
-    @tickets = Ticket.where("lower(attendee_email) = ?", current_user.email).includes(:ticket_type, :order)
+    @tickets = Ticket.legacy.where("lower(attendee_email) = ?", current_user.email).includes(:ticket_type, :order)
     @slots = EventSlot.where(active: true).order(:starts_at)
     @redemptions = EventSlotRedemption.where(ticket_id: @tickets.select(:id)).includes(:event_slot).group_by(&:ticket_id)
   end

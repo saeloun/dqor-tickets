@@ -168,6 +168,7 @@
     </section>
   <% end %>
 
+  <% if current_user.legacy_network_eligible? && current_user.discoverable? %>
   <% profile_url = attendee_url(current_user) %>
   <section class="account-section">
     <h2>Connect with me</h2>
@@ -188,6 +189,13 @@
       </div>
     </div>
   </section>
+
+  <% else %>
+    <section class="account-section">
+      <h2>Your profile is private</h2>
+      <p>Your profile is not available for sharing or discovery.</p>
+    </section>
+  <% end %>
 
   <% ref_url = tickets_store_url(ref: current_user.referral_code) %>
   <% share_text = "I'm going to Deccan Queen on Rails — India's Ruby & Rails conference in Pune, Oct 8–11. Grab 5% off with my link:" %>

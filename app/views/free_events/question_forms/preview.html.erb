@@ -1,0 +1,6 @@
+<main class="ticket">
+  <%= link_to "← Back to questions", free_event_questions_path(@event.organization, @event, @ticket_type), class: "back" %>
+  <span class="badge">Draft preview · Not open to attendees</span><h1 style="margin-top: 20px"><%= @event.title %></h1><p><%= @ticket_type.name %> · Free</p>
+  <p class="help">This preview shows the draft order and fields. Nothing is submitted or registered.</p>
+  <%= render "answer_fields", questions: @form.draft_questions, answers: {}, errors: {}, preview: true %>
+</main>

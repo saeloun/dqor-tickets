@@ -6,6 +6,7 @@ class PdfRenderer
   }.freeze
 
   def self.render(record, template:)
+    LegacyCommerce.assert!(record)
     html = ApplicationController.render(template: "pdfs/#{template}", locals: { template => record }, layout: false)
     browser_options = { process_timeout: ENV.fetch("FERRUM_PROCESS_TIMEOUT", 30).to_i, timeout: 30 }
     browser_options[:browser_path] = ENV["CHROME_PATH"] if ENV["CHROME_PATH"].present?

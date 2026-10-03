@@ -1,0 +1,11 @@
+<h1>Pending finance documents</h1>
+<p>Private to administrators. Payments and processed refunds remain complete while accounting documents await remediation.</p>
+<%= form_with url: finance_documents_path, method: :get, data: { turbo: false } do %>
+  <%= label_tag :code, "Find a specific order" %><%= text_field_tag :code, params[:code], maxlength: 8 %><button type="submit">Find order</button>
+<% end %>
+<div class="panel scroll"><table><thead><tr><th>Order</th><th>Buyer</th><th>Invoice</th><th>Credit notes</th></tr></thead><tbody>
+<% @orders.each do |order| %><tr><td><%= link_to order.code, finance_document_path(order) %></td><td><%= order.buyer_name %></td><td><%= order.metadata["confirmation_documents_pending"] && order.metadata["invoice_pending_reason"].blank? ? "Delivery pending" : document_pending_description(order.metadata["invoice_pending_reason"]) %></td><td><%= order.refunds.processed.where(credit_note_number: [ nil, "" ]).count %> pending</td></tr><% end %>
+</tbody></table>
+<% if @orders.empty? %><p>No pending documents recorded.</p><% end %>
+<p class="muted">Page <%= @page %>, oldest cases first. Open an order for billing details and the next action.</p>
+<nav aria-label="Queue pages"><% if @page > 1 %><%= link_to "Previous", finance_documents_path(page: @page - 1, code: params[:code]) %><% end %><% if @next_page %><%= link_to "Next", finance_documents_path(page: @page + 1, code: params[:code]) %><% end %></nav></div>

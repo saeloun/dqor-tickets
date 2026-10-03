@@ -44,7 +44,7 @@ module SeoHelper
 
   private
     def event_offers
-      TicketType.where(hidden: false).order(:position, :id).filter_map do |ticket_type|
+      TicketType.legacy.where(hidden: false).order(:position, :id).filter_map do |ticket_type|
         next unless ticket_type.purchasable?
 
         {

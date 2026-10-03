@@ -13,7 +13,7 @@ RSpec.describe PdfRenderer, type: :model do
   end
 
   it "renders a branded GST invoice as a non-trivial PDF" do
-    order = create(:order, :paid, gstin: "27AAAAA0000A1Z5", gst_legal_name: "Ada Labs Pvt Ltd", billing_state_code: "27")
+    order = create(:order, :paid, gstin: "27AAAAA0000A1Z5", gst_legal_name: "Ada Labs Pvt Ltd", billing_state_code: "27", metadata: { "billing_address" => "Test address", "billing_state_name" => "Maharashtra" })
     create(:ticket, order:)
     invoice = Invoice.issue_for!(order)
 
@@ -34,7 +34,7 @@ RSpec.describe PdfRenderer, type: :model do
     previous_value = ENV["CHROME_NO_SANDBOX"]
     ENV["CHROME_NO_SANDBOX"] = "1"
 
-    render(Object.new, template: :invoice)
+    render(build(:invoice), template: :invoice)
 
     expect(Ferrum::Browser).to have_received(:new).with(hash_including(browser_options: hash_including(
       "no-sandbox" => nil,
@@ -53,7 +53,7 @@ RSpec.describe PdfRenderer, type: :model do
     allow(ApplicationController).to receive(:render).and_return("<html></html>")
     allow(Ferrum::Browser).to receive(:new).and_return(failed_browser, working_browser)
 
-    expect(render(Object.new, template: :invoice)).to eq("%PDF-test")
+    expect(render(build(:invoice), template: :invoice)).to eq("%PDF-test")
     expect(Ferrum::Browser).to have_received(:new).twice
     expect(failed_browser).to have_received(:quit)
     expect(working_browser).to have_received(:quit)

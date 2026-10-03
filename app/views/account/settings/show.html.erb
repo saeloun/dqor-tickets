@@ -15,6 +15,15 @@
   <% end %>
 
   <section class="account-section">
+    <h2>Announcement emails</h2>
+    <p>Optional event announcements. Ticket receipts and account emails are unaffected.</p>
+    <%= form_with url: account_announcement_preference_path, method: :patch do %>
+      <%= check_box_tag :subscribe, "1", AnnouncementPreference.consented.exists?(email: current_user.email) %>
+      <%= label_tag :subscribe, "Email me DQOR announcements" %>
+      <%= submit_tag "Save email preference" %>
+    <% end %>
+  </section>
+  <section class="account-section">
     <h2>Profile</h2>
     <%= form_with model: current_user, url: account_settings_path, method: :patch, scope: :user, class: "assignment-form" do |form| %>
       <div class="field">

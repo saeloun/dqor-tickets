@@ -3,6 +3,9 @@ class Account::DashboardController < ApplicationController
   before_action :require_user
 
   def show
+    if !current_user.legacy_network_eligible? && FreeEvents::Access.enabled?
+      return redirect_to free_tickets_path
+    end
     @tickets = current_user.tickets.includes(:ticket_type, :order).order(created_at: :desc)
     @incomplete_tickets = @tickets.select { |ticket| ticket.canceled_at.nil? && (!ticket.assigned? || ticket.details_pending?) }
     @saved_talks = current_user.bookmarked_talks.merge(Talk.published).order(Arel.sql("starts_at IS NULL"), :starts_at)

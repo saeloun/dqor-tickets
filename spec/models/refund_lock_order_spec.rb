@@ -8,6 +8,7 @@ RSpec.describe "refund and admission lock ordering", type: :model do
     @type = create(:ticket_type)
     @order = create(:order, :paid, total_paise: 350_000)
     @ticket = create(:ticket, order: @order, ticket_type: @type, price_paise: 350_000)
+    @order.update!(metadata: { "invoice_purchase_lines" => Invoice.line_item_snapshot(@order) })
     @refund = create(:refund, order: @order, status: :initiated, ticket_ids: [ @ticket.id ], amount_paise: 350_000)
     @event = create(:payment_event, order: @order, kind: "refund.processed", amount_paise: 350_000)
   end
@@ -23,7 +24,7 @@ RSpec.describe "refund and admission lock ordering", type: :model do
     @type.destroy!
   end
 
-  [ true ].each do |issued|
+  [ false, true ].each do |issued|
     it "rejects admission after the refund commits with an #{issued ? 'issued' : 'pending'} invoice" do
       Invoice.issue_for!(@order) if issued
       ready = Queue.new
@@ -52,7 +53,7 @@ RSpec.describe "refund and admission lock ordering", type: :model do
       expect(Timeout.timeout(10) { @worker.value }).to be_a(Ticket::Canceled)
       expect(@ticket.reload.checked_in_at).to be_empty
       expect(@refund.reload).to be_processed
-      expect(@refund.credit_note_number).to be_present
+      expect(@refund.credit_note_pending?).to eq(!issued)
     end
 
     it "serializes admission with a refund when the original invoice is #{issued ? 'issued' : 'pending'}" do
@@ -88,7 +89,7 @@ RSpec.describe "refund and admission lock ordering", type: :model do
       expect(@refund.reload).to be_processed
       expect(@ticket.reload.canceled_at).to be_present
       expect(@ticket.checked_in_at).to have_key("2026-10-08")
-      expect(@refund.credit_note_number).to be_present
+      expect(@refund.credit_note_pending?).to eq(!issued)
       @refund.process!(@event)
       expect(@order.invoices.credit_note.count).to eq(issued ? 1 : 0)
     end

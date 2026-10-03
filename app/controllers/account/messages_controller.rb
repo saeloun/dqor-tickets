@@ -1,9 +1,11 @@
 class Account::MessagesController < ApplicationController
   allow_unauthenticated_access
   before_action :require_user
+  before_action :require_legacy_network
 
   def create
     @conversation = current_user.conversations.find(params[:conversation_id])
+    raise ActiveRecord::RecordNotFound unless current_user.can_message?(@conversation.other_participant(current_user))
     @message = @conversation.messages.build(sender: current_user, body: message_params[:body])
 
     if @message.save

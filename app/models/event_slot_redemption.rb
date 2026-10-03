@@ -1,4 +1,5 @@
 class EventSlotRedemption < ApplicationRecord
+  validate { errors.add(:ticket, "must belong to legacy checkout") if ticket&.event_id.present? }
   belongs_to :event_slot
   belongs_to :ticket
   belongs_to :admin_user

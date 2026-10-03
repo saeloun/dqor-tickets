@@ -51,7 +51,7 @@ module Webhooks
 
       def process_refund(payload, event_id)
         refund_entity = payload.dig("payload", "refund", "entity") || {}
-        refund = Refund.find_by(razorpay_refund_id: refund_entity["id"])
+        refund = Refund.legacy.find_by(razorpay_refund_id: refund_entity["id"])
         return unless refund
 
         event = record_event(refund.order, payload, event_id)
@@ -61,7 +61,7 @@ module Webhooks
       def find_order(payload)
         payment = payload.dig("payload", "payment", "entity") || {}
         order = payload.dig("payload", "order", "entity") || {}
-        Order.find_by(razorpay_order_id: payment["order_id"] || order["id"])
+        Order.legacy.find_by(razorpay_order_id: payment["order_id"] || order["id"])
       end
 
       def record_event(order, payload, event_id)

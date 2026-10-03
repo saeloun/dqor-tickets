@@ -1,0 +1,70 @@
+<main class="operations">
+  <h1><%= @event.title %> · Operations</h1>
+  <p>Private organizer records · INR, integer paise (100 paise = ₹1). Manual records only; no payment processing.</p>
+  <p><%= link_to "Event", organizer_organization_event_path(@organization, @event) %> · <%= link_to "Export manual cash CSV", organizer_organization_event_operations_path(@organization, @event, format: :csv) %></p>
+  <% if @record&.errors&.any? %><div role="alert"><%= @record.errors.full_messages.to_sentence %></div><% end %>
+  <h2>Cash and commitments</h2>
+  <dl>
+    <dt>Cash pledges (not receipts), paise</dt><dd><%= @deals.where(stage: "pledged", contribution: "cash").sum(:amount_paise) %></dd>
+    <dt>Cash sponsor commitments, paise</dt><dd><%= @deals.where(stage: "committed", contribution: "cash").sum(:amount_paise) %></dd>
+    <dt>In-kind estimated value (not cash), paise</dt><dd><%= @deals.where(contribution: "in_kind").sum(:amount_paise) %></dd>
+    <dt>Vendor commitments, paise</dt><dd><%= @vendors.sum(:amount_paise) %></dd>
+    <% { "receipt" => "Cash received", "refund" => "Sponsor cash refunded", "expense" => "Cash paid to vendors", "expense_refund" => "Vendor cash returned" }.each do |kind, label| %>
+      <dt><%= label %>, paise</dt><dd><%= @entries.where(kind: kind).sum(:amount_paise) %></dd>
+    <% end %>
+  </dl>
+  <h2>1. Business contacts</h2>
+  <% @contacts.each do |contact| %>
+    <p><%= contact.name %> · <%= contact.email %>
+      <% if contact.outreach_approved? %> · <%= link_to "Local draft", organizer_organization_event_operation_draft_path(@organization, @event, contact) %><% end %>
+    </p>
+  <% end %>
+  <%= form_with url: organizer_organization_event_operation_records_path(@organization, @event, "contacts"), scope: :record do |f| %>
+    <%= f.label :name, "Contact name", for: "contact_name" %><%= f.text_field :name, required: true, maxlength: 200, id: "contact_name" %>
+    <%= f.label :email, "Email (optional)", for: "contact_email" %><%= f.email_field :email, id: "contact_email" %>
+    <label><%= f.check_box :outreach_approved %> Approve this name and event title for a local outreach template</label>
+    <%= f.submit "Add contact" %>
+  <% end %>
+  <h2>2. Sponsor deals</h2>
+  <% @deals.each do |deal| %><p><strong><%= deal.title %></strong> · <%= deal.stage %> · <%= deal.contribution %> · <%= deal.amount_paise %> paise · Net cash received: <%= deal.cash_received_paise %> paise</p>
+    <% if deal.stage == "pledged" %><%= button_to "Commit #{deal.title}", organizer_organization_event_commit_operation_deal_path(@organization, @event, deal), method: :patch %><% end %>
+  <% end %>
+  <%= form_with url: organizer_organization_event_operation_records_path(@organization, @event, "deals"), scope: :record do |f| %>
+    <%= render "contact_field", f: f, prefix: "deal" %>
+    <%= render "amount_fields", f: f, prefix: "deal" %>
+    <%= f.label :stage, "Stage", for: "deal_stage" %><%= f.select :stage, %w[pledged committed], {}, id: "deal_stage" %>
+    <%= f.label :contribution, "Contribution", for: "deal_contribution" %><%= f.select :contribution, %w[cash in_kind], {}, id: "deal_contribution" %>
+    <%= f.submit "Add sponsor deal" %>
+  <% end %>
+  <h2>3. Vendor commitments</h2>
+  <% @vendors.each do |vendor| %><p><strong><%= vendor.title %></strong> · Commitment: <%= vendor.amount_paise %> paise · Net cash paid: <%= vendor.cash_paid_paise %> paise</p><% end %>
+  <%= form_with url: organizer_organization_event_operation_records_path(@organization, @event, "vendors"), scope: :record do |f| %>
+    <%= render "contact_field", f: f, prefix: "vendor" %>
+    <%= render "amount_fields", f: f, prefix: "vendor" %>
+    <%= f.submit "Add vendor commitment" %>
+  <% end %>
+  <h2>4. Record an installment or refund</h2>
+  <p>Choose exactly one committed cash deal or vendor. Entries cannot be edited. Use explicit refunds for returned cash.</p>
+  <%= form_with url: organizer_organization_event_operation_records_path(@organization, @event, "entries"), scope: :record do |f| %>
+    <%= f.label :sponsor_deal_id, "Cash sponsor", for: "entry_deal" %><%= f.collection_select :sponsor_deal_id, @deals.where(stage: "committed", contribution: "cash"), :id, :title, { include_blank: true }, id: "entry_deal" %>
+    <%= f.label :vendor_engagement_id, "Vendor", for: "entry_vendor" %><%= f.collection_select :vendor_engagement_id, @vendors, :id, :title, { include_blank: true }, id: "entry_vendor" %>
+    <%= f.label :kind, "Cash movement", for: "entry_kind" %><%= f.select :kind, [["Sponsor receipt", "receipt"], ["Sponsor refund", "refund"], ["Vendor expense", "expense"], ["Vendor expense refund", "expense_refund"]], {}, id: "entry_kind" %>
+    <%= f.label :amount_paise, "Amount (integer paise)", for: "entry_amount" %><%= f.number_field :amount_paise, min: 1, step: 1, required: true, id: "entry_amount" %>
+    <%= f.label :occurred_on, "Date", for: "entry_date" %><%= f.date_field :occurred_on, required: true, id: "entry_date" %>
+    <%= f.label :reference, "Manual reference", for: "entry_reference" %><%= f.text_field :reference, required: true, maxlength: 200, id: "entry_reference" %>
+    <%= f.submit "Record cash movement" %>
+  <% end %>
+  <% @entries.each do |entry| %><p><%= entry.occurred_on %> · <%= entry.kind %> · <%= entry.amount_paise %> paise · <%= entry.reference %></p><% end %>
+  <h2>5. Sponsor deliverables and giveaways</h2>
+  <% @tasks.each do |task| %>
+    <p><%= task.title %> · <%= task.sponsor_deal.title %> · Due <%= task.due_on || "unscheduled" %> · <%= task.completed? ? "Completed" : "Pending" %></p>
+    <% unless task.completed? %><%= button_to "Complete #{task.title}", organizer_organization_event_complete_operation_task_path(@organization, @event, task), method: :patch %><% end %>
+  <% end %>
+  <%= form_with url: organizer_organization_event_operation_records_path(@organization, @event, "tasks"), scope: :record do |f| %>
+    <%= f.label :sponsor_deal_id, "Sponsor deal", for: "task_deal" %><%= f.collection_select :sponsor_deal_id, @deals, :id, :title, {}, id: "task_deal" %>
+    <%= f.label :title, "Deliverable / giveaway", for: "task_title" %><%= f.text_field :title, required: true, maxlength: 200, id: "task_title" %>
+    <%= f.label :due_on, "Due date", for: "task_due" %><%= f.date_field :due_on, id: "task_due" %>
+    <%= f.submit "Add deliverable" %>
+  <% end %>
+  <p>Outreach uses a local template only. AI generation is disabled. No messages are sent.</p>
+</main>

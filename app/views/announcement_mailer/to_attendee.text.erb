@@ -3,5 +3,9 @@
 <%= @announcement.body %>
 
 —
-You’re receiving this because you have a ticket to Deccan Queen on Rails — October 8–11, 2026, Pune.
+You’re receiving this because you opted in to announcement emails and have a ticket to Deccan Queen on Rails — October 8–11, 2026, Pune.
 All updates: <%= updates_url %>
+
+<% if @unsubscribe_token %>
+Unsubscribe: <%= announcement_unsubscribe_url(token: @unsubscribe_token) %>
+<% end %>

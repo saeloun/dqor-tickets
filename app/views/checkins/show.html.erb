@@ -1,5 +1,7 @@
+<p style="padding:1rem"><%= link_to "Camera self-test — no admission", scanner_rehearsal_path, data: { turbo: false } %></p>
 <p style="padding:1rem"><%= link_to "Change purpose: entry, food or after-party", event_slots_path %></p>
 <% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
   <style>
     .checkin { max-width: 56rem; margin: 0 auto; padding: 1rem; font-family: system-ui, sans-serif; }
     .checkin h1 { margin: .5rem 0 1rem; font-size: 1.75rem; }

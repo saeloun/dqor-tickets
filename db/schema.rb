@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_040000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_admin_users_on_lower_email", unique: true
+  end
+
+  create_table "announcement_campaigns", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.bigint "announcement_id", null: false
+    t.datetime "approved_at", null: false
+    t.integer "audience_count", null: false
+    t.text "body", null: false
+    t.string "content_digest", null: false
+    t.datetime "created_at", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_announcement_campaigns_on_admin_user_id"
+    t.index ["announcement_id"], name: "index_announcement_campaigns_on_announcement_id", unique: true
+  end
+
+  create_table "announcement_deliveries", force: :cascade do |t|
+    t.bigint "announcement_campaign_id", null: false
+    t.datetime "attempted_at"
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "error_class"
+    t.string "state", default: "pending", null: false
+    t.datetime "submitted_at"
+    t.datetime "updated_at", null: false
+    t.index ["announcement_campaign_id", "email"], name: "unique_announcement_recipient", unique: true
+    t.index ["announcement_campaign_id"], name: "index_announcement_deliveries_on_announcement_campaign_id"
+    t.index ["state", "id"], name: "index_announcement_deliveries_on_state_and_id"
+    t.check_constraint "state::text = ANY (ARRAY['pending'::character varying, 'preparing'::character varying, 'submitting'::character varying, 'submitted'::character varying, 'suppressed'::character varying, 'failed'::character varying, 'unknown'::character varying]::text[])", name: "announcement_delivery_state"
+  end
+
+  create_table "announcement_dispatch_limits", force: :cascade do |t|
+    t.integer "used", default: 0, null: false
+    t.datetime "window_started_at", null: false
+  end
+
+  create_table "announcement_preferences", force: :cascade do |t|
+    t.string "consent_source"
+    t.datetime "consented_at"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "suppressed_at"
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_announcement_preferences_on_email", unique: true
+    t.check_constraint "email::text = lower(btrim(email::text))", name: "announcement_email_normalized"
   end
 
   create_table "announcements", force: :cascade do |t|
@@ -124,6 +170,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
   end
 
+  create_table "event_branding_assets", force: :cascade do |t|
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_branding_setting_id", null: false
+    t.integer "height", null: false
+    t.binary "image_data", null: false
+    t.datetime "updated_at", null: false
+    t.integer "width", null: false
+    t.index ["event_branding_setting_id"], name: "index_event_branding_assets_on_event_branding_setting_id"
+  end
+
+  create_table "event_branding_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "draft", default: {}, null: false
+    t.string "event_key", default: "dqor", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.jsonb "previous_published"
+    t.jsonb "published"
+    t.datetime "published_at"
+    t.bigint "published_by_id"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["event_key"], name: "index_event_branding_settings_on_event_key", unique: true
+    t.index ["published_by_id"], name: "index_event_branding_settings_on_published_by_id"
+    t.index ["updated_by_id"], name: "index_event_branding_settings_on_updated_by_id"
+    t.check_constraint "event_key::text = 'dqor'::text", name: "event_branding_single_existing_event"
+  end
+
   create_table "event_slot_redemptions", force: :cascade do |t|
     t.bigint "admin_user_id", null: false
     t.datetime "created_at", null: false
@@ -154,6 +228,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.check_constraint "ends_at > starts_at AND redemption_limit > 0 AND (capacity IS NULL OR capacity > 0)", name: "event_slot_limits"
   end
 
+  create_table "events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "ends_at"
+    t.bigint "organization_id", null: false
+    t.string "slug", null: false
+    t.datetime "starts_at"
+    t.string "status", default: "draft", null: false
+    t.string "timezone", default: "UTC", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "slug"], name: "index_events_on_organization_id_and_slug", unique: true
+    t.index ["organization_id"], name: "index_events_on_organization_id"
+    t.check_constraint "ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at", name: "events_ordered_dates"
+    t.check_constraint "status::text <> 'published'::text OR starts_at IS NOT NULL AND ends_at IS NOT NULL", name: "events_publication_dates"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying]::text[])", name: "events_valid_status"
+  end
+
   create_table "faqs", force: :cascade do |t|
     t.text "answer"
     t.datetime "created_at", null: false
@@ -162,6 +253,156 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.string "question", null: false
     t.datetime "updated_at", null: false
     t.index ["published", "position"], name: "index_faqs_on_published_and_position"
+  end
+
+  create_table "free_checkins", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "operator_id", null: false
+    t.bigint "ticket_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_free_checkins_on_event_id"
+    t.index ["operator_id"], name: "index_free_checkins_on_operator_id"
+    t.index ["ticket_id"], name: "index_free_checkins_on_ticket_id", unique: true
+  end
+
+  create_table "free_event_form_versions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "form_id", null: false
+    t.integer "number", null: false
+    t.jsonb "questions", default: [], null: false
+    t.bigint "ticket_type_id", null: false
+    t.index ["form_id", "number"], name: "index_free_event_form_versions_on_form_id_and_number", unique: true
+    t.index ["form_id"], name: "index_free_event_form_versions_on_form_id"
+    t.index ["id", "event_id", "ticket_type_id"], name: "free_form_version_ownership", unique: true
+  end
+
+  create_table "free_event_forms", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "draft_questions", default: [], null: false
+    t.bigint "event_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.bigint "ticket_type_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_free_event_forms_on_event_id"
+    t.index ["id", "event_id", "ticket_type_id"], name: "free_form_ownership", unique: true
+    t.index ["ticket_type_id"], name: "index_free_event_forms_on_ticket_type_id", unique: true
+  end
+
+  create_table "free_event_responses", force: :cascade do |t|
+    t.jsonb "answers", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "form_version_id", null: false
+    t.bigint "ticket_id", null: false
+    t.bigint "ticket_type_id", null: false
+    t.index ["form_version_id"], name: "index_free_event_responses_on_form_version_id"
+    t.index ["ticket_id"], name: "index_free_event_responses_on_ticket_id", unique: true
+  end
+
+  create_table "free_registration_windows", force: :cascade do |t|
+    t.datetime "closes_at"
+    t.datetime "created_at", null: false
+    t.datetime "draft_closes_at"
+    t.datetime "draft_opens_at"
+    t.string "draft_timezone", null: false
+    t.bigint "event_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "opens_at"
+    t.datetime "published_at"
+    t.bigint "ticket_type_id", null: false
+    t.string "timezone"
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_free_registration_windows_on_event_id"
+    t.index ["ticket_type_id"], name: "index_free_registration_windows_on_ticket_type_id", unique: true
+    t.check_constraint "draft_opens_at IS NULL OR draft_closes_at IS NULL OR draft_opens_at < draft_closes_at", name: "free_window_draft_order"
+    t.check_constraint "opens_at IS NULL OR closes_at IS NULL OR opens_at < closes_at", name: "free_window_published_order"
+  end
+
+  create_table "hiring_access_events", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "application_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["application_id"], name: "index_hiring_access_events_on_application_id"
+    t.index ["user_id"], name: "index_hiring_access_events_on_user_id"
+  end
+
+  create_table "hiring_affiliations", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["company_id", "user_id"], name: "index_hiring_affiliations_on_company_id_and_user_id", unique: true
+    t.index ["company_id"], name: "index_hiring_affiliations_on_company_id"
+    t.index ["user_id"], name: "index_hiring_affiliations_on_user_id"
+  end
+
+  create_table "hiring_applications", force: :cascade do |t|
+    t.bigint "applicant_id", null: false
+    t.datetime "consented_at", null: false
+    t.datetime "created_at", null: false
+    t.bigint "job_id", null: false
+    t.binary "quarantined_pdf"
+    t.string "resume_digest"
+    t.string "scan_digest"
+    t.string "scan_status", default: "quarantined", null: false
+    t.datetime "scanned_at"
+    t.bigint "share_request_id"
+    t.jsonb "snapshot", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.datetime "withdrawn_at"
+    t.index ["applicant_id"], name: "index_hiring_applications_on_applicant_id"
+    t.index ["job_id", "applicant_id"], name: "index_hiring_applications_on_job_id_and_applicant_id", unique: true
+    t.index ["job_id"], name: "index_hiring_applications_on_job_id"
+    t.index ["share_request_id"], name: "index_hiring_applications_on_share_request_id", unique: true
+  end
+
+  create_table "hiring_companies", force: :cascade do |t|
+    t.bigint "claimant_id", null: false
+    t.datetime "created_at", null: false
+    t.text "evidence", null: false
+    t.string "name", null: false
+    t.bigint "organization_id", null: false
+    t.bigint "reviewer_id"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.string "website", null: false
+    t.index ["claimant_id"], name: "index_hiring_companies_on_claimant_id"
+    t.index ["organization_id"], name: "index_hiring_companies_on_organization_id"
+    t.index ["reviewer_id"], name: "index_hiring_companies_on_reviewer_id"
+  end
+
+  create_table "hiring_jobs", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description", null: false
+    t.bigint "event_id"
+    t.boolean "open", default: true, null: false
+    t.bigint "recruiter_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_hiring_jobs_on_company_id"
+    t.index ["event_id"], name: "index_hiring_jobs_on_event_id"
+    t.index ["recruiter_id"], name: "index_hiring_jobs_on_recruiter_id"
+  end
+
+  create_table "hiring_share_requests", force: :cascade do |t|
+    t.bigint "applicant_id"
+    t.datetime "consented_at"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "job_id", null: false
+    t.bigint "recipient_id", null: false
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["applicant_id"], name: "index_hiring_share_requests_on_applicant_id"
+    t.index ["job_id"], name: "index_hiring_share_requests_on_job_id"
+    t.index ["recipient_id"], name: "index_hiring_share_requests_on_recipient_id"
+    t.index ["token_digest"], name: "index_hiring_share_requests_on_token_digest", unique: true
   end
 
   create_table "info_pages", force: :cascade do |t|
@@ -175,6 +416,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.index ["slug"], name: "index_info_pages_on_slug", unique: true
   end
 
+  create_table "invoice_policy_reviews", force: :cascade do |t|
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.datetime "configured_at"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.jsonb "policy_data", default: {}, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "supersedes_id"
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_invoice_policy_reviews_on_approved_by_id"
+    t.index ["created_by_id"], name: "index_invoice_policy_reviews_on_created_by_id"
+    t.index ["supersedes_id"], name: "index_invoice_policy_reviews_on_supersedes_id"
+  end
+
   create_table "invoices", force: :cascade do |t|
     t.json "buyer_snapshot", default: {}, null: false
     t.datetime "created_at", null: false
@@ -184,11 +441,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.string "number", null: false
     t.integer "order_id", null: false
     t.integer "refers_to_id"
+    t.json "seller_snapshot"
+    t.integer "snapshot_version"
+    t.json "tax_snapshot"
     t.datetime "updated_at", null: false
     t.index ["number"], name: "index_invoices_on_number", unique: true
     t.index ["order_id"], name: "index_invoices_on_order_id"
     t.index ["order_id"], name: "index_invoices_one_invoice_per_order", unique: true, where: "((kind)::text = 'invoice'::text)"
     t.index ["refers_to_id"], name: "index_invoices_on_refers_to_id"
+  end
+
+  create_table "memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "organization_id", null: false
+    t.string "role", default: "viewer", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["organization_id", "user_id"], name: "index_memberships_on_organization_id_and_user_id", unique: true
+    t.index ["organization_id"], name: "index_memberships_on_organization_id"
+    t.index ["user_id"], name: "index_memberships_on_user_id"
+    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying, 'admin'::character varying, 'editor'::character varying, 'viewer'::character varying]::text[])", name: "memberships_valid_role"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -218,6 +490,84 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.index ["token_digest"], name: "index_native_staff_sessions_on_token_digest", unique: true
   end
 
+  create_table "operations_audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.bigint "record_id", null: false
+    t.string "record_kind", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["event_id"], name: "index_operations_audit_logs_on_event_id"
+    t.index ["user_id"], name: "index_operations_audit_logs_on_user_id"
+  end
+
+  create_table "operations_business_contacts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.bigint "event_id", null: false
+    t.string "name", null: false
+    t.boolean "outreach_approved", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_operations_business_contacts_on_event_id"
+  end
+
+  create_table "operations_fulfillment_tasks", force: :cascade do |t|
+    t.boolean "completed", default: false, null: false
+    t.datetime "created_at", null: false
+    t.date "due_on"
+    t.bigint "event_id", null: false
+    t.bigint "sponsor_deal_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_operations_fulfillment_tasks_on_event_id"
+    t.index ["sponsor_deal_id"], name: "index_operations_fulfillment_tasks_on_sponsor_deal_id"
+  end
+
+  create_table "operations_manual_entries", force: :cascade do |t|
+    t.bigint "amount_paise", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "kind", null: false
+    t.date "occurred_on", null: false
+    t.string "reference", null: false
+    t.bigint "sponsor_deal_id"
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_engagement_id"
+    t.index ["event_id"], name: "index_operations_manual_entries_on_event_id"
+    t.index ["sponsor_deal_id"], name: "index_operations_manual_entries_on_sponsor_deal_id"
+    t.index ["vendor_engagement_id"], name: "index_operations_manual_entries_on_vendor_engagement_id"
+    t.check_constraint "amount_paise > 0", name: "manual_entries_positive_amount"
+    t.check_constraint "sponsor_deal_id IS NOT NULL AND vendor_engagement_id IS NULL AND (kind::text = ANY (ARRAY['receipt'::character varying, 'refund'::character varying]::text[])) OR sponsor_deal_id IS NULL AND vendor_engagement_id IS NOT NULL AND (kind::text = ANY (ARRAY['expense'::character varying, 'expense_refund'::character varying]::text[]))", name: "manual_entry_target"
+  end
+
+  create_table "operations_sponsor_deals", force: :cascade do |t|
+    t.bigint "amount_paise", null: false
+    t.bigint "business_contact_id", null: false
+    t.string "contribution", default: "cash", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "stage", default: "pledged", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["business_contact_id"], name: "index_operations_sponsor_deals_on_business_contact_id"
+    t.index ["event_id"], name: "index_operations_sponsor_deals_on_event_id"
+    t.check_constraint "(stage::text = ANY (ARRAY['pledged'::character varying, 'committed'::character varying]::text[])) AND (contribution::text = ANY (ARRAY['cash'::character varying, 'in_kind'::character varying]::text[]))", name: "sponsor_deal_categories"
+    t.check_constraint "amount_paise > 0", name: "sponsor_deals_positive_amount"
+  end
+
+  create_table "operations_vendor_engagements", force: :cascade do |t|
+    t.bigint "amount_paise", null: false
+    t.bigint "business_contact_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["business_contact_id"], name: "index_operations_vendor_engagements_on_business_contact_id"
+    t.index ["event_id"], name: "index_operations_vendor_engagements_on_event_id"
+    t.check_constraint "amount_paise > 0", name: "vendor_engagements_positive_amount"
+  end
+
   create_table "orders", force: :cascade do |t|
     t.string "billing_state_code", limit: 2
     t.string "buyer_name", null: false
@@ -226,17 +576,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.integer "coupon_id"
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.bigint "event_id"
     t.datetime "expires_at"
     t.string "gst_legal_name"
     t.string "gstin"
     t.json "metadata", default: {}, null: false
+    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
     t.string "razorpay_order_id"
     t.integer "status", default: 0, null: false
     t.integer "total_paise", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.index ["code"], name: "index_orders_on_code", unique: true
     t.index ["coupon_id"], name: "index_orders_on_coupon_id"
+    t.index ["event_id", "user_id"], name: "one_free_registration_per_event_user", unique: true, where: "(event_id IS NOT NULL)"
+    t.index ["event_id"], name: "index_orders_on_event_id"
+    t.index ["id", "ownership_key"], name: "index_orders_on_id_and_ownership_key", unique: true
     t.index ["razorpay_order_id"], name: "index_orders_on_razorpay_order_id", unique: true
+    t.index ["user_id"], name: "index_orders_on_user_id"
+    t.check_constraint "event_id IS NULL OR event_id > 0", name: "orders_positive_event"
+    t.check_constraint "event_id IS NULL OR user_id IS NOT NULL AND total_paise = 0 AND razorpay_order_id IS NULL AND coupon_id IS NULL", name: "owned_orders_free_only"
+  end
+
+  create_table "organizations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_organizations_on_slug", unique: true
   end
 
   create_table "payment_events", force: :cascade do |t|
@@ -534,11 +901,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.date "event_ends_on"
+    t.bigint "event_id"
     t.date "event_starts_on"
+    t.datetime "free_published_at"
     t.boolean "hidden", default: false, null: false
     t.integer "max_per_order"
     t.integer "min_per_order", default: 1, null: false
     t.string "name", null: false
+    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
     t.integer "position", default: 0, null: false
     t.integer "price_paise", null: false
     t.boolean "requires_conference_pass", default: false, null: false
@@ -548,7 +918,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.datetime "updated_at", null: false
     t.string "venue_address"
     t.string "venue_name"
+    t.index ["event_id"], name: "index_ticket_types_on_event_id"
+    t.index ["id", "ownership_key"], name: "index_ticket_types_on_id_and_ownership_key", unique: true
     t.index ["slug"], name: "index_ticket_types_on_slug", unique: true
+    t.check_constraint "event_id IS NULL OR event_id > 0", name: "ticket_types_positive_event"
+    t.check_constraint "event_id IS NULL OR hidden = true AND active = false", name: "event_ticket_types_staged"
+    t.check_constraint "free_published_at IS NULL OR event_id IS NOT NULL AND price_paise = 0 AND capacity IS NOT NULL AND capacity > 0", name: "free_inventory_publication"
   end
 
   create_table "tickets", force: :cascade do |t|
@@ -561,16 +936,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.string "claim_token"
     t.datetime "created_at", null: false
     t.string "dietary_preference"
+    t.bigint "event_id"
     t.integer "order_id", null: false
+    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
     t.integer "price_paise", null: false
     t.string "secret", null: false
     t.integer "ticket_type_id", null: false
     t.string "tshirt_size"
     t.datetime "updated_at", null: false
     t.index ["claim_token"], name: "index_tickets_on_claim_token", unique: true
+    t.index ["event_id"], name: "index_tickets_on_event_id"
+    t.index ["id", "ownership_key", "ticket_type_id"], name: "free_response_ticket_ownership_key", unique: true
+    t.index ["id", "ownership_key"], name: "index_tickets_on_id_and_ownership_key", unique: true
     t.index ["order_id"], name: "index_tickets_on_order_id"
     t.index ["secret"], name: "index_tickets_on_secret", unique: true
     t.index ["ticket_type_id"], name: "index_tickets_on_ticket_type_id"
+    t.check_constraint "event_id IS NULL OR event_id > 0", name: "tickets_positive_event"
+    t.check_constraint "event_id IS NULL OR price_paise = 0", name: "owned_tickets_free_only"
   end
 
   create_table "users", force: :cascade do |t|
@@ -580,6 +962,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
     t.datetime "created_at", null: false
     t.boolean "discoverable", default: true, null: false
     t.string "email", null: false
+    t.boolean "free_pilot_identity", default: false, null: false
     t.string "github"
     t.string "linkedin"
     t.string "mastodon"
@@ -596,6 +979,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "announcement_campaigns", "admin_users"
+  add_foreign_key "announcement_campaigns", "announcements"
+  add_foreign_key "announcement_deliveries", "announcement_campaigns"
   add_foreign_key "checkin_audits", "admin_users", on_delete: :nullify
   add_foreign_key "checkin_audits", "tickets", on_delete: :nullify
   add_foreign_key "connections", "users"
@@ -603,16 +989,71 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
   add_foreign_key "conversations", "users", column: "participant_one_id"
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "event_branding_assets", "event_branding_settings"
+  add_foreign_key "event_branding_settings", "admin_users", column: "published_by_id"
+  add_foreign_key "event_branding_settings", "admin_users", column: "updated_by_id"
   add_foreign_key "event_slot_redemptions", "admin_users"
   add_foreign_key "event_slot_redemptions", "admin_users", column: "voided_by_id"
   add_foreign_key "event_slot_redemptions", "event_slots"
   add_foreign_key "event_slot_redemptions", "tickets"
+  add_foreign_key "events", "organizations"
+  add_foreign_key "free_checkins", "events"
+  add_foreign_key "free_checkins", "tickets"
+  add_foreign_key "free_checkins", "tickets", column: ["ticket_id", "event_id"], primary_key: ["id", "ownership_key"], name: "free_checkin_ticket_event"
+  add_foreign_key "free_checkins", "users", column: "operator_id"
+  add_foreign_key "free_event_form_versions", "free_event_forms", column: "form_id"
+  add_foreign_key "free_event_form_versions", "free_event_forms", column: ["form_id", "event_id", "ticket_type_id"], primary_key: ["id", "event_id", "ticket_type_id"], name: "free_version_form_ownership"
+  add_foreign_key "free_event_forms", "events"
+  add_foreign_key "free_event_forms", "ticket_types"
+  add_foreign_key "free_event_forms", "ticket_types", column: ["ticket_type_id", "event_id"], primary_key: ["id", "ownership_key"], name: "free_form_type_ownership"
+  add_foreign_key "free_event_responses", "free_event_form_versions", column: "form_version_id"
+  add_foreign_key "free_event_responses", "free_event_form_versions", column: ["form_version_id", "event_id", "ticket_type_id"], primary_key: ["id", "event_id", "ticket_type_id"], name: "free_response_version_ownership"
+  add_foreign_key "free_event_responses", "tickets"
+  add_foreign_key "free_event_responses", "tickets", column: ["ticket_id", "event_id", "ticket_type_id"], primary_key: ["id", "ownership_key", "ticket_type_id"], name: "free_response_ticket_ownership"
+  add_foreign_key "free_registration_windows", "events"
+  add_foreign_key "free_registration_windows", "ticket_types"
+  add_foreign_key "free_registration_windows", "ticket_types", column: ["ticket_type_id", "event_id"], primary_key: ["id", "ownership_key"], name: "free_window_type_ownership"
+  add_foreign_key "hiring_access_events", "hiring_applications", column: "application_id"
+  add_foreign_key "hiring_access_events", "users"
+  add_foreign_key "hiring_affiliations", "hiring_companies", column: "company_id"
+  add_foreign_key "hiring_affiliations", "users"
+  add_foreign_key "hiring_applications", "hiring_jobs", column: "job_id"
+  add_foreign_key "hiring_applications", "hiring_share_requests", column: "share_request_id"
+  add_foreign_key "hiring_applications", "users", column: "applicant_id"
+  add_foreign_key "hiring_companies", "organizations"
+  add_foreign_key "hiring_companies", "users", column: "claimant_id"
+  add_foreign_key "hiring_companies", "users", column: "reviewer_id"
+  add_foreign_key "hiring_jobs", "events"
+  add_foreign_key "hiring_jobs", "hiring_companies", column: "company_id"
+  add_foreign_key "hiring_jobs", "users", column: "recruiter_id"
+  add_foreign_key "hiring_share_requests", "hiring_jobs", column: "job_id"
+  add_foreign_key "hiring_share_requests", "users", column: "applicant_id"
+  add_foreign_key "hiring_share_requests", "users", column: "recipient_id"
+  add_foreign_key "invoice_policy_reviews", "admin_users", column: "approved_by_id"
+  add_foreign_key "invoice_policy_reviews", "admin_users", column: "created_by_id"
+  add_foreign_key "invoice_policy_reviews", "invoice_policy_reviews", column: "supersedes_id"
   add_foreign_key "invoices", "invoices", column: "refers_to_id"
   add_foreign_key "invoices", "orders"
+  add_foreign_key "memberships", "organizations"
+  add_foreign_key "memberships", "users"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "native_staff_sessions", "admin_users", on_delete: :cascade
+  add_foreign_key "operations_audit_logs", "events"
+  add_foreign_key "operations_audit_logs", "users"
+  add_foreign_key "operations_business_contacts", "events"
+  add_foreign_key "operations_fulfillment_tasks", "events"
+  add_foreign_key "operations_fulfillment_tasks", "operations_sponsor_deals", column: "sponsor_deal_id"
+  add_foreign_key "operations_manual_entries", "events"
+  add_foreign_key "operations_manual_entries", "operations_sponsor_deals", column: "sponsor_deal_id"
+  add_foreign_key "operations_manual_entries", "operations_vendor_engagements", column: "vendor_engagement_id"
+  add_foreign_key "operations_sponsor_deals", "events"
+  add_foreign_key "operations_sponsor_deals", "operations_business_contacts", column: "business_contact_id"
+  add_foreign_key "operations_vendor_engagements", "events"
+  add_foreign_key "operations_vendor_engagements", "operations_business_contacts", column: "business_contact_id"
   add_foreign_key "orders", "coupons"
+  add_foreign_key "orders", "events"
+  add_foreign_key "orders", "users"
   add_foreign_key "payment_events", "orders"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "refunds", "orders"
@@ -630,6 +1071,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_001000) do
   add_foreign_key "talk_questions", "talks"
   add_foreign_key "talk_questions", "users"
   add_foreign_key "talks", "speakers"
+  add_foreign_key "ticket_types", "events"
+  add_foreign_key "tickets", "events"
   add_foreign_key "tickets", "orders"
+  add_foreign_key "tickets", "orders", column: ["order_id", "ownership_key"], primary_key: ["id", "ownership_key"], name: "tickets_order_ownership"
   add_foreign_key "tickets", "ticket_types"
+  add_foreign_key "tickets", "ticket_types", column: ["ticket_type_id", "ownership_key"], primary_key: ["id", "ownership_key"], name: "tickets_type_ownership"
 end

@@ -46,7 +46,7 @@ class TicketAccessController < ApplicationController
 
   private
     def orders_for(email)
-      Order.paid.where("lower(orders.email) = ?", email)
+      Order.legacy.paid.where("lower(orders.email) = ?", email)
     end
 
     def generate_token(email)

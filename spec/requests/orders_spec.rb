@@ -176,4 +176,24 @@ RSpec.describe "Orders", type: :request do
     expect(response).to have_http_status(:not_found)
     expect(response.body).to include("The page you were looking for doesn't exist")
   end
+
+  it "rejects registered-buyer checkout with missing billing facts before contacting Razorpay" do
+    expect do
+      post orders_path, params: checkout_params(gstin: "27AAAAA0000A1Z5", gst_legal_name: "Test Buyer", billing_state_code: "27")
+    end.not_to change(Order, :count)
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("Billing address")
+    expect(a_request(:post, razorpay_url)).not_to have_been_made
+  end
+
+  it "stores supplied invoice billing privately and ignores financial metadata from the browser" do
+    stub_razorpay_order
+    post orders_path, params: checkout_params(gstin: "27AAAAA0000A1Z5", gst_legal_name: "Test Buyer", billing_state_code: "27",
+      billing_address: "Private billing street", billing_state_name: "Maharashtra", metadata: { invoice_purchase_lines: [], discount_paise: 999_999 })
+    expect(response).to have_http_status(:created)
+    expect(Order.last.metadata).to include("billing_address" => "Private billing street", "billing_state_name" => "Maharashtra")
+    expect(Order.last.metadata).not_to have_key("invoice_purchase_lines")
+    expect(Order.last.total_paise).to eq(400_000)
+    expect(response.body).not_to include("Private billing street")
+  end
 end

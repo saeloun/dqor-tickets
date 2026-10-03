@@ -60,7 +60,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   def check_in(ticket)
-    find("button[data-ticket-id='#{ticket.id}']").click
+    find("button[data-ticket-id='#{ticket.id}']:enabled").click
   end
 
   it "redirects an unauthenticated visitor to the sign-in page" do
@@ -150,6 +150,45 @@ RSpec.describe "Check-in", type: :system do
     expect(ticket.reload.checked_in_at.keys).to match_array([ "2026-10-08", "2026-10-09" ])
   end
 
+  it "blocks admission while a changed date loads and keeps the searched attendee" do
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Barbara Liskov")
+    open_desk
+    search_for("barbara")
+    page.execute_script(<<~JS)
+      const originalFetch = window.fetch.bind(window);
+      window.dateTransitionAdmissions = 0;
+      window.fetch = (...args) => {
+        const url = new URL(args[0] instanceof Request ? args[0].url : args[0], location.href);
+        const method = (args[1]?.method || "GET").toUpperCase();
+        if (url.pathname === "/checkin" && method === "POST") window.dateTransitionAdmissions += 1;
+        if (url.pathname !== "/checkin" || method !== "GET") return originalFetch(...args);
+        return new Promise((resolve, reject) => setTimeout(() => originalFetch(...args).then(resolve, reject), 1000));
+      };
+    JS
+
+    select "Oct 9", from: "date"
+    expect(page).to have_css(".checkin-result--warning", text: "Loading the selected date")
+    expect(page).to have_css("button[data-ticket-id='#{ticket.id}']:disabled")
+    page.execute_script(%Q{document.querySelector("button[data-ticket-id='#{ticket.id}']").click()})
+    expect(page.evaluate_script("window.dateTransitionAdmissions")).to eq(0)
+    expect(ticket.reload.checked_in_at).to eq({})
+
+    expect(page).to have_css(".checkin-stat__label", text: "checked in · Fri Oct 9")
+    expect(page).to have_field("q", with: "barbara")
+    check_in(ticket)
+    expect(page).to have_css(".checkin-result--success", text: "Checked in Barbara Liskov")
+    expect(ticket.reload.checked_in_at.keys).to eq([ "2026-10-09" ])
+
+    page.go_back
+    expect(page).to have_css(".checkin-stat__label", text: "checked in · Thu Oct 8")
+    expect(page).to have_select("date", selected: "Oct 8")
+    expect(page).to have_button("Search", disabled: false)
+    expect(page).to have_css("input[data-checkin-target='selection']:enabled")
+    check_in(ticket)
+    expect(page).to have_css(".checkin-result--success", text: "Checked in Barbara Liskov")
+    expect(ticket.reload.checked_in_at.keys).to match_array([ "2026-10-08", "2026-10-09" ])
+  end
+
   it "refuses to check in a canceled ticket" do
     ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Ada Lovelace", canceled_at: Time.current)
 
@@ -210,7 +249,7 @@ RSpec.describe "Check-in", type: :system do
       sign_in
       fill_in "q", with: "Grace"
       click_button "Search"
-      find("button[data-ticket-id='#{ticket.id}']").click
+      find("button[data-ticket-id='#{ticket.id}']:enabled").click
 
       expect(page).to have_css(".checkin-result--success", text: "Checked in Grace Hopper")
       expect(ticket.reload.checked_in_at).to have_key("2026-10-08")

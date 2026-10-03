@@ -24,7 +24,7 @@
       <span class="desk-topbar__brand">Deccan Queen on Rails · Registration desk</span>
       <% if Current.admin_user %>
         <span class="desk-topbar__who"><%= Current.admin_user.display_name %> · <%= Current.admin_user.role.titleize %></span>
-        <%= button_to "Sign out", session_path, method: :delete %>
+        <%= button_to "Sign out", session_path, method: :delete, form: { data: { turbo: controller_name != "scanner_rehearsals" } } %>
       <% end %>
     </header>
 

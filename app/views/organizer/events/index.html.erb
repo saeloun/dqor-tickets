@@ -1,0 +1,7 @@
+<main>
+  <% if FreeEvents::Access.enabled? %><%= link_to "← Your organizations", free_organizations_path, class: "back" %><% end %>
+  <p class="eyebrow">Organizer workspace</p>
+  <div class="page-heading"><div><h1><%= @organization.name %> events</h1><p class="muted">Build your next gathering, one step at a time.</p></div><% if can_manage_events? %><%= link_to "Create draft event", new_organizer_organization_event_path(@organization), class: "button" %><% end %></div>
+  <div class="card-list"><% @events.each do |event| %><article class="card"><h2><%= link_to event.title, organizer_organization_event_path(@organization, event) %></h2><span class="badge"><%= event.draft? ? "Draft · private" : "Published · public" %></span></article><% end %></div>
+  <% if @events.empty? %><div class="empty"><h2>Your first event starts here</h2><p>Save a private draft. Add the dates and review the details before you publish.</p></div><% end %>
+</main>

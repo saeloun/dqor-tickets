@@ -10,8 +10,9 @@ module Orders
       new(...).call
     end
 
-    def initialize(order_attributes:, items:, coupon_code: nil, conference_order_code: nil, conference_order_email: nil)
-      @order_attributes = order_attributes
+    def initialize(order_attributes:, items:, coupon_code: nil, conference_order_code: nil, conference_order_email: nil, billing_attributes: {})
+      @order_attributes = order_attributes.symbolize_keys
+      @billing_attributes = billing_attributes.symbolize_keys
       @items = items
       @coupon_code = coupon_code
       @conference_order_code = conference_order_code
@@ -19,9 +20,10 @@ module Orders
     end
 
     def call
+      raise InvalidSelection, "legacy checkout cannot assign ownership" if @order_attributes.stringify_keys.key?("event_id") || @order_attributes.stringify_keys.key?("user_id")
       Order.transaction do
         selections = normalize_items
-        ticket_types = TicketType.where(id: selections.pluck(:ticket_type_id)).order(:id).lock.load.index_by(&:id)
+        ticket_types = TicketType.legacy.where(id: selections.pluck(:ticket_type_id)).order(:id).lock.load.index_by(&:id)
         raise InvalidSelection, "ticket type not found" unless ticket_types.size == selections.size
 
         validate_selections!(selections, ticket_types)
@@ -34,6 +36,9 @@ module Orders
         coupon = find_coupon
         discount = coupon ? coupon.discount_for(subtotals) : 0
         metadata = coupon ? { "coupon_code" => coupon.code, "discount_paise" => discount, "coupon_ticket_type_id" => coupon.ticket_type_id } : {}
+        billing = BillingDetails.new(**@billing_attributes.slice(:billing_address, :billing_state_name, :delivery_address, :requested),
+          **@order_attributes.slice(:gstin, :gst_legal_name, :billing_state_code), total_paise: subtotals.values.sum - discount)
+        metadata.merge!(billing.metadata!)
         order = Order.create!(**@order_attributes, coupon:, total_paise: subtotals.values.sum - discount, expires_at: 30.minutes.from_now, metadata:)
 
         selections.each do |selection|
@@ -86,7 +91,7 @@ module Orders
       def eligible_conference_order?
         return false if @conference_order_code.blank? || @conference_order_email.blank?
 
-        Order.paid.where(code: @conference_order_code, email: @conference_order_email.strip.downcase)
+        Order.legacy.paid.where(code: @conference_order_code, email: @conference_order_email.strip.downcase)
           .joins(tickets: :ticket_type)
           .where(tickets: { canceled_at: nil })
           .where("ticket_types.slug LIKE 'conference-pass-%'")

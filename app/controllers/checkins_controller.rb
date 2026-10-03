@@ -12,7 +12,7 @@ class CheckinsController < ApplicationController
     if params[:ticket_ids].present?
       ids = selected_ids(params[:ticket_ids])
       raise ActionController::BadRequest, "Select at most #{MAX_BATCH_SIZE} tickets" if ids.size > MAX_BATCH_SIZE
-      @tickets = Ticket.includes(:ticket_type, :order).where(id: ids).order(:id)
+      @tickets = Ticket.legacy.includes(:ticket_type, :order).where(id: ids).order(:id)
       @selection_from_admin = true
     else
       matches = search(@query).limit(SEARCH_LIMIT + 1).to_a
@@ -42,9 +42,9 @@ class CheckinsController < ApplicationController
   def create
     date = event_date(params[:date])
     ticket = if params[:ticket_id].present?
-      Ticket.find_by(id: params[:ticket_id])
+      Ticket.legacy.find_by(id: params[:ticket_id])
     else
-      Ticket.find_by(secret: params.expect(:secret))
+      Ticket.legacy.find_by(secret: params.expect(:secret))
     end
     source = params[:ticket_id].present? ? "manual" : "scanner"
     result = Checkins::Record.call(ticket:, date:, operator: Current.admin_user, source:)
@@ -62,7 +62,7 @@ class CheckinsController < ApplicationController
     end
 
     results = ids.map do |id|
-      Checkins::Record.call(ticket: Ticket.find_by(id:), date:, operator: Current.admin_user, source: "batch")
+      Checkins::Record.call(ticket: Ticket.legacy.find_by(id:), date:, operator: Current.admin_user, source: "batch")
         .except(:status).merge(ticket_id: id)
     end
     stats = checkin_stats(date)
@@ -112,14 +112,14 @@ class CheckinsController < ApplicationController
 
     def search(query)
       term = "%#{ActiveRecord::Base.sanitize_sql_like(query.downcase)}%"
-      Ticket.confirmed.includes(:ticket_type, :order)
+      Ticket.legacy.confirmed.includes(:ticket_type, :order)
         .where("lower(tickets.attendee_name) LIKE :term OR lower(tickets.attendee_email) LIKE :term OR lower(orders.email) LIKE :term OR lower(orders.code) LIKE :term", term:)
         .order(created_at: :desc)
     end
 
     def checkin_stats(date)
       key = date.iso8601
-      valid = Ticket.confirmed.joins(:ticket_type)
+      valid = Ticket.legacy.confirmed.joins(:ticket_type)
         .where("ticket_types.event_starts_on IS NULL OR ticket_types.event_starts_on <= ?", date)
         .where("ticket_types.event_ends_on IS NULL OR ticket_types.event_ends_on >= ?", date)
       checked_in = valid.where("(tickets.checked_in_at ->> ?) IS NOT NULL", key)

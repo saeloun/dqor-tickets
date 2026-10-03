@@ -10,6 +10,6 @@ class EventSlot < ApplicationRecord
     def valid_configuration
       errors.add(:ends_at, "must follow start") if starts_at && ends_at && ends_at <= starts_at
       errors.add(:ticket_type_ids, "must explicitly select eligible ticket types") if active? && ticket_type_ids.empty?
-      errors.add(:ticket_type_ids, "contains unknown types") unless (ticket_type_ids - TicketType.where(id: ticket_type_ids).pluck(:id)).empty?
+      errors.add(:ticket_type_ids, "contains unknown types") unless (ticket_type_ids - TicketType.legacy.where(id: ticket_type_ids).pluck(:id)).empty?
     end
 end

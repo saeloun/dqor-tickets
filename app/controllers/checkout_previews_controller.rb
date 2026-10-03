@@ -23,7 +23,7 @@ class CheckoutPreviewsController < ApplicationController
         result[ticket_type_id] += quantity
       end
 
-      TicketType.where(id: quantities.keys, hidden: false).to_h do |ticket_type|
+      TicketType.legacy.where(id: quantities.keys, hidden: false).to_h do |ticket_type|
         [ ticket_type.id, ticket_type.price_paise * quantities.fetch(ticket_type.id) ]
       end
     end

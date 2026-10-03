@@ -1,0 +1,2 @@
+<%= f.label :business_contact_id, "Business contact", for: "#{prefix}_contact" %>
+<%= f.collection_select :business_contact_id, @contacts, :id, :name, {}, id: "#{prefix}_contact" %>
