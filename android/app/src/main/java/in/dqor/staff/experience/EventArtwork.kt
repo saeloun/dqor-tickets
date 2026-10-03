@@ -59,3 +59,21 @@ import `in`.dqor.staff.Event
     }
 }
 }
+
+@Composable internal fun GatheringMotif(modifier: Modifier=Modifier) {
+    Canvas(modifier.clearAndSetSemantics {}) {
+        val plum=Color(0xFF642F47)
+        val warm=Color(0xFFEBC8B2)
+        drawCircle(warm,size.height*.28f,Offset(size.width*.68f,size.height*.32f))
+        val path=androidx.compose.ui.graphics.Path().apply {
+            moveTo(size.width*.10f,size.height*.88f)
+            lineTo(size.width*.10f,size.height*.48f)
+            cubicTo(size.width*.10f,size.height*.02f,size.width*.62f,size.height*.02f,size.width*.62f,size.height*.48f)
+            lineTo(size.width*.62f,size.height*.88f)
+        }
+        drawPath(path,plum,style=androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
+        drawLine(plum,Offset(size.width*.02f,size.height*.88f),Offset(size.width*.94f,size.height*.88f),2.dp.toPx())
+        drawLine(plum,Offset(size.width*.24f,size.height*.69f),Offset(size.width*.48f,size.height*.69f),2.dp.toPx())
+        drawLine(plum,Offset(size.width*.24f,size.height*.79f),Offset(size.width*.48f,size.height*.79f),2.dp.toPx())
+    }
+}

@@ -50,7 +50,7 @@ final class StaffUITests: XCTestCase {
     @MainActor
     func testRoleWithoutCapability() {
         let app = XCUIApplication(); app.launchArguments = ["--finance"]; app.launch()
-        app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
+        app.buttons["staffDemoShortcut"].tap(); app.buttons["day-1"].tap()
         XCTAssertTrue(app.staticTexts["Check-in access unavailable"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Scan tickets"].exists)
         capture(app, name: "Role unavailable")
@@ -83,7 +83,7 @@ final class StaffUITests: XCTestCase {
                 if issue.auditType != .dynamicType { actionableIssues.append(issue.compactDescription) }
                 return true
             }
-            XCTAssertTrue(actionableIssues.isEmpty, "\(name): \(actionableIssues.joined(separator: ", "))")
+            XCTAssertTrue(actionableIssues.isEmpty, "\(name): \(issues.joined(separator: ", "))")
             let report = XCTAttachment(string: issues.isEmpty ? "No automated findings" : issues.joined(separator: "\n"))
             report.name = "Accessibility audit - \(name)"; report.lifetime = .keepAlways; add(report)
             capture(app, name: "Accessibility - \(name)")
@@ -217,6 +217,7 @@ final class StaffUITests: XCTestCase {
     @MainActor
     func testAttendeeEventAndPassDesignJourney() {
         let app = XCUIApplication(); app.launch()
+        capture(app, name: "Premium attendee welcome")
         app.buttons["exploreSampleEvent"].tap()
         XCTAssertTrue(app.staticTexts["Synthetic preview"].waitForExistence(timeout: 5))
         capture(app, name: "Attendee event artwork and identity")
@@ -252,6 +253,46 @@ final class StaffUITests: XCTestCase {
         capture(app, name: "Attendee largest text dark pass")
         app.navigationBars.buttons["BackButton"].tap()
         XCTAssertTrue(app.buttons["eventSamplePass"].exists)
+    }
+
+    @MainActor
+    func testSavedScheduleRepeatedTapsBackAndReducedMotion() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--reduce-motion-preview", "--offline"]
+        app.launch()
+        app.buttons["exploreSampleEvent"].tap()
+        app.swipeUp()
+        app.buttons["eventSchedule"].tap()
+        let saved = app.segmentedControls["scheduleFilter"].buttons["Saved"]
+        saved.tap()
+        XCTAssertTrue(app.staticTexts["Your evening, your way"].waitForExistence(timeout: 5))
+        capture(app, name: "Premium saved schedule empty reduced motion")
+        app.buttons["Explore all sessions"].tap()
+        let bookmark = app.buttons["save-afterhours-welcome"]
+        bookmark.tap()
+        XCTAssertEqual(bookmark.value as? String, "Saved")
+        bookmark.tap()
+        XCTAssertEqual(bookmark.value as? String, "Not saved")
+        bookmark.tap()
+        saved.tap()
+        XCTAssertTrue(app.staticTexts["Settle in"].exists)
+        XCTAssertFalse(app.staticTexts["Ideas & encounters"].exists)
+        capture(app, name: "Premium saved schedule reduced motion")
+        app.navigationBars.buttons["BackButton"].tap()
+        app.buttons["eventSchedule"].tap()
+        app.segmentedControls["scheduleFilter"].buttons["Saved"].tap()
+        XCTAssertTrue(app.staticTexts["Settle in"].exists)
+        app.buttons["save-afterhours-welcome"].tap()
+        XCTAssertTrue(app.staticTexts["Your evening, your way"].exists)
+        app.navigationBars.buttons["BackButton"].tap()
+        app.navigationBars.buttons["BackButton"].tap()
+        app.terminate()
+        app.launch()
+        app.buttons["exploreSampleEvent"].tap()
+        app.swipeUp()
+        app.buttons["eventSchedule"].tap()
+        app.segmentedControls["scheduleFilter"].buttons["Saved"].tap()
+        XCTAssertTrue(app.staticTexts["Your evening, your way"].exists)
     }
 
 }

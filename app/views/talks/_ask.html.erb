@@ -4,8 +4,9 @@
       <% if question.errors.any? %>
         <p class="qa-ask__error" role="alert"><%= question.errors.full_messages.to_sentence %></p>
       <% end %>
-      <%= text_area_tag "talk_question[body]", question.body, rows: 2, maxlength: 500, placeholder: "Ask the speaker a question…", class: "qa-ask__input", data: { chat_composer_target: "input" } %>
-      <%= submit_tag "Ask", class: "btn btn-primary qa-ask__submit" %>
+      <%= label_tag "talk_question_body", "Your question", class: "sr-only" %>
+      <%= text_area_tag "talk_question[body]", question.body, rows: 2, maxlength: 500, id: "talk_question_body", placeholder: "Ask the speaker a question…", class: "qa-ask__input", data: { chat_composer_target: "input" } %>
+      <%= submit_tag "Ask", class: "btn btn-primary qa-ask__submit", data: { turbo_submits_with: "Sending…" } %>
     <% end %>
   <% elsif user_signed_in? %>
     <p class="qa-ask__note">Only attendees with a pass can ask questions. <%= link_to "Get a pass", tickets_store_path %>.</p>

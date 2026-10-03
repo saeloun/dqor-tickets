@@ -27,6 +27,19 @@ module ApplicationHelper
     qr_svg(ticket.secret)
   end
 
+  def entry_pass_date_label(ticket)
+    starts_on = ticket.ticket_type.event_starts_on
+    ends_on = ticket.ticket_type.event_ends_on
+    return unless starts_on || ends_on
+
+    format_date = ->(date) { date.strftime("%B %-d, %Y") }
+    return "From #{format_date.call(starts_on)}" unless ends_on
+    return "Through #{format_date.call(ends_on)}" unless starts_on
+    return format_date.call(starts_on) if starts_on == ends_on
+
+    "#{format_date.call(starts_on)} – #{format_date.call(ends_on)}"
+  end
+
   def connect_qr_svg(url)
     qr_svg(url)
   end

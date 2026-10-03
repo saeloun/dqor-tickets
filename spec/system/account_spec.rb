@@ -24,7 +24,8 @@ RSpec.describe "Account", type: :system do
 
   it "shows the entry-pass QR on the dashboard for a ticket holder" do
     order = create(:order, :paid, email: "grace@example.com")
-    create(:ticket, order:)
+    type = create(:ticket_type, name: "Rails Girls Pune Pass", event_starts_on: "2026-10-10", event_ends_on: "2026-10-10")
+    create(:ticket, order:, ticket_type: type)
     user = User.create!(email: "grace@example.com")
     token = Rails.application.message_verifier(:account_magic_link).generate(user.id, purpose: :account_magic_link, expires_in: 30.minutes)
 
@@ -32,5 +33,7 @@ RSpec.describe "Account", type: :system do
     first("summary", text: "Show entry pass").click
 
     expect(page).to have_css(".entry-pass__qr svg", visible: true)
+    expect(page).to have_css(".entry-pass__date", text: "October 10, 2026 · Pune", visible: true)
+    expect(page).not_to have_css(".entry-pass__date", text: "October 8–11")
   end
 end
