@@ -1,0 +1,62 @@
+name: Android CodeQL
+
+on:
+  pull_request:
+    paths: ['android/**', '.github/workflows/native-codeql.yml', '.github/scripts/**']
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/native-codeql.yml', '.github/scripts/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-codeql-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze Kotlin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify Android SDK
+        run: |
+          test -d "$ANDROID_HOME/platforms/android-35"
+          test -d "$ANDROID_HOME/build-tools/35.0.0"
+      - name: Test result verification
+        run: python3 -m unittest discover -s .github/scripts/tests
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: java-kotlin
+          build-mode: manual
+      - name: Build Android for extraction
+        working-directory: android
+        run: >-
+          ./gradlew --no-daemon --no-build-cache --rerun-tasks
+          -Pkotlin.incremental=false
+          -Pkotlin.compiler.execution.strategy=in-process
+          :app:assembleDebug
+      - name: Analyze Kotlin
+        uses: github/codeql-action/analyze@v4
+        with:
+          output: native-codeql-results
+          upload: never
+          upload-database: false
+      - name: Verify security findings
+        run: python3 .github/scripts/verify_codeql_results.py native-codeql-results
+      - name: Preserve native analysis
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-codeql-${{ github.sha }}
+          path: native-codeql-results/*.sarif
+          retention-days: 14
+          if-no-files-found: error
