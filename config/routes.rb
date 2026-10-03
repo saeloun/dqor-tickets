@@ -87,6 +87,12 @@ Rails.application.routes.draw do
   end
 
   namespace :api do
+    namespace :attendee do
+      namespace :v1 do
+        resource :account, only: :show
+        resources :passes, only: :index
+      end
+    end
     namespace :staff do
       resource :session, only: %i[create show destroy]
       resources :checkins, only: :index do
