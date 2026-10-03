@@ -10,8 +10,6 @@ import okhttp3.Request
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 
-/** Deliberately cannot be instantiated in shipped demo builds. No INTERNET permission
- * exists either. Approval requires a reviewed build flag, fixed origin and manifest change. */
 internal object NativeIntegrationGate { const val ENABLED = false }
 
 class ApprovedNativeTransport(private val config: NativeConfig) : NativeTransport {

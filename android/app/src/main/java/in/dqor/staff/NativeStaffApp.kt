@@ -106,9 +106,9 @@ fun NativeStaffApp(events: List<Event>, workflow: NativeDeskWorkflow, demo: Mock
                         item {StaffSections(section) {section=it; scanning=false; focus.clearFocus()}}
                         items(state.results) {result -> Card(Modifier.fillMaxWidth()) {Column(Modifier.padding(16.dp)) {Text("${when(result.state) {NativeState.SUCCESS -> "✓ Confirmed"; NativeState.WARNING -> "! Already admitted"; NativeState.ERROR -> "× Rejected"}} · ${result.attendee ?: "Unknown attendee"} · #${result.ticketId}",style=MaterialTheme.typography.titleMedium); Text(result.message)}}}
                         if(section=="Scan") item {
-                            Text("Scan, review, welcome.",style=MaterialTheme.typography.titleLarge)
+                            Text("Event admission · scanner rehearsal",style=MaterialTheme.typography.titleLarge)
                             Text("A QR preview never admits a guest. Keep scanning to build a batch, then review every name.")
-                            if(scanning) {Text("Scanning resolves identity only. Hold one QR in view; review the selected identities before confirming."); QrScanner(enabled=!state.busy && state.review==null,onScan={secret -> run {resolve(secret)}})}
+                            if(scanning) {Text("Scanning resolves identity only. Hold one QR in view; review the selected identities before confirming."); QrScanner(enabled=!state.busy && state.review==null && !state.uncertain && !offline && state.session!=null,onScan={secret -> run {resolve(secret)}})}
                             OutlinedButton(onClick={run {resolve("demo-101")}},enabled=!state.busy && !offline && state.review==null) {Text("Preview sample QR")}
                         }
                         if(section=="Scan") state.preview?.let {preview -> item {Card(Modifier.fillMaxWidth()) {Column(Modifier.padding(16.dp)) {Text("Preview · NOT an admission",style=MaterialTheme.typography.titleMedium); Text("${preview.ticket.attendeeName} · ${preview.ticket.attendeeEmail} · #${preview.ticket.id}"); Text(if(!preview.ticket.eligible) "Ineligible — do not admit" else if(preview.ticket.checkedInAt!=null) "Already checked in" else "Eligible at preview time; rechecked on confirmation")}}}}
