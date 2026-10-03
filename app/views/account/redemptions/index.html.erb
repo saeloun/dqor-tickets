@@ -1,0 +1,9 @@
+<main style="max-width:40rem;margin:auto;padding:1rem" data-controller="redemption-status">
+<h1>My scan status</h1><p role="status" data-redemption-status-target="freshness">Server snapshot at <%= @checked_at.iso8601 %>. Refresh to check for changes.</p>
+<%= link_to "Refresh status", account_redemptions_path, data: { turbo: false } %>
+<% @tickets.each do |ticket| %><article><h2><%= ticket.ticket_type.name %> · #<%= ticket.id %></h2>
+<p><%= ticket.canceled_at? || !ticket.order.paid? ? "Ticket no longer eligible" : "Confirmed ticket" %></p>
+<h3>Regular event entry</h3><% Ticket::EVENT_DATES.each do |day| %><p><%= day %>: <%= ticket.checked_in_at[day.iso8601] || "Not scanned" %></p><% end %>
+<h3>Special purposes</h3><% @slots.each do |slot| %><% uses = (@redemptions[ticket.id] || []).count { |redemption| redemption.event_slot_id == slot.id && !redemption.voided_at? } %><p><strong><%= slot.name %></strong>: <%= uses.positive? ? "Redeemed #{uses} of #{slot.redemption_limit}" : "Not redeemed" %> · <%= slot.ticket_type_ids.include?(ticket.ticket_type_id) ? "Configured entitlement (ticket and time checks apply)" : "No entitlement configured" %></p><% end %>
+<% (@redemptions[ticket.id] || []).each do |redemption| %><p><%= redemption.event_slot.name %>: <%= redemption.voided_at? ? "Corrected / voided" : "Redeemed" %> at <%= redemption.redeemed_at.iso8601 %><% if redemption.voided_at? %> · corrected at <%= redemption.voided_at.iso8601 %><% end %></p><% end %>
+</article><% end %><% if @tickets.empty? %><p>No tickets assigned to your account email.</p><% end %></main>

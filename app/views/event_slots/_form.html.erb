@@ -1,0 +1,11 @@
+<main style="max-width:40rem;margin:auto;padding:1rem"><h1>Slot schedule and eligibility</h1>
+<p>Times use Asia/Kolkata. Select eligible ticket types only after verifying organizer rules. Draft slots cannot be redeemed.</p>
+<%= form_with model: @slot do |f| %>
+<p role="alert"><%= @slot.errors.full_messages.to_sentence %></p>
+<p><%= f.label :name %><br><%= f.text_field :name, required: true %></p>
+<% [:starts_at, :ends_at].each do |field| %><p><%= f.label field %><br><%= f.datetime_local_field field, value: @slot.public_send(field)&.in_time_zone("Asia/Kolkata")&.strftime("%Y-%m-%dT%H:%M"), required: true %></p><% end %>
+<p><%= f.label :capacity, "Total redemption capacity (blank for unlimited)" %><br><%= f.number_field :capacity, min: 1 %></p>
+<p><%= f.label :redemption_limit, "Redemptions per ticket" %><br><%= f.number_field :redemption_limit, min: 1 %></p>
+<fieldset><legend>Explicit eligible ticket types</legend><%= f.collection_check_boxes :ticket_type_ids, TicketType.order(:name), :id, :name do |b| %><p><%= b.label { b.check_box + b.text } %></p><% end %></fieldset>
+<p><%= f.label :active do %><%= f.check_box :active %> Activate verified eligibility and schedule<% end %></p><%= f.submit "Save slot" %>
+<% end %></main>
