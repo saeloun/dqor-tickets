@@ -58,6 +58,7 @@ final class PublicProgrammeStore: ObservableObject {
     }
     func clear() async {
         generation += 1
+        let clearGeneration = generation
         refreshTask?.cancel()
         refreshTask = nil
         loading = true
@@ -68,6 +69,7 @@ final class PublicProgrammeStore: ObservableObject {
         isStale = false
         cleared = true
         await client.clear()
+        guard clearGeneration == generation else { return }
         loading = false
     }
     func toggle(_ id: String) {
