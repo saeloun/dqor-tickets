@@ -58,20 +58,45 @@ class NativeDemoModel(application: Application) : AndroidViewModel(application) 
 }
 
 class MainActivity : ComponentActivity() {
+    private val attendee by lazy { ViewModelProvider(this)[`in`.dqor.staff.attendee.AttendeeModel::class.java] }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        consumeAttendeeCallback(intent)
+    }
+    private fun consumeAttendeeCallback(intent: Intent) {
+        val callback = intent.dataString
+        intent.data = null
+        attendee.callback(callback)
+    }
+    override fun onStart() { super.onStart(); attendee.foreground() }
+    override fun onStop() { attendee.background(); super.onStop() }
+    private fun openWebsite(url: String): Boolean = try {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        true
+    } catch (_: ActivityNotFoundException) { false }
+
     private val model by lazy { ViewModelProvider(this)[NativeDemoModel::class.java] }
     private val published by lazy { ViewModelProvider(this)[PublishedProgrammeModel::class.java] }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        consumeAttendeeCallback(intent)
         val source = JSONArray(assets.open("events.json").bufferedReader().use { it.readText() })
         val events = (0 until source.length()).map { i -> source.getJSONObject(i).let { e -> Event(e.getString("id"),e.getString("name"),e.getString("location"),e.getString("subtitle"),(0 until e.getJSONArray("dates").length()).map { e.getJSONArray("dates").getString(it) },e.getString("theme")) } }
         val experience = EventExperience.parse(assets.open("experience.json").bufferedReader().use { it.readText() })
         setContent {
+            var account by rememberSaveable {mutableStateOf(false)}
             var preview by rememberSaveable {mutableStateOf(false)}
             var staff by rememberSaveable {mutableStateOf(false)}
             var browserProblem by remember {mutableStateOf<String?>(null)}
             val savedScreens=rememberSaveableStateHolder()
-            if(preview) {
+            if(account) {
+                `in`.dqor.staff.attendee.AttendeeAccountApp(attendee.controller,onClose={account=false},
+                    onAuthorize={authorization -> if(!openWebsite(authorization.url)) {attendee.controller.cancel(); browserProblem="No system browser is available."}},
+                    onWebsite={browserProblem=if(openWebsite(`in`.dqor.staff.attendee.AttendeeIntegration.ACCOUNT_WEBSITE)) null else "No system browser is available."},
+                    onTickets={browserProblem=if(openWebsite(`in`.dqor.staff.attendee.AttendeeIntegration.TICKETS_WEBSITE)) null else "No system browser is available."},browserProblem=browserProblem)
+            } else if(preview) {
                 BackHandler(enabled=!staff) {preview=false}
                 Column(Modifier.fillMaxSize().safeDrawingPadding()) {
                     Text("DEMO PREVIEW · synthetic events, passes and staff",Modifier.padding(12.dp),style=MaterialTheme.typography.bodySmall)
@@ -98,7 +123,7 @@ class MainActivity : ComponentActivity() {
                     browserProblem=null
                     try {startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(OfficialProgrammeTransport.TICKETS)))}
                     catch(_: ActivityNotFoundException) {browserProblem="No browser is available to open the official ticket website."}
-                },bookmarks=bookmarks,onBookmark=published.bookmarks::toggle,browserProblem=browserProblem)
+                },bookmarks=bookmarks,onBookmark=published.bookmarks::toggle,browserProblem=browserProblem,onAccount={browserProblem=null; account=true})
             }
         }
     }
