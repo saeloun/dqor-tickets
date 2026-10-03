@@ -1,6 +1,6 @@
 # Native staff integration requirements
 
-Status: integration acceptance requirements for the backend/native owners. The native app remains mock-only. This document is confined to the iOS change; it does not edit or authorize backend work.
+Status: integration acceptance requirements for the backend/native owners. Staff integration remains mock-only; the anonymous production public programme is a separate read-only connection described in [README.md](README.md). This document is confined to the iOS change; it does not edit or authorize backend work.
 
 ## Latest backend handoff received
 
@@ -28,7 +28,7 @@ Verify the new read-only resolution operation against these guarantees before co
 - Repeated resolution is safe. Ticket revocation between resolve and confirm is still enforced by the existing batch mutation. Resolution never reserves entry or promises eligibility at submission time.
 - Regression evidence should assert unchanged attendance count/timestamp and unchanged success-audit count after repeated/concurrent lookups, plus staff auth, CSRF, eligibility, unknown-ticket, and log-redaction behavior.
 
-The app has no network route configured. The proposed `/api/staff/checkins/resolve` response can map to `Attendee` after the above verification without changing the scanner/review semantics.
+The staff adapter has no active production route configured; the public programme transport is separate. The proposed `/api/staff/checkins/resolve` response can map to `Attendee` after the above verification without changing the scanner/review semantics.
 
 ## Native authentication — proposed first-party flow requires integration verification
 
