@@ -3,6 +3,9 @@ package `in`.dqor.staff
 import android.os.ParcelFileDescriptor
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.Density
@@ -10,6 +13,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import `in`.dqor.staff.programme.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
+import java.io.File
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -29,6 +33,15 @@ class PublishedProgrammeUiTest {
     private fun back(overview: Boolean=false) {instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);compose.waitForIdle();if(overview) compose.waitUntil(5_000) {compose.onAllNodesWithTag("published-overview").fetchSemanticsNodes().isNotEmpty()}}
     private fun collapsed(id: Int) {val matcher=hasText("Session details") and hasAnyAncestor(hasTestTag("public-session-$id"));compose.waitUntil(5_000) {compose.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()};compose.onNode(matcher).performScrollTo().assertIsDisplayed()}
     private fun programme() {compose.onNodeWithText("Programme").performClick();compose.waitForIdle()}
+    private fun filterEvidence(name: String) {
+        compose.captureDemo(name)
+        File(instrumentation.targetContext.filesDir,"review-shots/$name-semantics.txt").writeText(compose.onRoot().printToString())
+    }
+    private fun unmatchedQuery() {
+        compose.onNode(hasSetTextAction()).assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText,AnnotatedString("unmatched")))
+        compose.onNodeWithText("0 sessions").assertExists()
+        compose.onAllNodes(SemanticsMatcher("Published session row") {it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("public-session-")==true}).assertCountEquals(0)
+    }
     @Test fun actualBackCollapsesLatestOffscreenDetailBeforeReturningToOverview() {
         setup();programme();detail(1);detail(20)
         show("Find a session or speaker");compose.captureDemo("public-long-list-before-back")
@@ -50,9 +63,17 @@ class PublishedProgrammeUiTest {
         programme();show("Reset filters");compose.onNodeWithText("Reset filters").performClick();detail(1)
         show("Fri, 9 Oct");compose.onNodeWithText("Fri, 9 Oct").performClick();show("No sessions match");back(true);show("Your tickets")
         programme();show("Thu, 8 Oct");compose.onNodeWithText("Thu, 8 Oct").performClick();detail(1)
-        show("Find a session or speaker");compose.onNodeWithText("Find a session or speaker").performTextInput("unmatched")
-        instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ESCAPE);compose.waitForIdle()
-        show("No sessions match");back(true);show("Your tickets")
+        try {
+            show("Find a session or speaker");compose.onNodeWithText("Find a session or speaker").performTextInput("unmatched")
+            unmatchedQuery()
+            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ESCAPE);compose.waitForIdle()
+            unmatchedQuery();show("No sessions match")
+            filterEvidence("public-filter-after-assertions")
+            back(true);show("Your tickets")
+        } catch(failure: Throwable) {
+            filterEvidence("public-filter-failure")
+            throw failure
+        }
     }
     @Test fun authoritativeWithdrawalAndClearRemoveSavedDetailState() {
         setup();programme();detail(1);compose.onNodeWithContentDescription("Save Synthetic session 1").performClick()

@@ -30,7 +30,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onClear: ()->Unit,
-    onPreview: ()->Unit,onTickets: ()->Unit,bookmarks: Set<String>,onBookmark: (String)->Unit,browserProblem: String?=null) {
+    onPreview: ()->Unit,onTickets: ()->Unit,bookmarks: Set<String>,onBookmark: (String)->Unit,browserProblem: String?=null,onAccount: (() -> Unit)?=null) {
     var schedule by rememberSaveable {mutableStateOf(false)}
     var date by rememberSaveable {mutableStateOf("")}
     var query by rememberSaveable {mutableStateOf("")}
@@ -60,7 +60,8 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
                 Column(Modifier.widthIn(max=680.dp).fillMaxSize().testTag(if(schedule) "published-schedule" else "published-overview")) {
                     Row(Modifier.fillMaxWidth().padding(horizontal=16.dp),verticalAlignment=Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {Text("dqor",fontSize=24.sp,fontWeight=FontWeight.Bold); Text("Official public programme",style=MaterialTheme.typography.bodySmall)}
-                        TextButton(onClick=onPreview,modifier=Modifier.heightIn(min=48.dp)) {Text("Demo preview")}
+                        Column {onAccount?.let {TextButton(onClick=it,modifier=Modifier.heightIn(min=48.dp)) {Text("Account")}}
+                            TextButton(onClick=onPreview,modifier=Modifier.heightIn(min=48.dp)) {Text("Demo preview")}}
                     }
                     if(programme!=null) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal=16.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected=!schedule,onClick={schedule=false},label={Text("Overview")})
