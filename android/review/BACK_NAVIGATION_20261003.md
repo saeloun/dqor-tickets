@@ -6,7 +6,7 @@ One stable event-level Back handler owns the decision. Expansion and preview sta
 
 ## Baseline and preserved experiment
 
-The branch starts at current main `6efec600242e79d72b0470c2d2de3a7a0d2cc9bb`. The exact Library handoff `libfile_0a55d131627481919af99fd4d4be8dbc` was materialized in this executor and inspected before reproduction: 10,308 bytes, SHA256 `e0f39bd3ab94c06a9e5bf3930ea3732e1c8239c7c79f9df8ae3aae42cba84cf5`.
+The original navigation validation started at main `6efec600242e79d72b0470c2d2de3a7a0d2cc9bb`. The exact Library handoff `libfile_0a55d131627481919af99fd4d4be8dbc` was materialized in this executor and inspected before reproduction: 10,308 bytes, SHA256 `e0f39bd3ab94c06a9e5bf3930ea3732e1c8239c7c79f9df8ae3aae42cba84cf5`.
 
 That bundle preserves an unmerged experiment which moved card expansion into ScheduleScreen but still registered child Back handlers. Its API35 run failed two Back assertions even after bounded waits. The experiment is not the implementation in this change. Only its long-list test reproduction was initially ported, with production source unchanged.
 
@@ -35,3 +35,13 @@ Installed APK hashes match the final locally built artifacts on both owned emula
 Before/after screenshots are unedited captures from the real composables in the synthetic test activity. Before OS Back shows the unexpected Overview; after OS Back remains in Schedule; returning to the original card shows collapsed Session details. The coordinator inspected those pixels. The evidence bundle includes raw baseline/final logs, original handoff, source patch, APK checksums and a short synthetic emulator replay. Exact Library IDs accompany the draft PR handoff.
 
 Only Android attendee state/navigation, instrumentation tests and this review note change. Web, iOS, CI, production flags, transport, credentials, permissions, auth, payment, scanner/QR and staff mutation semantics remain unchanged. No live feed, wallet or account capability is activated. The launcher keeps FLAG_SECURE. Emulator fixtures do not establish live native integration, physical camera/TalkBack or distribution readiness. Landing remains with the release owner.
+
+## PR188 readiness follow-up
+
+The branch is refreshed onto main `ab520c063a5989498458dfeb1ff32314e0bf6a92`, preserving PR187's Zendesk logo rename and home-view reference exactly. Production navigation source and the app APK remain identical to the previously reviewed Back correction.
+
+The public-preview test helper now waits for a resolved client snapshot or error with loading finished, then for Compose idle, before scrolling. This avoids a missing-row scroll exception escaping the wait during refresh. Existing visibility, exact search-value and OS Back assertions remain intact. A deferred synthetic response additionally verifies visible loading, disabled refresh and absent search, followed by reachable offscreen search/session content after response completion. It covers the delayed UI journey; it is not claimed as a deterministic failure reproduction of the previous helper.
+
+Fresh checks pass: debug/instrumentation builds, lint, 67 JVM tests, all four public tests on API35 and API32, focused navigation 10/10 on both, and full API32 25/25. Five independent reviewers approve the frozen test-only change. The coordinator inspected all four fresh loading/resolved captures from both devices. Installed APK hashes match the locally built artifacts: app `39dbb072ddd60b5ab6a1aeeb22883678308d4201dd0dd43793a5031695e65be9`, instrumentation `9251426a551009266104159b6bbb36a1dd4165093b0c9fc60e7df445be66ebe1`.
+
+The first fresh API35 full run crashed in the existing schedule-filter visibility assertion before public-preview tests ran: Compose SnapshotStateObserver reported concurrent instrumentation/main-thread access while lazy prefetch attached a ripple. The exact failure and logcat are retained. No dependency, runtime, prefetch, screenshot-helper or assertion change was made in response. On unchanged code, the isolated filter test passed 1/1 in 3.682 seconds and one controlled full API35 run passed 25/25 in 51.232 seconds. API32 full25 passed in 64.492 seconds; focused10 passed in 32.309 seconds on API35 and 37.093 seconds on API32. The underlying Compose race is not claimed fixed. All failed and passing runs are retained in the final Library evidence.
