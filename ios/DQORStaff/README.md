@@ -1,8 +1,8 @@
-# DQOR iOS — public programme and scanner rehearsal
+# DQOR iOS — programme, account client and scanner rehearsal
 
 The default app connects anonymously to the deployed official DQOR public programme. It presents real event dates, venue and published sessions, local saved-session preferences, search/day filters, details, retry and clearly marked cached/offline states. The original bundled Deccan artwork and warm/plum presentation remain. Public reads do not authenticate, download private tickets or alter attendance.
 
-The separate labeled staff/design demo uses synthetic data only. The disabled native staff adapter remains disconnected. Backend PR #189 is merged and deployed at main `6842a5b0b6224f24f78332593aff3b9b56d62be8`, with account/pass cookie JSON disabled by default. The separate PKCE bearer bridge is implemented only as an undeployed backend draft and is not connected to this client; an approved native authentication handoff and scannable-pass API remain absent; the app opens the existing official ticket route in the system browser instead of inventing a private integration or presenting sample passes as live.
+The separate labeled staff/design demo uses synthetic data only. The disabled native staff adapter remains disconnected. Backend PR #189 is merged and deployed at main `6842a5b0b6224f24f78332593aff3b9b56d62be8`, with account/pass cookie JSON disabled by default. The attendee account client implements the separate undeployed draft PR #192 behind a fixed closed production gate, with Debug-only synthetic journeys and intercepted HTTP tests. Your account uses the existing official system-browser account and ticket routes in production. There is no scannable native attendee pass API or live private identity in the app. See [NATIVE_ATTENDEE_AUTH.md](NATIVE_ATTENDEE_AUTH.md) for the exact contract, memory-only lifecycle and platform gates.
 
 ## Run and test
 
@@ -36,7 +36,7 @@ The public feed needs no new authentication or activation. Staff API production 
 
 Before staff login: verify the approved secure credential-entry flow, event/date capabilities, eight-hour expiry, origin-bound token-only Keychain policy, logout/revocation, 401/403 clearing and lost-network recovery against approved synthetic staging fixtures. Before any real confirmation: explicitly authorize the named event/day, test attendees and attendance mutation; verify read-only QR resolution writes nothing, and require explicit review/confirmation. Legacy web `POST /checkin` must never implement native preview.
 
-Before native attendee tickets/wallet: PR #189 is merged and deployed at main `6842a5b0b6224f24f78332593aff3b9b56d62be8`, supplying cookie-authenticated account/pass JSON that remains disabled by default. That cookie contract is separate from the implemented, undeployed PKCE bearer draft; this client is not connected to that bridge. Obtain an approved native attendee authentication/token handoff separate from staff identity, minimal authenticated ticket/entitlement DTOs, expiry/revocation/logout semantics and secure QR storage/display policy. Existing browser ticket-access links do not supply that native contract. Payments, email and redemption remain separately scoped; this implementation enables none of them.
+Before native attendee activation: PR #189's merged and deployed cookie-authenticated account/pass JSON remains disabled by default and separate from the undeployed bearer draft. Review draft PR #192 (`2839e33961e9c6a9b95ea78c8b477265471e8bca`), provision the owner-approved canonical `dqor-ios` client/callback mapping, independently verify webcredentials/applinks associations and secure real-device browser return. The client gate is fixed off. The synthetic account/pass UI has no QR; a scannable-pass contract and secure display/storage policy still require review. Staff identity, payments, email and redemption remain separately scoped.
 
 [NATIVE_CONTRACT_REQUIREMENTS.md](NATIVE_CONTRACT_REQUIREMENTS.md) and [NATIVE_ADAPTER.md](NATIVE_ADAPTER.md) describe the existing disabled adapter and acceptance requirements.
 
@@ -46,7 +46,11 @@ Read-only inspection on 2026-10-03 found an Apple Development signing identity, 
 
 Physical rear-camera capture, real QR focus/rotation/interruption, permission behavior on a real phone, locked-device token storage and actual staff auth/revocation still require an approved device build and test scope. Simulator fixtures cannot prove those behaviors. TestFlight/App Store distribution requires an approved team, App ID, provisioning/distribution target and explicit release authorization; no upload has occurred.
 
-## Evidence
+## Attendee client validation
+
+The isolated auth lane passed a full candidate unit run of 105 reported tests, one explicit opt-in public-live skip and zero failures. After the final timer/copy delta, all 39 affected auth tests passed with no skips/failures. Five selected simulator UI journeys passed before that last timer/copy delta: four auth rehearsals and the existing public navigation/save/offline/clear fixture journey. After grafting the auth-only diff onto landed main `c70f5e41f3737c00fe8460227d81a41d71b4f9de`, the combined unit suite reported 106 tests, one intentional public-live opt-in skip and zero failures (105 actually ran); the unchanged public fixture UI journey also passed. Clean Debug and unsigned Release simulator builds on that base passed. Screenshots were inspected; first-run assertion failures and two rejected transition captures remain retained. [NATIVE_ATTENDEE_AUTH.md](NATIVE_ATTENDEE_AUTH.md) distinguishes exact source/test provenance and remaining gates. No private production calls were made.
+
+## Public/scanner evidence
 
 The final 2026-10-03 live-enabled unit run passed all 67 tests with zero skips/failures, including an actual simulator URLSession 200 followed by exact weak-ETag 304. The observed publication had 34 sessions and 14 speakers. The controlled full UI replay passed all 20 tests with zero skips/failures, including real programme content, local saving/cold restart, foreground/privacy clear and labeled scanner rehearsal. After a test-only settled-landscape/whole-screen capture refinement, the focused scanner journey passed its one test; the runtime app binary remained unchanged. Actual screenshot pixels were inspected.
 

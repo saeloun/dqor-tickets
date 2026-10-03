@@ -122,14 +122,25 @@ enum PublicProgrammeFormatting {
 struct PublicEventRootView: View {
     @ObservedObject var demoStore: StaffStore
     @StateObject private var programme: PublicProgrammeStore
+    @StateObject private var attendee: AttendeeSessionStore
+    #if DEBUG
+    private let attendeeBrowser: SyntheticAttendeeBrowser?
+    private let attendeeAPI: SyntheticAttendeeBridge?
+    #endif
     @Environment(\.scenePhase) private var scenePhase
     @State private var clearing = false
     init(demoStore: StaffStore) {
         self.demoStore = demoStore
         #if DEBUG
         let fixture = ProcessInfo.processInfo.arguments.contains("--public-fixture")
+        let authFixture = ProcessInfo.processInfo.arguments.contains("--attendee-auth-fixture")
+        let browser = authFixture ? SyntheticAttendeeBrowser() : nil
+        let api = authFixture ? SyntheticAttendeeBridge() : nil
+        attendeeBrowser = browser; attendeeAPI = api
+        _attendee = StateObject(wrappedValue: AttendeeSessionStore(api: api, browser: browser, synthetic: authFixture, supportsHTTPSCallback: ProcessInfo.processInfo.arguments.contains("--attendee-older-policy") ? false : AttendeePlatformPolicy.supportsHTTPSCallback))
         _programme = StateObject(wrappedValue: fixture ? PublicProgrammeStore(transport: PublicProgrammePreviewTransport(offline: ProcessInfo.processInfo.arguments.contains("--public-offline")), isFixture: true) : PublicProgrammeStore())
         #else
+        _attendee = StateObject(wrappedValue: AttendeeSessionStore())
         _programme = StateObject(wrappedValue: PublicProgrammeStore())
         #endif
     }
@@ -168,6 +179,7 @@ struct PublicEventRootView: View {
                     }
                     VStack(alignment: .leading, spacing: 16) {
                         Label("Your tickets", systemImage: "ticket").font(.title3.weight(.semibold))
+                        NavigationLink { attendeeAccount } label: { Label("Your account", systemImage: "person.crop.circle").frame(minHeight: 48) }.accessibilityIdentifier("attendeeAccount")
                         Text("Open your existing tickets on the official website in your browser. Native sign-in and passes are not connected.")
                             .foregroundStyle(AttendeeStyle.secondary)
                         Link(destination: URL(string: "https://deccanqueenonrails.com/tickets/mine")!) {
@@ -206,9 +218,18 @@ struct PublicEventRootView: View {
                     Button("Clear local data", role: .destructive) { Task { await programme.clear() } }
                     Button("Cancel", role: .cancel) {}
                 }
+                .onOpenURL { attendee.receiveExternalCallback($0) }
                 .task { programme.refresh(automatic: true) }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { programme.refresh(automatic: true) } }
         }
+    }
+    @ViewBuilder
+    private var attendeeAccount: some View {
+        #if DEBUG
+        AttendeeAccountView(store: attendee, previewBrowser: attendeeBrowser, previewAPI: attendeeAPI)
+        #else
+        AttendeeAccountView(store: attendee)
+        #endif
     }
     private var refreshButton: some View {
         Button(programme.snapshot == nil ? "Load programme" : "Refresh programme") { programme.refresh() }
