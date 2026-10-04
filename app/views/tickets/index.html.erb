@@ -22,7 +22,7 @@
 
       <% @ticket_types.each do |ticket_type| %>
         <% available = ticket_type.available_quantity %>
-        <% state = if ticket_type.purchasable? && available.positive? then "on sale" elsif ticket_type.purchasable? then "sold out" else "coming soon" end %>
+        <% state = ticket_sale_state(ticket_type, available: available) %>
         <% add_on = ticket_type.requires_conference_pass? %>
         <% rails_girls = ticket_type.slug == "rails-girls-pune" %>
         <% featured = ticket_type.slug == "conference-pass-regular" %>
@@ -94,7 +94,7 @@
                 <button type="button" data-action="cart#increment" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Add one <%= ticket_type.name %>">+</button>
               </div>
             <% else %>
-              <p class="ticket-unavailable"><%= state == "sold out" ? "This tier has sold out." : "Sales open soon." %></p>
+              <p class="ticket-unavailable"><%= { "sold out" => "This tier has sold out.", "sales closed" => "Sales for this tier have closed." }.fetch(state, "Sales open soon.") %></p>
             <% end %>
           </div>
         </article>
