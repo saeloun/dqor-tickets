@@ -78,11 +78,18 @@ struct StaffRootView: View {
                         Text("\(store.selection.count) in batch").font(.title2.bold()).accessibilityAddTraits(.updatesFrequently)
                         Text(store.message ?? "Point at a ticket QR code. Attendees are added to a batch for review.")
                             .padding().accessibilityIdentifier("scanStatus")
-                        Button { scanning = false } label: {
-                            Text("Use attendee search").frame(minHeight: 48)
-                        }.buttonStyle(.bordered).tint(AttendeeStyle.accent)
-                            .foregroundStyle(Color(uiColor: .label))
-                    } }.navigationTitle("Scan tickets")
+                    } }
+                        .safeAreaInset(edge: .bottom) {
+                            Button { scanning = false } label: {
+                                Text("Use attendee search")
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, minHeight: 48)
+                            }.buttonStyle(.bordered).tint(AttendeeStyle.accent)
+                                .foregroundStyle(Color(uiColor: .label))
+                                .padding(.horizontal, 16).padding(.vertical, 8)
+                                .background(Color(uiColor: .systemBackground))
+                        }
+                        .navigationTitle("Scan tickets")
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { scanning = false }.font(.body) } }
                 }
             }
