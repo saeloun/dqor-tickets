@@ -1,6 +1,8 @@
 package `in`.dqor.staff
 
 import android.os.ParcelFileDescriptor
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -10,6 +12,8 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import `in`.dqor.staff.programme.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
@@ -36,6 +40,16 @@ class PublishedProgrammeUiTest {
     private fun filterEvidence(name: String) {
         compose.captureDemo(name)
         File(instrumentation.targetContext.filesDir,"review-shots/$name-semantics.txt").writeText(compose.onRoot().printToString())
+    }
+    private fun imeVisible() = compose.runOnUiThread {
+        val root=ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).singleOrNull()?.window?.decorView
+        root?.takeIf {it.isAttachedToWindow}?.let {ViewCompat.getRootWindowInsets(it)?.isVisible(WindowInsetsCompat.Type.ime())}
+    }
+    private fun waitForIme(visible: Boolean) {
+        compose.waitUntil(5_000) {imeVisible()==visible}
+        val observed=imeVisible()
+        assertEquals(visible,observed)
+        android.util.Log.i("DQOR_IME_GATE","requested=$visible observed=$observed")
     }
     private fun unmatchedQuery() {
         compose.onNode(hasSetTextAction()).assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText,AnnotatedString("unmatched")))
@@ -66,7 +80,9 @@ class PublishedProgrammeUiTest {
         try {
             show("Find a session or speaker");compose.onNodeWithText("Find a session or speaker").performTextInput("unmatched")
             unmatchedQuery()
+            waitForIme(true)
             instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ESCAPE);compose.waitForIdle()
+            waitForIme(false)
             unmatchedQuery();show("No sessions match")
             filterEvidence("public-filter-after-assertions")
             back(true);show("Your tickets")
