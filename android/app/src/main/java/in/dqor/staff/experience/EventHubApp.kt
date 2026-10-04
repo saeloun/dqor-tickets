@@ -48,6 +48,7 @@ enum class EventSection(val label: String) { OVERVIEW("Overview"), SCHEDULE("Sch
 private fun dayLabel(day: String)=LocalDate.parse(day).format(DateTimeFormatter.ofPattern("EEE, d MMM",java.util.Locale.ENGLISH))
 private val PosterShape=RoundedCornerShape(16.dp)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Unit) {
     var eventId by rememberSaveable {mutableStateOf<String?>(null)}
@@ -77,7 +78,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                     else Text("dqor",Modifier.padding(horizontal=8.dp),fontSize=24.sp,fontWeight=FontWeight.Bold,letterSpacing=(-1).sp)
                 }
                 val staff: @Composable () -> Unit = {TextButton(onClick=onStaff,modifier=Modifier.heightIn(min=48.dp)) {Text("Staff workspace",style=MaterialTheme.typography.labelLarge)}}
-                if(LocalDensity.current.fontScale>1.3f) Column(Modifier.fillMaxWidth().padding(horizontal=12.dp)) {back(); staff()}
+                if(LocalDensity.current.fontScale>1.3f) FlowRow(Modifier.fillMaxWidth().padding(horizontal=12.dp),horizontalArrangement=Arrangement.SpaceBetween) {back(); staff()}
                 else Row(Modifier.fillMaxWidth().heightIn(min=56.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {back(); staff()}
                 if(event!=null && passId==null) ScrollableTabRow(selectedTabIndex=section.ordinal,edgePadding=8.dp,divider={},containerColor=Color.Transparent,
                     indicator={positions -> if(positions.isNotEmpty()) TabRowDefaults.SecondaryIndicator(Modifier.tabIndicatorOffset(positions[section.ordinal]),height=2.dp)}) {
