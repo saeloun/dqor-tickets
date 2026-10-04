@@ -56,18 +56,13 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
             confirmButton={TextButton(onClick={clearDialog=false; expanded=emptyList(); query=""; date=""; savedOnly=false; schedule=false; onClear()}) {Text("Clear local data")}},
             dismissButton={TextButton(onClick={clearDialog=false}) {Text("Cancel")}})
         Surface(Modifier.fillMaxSize()) {
-            Box(Modifier.safeDrawingPadding(),contentAlignment=Alignment.TopCenter) {
+            BoxWithConstraints(Modifier.safeDrawingPadding(),contentAlignment=Alignment.TopCenter) {
+                val scrollHeader=LocalDensity.current.fontScale>1.3f || maxWidth<360.dp || maxHeight<420.dp
                 Column(Modifier.widthIn(max=680.dp).fillMaxSize().testTag(if(schedule) "published-schedule" else "published-overview")) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal=16.dp),verticalAlignment=Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {Text("dqor",fontSize=24.sp,fontWeight=FontWeight.Bold); Text("Official public programme",style=MaterialTheme.typography.bodySmall)}
-                        Column {onAccount?.let {TextButton(onClick=it,modifier=Modifier.heightIn(min=48.dp)) {Text("Account")}}
-                            TextButton(onClick=onPreview,modifier=Modifier.heightIn(min=48.dp)) {Text("Demo preview")}}
-                    }
-                    if(programme!=null) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal=16.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        FilterChip(selected=!schedule,onClick={schedule=false},label={Text("Overview")})
-                        FilterChip(selected=schedule,onClick={schedule=true},label={Text("Programme")})
-                    }
+                    if(!scrollHeader) PublishedHeader(onPreview,onAccount,false,Modifier.padding(horizontal=16.dp))
+                    if(programme!=null) PublishedNavigation(schedule,{schedule=it},Modifier.padding(horizontal=16.dp))
                     LazyColumn(Modifier.weight(1f).testTag("published-programme"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
+                        if(scrollHeader) item(key="public-header") {PublishedHeader(onPreview,onAccount,true)}
                         item {PublishedStatus(state,onRefresh)}
                         if(programme==null) {
                             item {Text("Deccan Queen on Rails",fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.SemiBold); Text("The official published programme will appear here when it can be verified.")}
@@ -103,6 +98,29 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable private fun PublishedHeader(onPreview: ()->Unit,onAccount: (() -> Unit)?,stacked: Boolean,modifier: Modifier=Modifier) {
+    val brand: @Composable ()->Unit={Column {Text("dqor",fontSize=24.sp,fontWeight=FontWeight.Bold); Text("Official public programme",style=MaterialTheme.typography.bodySmall)}}
+    val actions: @Composable ()->Unit={
+        onAccount?.let {TextButton(onClick=it,modifier=Modifier.heightIn(min=48.dp)) {Text("Account")}}
+        TextButton(onClick=onPreview,modifier=Modifier.heightIn(min=48.dp)) {Text("Demo preview")}
+    }
+    if(stacked) Column(modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+        brand()
+        FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {actions()}
+    } else Row(modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {brand()}
+        Column {actions()}
+    }
+}
+
+@Composable private fun PublishedNavigation(schedule: Boolean,onSchedule: (Boolean)->Unit,modifier: Modifier=Modifier) {
+    Row(modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        FilterChip(selected=!schedule,onClick={onSchedule(false)},label={Text("Overview")},modifier=Modifier.heightIn(min=48.dp))
+        FilterChip(selected=schedule,onClick={onSchedule(true)},label={Text("Programme")},modifier=Modifier.heightIn(min=48.dp))
     }
 }
 
