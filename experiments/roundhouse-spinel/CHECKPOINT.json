@@ -1,0 +1,47 @@
+{
+  "scope": "Compiler compatibility experiment; DQOR application is not compiled or deployable",
+  "dqor_source": "585f1e5143dab85b1041a84fce0f3ee0d470ad72",
+  "roundhouse_base": "be39e428ef6f3a47719d3ab9a46041133146178a",
+  "spinel_revision": "ed603ed595db42626c747988a091c07f54532b94",
+  "patch_sha256": "17ab8652e4ce0f1458e7c7c26e334ddba1244bc305aaa63a97540e27044b9d81",
+  "local_compiler_checkpoint": "3932cc38b82fe4f14b584c45caebc082869f54d8",
+  "compiler_binary_sha256": "fdd6a7d3b0b90e3183c0ef2ed7d57b2122eb5109fcb96050ef29d6b4966fb85e",
+  "source_content_sha256": "745d0940e59fd546c063941a50f31cf2d322c9adf9087d792e8e297c2252b5ad",
+  "validation": {
+    "affected_integration_targets": {
+      "passed": 29,
+      "failed": 0,
+      "ignored": 4
+    },
+    "library": {
+      "passed": 901,
+      "failed": 0,
+      "ignored": 1,
+      "working_directory_without_spaces": true,
+      "rust_min_stack": 33554432
+    },
+    "external_sqlite_oracle": {
+      "passed": 1,
+      "failed": 0
+    },
+    "native_binaries": {
+      "ownership": "0189e8d6b937e2844984e155c81e903e4227fb37d71ecc8b639cf301a7fa4cf7",
+      "two_connection_pool": "d4f3707ddd9ba6df28ff6b0ed7a438bb89750fc3fbc8d659d6401532bea56732",
+      "emitted_orm": "949df430ba7c830a726a76eb71fb5cb89de023ab77e75c97adbebcebf19060b1"
+    },
+    "native_build_run_phases_passed": 6,
+    "independent_native_executions_passed": 3,
+    "five_expert_source_approvals": true
+  },
+  "full_dqor_compatible": false,
+  "no_avo_probe": {
+    "source_overlay": "Only mount_avo removed from exact DQOR source archive; Gemfile unchanged",
+    "check_errors": 329,
+    "emission_errors": 348,
+    "full_app_binary_emitted": false,
+    "admin_parity": false
+  },
+  "production_changed": false,
+  "feature_flags_activated": false,
+  "credentials_used_for_native_tests": false
+}

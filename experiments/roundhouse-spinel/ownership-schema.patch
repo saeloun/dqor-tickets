@@ -1,0 +1,1074 @@
+diff --git a/runtime/spinel/db.rb b/runtime/spinel/db.rb
+index 709d008b..ac34bd1c 100644
+--- a/runtime/spinel/db.rb
++++ b/runtime/spinel/db.rb
+@@ -716,24 +716,34 @@ class DbPool
+     @lock  = Mutex.new
+     @cv    = ConditionVariable.new
+     i = 0
+-    while i < n
+-      rc = SQL.sqlite3_open_v2(path, SQL.db_out, SQL::OPEN_URI_RWC, nil)
+-      if rc != SQL::OK
+-        # Best-effort error surface — sqlite3_errmsg requires a valid db
+-        # handle, which we don't have on open failure. The numeric rc +
+-        # path are the only signals we can raise pre-handle.
+-        raise "Db.configure: sqlite3_open(" + path + ") failed (" + rc.to_s + ")"
++    begin
++      while i < n
++        rc = SQL.sqlite3_open_v2(path, SQL.db_out, SQL::OPEN_URI_RWC, nil)
++        dbh = SQL.read_ptr(SQL.db_out)
++        if rc != SQL::OK
++          SQL.sqlite3_close(dbh) unless dbh.nil?
++          raise "Db.configure: sqlite3_open(" + path + ") failed (" + rc.to_s + ")"
++        end
++        @conns.push(DbConn.new(dbh))
++        if SQL.sqlite3_exec(dbh, "PRAGMA foreign_keys=ON", nil, nil, nil) != SQL::OK
++          raise "Db.configure: foreign key enforcement could not be enabled"
++        end
++        if SQL.sqlite3_prepare_v2(dbh, "PRAGMA foreign_keys", -1, SQL.stmt_out, nil) != SQL::OK
++          raise "Db.configure: foreign key enforcement could not be verified"
++        end
++        enforcement = SQL.read_ptr(SQL.stmt_out)
++        enabled = SQL.sqlite3_step(enforcement) == SQL::ROW && SQL.sqlite3_column_int(enforcement, 0) == 1
++        SQL.sqlite3_finalize(enforcement)
++        unless enabled
++          raise "Db.configure: SQLite foreign key enforcement is unavailable"
++        end
++        PRAGMAS.each { |p| SQL.sqlite3_exec(dbh, p, nil, nil, nil) }
++        @free.push(i)
++        i += 1
+       end
+-      dbh = SQL.read_ptr(SQL.db_out)
+-      # Deliberately not raising on a refused pragma. Every one of these is an
+-      # optimization or a politeness; none changes a query's RESULT. A build of
+-      # sqlite that declines one (journal_mode=WAL on a read-only mount, say)
+-      # should still serve, slower, rather than fail to boot — and a pragma
+-      # that silently did nothing is what the numbers above would reveal.
+-      PRAGMAS.each { |p| SQL.sqlite3_exec(dbh, p, nil, nil, nil) }
+-      @conns.push(DbConn.new(dbh))
+-      @free.push(i)
+-      i += 1
++    rescue StandardError => error
++      close_all
++      raise error
+     end
+   end
+ 
+@@ -857,9 +867,15 @@ module Db
+     per = n / stripes
+     per = 1 if per < 1
+     i = 0
+-    while i < stripes
+-      @pools.push(DbPool.new(path, per))
+-      i += 1
++    begin
++      while i < stripes
++        @pools.push(DbPool.new(path, per))
++        i += 1
++      end
++    rescue StandardError => error
++      @pools.each { |pool| pool.close_all }
++      @pools = []
++      raise error
+     end
+     @assign_lock = Mutex.new
+     @next_pool = 0
+diff --git a/runtime/spinel/db_cruby.rb b/runtime/spinel/db_cruby.rb
+index 344a9349..08d2e6fa 100644
+--- a/runtime/spinel/db_cruby.rb
++++ b/runtime/spinel/db_cruby.rb
+@@ -89,29 +89,43 @@ module Db
+     # takes the gem's defaults, which are the same flags minus URI.
+     flags = SQLite3::Constants::Open::READWRITE | SQLite3::Constants::Open::CREATE
+     flags |= SQLite3::Constants::Open::URI if path.start_with?("file:")
+-    ActiveRecord::ConnectionAdapters::ConnectionPool.new(@pool_size) do
+-      db = SQLite3::Database.new(path, flags: flags)
+-      db.results_as_hash = false
+-      # PINNED, not inherited. This lane reads `synchronous = NORMAL`
+-      # today without asking for it, because the sqlite3 gem's bundled
+-      # SQLite defaults WAL that way — while the binary's own SQLite
+-      # defaults to FULL, which cost the spinel lane 5.5s on a
+-      # 1,000-socket connect storm (one fsync per presence write; see
+-      # runtime/spinel/db.rb's PRAGMAS). Three lanes agreeing by
+-      # compile-time accident is not agreement, so each states it.
+-      db.execute("PRAGMA journal_mode=WAL")
+-      db.execute("PRAGMA synchronous=NORMAL")
+-      # The gem's default is 0: a second writer fails at once with
+-      # SQLITE_BUSY. Rails' database.yml says `timeout: 5000`, and so do
+-      # the binary's PRAGMAS — the harness's file database (see
+-      # test/test_helper.rb) relies on writers waiting.
+-      db.busy_timeout = 5000
+-      # The app's SQL functions (`create_function` / `create_aggregate`
+-      # in an initializer), per connection as Rails' adapter registers
+-      # them. Defined only when the app has some (runtime/sql_functions.rb
+-      # is generated for it).
+-      SqlFunctions.install(db) if defined?(SqlFunctions)
+-      db
++    opened = []
++    begin
++      ActiveRecord::ConnectionAdapters::ConnectionPool.new(@pool_size) do
++        db = SQLite3::Database.new(path, flags: flags)
++        opened << db
++        db.results_as_hash = false
++        begin
++          db.execute("PRAGMA foreign_keys=ON")
++          raise "SQLite foreign key enforcement is unavailable" unless db.get_first_value("PRAGMA foreign_keys") == 1
++        rescue StandardError
++          db.close
++          raise
++        end
++        # PINNED, not inherited. This lane reads `synchronous = NORMAL`
++        # today without asking for it, because the sqlite3 gem's bundled
++        # SQLite defaults WAL that way — while the binary's own SQLite
++        # defaults to FULL, which cost the spinel lane 5.5s on a
++        # 1,000-socket connect storm (one fsync per presence write; see
++        # runtime/spinel/db.rb's PRAGMAS). Three lanes agreeing by
++        # compile-time accident is not agreement, so each states it.
++        db.execute("PRAGMA journal_mode=WAL")
++        db.execute("PRAGMA synchronous=NORMAL")
++        # The gem's default is 0: a second writer fails at once with
++        # SQLITE_BUSY. Rails' database.yml says `timeout: 5000`, and so do
++        # the binary's PRAGMAS — the harness's file database (see
++        # test/test_helper.rb) relies on writers waiting.
++        db.busy_timeout = 5000
++        # The app's SQL functions (`create_function` / `create_aggregate`
++        # in an initializer), per connection as Rails' adapter registers
++        # them. Defined only when the app has some (runtime/sql_functions.rb
++        # is generated for it).
++        SqlFunctions.install(db) if defined?(SqlFunctions)
++        db
++      end
++    rescue StandardError
++      opened.each { |db| db.close unless db.closed? }
++      raise
+     end
+   end
+ 
+diff --git a/src/emit/shared/schema_sql.rs b/src/emit/shared/schema_sql.rs
+index 0af77937..44336a81 100644
+--- a/src/emit/shared/schema_sql.rs
++++ b/src/emit/shared/schema_sql.rs
+@@ -162,6 +162,13 @@ pub fn render_schema_statements_for(schema: &Schema, dialect: Dialect) -> Result
+             ));
+             continue;
+         }
++        if dialect == Dialect::Sqlite {
++            for idx in &table.indexes {
++                if idx.unique && idx.predicate.as_ref().is_some_and(|p| !sqlite_reads_alike(p, table)) {
++                    return Err(format!("unique index `{}` has no equivalent SQLite predicate", idx.name));
++                }
++            }
++        }
+         let mut s = String::new();
+         writeln!(s, "CREATE TABLE IF NOT EXISTS {} (", dialect.ident(table.name.as_str())).unwrap();
+         let mut lines: Vec<String> = Vec::new();
+@@ -175,11 +182,39 @@ pub fn render_schema_statements_for(schema: &Schema, dialect: Dialect) -> Result
+                 dialect.ident(col.name.as_str()),
+                 dialect.column_type(&col.col_type)
+             );
++            if let Some(generated) = table.constraints.generated_columns.get(&col.name) {
++                let expression = generated_expression(generated, table, dialect)?;
++                write!(line, " GENERATED ALWAYS AS ({expression}) {}", if generated.stored { "STORED" } else { "VIRTUAL" }).unwrap();
++            }
+             if !col.nullable {
+                 line.push_str(" NOT NULL");
+             }
+             lines.push(line);
+         }
++        if dialect == Dialect::Sqlite && !table.constraints.generated_columns.is_empty() {
++            for col in &table.columns {
++                if is_integer(&col.col_type) && !col.primary_key {
++                    let name = dialect.ident(col.name.as_str());
++                    let range = if matches!(col.col_type, ColumnType::Integer) { format!(" AND {name} BETWEEN -2147483648 AND 2147483647") } else { String::new() };
++                    lines.push(format!("  CHECK ({name} IS NULL OR (typeof({name}) = 'integer'{range}))"));
++                }
++            }
++        }
++        for check in &table.constraints.checks {
++            if dialect == Dialect::Sqlite && (!sqlite_reads_alike(&check.expression, table)
++                || check.expression.chars().any(|c| matches!(c, '+' | '-' | '*' | '/' | '%' | '|'))
++                || check.expression.split(|c: char| !c.is_ascii_alphanumeric() && c != '_').any(|word| word.eq_ignore_ascii_case("lower") || word.eq_ignore_ascii_case("upper") || word.eq_ignore_ascii_case("abs"))) {
++                return Err(format!("check constraint on `{}` has no equivalent SQLite expression: {}", table.name, check.expression));
++            }
++            let name = check.name.as_ref().map(|n| format!("CONSTRAINT {} ", dialect.ident(n.as_str()))).unwrap_or_default();
++            lines.push(format!("  {name}CHECK ({})", check.expression));
++        }
++        for fk in &table.foreign_keys {
++            lines.push(foreign_key_sql(&[fk.from_column.clone()], &fk.to_table, &[fk.to_column.clone()], &fk.on_delete, &fk.on_update, table, schema, dialect)?);
++        }
++        for fk in &table.constraints.composite_foreign_keys {
++            lines.push(foreign_key_sql(&fk.from_columns, &fk.to_table, &fk.to_columns, &fk.on_delete, &fk.on_update, table, schema, dialect)?);
++        }
+         writeln!(s, "{}", lines.join(",\n")).unwrap();
+         s.push(')');
+         out.push(s);
+@@ -326,6 +361,31 @@ fn sqlite_reads_alike(predicate: &str, table: &Table) -> bool {
+     true
+ }
+ 
++fn generated_expression(generated: &crate::schema::GeneratedColumn, table: &Table, dialect: Dialect) -> Result<String, String> {
++    if dialect == Dialect::Postgres { return Ok(generated.expression.clone()); }
++    let compact: String = generated.expression.chars().filter(|c| !c.is_ascii_whitespace()).collect();
++    if let Some(arguments) = compact.strip_prefix("COALESCE(").and_then(|s| s.strip_suffix(')')) {
++        if let Some((column, fallback)) = arguments.split_once(',') {
++            if matches!(fallback, "(0)::bigint" | "0::bigint" | "0") && table.columns.iter().any(|c| c.name.as_str() == column && matches!(c.col_type, ColumnType::BigInt | ColumnType::Integer)) {
++                return Ok(format!("COALESCE({}, 0)", dialect.ident(column)));
++            }
++        }
++    }
++    Err(format!("generated column on `{}` has no equivalent SQLite expression: {}", table.name, generated.expression))
++}
++
++fn foreign_key_sql(from: &[crate::Symbol], target: &crate::TableRef, to: &[crate::Symbol], on_delete: &crate::schema::ReferentialAction, on_update: &crate::schema::ReferentialAction, table: &Table, schema: &Schema, dialect: Dialect) -> Result<String, String> {
++    let Some(parent) = schema.tables.get(&target.0) else { return Err(format!("foreign key on `{}` references missing table `{}`", table.name, target.0)); };
++    if from.is_empty() || from.len() != to.len() || from.iter().any(|name| !table.columns.iter().any(|c| c.name == *name)) || to.iter().any(|name| !parent.columns.iter().any(|c| c.name == *name)) {
++        return Err(format!("foreign key on `{}` has invalid column binding", table.name));
++    }
++    let names = |columns: &[crate::Symbol]| columns.iter().map(|c| dialect.ident(c.as_str())).collect::<Vec<_>>().join(", ");
++    let action = |value: &crate::schema::ReferentialAction| match value {
++        crate::schema::ReferentialAction::NoAction => "NO ACTION", crate::schema::ReferentialAction::Restrict => "RESTRICT", crate::schema::ReferentialAction::Cascade => "CASCADE", crate::schema::ReferentialAction::SetNull => "SET NULL", crate::schema::ReferentialAction::SetDefault => "SET DEFAULT",
++    };
++    Ok(format!("  FOREIGN KEY ({}) REFERENCES {} ({}) ON DELETE {} ON UPDATE {}", names(from), dialect.ident(target.0.as_str()), names(to), action(on_delete), action(on_update)))
++}
++
+ fn is_integer(ct: &ColumnType) -> bool {
+     matches!(ct, ColumnType::Integer | ColumnType::BigInt | ColumnType::Reference { .. })
+ }
+@@ -399,7 +459,7 @@ mod tests {
+     }
+ 
+     fn table(name: &str, columns: Vec<Column>, indexes: Vec<Index>) -> Table {
+-        Table { name: Symbol::from(name), columns, indexes, foreign_keys: Vec::new(), virtual_module: None }
++        Table { name: Symbol::from(name), columns, indexes, foreign_keys: Vec::new(), constraints: Default::default(), virtual_module: None }
+     }
+ 
+     fn schema_of(tables: Vec<Table>) -> Schema {
+@@ -456,11 +516,6 @@ end
+         );
+     }
+ 
+-    /// A partial index keeps its `where:` wherever it decides which rows
+-    /// the index accepts: on a unique index in both dialects. A
+-    /// non-unique one keeps it on Postgres only; on SQLite it covers
+-    /// every row, as before. So does a unique one whose predicate SQLite
+-    /// can't be trusted to run.
+     #[test]
+     fn a_partial_index_keeps_its_predicate() {
+         let schema_rb = r#"ActiveRecord::Schema[8.1].define(version: 1) do
+@@ -471,7 +526,6 @@ end
+     t.string "kind"
+     t.index ["user_id"], name: "index_tokens_on_live_user_id", unique: true, where: "(revoked_at IS NULL)"
+     t.index ["state"], name: "index_tokens_on_open_state", where: "(state = ANY (ARRAY[2, 3]))"
+-    t.index ["user_id"], name: "index_tokens_on_initial_user_id", unique: true, where: "((kind)::text = 'initial'::text)"
+   end
+ end
+ "#;
+@@ -482,7 +536,6 @@ end
+                 "CREATE UNIQUE INDEX IF NOT EXISTS index_tokens_on_live_user_id ON tokens (user_id) \
+                  WHERE (revoked_at IS NULL)",
+                 "CREATE INDEX IF NOT EXISTS index_tokens_on_open_state ON tokens (state)",
+-                "CREATE UNIQUE INDEX IF NOT EXISTS index_tokens_on_initial_user_id ON tokens (user_id)",
+             ]
+         );
+         assert_eq!(
+@@ -492,8 +545,6 @@ end
+                  WHERE (revoked_at IS NULL)",
+                 "CREATE INDEX IF NOT EXISTS \"index_tokens_on_open_state\" ON \"tokens\" (\"state\") \
+                  WHERE (state = ANY (ARRAY[2, 3]))",
+-                "CREATE UNIQUE INDEX IF NOT EXISTS \"index_tokens_on_initial_user_id\" ON \"tokens\" (\"user_id\") \
+-                 WHERE ((kind)::text = 'initial'::text)",
+             ]
+         );
+     }
+diff --git a/src/ingest/schema.rs b/src/ingest/schema.rs
+index cbdaea67..4a0c5174 100644
+--- a/src/ingest/schema.rs
++++ b/src/ingest/schema.rs
+@@ -76,7 +76,9 @@ pub fn ingest_schema(source: &[u8], file: &str) -> IngestResult<Schema> {
+                     .arguments()
+                     .map(|a| a.arguments().iter().collect())
+                     .unwrap_or_default();
+-                apply_add_foreign_key(&args, &mut schema);
++                if let Err(gap) = apply_add_foreign_key(&args, &mut schema, file) {
++                    gaps.push(gap);
++                }
+             }
+             _ => {}
+         }
+@@ -162,6 +164,11 @@ const UNSUPPORTED_VERBS: &[&str] = &[
+     "reversible",
+     "revert",
+     "up_only",
++    "add_check_constraint",
++    "remove_check_constraint",
++    "validate_check_constraint",
++    "remove_foreign_key",
++    "validate_foreign_key",
+ ];
+ 
+ fn apply_migration_verb(
+@@ -180,6 +187,11 @@ fn apply_migration_verb(
+         });
+     }
+ 
++    if matches!(verb, "drop_table" | "rename_table" | "change_column" | "remove_column" | "rename_column" | "remove_reference" | "remove_belongs_to")
++        && schema.tables.values().any(|table| !table.constraints.generated_columns.is_empty() || !table.constraints.composite_foreign_keys.is_empty() || !table.constraints.checks.is_empty())
++    {
++        return Err(IngestError::Unsupported { file: file.into(), message: format!("migration verb `{verb}` requires materialized db/schema.rb to preserve generated and referential constraints") });
++    }
+     let args: Vec<Node<'_>> = call
+         .arguments()
+         .map(|a| a.arguments().iter().collect())
+@@ -218,6 +230,8 @@ fn apply_migration_verb(
+                     // change_column replaces; add_column after a
+                     // replace-shaped history stays idempotent.
+                     table.columns.retain(|x| x.name != col.name);
++                    table.constraints.generated_columns.shift_remove(&col.name);
++                    if let Some(generated) = opts.generated { table.constraints.generated_columns.insert(col.name.clone(), generated); }
+                     table.columns.push(col);
+                 }
+             }
+@@ -324,7 +338,7 @@ fn apply_migration_verb(
+         // conversion emits real `foreign_key` migration lines from it).
+         // Column typing itself is unaffected: the FK column is already an
+         // ordinary integer column from `create_table`.
+-        "add_foreign_key" => apply_add_foreign_key(&args, schema),
++        "add_foreign_key" => apply_add_foreign_key(&args, schema, file)?,
+         // Extensions (and FK removal — schema.rb is canonical state, so
+         // a remove would only appear in migration folds where the add is
+         // also seen) don't affect column typing; skipped like before.
+@@ -347,6 +361,12 @@ fn refuse_predicate_column(
+     column: &str,
+     file: &str,
+ ) -> Result<(), IngestError> {
++    if !table.constraints.generated_columns.is_empty() || !table.constraints.composite_foreign_keys.is_empty() || !table.constraints.checks.is_empty() {
++        return Err(IngestError::Unsupported {
++            file: file.into(),
++            message: format!("migration verb `{verb}` on {}.{column} requires materialized db/schema.rb to preserve constraints", table.name),
++        });
++    }
+     let Some(index) = table
+         .indexes
+         .iter()
+@@ -447,24 +467,64 @@ fn table_name_value(node: &Node<'_>) -> Option<String> {
+ /// Shared by the schema.rb walk and the migration fold; column typing
+ /// itself is unaffected (the FK column is already an ordinary integer
+ /// column from `create_table`).
+-fn apply_add_foreign_key(args: &[Node<'_>], schema: &mut Schema) {
++fn apply_add_foreign_key(args: &[Node<'_>], schema: &mut Schema, file: &str) -> IngestResult<()> {
+     let arg_name = |i: usize| args.get(i).and_then(table_name_value);
+-    let (Some(from_t), Some(to_t)) = (arg_name(0), arg_name(1)) else { return };
+-    let kw = |key: &str| kwarg_value(args.iter().skip(2), key).and_then(|v| name_value(&v));
+-    let from_column =
+-        kw("column").unwrap_or_else(|| format!("{}_id", crate::naming::singularize(&to_t)));
+-    let to_column = kw("primary_key").unwrap_or_else(|| "id".to_string());
+-    let on_delete = kw("on_delete").map(|s| referential_action(&s)).unwrap_or_default();
+-    let on_update = kw("on_update").map(|s| referential_action(&s)).unwrap_or_default();
++    let (Some(from_t), Some(to_t)) = (arg_name(0), arg_name(1)) else {
++        return Err(IngestError::Unsupported { file: file.into(), message: "foreign key tables must be literal".into() });
++    };
++    if !schema.tables.contains_key(&Symbol::from(from_t.clone())) || !schema.tables.contains_key(&Symbol::from(to_t.clone())) {
++        return Err(IngestError::Unsupported { file: file.into(), message: format!("foreign key {from_t}->{to_t} names an absent table") });
++    }
++    for node in args.iter().skip(2) {
++        let Some(hash) = node.as_keyword_hash_node() else {
++            return Err(IngestError::Unsupported { file: file.into(), message: "foreign key options must be keyword literals".into() });
++        };
++        for element in hash.elements().iter() {
++            let Some(assoc) = element.as_assoc_node() else {
++                return Err(IngestError::Unsupported { file: file.into(), message: "dynamic foreign key options are unsupported".into() });
++            };
++            let key = symbol_value(&assoc.key()).unwrap_or_default();
++            if !matches!(key.as_str(), "column" | "primary_key" | "on_delete" | "on_update" | "name") {
++                return Err(IngestError::Unsupported { file: file.into(), message: format!("foreign key option `{key}` is unsupported") });
++            }
++        }
++    }
++    let names = |key: &str, fallback: String| -> IngestResult<Vec<Symbol>> {
++        let Some(value) = kwarg_value(args.iter().skip(2), key) else { return Ok(vec![Symbol::from(fallback)]) };
++        let values: Option<Vec<Symbol>> = if let Some(array) = value.as_array_node() {
++            array.elements().iter().map(|n| name_value(&n).map(Symbol::from)).collect()
++        } else {
++            name_value(&value).map(|name| vec![Symbol::from(name)])
++        };
++        values.filter(|v| !v.is_empty()).ok_or_else(|| IngestError::Unsupported { file: file.into(), message: format!("foreign key {from_t}->{to_t} has dynamic or empty {key}") })
++    };
++    let from_columns = names("column", format!("{}_id", crate::naming::singularize(&to_t)))?;
++    let to_columns = names("primary_key", "id".into())?;
++    if from_columns.len() != to_columns.len() {
++        return Err(IngestError::Unsupported { file: file.into(), message: format!("foreign key {from_t}->{to_t} has unequal column arity") });
++    }
++    let action = |key: &str| -> IngestResult<crate::schema::ReferentialAction> {
++        let Some(value) = kwarg_value(args.iter().skip(2), key) else { return Ok(Default::default()) };
++        let name = name_value(&value).unwrap_or_default();
++        if !matches!(name.as_str(), "cascade" | "nullify" | "restrict" | "no_action") {
++            return Err(IngestError::Unsupported { file: file.into(), message: format!("foreign key action `{key}: {name}` is unsupported") });
++        }
++        Ok(referential_action(&name))
++    };
+     if let Some(table) = schema.tables.get_mut(&Symbol::from(from_t)) {
+-        table.foreign_keys.push(crate::schema::ForeignKey {
+-            from_column: Symbol::from(from_column),
+-            to_table: TableRef(Symbol::from(to_t)),
+-            to_column: Symbol::from(to_column),
+-            on_delete,
+-            on_update,
+-        });
++        if from_columns.len() == 1 {
++            table.foreign_keys.push(crate::schema::ForeignKey {
++                from_column: from_columns[0].clone(), to_table: TableRef(Symbol::from(to_t)), to_column: to_columns[0].clone(),
++                on_delete: action("on_delete")?, on_update: action("on_update")?,
++            });
++        } else {
++            table.constraints.composite_foreign_keys.push(crate::schema::CompositeForeignKey {
++                from_columns, to_table: TableRef(Symbol::from(to_t)), to_columns,
++                on_delete: action("on_delete")?, on_update: action("on_update")?,
++            });
++        }
+     }
++    Ok(())
+ }
+ 
+ /// `on_delete:`/`on_update:` symbol → the neutral referential action.
+@@ -616,9 +676,10 @@ fn table_from_create_table(
+ 
+     let mut columns = Vec::new();
+     let mut indexes: Vec<Index> = Vec::new();
++    let mut constraints = crate::schema::TableConstraints::default();
+     if has_id {
+         let id_limit = hash_limit.unwrap_or(outer_limit);
+-        let opts = ColumnOpts { nullable: Some(false), default: None, limit: id_limit };
++        let opts = ColumnOpts { nullable: Some(false), default: None, limit: id_limit, ..Default::default() };
+         // `serial` and `bigserial` are the integer keys Postgres fills
+         // from a sequence: Rails' PostgreSQL adapter makes `id: :integer`
+         // a `serial`, and dumps it as `id: :serial`. An integer key with
+@@ -671,13 +732,40 @@ fn table_from_create_table(
+                             if let Some(idx) = index_from_call(&call, &table_name) {
+                                 indexes.push(idx);
+                             }
++                        } else if call_name == "check_constraint" {
++                            let args: Vec<Node<'_>> = call.arguments().map(|a| a.arguments().iter().collect()).unwrap_or_default();
++                            let options_valid = args.iter().skip(1).all(|node| {
++                                node.as_keyword_hash_node().is_some_and(|hash| hash.elements().iter().all(|element| {
++                                    element.as_assoc_node().is_some_and(|assoc| symbol_value(&assoc.key()).as_deref() == Some("name") && name_value(&assoc.value()).is_some())
++                                }))
++                            });
++                            if !options_valid {
++                                gaps.push(IngestError::Unsupported { file: file.into(), message: format!("unsupported check constraint options on {table_name}") });
++                                continue;
++                            }
++                            match args.first().and_then(string_value) {
++                                Some(expression) => constraints.checks.push(crate::schema::CheckConstraint {
++                                    name: kwarg_value(args.iter().skip(1), "name").and_then(|n| name_value(&n)).map(Symbol::from),
++                                    expression,
++                                }),
++                                None => gaps.push(IngestError::Unsupported { file: file.into(), message: format!("dynamic check constraint on {table_name}") }),
++                            }
++                        } else if matches!(call_name.as_str(), "foreign_key" | "exclusion_constraint" | "unique_constraint") {
++                            gaps.push(IngestError::Unsupported { file: file.into(), message: format!("table-level constraint `{call_name}` on {table_name} is not modeled") });
+                         } else if call_name == "timestamps" {
+                             // Migration macro; schema.rb has these
+                             // already materialized as two datetimes.
+                             columns.extend(timestamp_columns());
+                         } else {
+                             match column_from_call(&call, &table_name, file) {
+-                                Ok(Some(col)) => columns.push(col),
++                                Ok(Some(col)) => {
++                                    if call_name == "virtual" {
++                                        let args: Vec<Node<'_>> = call.arguments().map(|a| a.arguments().iter().collect()).unwrap_or_default();
++                                        let opts = parse_column_opts(args.iter().skip(1));
++                                        constraints.generated_columns.insert(col.name.clone(), opts.generated.unwrap());
++                                    }
++                                    columns.push(col);
++                                },
+                                 Ok(None) => {}
+                                 Err(gap) => gaps.push(gap),
+                             }
+@@ -699,6 +787,7 @@ fn table_from_create_table(
+             columns,
+             indexes,
+             foreign_keys: vec![],
++            constraints,
+             virtual_module: None,
+         },
+     ))
+@@ -744,6 +833,7 @@ fn virtual_table_from_call(call: &ruby_prism::CallNode<'_>) -> Option<(Symbol, T
+             columns,
+             indexes: vec![],
+             foreign_keys: vec![],
++            constraints: Default::default(),
+             virtual_module: Some(crate::schema::VirtualModule { module, args: module_args }),
+         },
+     ))
+@@ -785,6 +875,7 @@ fn view_from_create_view(
+             columns,
+             indexes: vec![],
+             foreign_keys: vec![],
++            constraints: Default::default(),
+             virtual_module: None,
+         },
+     ))
+@@ -922,6 +1013,9 @@ struct ColumnOpts {
+     nullable: Option<bool>,
+     default: Option<String>,
+     limit: Option<u32>,
++    value_type: Option<String>,
++    generated: Option<crate::schema::GeneratedColumn>,
++    generated_options_invalid: bool,
+ }
+ 
+ // Not `string_value` alone: schema.rb dumps an integer, float or boolean default unquoted (`default: 0`, `default: true`).
+@@ -937,13 +1031,21 @@ fn default_value(node: &Node<'_>) -> Option<String> {
+ 
+ fn parse_column_opts<'pr>(nodes: impl Iterator<Item = &'pr Node<'pr>>) -> ColumnOpts {
+     let mut opts = ColumnOpts::default();
++    let mut expression = None;
++    let mut stored = None;
+     for node in nodes {
+-        let Some(kh) = node.as_keyword_hash_node() else { continue };
++        let Some(kh) = node.as_keyword_hash_node() else { opts.generated_options_invalid = true; continue };
+         for el in kh.elements().iter() {
+-            let Some(assoc) = el.as_assoc_node() else { continue };
+-            let Some(key) = symbol_value(&assoc.key()) else { continue };
++            let Some(assoc) = el.as_assoc_node() else { opts.generated_options_invalid = true; continue };
++            let Some(key) = symbol_value(&assoc.key()) else { opts.generated_options_invalid = true; continue };
+             let value = &assoc.value();
++            if !matches!(key.as_str(), "type" | "as" | "stored" | "null") || (key == "null" && bool_value(value).is_none()) {
++                opts.generated_options_invalid = true;
++            }
+             match key.as_str() {
++                "type" => opts.value_type = name_value(value),
++                "as" => expression = string_value(value),
++                "stored" => stored = bool_value(value),
+                 "null" => opts.nullable = bool_value(value),
+                 "default" => opts.default = default_value(value),
+                 "limit" => {
+@@ -957,6 +1059,7 @@ fn parse_column_opts<'pr>(nodes: impl Iterator<Item = &'pr Node<'pr>>) -> Column
+             }
+         }
+     }
++    opts.generated = expression.zip(stored).map(|(expression, stored)| crate::schema::GeneratedColumn { expression, stored });
+     opts
+ }
+ 
+@@ -977,6 +1080,15 @@ fn column_with_type(
+     table: &str,
+     file: &str,
+ ) -> Result<Column, IngestError> {
++    if type_name == "virtual" {
++        let Some(value_type) = opts.value_type.as_deref().filter(|t| *t != "virtual") else {
++            return Err(IngestError::Unsupported { file: file.into(), message: format!("generated column {table}.{col_name} requires a literal underlying type") });
++        };
++        if opts.generated.is_none() || opts.default.is_some() || opts.generated_options_invalid || !matches!(value_type, "bigint" | "integer") {
++            return Err(IngestError::Unsupported { file: file.into(), message: format!("generated column {table}.{col_name} requires a literal expression, explicit stored mode, and no default") });
++        }
++        return column_with_type(value_type, col_name, opts, table, file);
++    }
+     let col_type = match type_name {
+         "integer" => ColumnType::Integer,
+         "bigint" => ColumnType::BigInt,
+diff --git a/src/ingest/sequel_migration.rs b/src/ingest/sequel_migration.rs
+index aa48ac02..e1155f93 100644
+--- a/src/ingest/sequel_migration.rs
++++ b/src/ingest/sequel_migration.rs
+@@ -110,6 +110,7 @@ fn ingest_table_stmt(
+                 columns: Vec::new(),
+                 indexes: Vec::new(),
+                 foreign_keys: Vec::new(),
++                constraints: Default::default(),
+                 virtual_module: None,
+             };
+             if let Some(body) =
+diff --git a/src/ingest/structure_sql.rs b/src/ingest/structure_sql.rs
+index d9bc640f..e6728755 100644
+--- a/src/ingest/structure_sql.rs
++++ b/src/ingest/structure_sql.rs
+@@ -262,6 +262,7 @@ fn handle_create_table(
+             columns,
+             indexes: Vec::new(),
+             foreign_keys: Vec::new(),
++            constraints: Default::default(),
+             virtual_module: None,
+         },
+     );
+diff --git a/src/lower/arel/build.rs b/src/lower/arel/build.rs
+index 71ee25ea..59a3a432 100644
+--- a/src/lower/arel/build.rs
++++ b/src/lower/arel/build.rs
+@@ -669,6 +669,7 @@ mod tests {
+                 ],
+                 indexes: vec![],
+                 foreign_keys: vec![],
++                constraints: Default::default(),
+                 virtual_module: None,
+             },
+         );
+diff --git a/src/lower/arel/visitor.rs b/src/lower/arel/visitor.rs
+index 16259629..3e6b7896 100644
+--- a/src/lower/arel/visitor.rs
++++ b/src/lower/arel/visitor.rs
+@@ -1127,6 +1127,7 @@ mod tests {
+                 ],
+                 indexes: vec![],
+                 foreign_keys: vec![],
++                constraints: Default::default(),
+                 virtual_module: None,
+             },
+         );
+diff --git a/src/lower/model_to_library/adapter_emit.rs b/src/lower/model_to_library/adapter_emit.rs
+index 7d510c35..b54b0867 100644
+--- a/src/lower/model_to_library/adapter_emit.rs
++++ b/src/lower/model_to_library/adapter_emit.rs
+@@ -218,7 +218,7 @@ fn synth_adapter_insert(owner: &ClassId, table: &Table, schema: &Schema) -> Meth
+     let assignments: Vec<Assignment> = table
+         .columns
+         .iter()
+-        .filter(|c| !c.primary_key || supplied_key.is_some())
++        .filter(|c| (!c.primary_key || supplied_key.is_some()) && !table.constraints.generated_columns.contains_key(&c.name))
+         .map(|c| Assignment {
+             column: c.name.clone(),
+             value: Value::Runtime {
+@@ -312,7 +312,7 @@ fn synth_adapter_update(owner: &ClassId, table: &Table, schema: &Schema) -> Meth
+     let assignments: Vec<Assignment> = table
+         .columns
+         .iter()
+-        .filter(|c| !c.primary_key)
++        .filter(|c| !c.primary_key && !table.constraints.generated_columns.contains_key(&c.name))
+         .map(|c| Assignment {
+             column: c.name.clone(),
+             value: Value::Runtime {
+diff --git a/src/project.rs b/src/project.rs
+index a3534826..4803810c 100644
+--- a/src/project.rs
++++ b/src/project.rs
+@@ -933,6 +933,14 @@ pub fn target_files(
+     fixture: &Path,
+     target: BuildTarget,
+ ) -> Result<Vec<(String, String)>, String> {
++    if !matches!(target, BuildTarget::Blog | BuildTarget::Spinel | BuildTarget::Ruby)
++        && app.schema.tables.values().any(|table| !table.constraints.generated_columns.is_empty() || !table.constraints.composite_foreign_keys.is_empty() || !table.constraints.checks.is_empty())
++    {
++        return Err("generated, composite foreign key and check constraints require the verified Ruby or Spinel target".into());
++    }
++    if !matches!(target, BuildTarget::Blog) {
++        crate::emit::shared::schema_sql::render_schema_statements_for(&app.schema, crate::emit::shared::schema_sql::Dialect::Sqlite)?;
++    }
+     reject_unsupported_dates(app, target)?;
+     reject_unsupported_forwarded_procs(app, target)?;
+     report_unsupported_keys(app, target);
+@@ -3443,6 +3451,7 @@ fn scaffold_readme_to_specimen(files: &mut [(String, String)]) {
+ /// `spinel: main.rb: cannot load such file` rather than as anything a
+ /// unit test could see. A toolchain test should drive what ships.
+ pub fn spinel_base_files(app: &App, fixture: &Path) -> Result<Vec<(String, String)>, String> {
++    crate::emit::shared::schema_sql::render_schema_statements_for(&app.schema, crate::emit::shared::schema_sql::Dialect::Sqlite)?;
+     // The bundled-library requires belong HERE, not only in
+     // `spin_shape`. This is the tree `tests/spinel_toolchain.rs`
+     // compiles, and without them it compiles something the CLI never
+diff --git a/src/schema.rs b/src/schema.rs
+index 7dd3d12f..6821dfd7 100644
+--- a/src/schema.rs
++++ b/src/schema.rs
+@@ -24,6 +24,8 @@ pub struct Table {
+     pub columns: Vec<Column>,
+     pub indexes: Vec<Index>,
+     pub foreign_keys: Vec<ForeignKey>,
++    #[serde(default)]
++    pub constraints: TableConstraints,
+     /// `create_virtual_table "message_search_index", "fts5", ["body",
+     /// "tokenize=porter"]` — a table the DB builds from a MODULE rather
+     /// than from a column list. It has no rowid column of its own, no
+@@ -44,6 +46,34 @@ pub struct VirtualModule {
+     pub args: Vec<String>,
+ }
+ 
++#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
++pub struct TableConstraints {
++    pub generated_columns: IndexMap<Symbol, GeneratedColumn>,
++    pub composite_foreign_keys: Vec<CompositeForeignKey>,
++    pub checks: Vec<CheckConstraint>,
++}
++
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct GeneratedColumn {
++    pub expression: String,
++    pub stored: bool,
++}
++
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct CompositeForeignKey {
++    pub from_columns: Vec<Symbol>,
++    pub to_table: TableRef,
++    pub to_columns: Vec<Symbol>,
++    pub on_delete: ReferentialAction,
++    pub on_update: ReferentialAction,
++}
++
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct CheckConstraint {
++    pub name: Option<Symbol>,
++    pub expression: String,
++}
++
+ #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+ pub struct Column {
+     pub name: Symbol,
+diff --git a/tests/roundtrip.rs b/tests/roundtrip.rs
+index a91659f3..48d13c44 100644
+--- a/tests/roundtrip.rs
++++ b/tests/roundtrip.rs
+@@ -41,6 +41,7 @@ fn tiny_blog_round_trips() {
+             ],
+             indexes: vec![],
+             foreign_keys: vec![],
++            constraints: Default::default(),
+             virtual_module: None,
+         },
+     );
+diff --git a/tests/schema_uuid_and_custom_key.rs b/tests/schema_uuid_and_custom_key.rs
+index 5c0e30c7..af627a42 100644
+--- a/tests/schema_uuid_and_custom_key.rs
++++ b/tests/schema_uuid_and_custom_key.rs
+@@ -155,7 +155,7 @@ end
+     assert_eq!(
+         out[0],
+         "CREATE TABLE IF NOT EXISTS accounts (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  \
+-         fields TEXT,\n  last_ip TEXT,\n  username TEXT NOT NULL,\n  seen_at TEXT\n)"
++         fields TEXT,\n  last_ip TEXT,\n  username TEXT NOT NULL,\n  seen_at TEXT,\n  CONSTRAINT username_present CHECK (length(username) > 0)\n)"
+     );
+ }
+ 
+diff --git a/tests/sql_identifiers.rs b/tests/sql_identifiers.rs
+index 7e803c42..a2606092 100644
+--- a/tests/sql_identifiers.rs
++++ b/tests/sql_identifiers.rs
+@@ -213,6 +213,7 @@ fn virtual_table_name_is_quoted_without_rewriting_module_arguments() {
+             columns: vec![],
+             indexes: vec![],
+             foreign_keys: vec![],
++            constraints: Default::default(),
+             virtual_module: Some(roundhouse::schema::VirtualModule {
+                 module: "fts5".into(),
+                 args: vec!["body".into(), "tokenize=porter".into()],
+diff --git a/tests/generated_ownership_schema.rs b/tests/generated_ownership_schema.rs
+new file mode 100644
+index 00000000..d5d564c5
+--- /dev/null
++++ b/tests/generated_ownership_schema.rs
+@@ -0,0 +1,317 @@
++use roundhouse::emit::shared::schema_sql::{Dialect, render_schema_statements_for};
++use roundhouse::ingest::schema::ingest_schema;
++use std::process::Command;
++
++const SOURCE: &str = r#"
++ActiveRecord::Schema.define do
++  create_table "orders" do |t|
++    t.bigint "event_id"
++    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
++    t.index ["id", "ownership_key"], unique: true, name: "orders_ownership"
++    t.check_constraint "event_id IS NULL OR event_id > 0", name: "orders_positive_event"
++  end
++  create_table "ticket_types" do |t|
++    t.bigint "event_id"
++    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
++    t.index ["id", "ownership_key"], unique: true, name: "types_ownership"
++  end
++  create_table "tickets" do |t|
++    t.bigint "order_id", null: false
++    t.bigint "ticket_type_id", null: false
++    t.bigint "event_id"
++    t.integer "price_paise", null: false
++    t.virtual "ownership_key", type: :bigint, as: "COALESCE(event_id, (0)::bigint)", stored: true
++    t.check_constraint "event_id IS NULL OR event_id > 0", name: "tickets_positive_event"
++    t.check_constraint "event_id IS NULL OR price_paise = 0", name: "owned_tickets_free_only"
++  end
++  add_foreign_key "tickets", "orders", column: ["order_id", "ownership_key"], primary_key: ["id", "ownership_key"]
++  add_foreign_key "tickets", "ticket_types", column: ["ticket_type_id", "ownership_key"], primary_key: ["id", "ownership_key"]
++end
++"#;
++
++#[test]
++fn generated_tenant_schema_retains_and_renders_constraints() {
++    let schema = ingest_schema(SOURCE.as_bytes(), "ownership/schema.rb").expect("generated columns are supported without omission");
++    let sql = render_schema_statements_for(&schema, Dialect::Sqlite).expect("portable ownership constraints").join(";\n");
++    assert!(sql.contains("GENERATED ALWAYS AS"));
++    assert!(sql.contains("FOREIGN KEY (order_id, ownership_key)"));
++    assert!(sql.contains("FOREIGN KEY (ticket_type_id, ownership_key)"));
++    assert!(sql.contains("CHECK"));
++}
++
++#[test]
++#[ignore = "requires Python 3 with SQLite 3.31+; run explicitly for SQLite oracle validation"]
++fn generated_tenant_schema_enforces_insert_update_constraints() {
++    let schema = ingest_schema(SOURCE.as_bytes(), "ownership/schema.rb").unwrap();
++    let sql = render_schema_statements_for(&schema, Dialect::Sqlite).unwrap().join(";\n");
++    let retained = std::env::var_os("DQOR_SCHEMA_EVIDENCE");
++    let out = retained.as_ref().map(std::path::PathBuf::from).unwrap_or_else(|| {
++        std::env::temp_dir().join(format!("roundhouse-ownership-{}", std::process::id()))
++    });
++    std::fs::create_dir_all(&out).unwrap();
++    std::fs::write(out.join("generated-schema.sql"), &sql).unwrap();
++    let script = r#"
++import sqlite3,sys
++c=sqlite3.connect(':memory:')
++c.execute('PRAGMA foreign_keys=ON')
++c.executescript(open(sys.argv[1]).read())
++def reject(sql):
++    try: c.execute(sql)
++    except sqlite3.IntegrityError: return
++    raise AssertionError('accepted invalid write: '+sql)
++c.executescript('INSERT INTO orders(id,event_id) VALUES(1,NULL),(2,7),(3,8);INSERT INTO ticket_types(id,event_id) VALUES(1,NULL),(2,7),(3,8);INSERT INTO tickets(id,order_id,ticket_type_id,event_id,price_paise) VALUES(1,1,1,NULL,100),(2,2,2,7,0);')
++assert c.execute('SELECT ownership_key FROM orders ORDER BY id').fetchall()==[(0,),(7,),(8,)]
++assert c.execute('SELECT ownership_key FROM tickets ORDER BY id').fetchall()==[(0,),(7,)]
++reject('INSERT INTO tickets(id,order_id,ticket_type_id,event_id,price_paise) VALUES(3,2,3,7,0)')
++reject('INSERT INTO tickets(id,order_id,ticket_type_id,event_id,price_paise) VALUES(3,2,2,NULL,0)')
++reject('UPDATE tickets SET ticket_type_id=3 WHERE id=2')
++reject('UPDATE tickets SET event_id=8 WHERE id=2')
++reject('UPDATE orders SET event_id=8 WHERE id=2')
++reject('UPDATE ticket_types SET event_id=8 WHERE id=2')
++reject('UPDATE tickets SET price_paise=10 WHERE id=2')
++reject('UPDATE tickets SET price_paise=2147483648 WHERE id=1')
++reject('INSERT INTO orders(id,event_id) VALUES(4,-1)')
++reject("INSERT INTO orders(id,event_id) VALUES(4,'foreign')")
++reject("UPDATE orders SET event_id='foreign' WHERE id=3")
++reject("INSERT INTO ticket_types(id,event_id) VALUES(4,'foreign')")
++reject("UPDATE tickets SET event_id='foreign' WHERE id=2")
++try: c.execute('UPDATE tickets SET ownership_key=8 WHERE id=2')
++except sqlite3.OperationalError as e: assert 'generated column' in str(e)
++else: raise AssertionError('generated key was writable')
++c.execute('INSERT INTO orders(id,event_id) VALUES(4,NULL)')
++c.execute('UPDATE orders SET event_id=9 WHERE id=4')
++assert c.execute('SELECT ownership_key FROM orders WHERE id=4').fetchone()==(9,)
++assert c.execute('SELECT id,order_id,ticket_type_id,event_id,ownership_key,price_paise FROM tickets ORDER BY id').fetchall()==[(1,1,1,None,0,100),(2,2,2,7,7,0)]
++print('ownership schema insert/update enforcement passed')
++"#;
++    let result = Command::new("python3").args(["-c", script]).arg(out.join("generated-schema.sql")).output().unwrap();
++    if retained.is_none() { std::fs::remove_dir_all(&out).unwrap(); }
++    assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
++    print!("{}", String::from_utf8_lossy(&result.stdout));
++}
++
++#[test]
++fn unsupported_check_expression_is_rejected_instead_of_omitted() {
++    let source = r#"ActiveRecord::Schema.define do
++      create_table "events" do |t|
++        t.string "status"
++        t.check_constraint "status::text = ANY (ARRAY['draft'::text, 'published'::text])", name: "status_guard"
++      end
++    end"#;
++    let schema = ingest_schema(source.as_bytes(), "checks/schema.rb").unwrap();
++    let error = render_schema_statements_for(&schema, Dialect::Sqlite).unwrap_err();
++    assert!(error.contains("check constraint"));
++    assert!(render_schema_statements_for(&schema, Dialect::Postgres).unwrap().join("\n").contains("status::text"));
++}
++
++#[test]
++fn malformed_composite_foreign_key_fails_ingestion() {
++    let source = r#"ActiveRecord::Schema.define do
++      create_table "orders" do |t| t.bigint "event_id" end
++      create_table "tickets" do |t| t.bigint "order_id"; t.bigint "event_id" end
++      add_foreign_key "tickets", "orders", column: ["order_id", "event_id"], primary_key: ["id"]
++    end"#;
++    let error = ingest_schema(source.as_bytes(), "invalid/schema.rb").unwrap_err().to_string();
++    assert!(error.contains("unequal column arity"));
++}
++
++#[test]
++fn unsupported_unique_index_does_not_widen_uniqueness() {
++    let source = r#"ActiveRecord::Schema.define do
++      create_table "tokens" do |t|
++        t.bigint "user_id"
++        t.string "kind"
++        t.index ["user_id"], unique: true, name: "initial_tokens", where: "((kind)::text = 'initial'::text)"
++      end
++    end"#;
++    let schema = ingest_schema(source.as_bytes(), "indexes/schema.rb").unwrap();
++    assert!(render_schema_statements_for(&schema, Dialect::Sqlite).unwrap_err().contains("initial_tokens"));
++    assert!(render_schema_statements_for(&schema, Dialect::Postgres).unwrap()[1].contains("WHERE ((kind)::text"));
++}
++
++#[test]
++fn unsupported_foreign_key_options_and_actions_fail_closed() {
++    for option in ["deferrable: :deferred", "validate: false", "match: :full", "on_delete: :unknown", "on_update: action"] {
++        let source = format!(r#"ActiveRecord::Schema.define do
++          create_table "orders" do |t| t.bigint "event_id" end
++          create_table "tickets" do |t| t.bigint "order_id" end
++          add_foreign_key "tickets", "orders", {option}
++        end"#);
++        assert!(ingest_schema(source.as_bytes(), "options/schema.rb").is_err(), "{option}");
++    }
++}
++
++#[test]
++fn foreign_key_declarations_cannot_disappear() {
++    for declaration in [
++        "add_foreign_key from_table, 'orders'",
++        "add_foreign_key 'tickets', to_table",
++        "add_foreign_key 'tickets', 'orders', options",
++        "add_foreign_key 'missing', 'orders'",
++        "add_foreign_key 'tickets', 'missing'",
++    ] {
++        let source = format!(r#"ActiveRecord::Schema.define do
++          create_table "orders" do |t| t.bigint "event_id" end
++          create_table "tickets" do |t| t.bigint "order_id" end
++          {declaration}
++        end"#);
++        assert!(ingest_schema(source.as_bytes(), "missing/schema.rb").is_err(), "{declaration}");
++    }
++}
++
++#[test]
++fn check_options_cannot_disappear() {
++    for option in ["validate: false", "**options", "name: name", "'name'"] {
++        let source = format!(r#"ActiveRecord::Schema.define do
++          create_table "orders" do |t|
++            t.bigint "event_id"
++            t.check_constraint "event_id > 0", {option}
++          end
++        end"#);
++        assert!(ingest_schema(source.as_bytes(), "check-options/schema.rb").is_err(), "{option}");
++    }
++}
++
++#[path = "support/emit_and_run.rs"]
++mod emit_and_run;
++
++#[test]
++fn emitted_orm_preserves_generated_ownership_writes_and_reload() {
++    emit_and_run::empty_app()
++        .write("db/schema.rb", SOURCE)
++        .write("app/models/application_record.rb", "class ApplicationRecord < ActiveRecord::Base\nend\n")
++        .write("app/models/order.rb", "class Order < ApplicationRecord\nend\n")
++        .write("app/models/ticket_type.rb", "class TicketType < ApplicationRecord\nend\n")
++        .write("app/models/ticket.rb", "class Ticket < ApplicationRecord\nend\n")
++        .write("app/controllers/application_controller.rb", "class ApplicationController < ActionController::Base\nend\n")
++        .write("config/routes.rb", "Rails.application.routes.draw do\nend\n")
++        .run_ruby(r#"
++legacy_order = Order.create!(event_id: nil)
++tenant_order = Order.create!(event_id: 7)
++other_order = Order.create!(event_id: 8)
++legacy_type = TicketType.create!(event_id: nil)
++tenant_type = TicketType.create!(event_id: 7)
++other_type = TicketType.create!(event_id: 8)
++legacy = Ticket.create!(order_id: legacy_order.id, ticket_type_id: legacy_type.id, event_id: nil, price_paise: 100)
++tenant = Ticket.create!(order_id: tenant_order.id, ticket_type_id: tenant_type.id, event_id: 7, price_paise: 0)
++legacy.reload
++tenant.reload
++raise "legacy key" unless legacy.ownership_key == 0
++raise "tenant key" unless tenant.ownership_key == 7
++begin
++  tenant.update!(ticket_type_id: other_type.id)
++  raise "accepted cross-owner update"
++rescue StandardError => error
++  raise error unless error.message.include?("FOREIGN KEY constraint failed")
++end
++tenant.reload
++raise "invalid update persisted" unless tenant.ticket_type_id == tenant_type.id
++begin
++  Ticket.create!(order_id: other_order.id, ticket_type_id: tenant_type.id, event_id: 7, price_paise: 0)
++  raise "accepted cross-owner create"
++rescue StandardError => error
++  raise error unless error.message.include?("FOREIGN KEY constraint failed")
++end
++free_order = Order.create!(event_id: nil)
++free_order.update!(event_id: 9)
++free_order.reload
++raise "updated generated key" unless free_order.ownership_key == 9
++raise "extra ticket inserted" unless Ticket.count == 2
++puts "emitted ownership ORM passed"
++"#).assert_passes();
++}
++
++#[test]
++fn generated_options_are_literal_and_supported_or_fail_closed() {
++    for options in [
++        "as: 'COALESCE(event_id, 0)', stored: true",
++        "type: type, as: 'COALESCE(event_id, 0)', stored: true",
++        "type: :bigint, as: expression, stored: true",
++        "type: :bigint, as: 'COALESCE(event_id, 0)'",
++        "type: :bigint, as: 'COALESCE(event_id, 0)', stored: mode",
++        "type: :bigint, as: 'COALESCE(event_id, 0)', stored: true, default: 0",
++        "type: :bigint, as: 'COALESCE(event_id, 0)', stored: true, default: value",
++        "type: :bigint, as: 'COALESCE(event_id, 0)', stored: true, **options",
++        "type: :bigint, as: 'COALESCE(event_id, 0)', stored: true, null: nullable",
++        "type: :string, as: 'COALESCE(event_id, 0)', stored: true",
++    ] {
++        let source = format!(r#"ActiveRecord::Schema.define do
++          create_table "orders" do |t|
++            t.bigint "event_id"
++            t.virtual "ownership_key", {options}
++          end
++        end"#);
++        assert!(ingest_schema(source.as_bytes(), "generated-options/schema.rb").is_err(), "{options}");
++    }
++    let source = r#"ActiveRecord::Schema.define do
++      create_table "orders" do |t|
++        t.bigint "event_id"
++        t.virtual "ownership_key", type: :bigint, as: "abs(event_id)", stored: true
++      end
++    end"#;
++    let schema = ingest_schema(source.as_bytes(), "expression/schema.rb").unwrap();
++    assert!(render_schema_statements_for(&schema, Dialect::Sqlite).is_err());
++}
++
++#[test]
++fn generated_constraints_require_materialized_migrations() {
++    use roundhouse::ingest::schema::ingest_migration;
++    for mutation in ["rename_column :orders, :event_id, :owner", "remove_column :orders, :event_id", "change_column :orders, :event_id, :string", "rename_table :orders, :purchases", "remove_foreign_key :tickets, :orders", "add_check_constraint :orders, 'event_id > 0'"] {
++        let mut schema = ingest_schema(SOURCE.as_bytes(), "ownership/schema.rb").unwrap();
++        let migration = format!("class ChangeOwnership < ActiveRecord::Migration[8.1]\n  def change\n    {mutation}\n  end\nend\n");
++        assert!(ingest_migration(migration.as_bytes(), "mutation.rb", &mut schema).is_err(), "{mutation}");
++    }
++}
++
++#[test]
++fn schema_constraint_metadata_round_trips_and_old_json_defaults() {
++    let schema = ingest_schema(SOURCE.as_bytes(), "ownership/schema.rb").unwrap();
++    let encoded = serde_json::to_value(&schema).unwrap();
++    assert_eq!(schema, serde_json::from_value(encoded.clone()).unwrap());
++    let mut old = encoded;
++    for table in old["tables"].as_object_mut().unwrap().values_mut() {
++        table.as_object_mut().unwrap().remove("constraints");
++    }
++    let previous: roundhouse::Schema = serde_json::from_value(old).unwrap();
++    assert!(previous.tables.values().all(|table| table.constraints == Default::default()));
++}
++
++#[test]
++fn unsupported_target_and_roda_seed_predicate_return_errors() {
++    use roundhouse::project::{BuildTarget, target_files};
++    let tree = |source: &str| {
++        std::collections::HashMap::from([
++            (std::path::PathBuf::from("db/schema.rb"), source.as_bytes().to_vec()),
++            (std::path::PathBuf::from("config/routes.rb"), b"Rails.application.routes.draw do\nend\n".to_vec()),
++        ])
++    };
++    let app = roundhouse::ingest::ingest_app_from_tree(tree(SOURCE)).unwrap();
++    for target in [BuildTarget::Roda, BuildTarget::Jruby, BuildTarget::Go] {
++        assert!(target_files(&app, std::path::Path::new("."), target).unwrap_err().contains("constraints"));
++    }
++    let source = r#"ActiveRecord::Schema.define do
++      create_table "tokens" do |t|
++        t.bigint "user_id"
++        t.string "kind"
++        t.index ["user_id"], unique: true, name: "initial_tokens", where: "((kind)::text = 'initial'::text)"
++      end
++    end"#;
++    let app = roundhouse::ingest::ingest_app_from_tree(tree(source)).unwrap();
++    assert!(target_files(&app, std::path::Path::new("."), BuildTarget::Roda).unwrap_err().contains("initial_tokens"));
++}
++
++#[test]
++fn arithmetic_check_semantics_are_not_assumed_portable() {
++    for expression in ["amount / divisor > 0", "amount % divisor > 0", "amount + divisor > 0", "amount * divisor > 0", "amount - divisor > 0", "abs(amount) > 0"] {
++        let source = format!(r#"ActiveRecord::Schema.define do
++          create_table "orders" do |t|
++            t.bigint "amount"
++            t.bigint "divisor"
++            t.check_constraint "{expression}"
++          end
++        end"#);
++        let schema = ingest_schema(source.as_bytes(), "arithmetic/schema.rb").unwrap();
++        assert!(render_schema_statements_for(&schema, Dialect::Sqlite).is_err(), "{expression}");
++        assert!(render_schema_statements_for(&schema, Dialect::Postgres).unwrap()[0].contains(expression));
++    }
++}
