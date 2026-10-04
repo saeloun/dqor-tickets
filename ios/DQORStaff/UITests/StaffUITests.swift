@@ -11,6 +11,16 @@ final class StaffUITests: XCTestCase {
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
     @MainActor
+    private func revealStaffListElement(_ element: XCUIElement, in app: XCUIApplication, scrollUp: Bool = true) {
+        for _ in 0..<10 {
+            if element.isHittable && app.frame.contains(element.frame) { return }
+            let list = app.collectionViews.firstMatch
+            if scrollUp { list.swipeUp() } else { list.swipeDown() }
+        }
+        XCTAssertTrue(element.isHittable)
+        XCTAssertTrue(app.frame.contains(element.frame))
+    }
+    @MainActor
     func testContinuousScannerRehearsalPreviewRepeatCancelMixedAndBackground() {
         let app = XCUIApplication(); app.launchArguments = ["--scanner-rehearsal"]; launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap(); app.buttons["Scan tickets"].tap()
@@ -215,8 +225,11 @@ final class StaffUITests: XCTestCase {
         capture(app, name: "Scanner fallback")
         app.buttons["Use attendee search"].tap()
         app.buttons["Search attendees"].tap()
-        app.buttons["demo-001"].tap(); app.buttons["demo-003"].tap()
-        app.swipeUp(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
+        app.buttons["demo-001"].tap()
+        revealStaffListElement(app.buttons["demo-003"], in: app)
+        app.buttons["demo-003"].tap()
+        app.swipeUp(); revealStaffListElement(app.buttons["reviewBatch"], in: app)
+        app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
         app.swipeUp()
         XCTAssertTrue(app.staticTexts["Not eligible for this day"].waitForExistence(timeout: 5))
         capture(app, name: "Mixed outcomes")
@@ -255,9 +268,14 @@ final class StaffUITests: XCTestCase {
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
         app.buttons["Search attendees"].tap()
         XCTAssertTrue(app.buttons["demo-001"].label.contains("alex@example.test"))
+        revealStaffListElement(app.buttons["demo-004"], in: app)
         XCTAssertTrue(app.buttons["demo-004"].label.contains("alex.second@example.test"))
-        app.buttons["demo-001"].tap(); app.buttons["demo-004"].tap()
-        app.swipeUp(); app.buttons["reviewBatch"].tap()
+        revealStaffListElement(app.buttons["demo-001"], in: app, scrollUp: false)
+        app.buttons["demo-001"].tap()
+        revealStaffListElement(app.buttons["demo-004"], in: app)
+        app.buttons["demo-004"].tap()
+        app.swipeUp(); revealStaffListElement(app.buttons["reviewBatch"], in: app)
+        app.buttons["reviewBatch"].tap()
         XCTAssertTrue(app.staticTexts["review-demo-001"].label.contains("alex@example.test"))
         XCTAssertTrue(app.staticTexts["review-demo-004"].label.contains("alex.second@example.test"))
         capture(app, name: "Duplicate-name review")
