@@ -11,14 +11,33 @@ final class StaffUITests: XCTestCase {
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
     @MainActor
-    private func revealStaffListElement(_ element: XCUIElement, in app: XCUIApplication, scrollUp: Bool = true) {
-        for _ in 0..<10 {
-            if element.isHittable && app.frame.contains(element.frame) { return }
-            let list = app.collectionViews.firstMatch
-            if scrollUp { list.swipeUp() } else { list.swipeDown() }
+    private func revealStaffListElement(_ identifier: String, in app: XCUIApplication, button: Bool = true, scrollUp: Bool = true) {
+        for attempt in 0..<20 {
+            guard let list = app.collectionViews.allElementsBoundByIndex.last else { XCTFail("No active staff list"); return }
+            let listFrame = list.frame
+            let top = max(listFrame.minY, app.navigationBars.allElementsBoundByIndex.last?.frame.maxY ?? listFrame.minY) + 8
+            let bottom = min(app.frame.maxY, listFrame.maxY)
+            let usable = CGRect(x: listFrame.minX, y: top, width: listFrame.width, height: max(0, bottom - top))
+            guard usable.height > 0 else { XCTFail("No visible staff list area"); return }
+            let element = button ? app.buttons[identifier] : app.staticTexts[identifier]
+            var down = !scrollUp
+            if element.exists {
+                let frame = element.frame
+                if element.isHittable && usable.contains(frame) {
+                    let geometry = XCTAttachment(string: "target=\(frame); usable=\(usable); ordinary drags=\(attempt)")
+                    geometry.name = "Visible staff target \(identifier)"; geometry.lifetime = .keepAlways; add(geometry)
+                    capture(app, name: "Visible staff target \(identifier)")
+                    return
+                }
+                down = frame.minY < usable.minY
+            }
+            let delta = usable.height * 0.1
+            let origin = list.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: usable.midX - listFrame.minX, dy: usable.midY + (down ? -delta : delta) - listFrame.minY))
+            let end = origin.withOffset(CGVector(dx: usable.midX - listFrame.minX, dy: usable.midY + (down ? delta : -delta) - listFrame.minY))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         }
-        XCTAssertTrue(element.isHittable)
-        XCTAssertTrue(app.frame.contains(element.frame))
+        XCTFail("Staff target \(identifier) did not become fully visible after 20 ordinary drags")
     }
     @MainActor
     func testContinuousScannerRehearsalPreviewRepeatCancelMixedAndBackground() {
@@ -224,15 +243,28 @@ final class StaffUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Use attendee search"].waitForExistence(timeout: 5))
         capture(app, name: "Scanner fallback")
         app.buttons["Use attendee search"].tap()
-        app.buttons["Search attendees"].tap()
-        app.buttons["demo-001"].tap()
-        revealStaffListElement(app.buttons["demo-003"], in: app)
+        revealStaffListElement("Search attendees", in: app); app.buttons["Search attendees"].tap()
+        revealStaffListElement("demo-001", in: app); app.buttons["demo-001"].tap()
+        revealStaffListElement("demo-003", in: app)
         app.buttons["demo-003"].tap()
-        app.swipeUp(); revealStaffListElement(app.buttons["reviewBatch"], in: app)
-        app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
-        app.swipeUp()
+        revealStaffListElement("reviewBatch", in: app)
+        app.buttons["reviewBatch"].tap()
+        revealStaffListElement("review-demo-001", in: app, button: false)
+        XCTAssertTrue(app.staticTexts["review-demo-001"].exists)
+        revealStaffListElement("review-demo-003", in: app, button: false)
+        XCTAssertTrue(app.staticTexts["review-demo-003"].exists)
+        app.buttons["Cancel"].tap()
+        revealStaffListElement("reviewBatch", in: app); app.buttons["reviewBatch"].tap()
+        revealStaffListElement("Confirm check-in", in: app); app.buttons["Confirm check-in"].tap()
+        revealStaffListElement("Checked in", in: app, button: false)
+        XCTAssertTrue(app.staticTexts["Checked in"].exists)
+        revealStaffListElement("Not eligible for this day", in: app, button: false)
         XCTAssertTrue(app.staticTexts["Not eligible for this day"].waitForExistence(timeout: 5))
         capture(app, name: "Mixed outcomes")
+        app.buttons["Events"].tap()
+        revealStaffListElement("day-2", in: app)
+        XCTAssertTrue(app.buttons["day-2"].waitForExistence(timeout: 5))
+        capture(app, name: "Staff catalog after confirmed results and Back")
     }
     @MainActor
     func testLargestDynamicTypeKeyboardAndCameraFallback() {
@@ -266,17 +298,20 @@ final class StaffUITests: XCTestCase {
     func testDuplicateNamesRemainDistinguishable() {
         let app = XCUIApplication(); app.launchArguments = ["--duplicate-names"]; launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
-        app.buttons["Search attendees"].tap()
+        revealStaffListElement("Search attendees", in: app); app.buttons["Search attendees"].tap()
+        revealStaffListElement("demo-001", in: app)
         XCTAssertTrue(app.buttons["demo-001"].label.contains("alex@example.test"))
-        revealStaffListElement(app.buttons["demo-004"], in: app)
+        revealStaffListElement("demo-004", in: app)
         XCTAssertTrue(app.buttons["demo-004"].label.contains("alex.second@example.test"))
-        revealStaffListElement(app.buttons["demo-001"], in: app, scrollUp: false)
+        revealStaffListElement("demo-001", in: app, scrollUp: false)
         app.buttons["demo-001"].tap()
-        revealStaffListElement(app.buttons["demo-004"], in: app)
+        revealStaffListElement("demo-004", in: app)
         app.buttons["demo-004"].tap()
-        app.swipeUp(); revealStaffListElement(app.buttons["reviewBatch"], in: app)
+        revealStaffListElement("reviewBatch", in: app)
         app.buttons["reviewBatch"].tap()
+        revealStaffListElement("review-demo-001", in: app, button: false)
         XCTAssertTrue(app.staticTexts["review-demo-001"].label.contains("alex@example.test"))
+        revealStaffListElement("review-demo-004", in: app, button: false)
         XCTAssertTrue(app.staticTexts["review-demo-004"].label.contains("alex.second@example.test"))
         capture(app, name: "Duplicate-name review")
     }
