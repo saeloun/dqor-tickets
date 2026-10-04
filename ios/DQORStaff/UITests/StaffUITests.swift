@@ -404,4 +404,96 @@ final class StaffUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Your evening, your way"].exists)
     }
 
+    @MainActor
+    func testScheduleRowEntireTouchAreaAndBackStack() {
+        let app = XCUIApplication()
+        XCUIDevice.shared.orientation = .portrait
+        launchDemo(app)
+        defer {
+            XCUIDevice.shared.orientation = .portrait
+            XCUIDevice.shared.press(.home); app.activate()
+            let restored = expectation(for: NSPredicate { _, _ in app.frame.height > app.frame.width }, evaluatedWith: app)
+            XCTAssertEqual(XCTWaiter.wait(for: [restored], timeout: 5), .completed)
+        }
+        app.buttons["exploreSampleEvent"].tap()
+        let schedule = app.buttons["eventSchedule"]
+        for _ in 0..<12 {
+            if schedule.isHittable && app.frame.contains(schedule.frame) { break }
+            let scroll = app.scrollViews.firstMatch
+            scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)).press(forDuration: 0.05,
+                thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
+        }
+        XCTAssertTrue(schedule.isHittable)
+        XCTAssertTrue(app.frame.contains(schedule.frame))
+        XCTAssertGreaterThanOrEqual(schedule.frame.height, 48)
+        let geometry = XCTAttachment(string: "Schedule row frame: \(schedule.frame)")
+        geometry.name = "Schedule full touch area"; geometry.lifetime = .keepAlways; add(geometry)
+        capture(app, name: "Schedule row full touch area portrait")
+        for point in [CGVector(dx: 0.5, dy: 0.5), CGVector(dx: 0.5, dy: 0.9)] {
+            schedule.coordinate(withNormalizedOffset: point).tap()
+            XCTAssertTrue(app.navigationBars["Schedule"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.segmentedControls["scheduleFilter"].exists)
+            app.navigationBars.buttons["BackButton"].tap()
+            XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        }
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCUIDevice.shared.press(.home); app.activate()
+        let landscapeReady = expectation(for: NSPredicate { _, _ in app.frame.width > app.frame.height }, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [landscapeReady], timeout: 5), .completed)
+        for _ in 0..<12 {
+            if schedule.isHittable && app.frame.contains(schedule.frame) { break }
+            let scroll = app.scrollViews.firstMatch
+            scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)).press(forDuration: 0.05,
+                thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
+        }
+        XCTAssertTrue(schedule.isHittable)
+        XCTAssertTrue(app.frame.contains(schedule.frame))
+        XCTAssertGreaterThanOrEqual(schedule.frame.height, 48)
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Schedule row full touch area landscape"; landscape.lifetime = .keepAlways; add(landscape)
+        schedule.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9)).tap()
+        XCTAssertTrue(app.navigationBars["Schedule"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testWelcomeActionWrapAndScheduleWithSystemTextSettings() throws {
+        let app = XCUIApplication()
+        XCUIDevice.shared.orientation = .portrait
+        launchDemo(app)
+        let portraitReady = expectation(for: NSPredicate { _, _ in app.frame.height > app.frame.width }, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [portraitReady], timeout: 5), .completed)
+        let action = app.staticTexts["Explore sample event"]
+        for _ in 0..<16 { if action.isHittable && app.frame.contains(action.frame) { break }; app.swipeUp() }
+        XCTAssertTrue(action.isHittable)
+        XCTAssertTrue(app.frame.contains(action.frame))
+        XCTAssertEqual(action.label, "Explore sample event")
+        try app.performAccessibilityAudit(for: .textClipped)
+        let geometry = XCTAttachment(string: "Welcome action frame: \(action.frame); complete label: \(action.label)")
+        geometry.name = "System text settings welcome action"; geometry.lifetime = .keepAlways; add(geometry)
+        capture(app, name: "System text settings whole welcome action")
+        action.tap()
+        XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        let schedule = app.buttons["eventSchedule"]
+        for _ in 0..<16 { if schedule.isHittable && app.frame.contains(schedule.frame) { break }; app.swipeUp() }
+        XCTAssertTrue(schedule.isHittable)
+        XCTAssertTrue(app.frame.contains(schedule.frame))
+        XCTAssertGreaterThanOrEqual(schedule.frame.height, 48)
+        capture(app, name: "System text settings schedule action")
+        schedule.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.navigationBars["Schedule"].waitForExistence(timeout: 5))
+        let filter = app.segmentedControls["scheduleFilter"]
+        for _ in 0..<16 { if filter.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(filter.isHittable)
+        filter.buttons["Saved"].tap()
+        XCTAssertTrue(app.staticTexts["Your evening, your way"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
+    }
+
 }
