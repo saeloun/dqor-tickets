@@ -139,8 +139,8 @@ RSpec.describe "Attendee read API", type: :request do
     expect_private_json(:unauthorized)
   end
 
-  it "requires matching email-link proof when Google provides only a current user", :google_callback do
-    auth = OmniAuth::AuthHash.new(provider: "google_oauth2", uid: "synthetic", info: { email: user.email, name: user.name })
+  it "requires matching email-link proof even when Google verifies the current user", :google_callback do
+    auth = OmniAuth::AuthHash.new(provider: "google_oauth2", uid: "synthetic", info: { email: user.email, name: user.name }, extra: { raw_info: { email_verified: true } })
     OmniAuth.config.mock_auth[:google_oauth2] = auth
     get "/auth/google_oauth2/callback"
     expect(response).to redirect_to(account_root_path)
