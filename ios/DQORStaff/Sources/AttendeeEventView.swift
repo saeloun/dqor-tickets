@@ -110,8 +110,8 @@ struct AttendeeEventView: View {
                         .foregroundStyle(AttendeeStyle.canvas).background(AttendeeStyle.ink, in: RoundedRectangle(cornerRadius: 14))
                 }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("eventSamplePass")
                 NavigationLink { EventCompanionView(day: day, wallet: false) } label: {
-                    HStack { Text("Explore the schedule"); Spacer(); Image(systemName: "arrow.right") }
-                        .font(.headline).frame(minHeight: 48)
+                    HStack { Text("Explore the schedule").fixedSize(horizontal: false, vertical: true); Spacer(); Image(systemName: "arrow.right") }
+                        .font(.headline).frame(minHeight: 48).contentShape(Rectangle())
                 }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("eventSchedule")
                 Divider()
                 Text("Good ideas start\nwith a conversation.").font(.system(.title, design: .serif).weight(.medium))

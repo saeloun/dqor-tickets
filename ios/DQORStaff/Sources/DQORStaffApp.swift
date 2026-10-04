@@ -159,13 +159,13 @@ struct StaffRootView: View {
                         EventArtwork(showsHeadline: false).aspectRatio(1.25, contentMode: .fit)
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 16) {
-                            AttendeeEventTitle(day: DemoCompanion.previewDay)
+                            AttendeeEventTitle(day: DemoCompanion.previewDay).fixedSize(horizontal: false, vertical: true)
                             HStack {
-                                Text("Explore sample event").font(.headline)
+                                Text("Explore sample event").font(.headline).fixedSize(horizontal: false, vertical: true)
                                 Spacer()
                                 Image(systemName: "arrow.up.right")
                             }.frame(minHeight: 48)
-                        }.padding(24)
+                        }.fixedSize(horizontal: false, vertical: true).padding(24)
                     }.background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 24))
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                 }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("exploreSampleEvent")
