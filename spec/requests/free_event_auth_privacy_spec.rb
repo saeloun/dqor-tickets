@@ -78,7 +78,16 @@ RSpec.describe "Free pilot authentication privacy", type: :request do
   it "rejects the freshly authenticated pilot-only chat identity despite a different eligible session and disabled flags" do
     pilot = create(:user_for_free_pilot, email: email)
     FreeEvents::Privacy.enroll!(pilot)
-    verify(create(:user_for_free_pilot))
+    eligible = create(:user_for_free_pilot)
+    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+      provider: "google_oauth2", uid: "unverified", info: { email: eligible.email },
+      extra: { raw_info: { email_verified: false } }
+    )
+    get "/auth/google_oauth2/callback"
+    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+      provider: "google_oauth2", uid: "pilot-google", info: { email: email, name: "Pilot Google" },
+      extra: { raw_info: { email_verified: true } }
+    )
     allow(Rails.configuration.x).to receive(:free_event_pilot_enabled).and_return(false)
     get chat_login_path, params: { state: state }
     expect { get "/auth/google_oauth2/callback" }.not_to change(ChatLoginGrant, :count)

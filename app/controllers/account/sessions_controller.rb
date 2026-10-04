@@ -33,10 +33,12 @@ class Account::SessionsController < ApplicationController
       pilot_origin = session.delete(:free_pilot_sign_in)
       pilot_sign_in = pilot_origin && FreeEvents::Access.enabled?
       pilot_return_to = session.delete(:free_pilot_return_to)
+      chat_state = session.delete(:chat_login_state)
       FreeEvents::Privacy.enroll!(user) if pilot_origin
       sign_in(user)
       session[:verified_attendee_email] = user.email
-      redirect_to(pilot_sign_in ? (pilot_return_to.presence || free_organizations_path) : account_root_path, notice: "You’re signed in.")
+      account_return_to = chat_state ? chat_login_path(state: chat_state) : account_root_path
+      redirect_to(pilot_sign_in ? (pilot_return_to.presence || free_organizations_path) : account_return_to, notice: "You’re signed in.")
     else
       redirect_to account_sign_in_path, alert: "That link is invalid or has expired. Request a new one."
     end
