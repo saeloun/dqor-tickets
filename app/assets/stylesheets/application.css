@@ -869,3 +869,14 @@ body.hotwire-native { padding-top: 0; }
 @media (max-width: 900px) {
   .nav-actions .nav-auth--desktop { display: none; }
 }
+
+.storefront .ticket-choices { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+.storefront .ticket-choices .btn { flex: 1 1 12rem; }
+.storefront .ticket-choices a:focus-visible { outline: 3px solid var(--color-ring); outline-offset: 3px; }
+.storefront .tickets-grid--primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.storefront .ticket-card { scroll-margin-top: calc(var(--nav-height) + 1rem); }
+.storefront .ticket-card:focus { outline: 3px solid var(--color-ring); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .storefront .tickets-grid--primary { grid-template-columns: 1fr; }
+}

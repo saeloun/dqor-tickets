@@ -1,6 +1,9 @@
 <% content_for :title, "Deccan Queen on Rails | Rails Conference Pune 2026" %>
 <% content_for :meta_description, "Oct 8–11, 2026 · Pune, India. A Rails conference rooted in Pune’s heritage. Rails developers from India, invited voices from the world. Book your pass." %>
 <% content_for :head, json_ld_tag(event_structured_data) %>
+<% conference_state = @conference_pass ? ticket_sale_state(@conference_pass, available: @available_quantities.fetch(@conference_pass.id), at: @ticket_sale_at) : "unavailable" %>
+<% rails_girls_state = @rails_girls_pass ? ticket_sale_state(@rails_girls_pass, available: @available_quantities.fetch(@rails_girls_pass.id), at: @ticket_sale_at) : "unavailable" %>
+<% explore_state = @explore_pass ? ticket_sale_state(@explore_pass, available: @available_quantities.fetch(@explore_pass.id), at: @ticket_sale_at) : "unavailable" %>
 
 <main>
 
@@ -413,7 +416,11 @@
           <p>A one-day workshop for women and non-binary people who are new to programming or Rails. Work through a small Rails app with coaches from the Ruby community.</p>
           <p>No Rails experience is needed. Bring a laptop. Lunch and snacks are included.</p>
           <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.75rem">
-            <a href="/tickets" class="btn btn-primary">Buy a ticket · ₹350</a>
+            <% if rails_girls_state == "on sale" %>
+              <%= link_to "Buy a ticket · #{inr(@rails_girls_pass.price_paise)}", tickets_store_path, class: "btn btn-primary" %>
+            <% else %>
+              <p class="ticket-unavailable"><%= rails_girls_state %></p>
+            <% end %>
           </div>
         </div>
 
@@ -451,7 +458,7 @@
       <!-- Unified applications notice -->
       <div class="rg-notice" id="rg-apply">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.3rem;height:1.3rem;flex-shrink:0;color:var(--color-saffron)" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <p>Conference and Rails Girls tickets are <strong>open now</strong>. Coach and volunteer sign-ups are open too.</p>
+        <p>Choose conference and Rails Girls tickets below. Coach and volunteer sign-ups are open too.</p>
         <a href="#tickets" class="btn btn-primary" style="white-space:nowrap">Get Your Pass</a>
       </div>
     </div>
@@ -825,10 +832,12 @@
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount"><%= @conference_from ? "From #{inr(@conference_from.price_paise)}" : "Get your pass" %></span>
-              <span class="ticket-price-note">· incl. GST</span>
+              <span class="ticket-price-amount"><%= @conference_from ? "From #{inr(@conference_from.price_paise)}" : conference_state %></span>
+              <% if conference_state == "on sale" %><span class="ticket-price-note">· incl. GST</span><% end %>
             </div>
-            <a href="/tickets" class="btn btn-primary" style="justify-content:center">Buy Conference Pass</a>
+            <% if conference_state == "on sale" %>
+              <a href="/tickets" class="btn btn-primary" style="justify-content:center">Buy Conference Pass</a>
+            <% end %>
           </div>
         </div>
 
@@ -854,10 +863,12 @@
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount">₹350</span>
-              <span class="ticket-price-note">· incl. GST</span>
+              <span class="ticket-price-amount"><%= rails_girls_state == "on sale" ? inr(@rails_girls_pass.price_paise) : rails_girls_state %></span>
+              <% if rails_girls_state == "on sale" %><span class="ticket-price-note">· incl. GST</span><% end %>
             </div>
-            <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-saffron);color:var(--color-saffron)">Buy Rails Girls Ticket</a>
+            <% if rails_girls_state == "on sale" %>
+              <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-saffron);color:var(--color-saffron)">Buy Rails Girls Ticket</a>
+            <% end %>
           </div>
         </div>
 
@@ -883,10 +894,12 @@
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount"><%= @explore_pass ? inr(@explore_pass.price_paise) : "₹2,000" %></span>
-              <span class="ticket-price-note">· add on with your pass</span>
+              <span class="ticket-price-amount"><%= explore_state == "on sale" ? inr(@explore_pass.price_paise) : explore_state %></span>
+              <% if explore_state == "on sale" %><span class="ticket-price-note">· add on with your pass</span><% end %>
             </div>
-            <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-gold);color:hsl(35,65%,35%)">Add to Conference Pass</a>
+            <% if explore_state == "on sale" %>
+              <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-gold);color:hsl(35,65%,35%)">Add to Conference Pass</a>
+            <% end %>
             <a href="#explore-pune-day" class="btn btn-ghost" style="justify-content:center;color:var(--color-gold)">See what's planned →</a>
           </div>
         </div>
