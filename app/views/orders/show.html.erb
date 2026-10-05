@@ -1,8 +1,8 @@
 <% content_for :title, "Order #{@order.code} · Deccan Queen on Rails" %>
 
 <main class="status-page">
-  <%= turbo_frame_tag "order_status", data: { controller: "poll", poll_url_value: order_path(@order.code), poll_active_value: @order.pending? } do %>
-    <section class="status-card status-card--<%= @order.status %>">
+  <%= turbo_frame_tag "order_status" do %>
+    <section class="status-card status-card--<%= @order.status %>" data-controller="poll" data-poll-url-value="<%= order_path(@order.code) %>" data-poll-active-value="<%= @order.pending? %>">
       <p class="section-label">Order <%= @order.code %></p>
 
       <% if @order.pending? %>
