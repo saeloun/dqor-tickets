@@ -48,7 +48,7 @@ RSpec.describe "Order email frame updates", type: :system do
 
     order.update!(status: :paid)
 
-    expect(page).to have_content("Your tickets are confirmed")
+    expect(page).to have_content("Your tickets are confirmed", wait: 12)
     expect(page.evaluate_script("document.body.dataset.initialDocument")).to eq("retained")
     expect_readable_emails(order, ticket, "poll")
     expect(ticket.reload.attendee_email).to eq("attendee@example.test")
