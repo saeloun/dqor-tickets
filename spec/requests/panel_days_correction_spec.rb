@@ -44,7 +44,7 @@ RSpec.describe "Conference panel day correction", type: :request do
     locked = statements.index { |event| event[:sql].include?("FOR UPDATE") && event[:sql].include?("ORDER BY") }
     updated = statements.index { |event| event[:sql].start_with?("UPDATE") }
     expect(locked).to be < updated
-    expect(statements.fetch(locked)[:binds].map(&:value_for_database)).to include(18, 37)
+    expect(statements.fetch(locked)[:sql]).to include('FROM "talks"')
   end
 
   [ :title, :start, :end, :publication, :partial, :missing, :duplicate ].each do |edit|
@@ -135,5 +135,79 @@ RSpec.describe "Conference panel day correction", type: :request do
     events = response.body.split("BEGIN:VEVENT").drop(1)
     expect(events.find { |event| event.include?("UID:talk-18@") }).to include("SUMMARY:Guest panel: international speakers", "DTSTART:20261008T095000Z", "DTEND:20261008T102000Z")
     expect(events.find { |event| event.include?("UID:talk-37@") }).to include("SUMMARY:Guest panel: Indian speakers", "DTSTART:20261009T094000Z", "DTEND:20261009T102000Z")
+  end
+end
+
+require Rails.root.join("db/migrate/20260804130546_seed_announced_speakers")
+require Rails.root.join("db/migrate/20260917103000_open_rails_girls_and_update_schedule")
+require Rails.root.join("db/migrate/20261002220000_correct_day_one_welcome_programme")
+
+RSpec.describe "Historical programme bootstrap preservation", type: :request do
+  before do
+    Talk.delete_all
+    Speaker.delete_all
+    ActiveRecord::Base.connection.reset_pk_sequence!("talks")
+    ActiveRecord::Base.connection.reset_pk_sequence!("speakers")
+    SeedAnnouncedSpeakers.new.up
+    OpenRailsGirlsAndUpdateSchedule.new.up
+    CorrectDayOneWelcomeProgramme.new.up
+  end
+
+  def facts
+    [ Talk, Speaker, TalkBookmark, TicketType, Coupon, Order, Ticket ].to_h do |model|
+      [ model.name, model.order(:id).map(&:attributes) ]
+    end
+  end
+
+  it "recognizes only the actual complete post-welcome programme and never writes in either direction" do
+    expect(Talk.count).to eq(33)
+    expect(Talk.find(18)).to have_attributes(title: "Guest panel", starts_at: Time.utc(2026, 10, 8, 11), ends_at: Time.utc(2026, 10, 8, 11, 30))
+    expect(Talk.find(4).ends_at).to eq(Time.utc(2026, 10, 8, 5))
+    expect(Talk.find(5)).not_to be_published
+    expect(Talk.exists?(37)).to be(false)
+    expect(Talk.find(6).speaker.name).to eq("Samuel Williams")
+    create(:coupon)
+    before = facts
+    statements = []
+    observer = ->(*event) { statements << event.last[:sql] if event.last[:sql].match?(/\A(?:UPDATE|INSERT|DELETE)/i) }
+    ActiveSupport::Notifications.subscribed(observer, "sql.active_record") do
+      migration = CorrectConferencePanelDays.new
+      2.times { migration.up; migration.down }
+    end
+    expect(statements).to be_empty
+    expect(facts).to eq(before)
+  end
+
+  [ :panel_title, :panel_time, :fractional_time, :other_title, :missing, :extra, :publication, :position,
+    :abstract, :room, :track, :speaker_bio, :speaker_name, :speaker_link, :live_panel ].each do |edit|
+    it "refuses a #{edit} drift from the exact bootstrap without writes in either direction" do
+      case edit
+      when :panel_title then Talk.find(18).update!(title: "Guest panel: Indian speakers")
+      when :panel_time then Talk.find(18).update!(starts_at: Time.utc(2026, 10, 8, 9, 50))
+      when :fractional_time then Talk.find(18).update!(starts_at: Talk.find(18).starts_at + 0.001.seconds)
+      when :other_title then Talk.find(1).update!(title: "Edited registration")
+      when :missing then Talk.find(33).destroy!
+      when :extra then Talk.create!(id: 100, title: "Extra talk")
+      when :publication then Talk.find(5).update!(published: true)
+      when :position then Talk.find(1).update!(position: 2)
+      when :abstract then Talk.find(1).update!(abstract: "Edited abstract")
+      when :room then Talk.find(1).update!(room: "Edited room")
+      when :track then Talk.find(1).update!(track: "Edited track")
+      when :speaker_bio then Talk.find(1).update!(speaker_bio: "Edited bio")
+      when :speaker_name then Talk.find(3).update!(speaker_name: "Edited name")
+      when :speaker_link then Talk.find(6).update!(speaker_id: nil)
+      when :live_panel then Talk.create!(id: 37, title: "Guest panel: international speakers", starts_at: Time.utc(2026, 10, 9, 9, 40), ends_at: Time.utc(2026, 10, 9, 10, 20), published: true)
+      end
+      before = facts
+      statements = []
+      observer = ->(*event) { statements << event.last[:sql] if event.last[:sql].match?(/\A(?:UPDATE|INSERT|DELETE)/i) }
+      ActiveSupport::Notifications.subscribed(observer, "sql.active_record") do
+        migration = CorrectConferencePanelDays.new
+        expect { migration.up }.to raise_error(RuntimeError, /inspect before migration/)
+        expect { migration.down }.to raise_error(RuntimeError, /inspect before migration/)
+      end
+      expect(statements).to be_empty
+      expect(facts).to eq(before)
+    end
   end
 end
