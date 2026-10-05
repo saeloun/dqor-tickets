@@ -7,6 +7,32 @@ RSpec.describe "Home ticket availability", type: :system do
   let!(:girls) { create(:ticket_type, name: "Rails Girls Pune", slug: "rails-girls-pune", price_paise: 35_000, position: 5) }
   let!(:explore) { create(:ticket_type, name: "Explore Pune Day", slug: "explore-pune-day", price_paise: 200_000, active: false, requires_conference_pass: true) }
 
+  it "does not advertise an empty upcoming tier while current inventory is sold out" do
+    travel_to(Time.zone.local(2026, 10, 5, 12)) do
+      regular.update!(active: true, capacity: 1)
+      create(:ticket, ticket_type: regular, order: create(:order, :paid))
+      late.update!(capacity: 0, sales_start_at: 1.hour.from_now)
+      before = Order.order(:id).map(&:attributes)
+
+      visit root_path
+      within("#tickets .ticket-card--conference") do
+        expect(page).to have_content("Sold Out")
+        expect(page).to have_no_content("Coming Soon")
+        expect(page).to have_no_content("From")
+        expect(page).to have_no_link("Buy Conference Pass")
+      end
+
+      late.update!(capacity: 1)
+      page.refresh
+      within("#tickets .ticket-card--conference") do
+        expect(page).to have_content("Coming Soon")
+        expect(page).to have_no_content("Sold Out")
+        expect(page).to have_no_link("Buy Conference Pass")
+      end
+      expect(Order.order(:id).map(&:attributes)).to eq(before)
+    end
+  end
+
   it "shows an upcoming tier after an earlier tier sells out and opens it at its sales start" do
     travel_to(Time.zone.local(2026, 10, 5, 12)) do
       regular.update!(active: true, capacity: 1)
