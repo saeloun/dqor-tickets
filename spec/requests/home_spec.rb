@@ -135,6 +135,38 @@ RSpec.describe "Home", type: :request do
       expect(home_card("conference").at_css("a")).to be_nil
     end
 
+    it "keeps the conference coming soon when an earlier tier is exhausted and a later tier has not opened" do
+      travel_to(Time.zone.local(2026, 10, 5, 12)) do
+        regular.update!(active: true, capacity: 1, position: 2)
+        create(:ticket, ticket_type: regular, order: create(:order, :paid))
+        late.update!(position: 3, sales_start_at: 1.hour.from_now)
+        models = [ TicketType, Coupon, Order, Ticket ]
+        before = models.to_h { |model| [ model.name, model.order(:id).map(&:attributes) ] }
+
+        get root_path
+        expect(home_card("conference").text).to include("coming soon")
+        expect(home_card("conference").text).not_to include("sold out", "From")
+        expect(home_card("conference").at_css("a")).to be_nil
+        expect(models.to_h { |model| [ model.name, model.order(:id).map(&:attributes) ] }).to eq(before)
+
+        late.update!(hidden: true)
+        get root_path
+        expect(home_card("conference").text).to include("sold out")
+        expect(home_card("conference").at_css("a")).to be_nil
+
+        late.update!(hidden: false)
+        travel_to(late.sales_start_at)
+        get root_path
+        expect(home_card("conference").text).to include("From ₹4,500")
+        expect(home_card("conference").at_css("a").text).to eq("Buy Conference Pass")
+
+        late.update!(capacity: 0)
+        get root_path
+        expect(home_card("conference").text).to include("sold out")
+        expect(home_card("conference").at_css("a")).to be_nil
+      end
+    end
+
     it "shows future and ended sales without a purchase link and opens at inclusive boundaries" do
       travel_to(Time.zone.local(2026, 10, 5, 12)) do
         late.update!(sales_start_at: 1.hour.from_now)
