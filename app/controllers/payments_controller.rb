@@ -9,7 +9,7 @@ class PaymentsController < ApplicationController
     )
     Razorpay::Utility.verify_payment_signature(razorpay_order_id:, razorpay_payment_id:, razorpay_signature:)
 
-    order = Order.find_by!(razorpay_order_id:)
+    order = Order.legacy.find_by!(razorpay_order_id:)
     order.payment_events.create_or_find_by!(razorpay_event_id: "callback_#{razorpay_payment_id}") do |event|
       event.razorpay_payment_id = razorpay_payment_id
       event.kind = "callback_verified"
@@ -17,7 +17,7 @@ class PaymentsController < ApplicationController
     end
     redirect_to order_path(order.code)
   rescue SecurityError
-    if order = Order.find_by(razorpay_order_id: params[:razorpay_order_id])
+    if order = Order.legacy.find_by(razorpay_order_id: params[:razorpay_order_id])
       order.payment_events.create!(
         razorpay_event_id: "signature_mismatch_#{SecureRandom.uuid}",
         kind: "signature_mismatch",
@@ -30,7 +30,7 @@ class PaymentsController < ApplicationController
   rescue ActiveRecord::RecordInvalid
     # The payment was already recorded (e.g. by the Razorpay webhook racing this callback).
     # The order is fine — just send the buyer to it.
-    if order = Order.find_by(razorpay_order_id: params[:razorpay_order_id])
+    if order = Order.legacy.find_by(razorpay_order_id: params[:razorpay_order_id])
       redirect_to order_path(order.code)
     else
       redirect_to tickets_store_path, alert: "We couldn't confirm that payment automatically. If you were charged, your tickets will arrive by email shortly — contact us if they don't."

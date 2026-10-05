@@ -1,3 +1,4 @@
+<p style="padding:1rem"><%= link_to "My entry and special-event scan status", account_redemptions_path %></p>
 <% content_for :title, "Your account · Deccan Queen on Rails" %>
 
 <main class="account-page">
@@ -68,6 +69,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span class="hub-tile__label">Attendees</span>
       <span class="hub-tile__hint">Meet &amp; connect</span>
+    <% end %>
+    <%= link_to ENV.fetch("CAMPFIRE_JOIN_URL", "https://chat.deccanqueenonrails.com"), class: "hub-tile", target: "_blank", rel: "noopener" do %>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="hub-tile__label">Conference chat</span>
+      <span class="hub-tile__hint">Join the conversation</span>
     <% end %>
     <%= link_to account_conversations_path, class: "hub-tile" do %>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -142,14 +148,14 @@
     <% end %>
   </section>
 
-  <% if @saved_talks.any? %>
-    <section class="account-section">
-      <h2>My schedule</h2>
+  <section class="account-section" aria-labelledby="my-schedule">
+      <h2 id="my-schedule">My schedule</h2>
+      <% if @saved_talks.any? %>
       <ul class="account-tickets">
         <% @saved_talks.each do |talk| %>
           <li class="account-ticket">
             <div class="account-ticket__row">
-              <span class="account-ticket__type"><%= talk.title %></span>
+              <span class="account-ticket__type"><%= link_to talk.title, talk_path(talk) %></span>
               <span class="account-ticket__meta"><%= talk.time_range %><%= " · #{talk.room}" if talk.room.present? %></span>
             </div>
           </li>
@@ -158,10 +164,13 @@
       <% if @saved_talks.any? { |talk| talk.starts_at.present? } %>
         <p><%= link_to "Add my schedule to calendar", account_calendar_path(format: :ics), class: "btn btn-secondary" %></p>
       <% end %>
+      <% else %>
+        <p>No saved talks yet. Save sessions from the programme to keep your plans together.</p>
+      <% end %>
       <p><%= link_to "Browse the full schedule", schedule_path %>.</p>
-    </section>
-  <% end %>
+  </section>
 
+  <% if current_user.legacy_network_eligible? && current_user.discoverable? %>
   <% profile_url = attendee_url(current_user) %>
   <section class="account-section">
     <h2>Connect with me</h2>
@@ -182,6 +191,13 @@
       </div>
     </div>
   </section>
+
+  <% else %>
+    <section class="account-section">
+      <h2>Your profile is private</h2>
+      <p>Your profile is not available for sharing or discovery.</p>
+    </section>
+  <% end %>
 
   <% ref_url = tickets_store_url(ref: current_user.referral_code) %>
   <% share_text = "I'm going to Deccan Queen on Rails — India's Ruby & Rails conference in Pune, Oct 8–11. Grab 5% off with my link:" %>

@@ -5,7 +5,7 @@ class WebPushNotifier
     end
 
     def deliver(user, title:, body:, path: "/", tag: nil)
-      return 0 unless configured?
+      return 0 unless user.legacy_network_eligible? && configured?
 
       delivered = 0
       user.push_subscriptions.find_each do |subscription|
@@ -15,6 +15,7 @@ class WebPushNotifier
     end
 
     def deliver_one(subscription, title:, body:, path: "/", tag: nil)
+      return false unless subscription.user.legacy_network_eligible?
       WebPush.payload_send(
         message: payload(title:, body:, path:, tag:),
         endpoint: subscription.endpoint,

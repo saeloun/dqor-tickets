@@ -1,6 +1,7 @@
 class Account::ConversationsController < ApplicationController
   allow_unauthenticated_access
   before_action :require_user
+  before_action :require_legacy_network
 
   def index
     @conversations = current_user.conversations
@@ -19,7 +20,7 @@ class Account::ConversationsController < ApplicationController
   end
 
   def create
-    other = User.find(params.require(:attendee_id))
+    other = User.legacy_network.where(discoverable: true).find(params.require(:attendee_id))
 
     unless current_user.can_message?(other)
       redirect_to community_path, alert: "You can only message attendees you’ve connected with."

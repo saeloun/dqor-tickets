@@ -61,7 +61,7 @@ RSpec.describe Ticket, type: :model do
   end
 
   it "records separate per-day check-ins" do
-    ticket = create(:ticket)
+    ticket = create(:ticket, order: create(:order, :paid))
 
     first = ticket.check_in!(Date.new(2026, 10, 8))
     second = ticket.check_in!(Date.new(2026, 10, 9))
@@ -70,7 +70,7 @@ RSpec.describe Ticket, type: :model do
   end
 
   it "raises with the prior timestamp on a duplicate check-in" do
-    ticket = create(:ticket)
+    ticket = create(:ticket, order: create(:order, :paid))
     checked_in_at = ticket.check_in!(Date.new(2026, 10, 8))
 
     expect { ticket.check_in!(Date.new(2026, 10, 8)) }

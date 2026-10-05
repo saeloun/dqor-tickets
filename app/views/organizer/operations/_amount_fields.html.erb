@@ -1,0 +1,2 @@
+<%= f.label :title, "Title", for: "#{prefix}_title" %><%= f.text_field :title, required: true, maxlength: 200, id: "#{prefix}_title" %>
+<%= f.label :amount_paise, "Amount / estimated in-kind value (integer paise)", for: "#{prefix}_amount" %><%= f.number_field :amount_paise, min: 1, step: 1, required: true, id: "#{prefix}_amount" %>

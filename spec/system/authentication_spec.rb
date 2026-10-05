@@ -189,6 +189,7 @@ RSpec.describe "Authentication", type: :system do
 
     it "signs out every existing session when the password is reset" do
       sign_in(email: admin.email, password:)
+      expect(page).to have_current_path("/avo/dashboard")
       expect(Session.count).to eq(1)
 
       visit edit_password_path(admin.password_reset_token)

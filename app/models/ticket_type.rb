@@ -1,4 +1,5 @@
 class TicketType < ApplicationRecord
+  scope :legacy, -> { where(event_id: nil) }
   has_many :tickets, dependent: :restrict_with_exception
   has_many :coupons, dependent: :nullify
 
@@ -23,6 +24,10 @@ class TicketType < ApplicationRecord
 
   def conference_pass?
     slug.start_with?("conference-pass-")
+  end
+
+  def valid_on?(date)
+    (!event_starts_on || date >= event_starts_on) && (!event_ends_on || date <= event_ends_on)
   end
 
   def event_window

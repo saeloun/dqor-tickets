@@ -1,0 +1,29 @@
+<% content_for :head do %><%= stylesheet_link_tag "announcement_campaigns", "data-turbo-track": "reload" %><% end %>
+<% content_for :title, "Review announcement email" %>
+<main class="campaign-review">
+  <p><%= link_to "Back to announcements", "/avo/resources/announcements" %></p>
+  <h1>Review announcement email</h1>
+  <% if flash[:notice] %><p role="status"><%= flash[:notice] %></p><% end %>
+  <% if flash[:alert] %><p role="alert"><%= flash[:alert] %></p><% end %>
+  <p><strong><%= pluralize(@campaign ? @campaign.audience_count : @audience.size, "recipient") %></strong> · Paid, active ticket holders who opted in. Duplicate addresses are counted once.</p>
+  <p>DQOR organizer broadcasts only. Current dispatch cap: 25 per minute. Delivery is <strong><%= BroadcastAnnouncementJob.enabled? ? "enabled" : "paused" %></strong>.</p>
+  <article class="campaign-preview" aria-label="Email content preview">
+    <h2><%= (@campaign || @announcement).title %></h2>
+    <%= simple_format(h((@campaign || @announcement).body)) %>
+  </article>
+  <p><%= link_to "Download test draft (.eml) — no email sent", draft_announcement_campaign_path(@announcement), class: "campaign-control" %></p>
+  <% if @campaign %>
+    <p>Approved <%= @campaign.approved_at %>. Content version <code><%= @campaign.content_digest.first(12) %></code>. Later edits do not change this email.</p>
+    <h2>Delivery progress</h2>
+    <p>Submitted means accepted by the mail transport, not confirmed inbox delivery. Unknown outcomes need provider reconciliation and cannot be retried here.</p>
+    <ul><% @counts.each do |state, count| %><li><%= state.humanize %>: <%= count %></li><% end %></ul>
+    <%= button_to "Retry preparation failures only", retry_failed_announcement_campaign_path(@announcement), class: "campaign-control" if @counts.fetch("failed", 0).positive? %>
+    <h3>Recipient ledger (first 100)</h3>
+    <ul class="campaign-ledger"><% @deliveries.each do |delivery| %><li><%= delivery.email %> — <%= delivery.state.humanize %> · Attempt <%= delivery.attempts %></li><% end %></ul>
+  <% elsif @announcement.emailed_at? %>
+    <p>This announcement was previously emailed. It cannot be sent again.</p>
+  <% else %>
+    <p>Approval freezes this content and audience. Consent and active tickets are checked again before sending. No audience is opted in automatically.</p>
+    <%= button_to "Approve email to #{pluralize(@audience.size, 'recipient')}", announcement_campaign_path(@announcement), params: { review_digest: @digest }, disabled: !@audience.size.between?(1, AnnouncementCampaign::MAX_RECIPIENTS), class: "campaign-control" %>
+  <% end %>
+</main>

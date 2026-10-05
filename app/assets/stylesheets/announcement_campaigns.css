@@ -1,0 +1,13 @@
+.campaign-review { max-width: 48rem; margin: 2rem auto; padding: 0 1.25rem; overflow-wrap: anywhere; }
+.campaign-review h1 { font-size: clamp(1.75rem, 6vw, 2.5rem); line-height: 1.15; margin-bottom: 1.25rem; }
+.campaign-review p, .campaign-review ul { margin-block: 1rem; }
+.campaign-review h2, .campaign-review h3 { margin-top: 1.5rem; }
+.campaign-review a { color: var(--color-foreground); text-decoration: underline; text-underline-offset: .2em; }
+.campaign-preview { background: var(--color-card); border: 1px solid var(--color-border-strong); border-radius: .75rem; padding: 1.25rem; margin-block: 1.5rem; }
+.campaign-preview h2 { margin-top: 0; }
+.campaign-control { display: inline-block; min-height: 44px; padding: .75rem 1rem; max-width: 100%; white-space: normal; border: 1px solid var(--color-border-strong); border-radius: .5rem; }
+button.campaign-control { background: var(--color-primary); color: var(--color-primary-foreground); cursor: pointer; }
+button.campaign-control:disabled { opacity: .6; cursor: not-allowed; }
+.campaign-review :focus-visible { outline: 3px solid var(--color-ring); outline-offset: 3px; }
+.campaign-ledger { padding-left: 1.25rem; }
+.campaign-ledger li { margin-block: .75rem; }

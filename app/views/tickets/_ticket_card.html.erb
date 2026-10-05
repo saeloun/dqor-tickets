@@ -1,4 +1,4 @@
-<% state = if ticket_type.purchasable? && available.positive? then "on sale" elsif ticket_type.purchasable? then "sold out" else "coming soon" end %>
+<% state = ticket_sale_state(ticket_type, available: available) %>
 <% add_on = ticket_type.requires_conference_pass? %>
 <% rails_girls = ticket_type.slug == "rails-girls-pune" %>
 <% featured = ticket_type.slug == "conference-pass-regular" %>
@@ -8,9 +8,9 @@
    elsif rails_girls
      [ "Build a Rails app with coaches", "No Rails experience required", "Bring a laptop", "Lunch and snacks included" ]
    elsif supporter
-     [ "All talks and keynotes", "Lunch and chai on both days", "Your name listed as a supporter on deccanqueenonrails.com", "Explore Pune Day add-on available" ]
+     [ "All talks and keynotes", "Lunch and chai on both days", "Conference afterparty (Oct 8)", "Your name listed as a supporter on deccanqueenonrails.com", "Explore Pune Day add-on available" ]
    else
-     [ "All talks and keynotes", "Lunch and chai on both days", "Explore Pune Day add-on available" ]
+     [ "All talks and keynotes", "Lunch and chai on both days", "Conference afterparty (Oct 8)", "Explore Pune Day add-on available" ]
    end %>
 
 <article id="<%= dom_id(ticket_type) %>" tabindex="-1" class="ticket-card <%= add_on ? "ticket-card--retreat" : rails_girls ? "ticket-card--rails-girls" : "ticket-card--conference" %> <%= "ticket-card--featured" if featured %> ticket-card--<%= state.parameterize %>">
@@ -70,7 +70,7 @@
         <button type="button" data-action="cart#increment" data-ticket-type-id="<%= ticket_type.id %>" aria-label="Add one <%= ticket_type.name %>">+</button>
       </div>
     <% else %>
-      <p class="ticket-unavailable"><%= state == "sold out" ? "This tier has sold out." : "Sales open soon." %></p>
+      <p class="ticket-unavailable"><%= { "sold out" => "This tier has sold out.", "sales closed" => "Sales for this tier have closed." }.fetch(state, "Sales open soon.") %></p>
     <% end %>
   </div>
 </article>

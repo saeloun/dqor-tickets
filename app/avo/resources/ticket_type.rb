@@ -1,4 +1,6 @@
 class Avo::Resources::TicketType < Avo::BaseResource
+  self.index_query = -> { query.legacy }
+  self.find_record_method = -> { id.is_a?(Array) ? query.legacy.where(id: id) : query.legacy.find(id) }
   self.title = :name
 
   def fields
@@ -16,8 +18,8 @@ class Avo::Resources::TicketType < Avo::BaseResource
     field :active, as: :boolean
     field :requires_conference_pass, as: :boolean
     field :position, as: :number
-    field :tickets, as: :has_many
-    field :coupons, as: :has_many
+    field :tickets, as: :has_many, attach_scope: -> { query.legacy }
+    field :coupons, as: :has_many, attach_scope: -> { query.legacy }
   end
 
   def actions

@@ -7,6 +7,9 @@ class Conversation < ApplicationRecord
 
   validates :participant_one_id, uniqueness: { scope: :participant_two_id }
   validate :distinct_participants
+  validate do
+    errors.add(:base, "Networking unavailable") unless participant_one&.legacy_network_eligible? && participant_two&.legacy_network_eligible?
+  end
 
   scope :for_user, ->(user) {
     where("participant_one_id = :id OR participant_two_id = :id", id: user.id)

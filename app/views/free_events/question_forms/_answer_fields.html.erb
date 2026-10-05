@@ -1,0 +1,18 @@
+<% questions.each do |question| %>
+  <% field_id = "answer_#{question['id']}" %>
+  <% value = answers[question["id"]].is_a?(String) ? answers[question["id"]] : nil %>
+  <% error = (errors || {})[question["id"]] %>
+  <div class="question-field">
+    <%= label_tag field_id do %><%= question["label"] %> <span class="help">(<%= question["required"] ? "Required" : "Optional" %>)</span><% end %>
+    <% input_options = { id: field_id, required: question["required"], disabled: preview, aria: { describedby: "#{field_id}_help #{field_id}_error", invalid: error.present? } } %>
+    <% name = "registration_answers[#{question['id']}]" %>
+    <% if question["type"] == "short_text" %><%= text_field_tag name, value, **input_options, maxlength: 200 %>
+    <% elsif question["type"] == "long_text" %><%= text_area_tag name, value, **input_options, maxlength: 1000, rows: 4 %>
+    <% elsif question["type"] == "integer" %><%= number_field_tag name, value, **input_options, min: -1000000, max: 1000000, step: 1 %>
+    <% elsif question["type"] == "single_choice" %><%= select_tag name, options_for_select([["Choose an option", ""]] + question["options"].map { |option| [option["label"], option["id"]] }, value), **input_options %>
+    <% elsif question["type"] == "yes_no" %><%= select_tag name, options_for_select([["Choose an answer", ""], ["Yes", "yes"], ["No", "no"]], value), **input_options %>
+    <% end %>
+    <p class="help" id="<%= field_id %>_help"><%= question["help"] %></p>
+    <% if error %><p role="alert" id="<%= field_id %>_error"><%= error %></p><% end %>
+  </div>
+<% end %>

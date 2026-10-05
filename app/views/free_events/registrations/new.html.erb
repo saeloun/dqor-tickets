@@ -1,0 +1,22 @@
+<main class="ticket attendee-event">
+  <%= link_to "← Event page", published_event_path(@event.organization.slug, @event.slug), class: "back" %>
+  <div class="event-monogram" aria-hidden="true"><%= @event.title.first %></div>
+  <p class="eyebrow"><%= @event.organization.name %></p><h1><%= @event.title %></h1>
+  <p class="muted"><%= @event.starts_at.in_time_zone(@event.timezone).strftime("%a, %-d %b · %-I:%M %p") %> · <%= @event.timezone %></p>
+  <p><span class="badge"><%= @ticket_type.name %> · Free</span></p>
+  <button type="button" data-open-registration>Continue registration</button>
+</main>
+<dialog open data-registration-dialog aria-labelledby="registration-title">
+  <div class="registration-back"><%= link_to "← Back to event", published_event_path(@event.organization.slug, @event.slug), class: "back", data: { close_registration: true } %></div>
+  <p class="eyebrow"><%= @event.title %></p><h2 id="registration-title">Your registration</h2>
+  <p><span class="badge"><%= @ticket_type.name %> · Free</span></p>
+  <p class="muted"><%= current_user.display_name %><br><%= current_user.email %></p>
+  <p class="help">Your answers are shared with this event’s organizers and stay separate from your public profile.</p>
+  <% if @errors&.[]("form") %><p role="alert"><%= @errors["form"] %></p><% end %>
+  <%= form_with url: free_event_registration_path(@event.organization.slug, @event.slug) do |form| %>
+    <%= hidden_field_tag :ticket_type_id, @ticket_type.id %><%= hidden_field_tag :form_version_id, @version.id %>
+    <%= render "free_events/question_forms/answer_fields", questions: @version.questions, answers: @answers, errors: @errors, preview: false %>
+    <div class="notice"><p><strong><%= @event.title %></strong><br><%= @ticket_type.name %> · Free<br><%= current_user.display_name %></p><p class="help">One ticket per attendee. No payment will be collected.</p></div>
+    <div class="actions"><%= form.submit "Complete registration" %></div>
+  <% end %>
+</dialog>

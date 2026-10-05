@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deccanqueenonrails.com/contracts/public_programme_v1.schema.json",
+  "title": "DQOR public programme v1 success snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "content_version",
+    "event",
+    "sessions",
+    "speakers"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "content_version": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "start_date",
+        "end_date",
+        "timezone",
+        "venue",
+        "public_url"
+      ],
+      "properties": {
+        "id": {
+          "const": "dqor-2026"
+        },
+        "title": {
+          "type": "string"
+        },
+        "start_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "timezone": {
+          "const": "Asia/Kolkata"
+        },
+        "venue": {
+          "type": "string"
+        },
+        "public_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "abstract",
+          "starts_at",
+          "ends_at",
+          "local_date",
+          "speaker_id",
+          "speaker_name",
+          "room"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "abstract": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "starts_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "local_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "speaker_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "speaker_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "room": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "speakers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "title",
+          "bio",
+          "profile_url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  }
+}

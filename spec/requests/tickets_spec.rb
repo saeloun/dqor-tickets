@@ -103,6 +103,29 @@ RSpec.describe "Tickets", type: :request do
       expect(response.parsed_body.css(".tickets-grid--primary .ticket-card").map { |card| card["id"] }).to eq([ "ticket_type_#{rails_girls.id}" ])
     end
 
+    it "preserves private billing controls and retained facts on a checkout error" do
+      billing = {
+        gst_legal_name: "Synthetic GST Buyer", gstin: "27AAAAA0000A1Z5", billing_state_code: "27",
+        billing_address: "Synthetic billing street", billing_state_name: "Maharashtra", delivery_address: "Synthetic delivery street"
+      }
+      expect do
+        post orders_path, params: { checkout: billing.merge(buyer_name: "Ada", email: "ada@example.com", billing_details_requested: "1", quantities: { regular.id.to_s => "0" }) }
+      end.not_to change(Order, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      document = response.parsed_body
+      expect(document.at_css("details[data-cart-target='billingDetails'][open]")).to be_present
+      billing.each do |field, value|
+        input = document.at_css("#checkout_#{field}")
+        expect(input).to be_present
+        expect(input.name == "textarea" ? input.text : input["value"]).to eq(value)
+      end
+      expect(document.at_css("#checkout_gstin")["data-action"]).to eq("input->cart#updateBilling")
+      expect(document.at_css("input[data-cart-target='billingRequested']")).to be_present
+      expect(document.at_css("[data-cart-target='billingNotice'][role='status']")).to be_present
+      expect(response.body).to include("orders of ₹50,000 or more", "Billing details stay private")
+    end
+
     it "retains both choices when checkout re-renders an invalid selection" do
       post orders_path, params: { checkout: { buyer_name: "Ada", email: "ada@example.com", quantities: { regular.id.to_s => "0" } } }
 

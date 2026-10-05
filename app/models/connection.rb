@@ -4,6 +4,9 @@ class Connection < ApplicationRecord
 
   validates :connected_user_id, uniqueness: { scope: :user_id }
   validate :not_self
+  validate do
+    errors.add(:base, "Networking unavailable") unless user&.legacy_network_eligible? && connected_user&.legacy_network_eligible?
+  end
 
   private
     def not_self

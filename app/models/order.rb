@@ -1,5 +1,7 @@
 class Order < ApplicationRecord
+  scope :legacy, -> { where(event_id: nil) }
   require "csv"
+  self.filter_attributes += [ :metadata ]
 
   CODE_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ379"
 
@@ -11,6 +13,10 @@ class Order < ApplicationRecord
   has_many :payment_events, dependent: :restrict_with_exception
   has_many :refunds, dependent: :restrict_with_exception
   has_many :invoices, dependent: :restrict_with_exception
+
+  generates_token_for :billing_details, expires_in: 7.days do
+    metadata["billing_request_nonce"]
+  end
 
   enum :status, { pending: 0, paid: 1, expired: 2, canceled: 3 }
 
@@ -39,11 +45,11 @@ class Order < ApplicationRecord
   end
 
   def self.expire_overdue!(at: Time.current)
-    overdue(at).update_all(status: statuses[:expired], updated_at: at)
+    legacy.overdue(at).update_all(status: statuses[:expired], updated_at: at)
   end
 
   def self.reconcile_pending_payments!
-    reconcilable.find_each(&:reconcile_payment!)
+    legacy.reconcilable.find_each(&:reconcile_payment!)
   end
 
   def self.issue_comps!(emails:, attendee_names: "")
@@ -51,7 +57,7 @@ class Order < ApplicationRecord
     names = attendee_names.to_s.lines.map(&:strip)
     raise ArgumentError, "enter at least one email" if email_list.empty?
 
-    ticket_type = TicketType.find_by!(slug: "complimentary-pass", hidden: true)
+    ticket_type = TicketType.legacy.find_by!(slug: "complimentary-pass", hidden: true)
 
     orders = transaction do
       if ticket_type.capacity && ticket_type.available_quantity < email_list.size
@@ -71,7 +77,7 @@ class Order < ApplicationRecord
 
   def self.exportable(relation)
     scope = relation.is_a?(ActiveRecord::Relation) ? relation : where(id: Array(relation).map(&:id))
-    scope.includes(:coupon, tickets: :ticket_type).order(:id)
+    scope.legacy.includes(:coupon, tickets: :ticket_type).order(:id)
   end
 
   def self.orders_csv(relation = all)
@@ -139,6 +145,7 @@ class Order < ApplicationRecord
   end
 
   def mark_paid!(payment_event)
+    LegacyCommerce.assert!(self)
     raise ArgumentError, "payment event belongs to another order" unless payment_event.order_id == id
     raise ArgumentError, "payment amount does not match order total" unless payment_event.amount_paise == total_paise
 
@@ -148,12 +155,17 @@ class Order < ApplicationRecord
       ensure_payable!
       update!(status: :paid)
       coupon&.increment!(:uses_count)
-      Invoice.issue_for!(self)
+      begin
+        Invoice.issue_for!(self)
+      rescue *Invoice::ISSUANCE_ERRORS => error
+        record_invoice_pending!(error)
+      end
       true
     end
   end
 
   def create_razorpay_order!
+    LegacyCommerce.assert!(self)
     return self if razorpay_order_id?
     return complete_comp! if total_paise < 100
 
@@ -169,6 +181,7 @@ class Order < ApplicationRecord
   end
 
   def complete_comp!
+    LegacyCommerce.assert!(self)
     payment_event = payment_events.create_or_find_by!(razorpay_event_id: "comp_#{code}") do |event|
       event.kind = "comp"
       event.amount_paise = total_paise
@@ -178,6 +191,7 @@ class Order < ApplicationRecord
   end
 
   def reconcile_payment!
+    LegacyCommerce.assert!(self)
     return unless pending? && razorpay_order_id?
 
     payment = Array(Razorpay::Order.fetch(razorpay_order_id).payments.items).find { |item| item["captured"] || item["status"] == "captured" }
@@ -206,6 +220,7 @@ class Order < ApplicationRecord
   end
 
   def refund_tickets!(ticket_ids)
+    LegacyCommerce.assert!(self)
     selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
     raise ArgumentError, "only a paid order can be refunded" unless paid?
 
@@ -215,8 +230,11 @@ class Order < ApplicationRecord
     already_refunding = refunds.where(status: Refund::OPEN_STATUSES).flat_map(&:ticket_ids).intersection(selected_ids)
     raise Refund::AlreadyRefunded, "a refund is already in progress for those tickets" if already_refunding.any?
 
-    invoice = invoices.invoice.first or raise ArgumentError, "order #{code} has no invoice to refund against"
-    lines = invoice.line_items.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+    invoice = invoices.invoice.first
+    purchase_lines = invoice&.line_items || metadata["invoice_purchase_lines"]
+    raise ArgumentError, "order #{code} has no captured purchase lines to refund against" unless purchase_lines
+    lines = purchase_lines.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+    raise ArgumentError, "refund selection is missing captured purchase lines" unless lines.size == selected_ids.size
     amount_paise = lines.sum { |line| line.fetch("total_paise") }
     payment_id = if amount_paise.positive?
       payment_events.order(created_at: :desc).filter_map do |event|
@@ -236,6 +254,7 @@ class Order < ApplicationRecord
   end
 
   def confirm_from_razorpay_if_stalled!
+    LegacyCommerce.assert!(self)
     callback = payment_events.find_by(kind: "callback_verified")
     return unless pending? && callback&.created_at && callback.created_at < 30.seconds.ago
     return unless claim_fallback_check!
@@ -262,6 +281,7 @@ class Order < ApplicationRecord
   end
 
   def deliver_confirmation!(documents_pending: false)
+    LegacyCommerce.assert!(self)
     attach_documents! unless documents_pending
     documents_pending ||= !invoices.invoice.first&.pdf&.attached?
 
@@ -279,21 +299,39 @@ class Order < ApplicationRecord
   end
 
   def deliver_order_link!
+    LegacyCommerce.assert!(self)
     OrderMailer.order_link(self).deliver_later
   end
 
   def resend_confirmation!
+    LegacyCommerce.assert!(self)
     attach_documents!
     OrderMailer.confirmation(self).deliver_later
   end
 
   def attach_documents!
+    LegacyCommerce.assert!(self)
     return unless paid?
 
-    Invoice.issue_for!(self).attach_pdf!
+    Invoice.issue_for!(self, line_items: metadata["invoice_purchase_lines"]).attach_pdf!
+    with_lock do
+      update!(metadata: metadata.except("invoice_pending_reason")) if metadata.key?("invoice_pending_reason")
+    end
+  rescue *Invoice::ISSUANCE_ERRORS => error
+    record_invoice_pending!(error)
+    raise Invoice::DocumentPending, "invoice awaits verified configuration, buyer facts or archived document review"
   end
 
   private
+    def record_invoice_pending!(error)
+      with_lock do
+        # Preserve the monetary basis captured when payment succeeds, even if the tax
+        # document cannot yet be issued. Never regenerate a legacy document's facts.
+        lines = metadata["invoice_purchase_lines"] || invoices.invoice.first&.line_items || Invoice.line_item_snapshot(self)
+        update!(metadata: metadata.merge("invoice_pending_reason" => error.class.name, "invoice_purchase_lines" => lines))
+      end
+    end
+
     def record_polling_failure(error)
       payment_events.create!(
         razorpay_event_id: "polling_check_failed_#{SecureRandom.uuid}",
@@ -309,7 +347,7 @@ class Order < ApplicationRecord
       return unless expired? || (expires_at && expires_at <= Time.current)
 
       quantities = tickets.group(:ticket_type_id).count
-      ticket_types = TicketType.where(id: quantities.keys).order(:id).lock.index_by(&:id)
+      ticket_types = TicketType.legacy.where(id: quantities.keys).order(:id).lock.index_by(&:id)
       unavailable = quantities.any? { |ticket_type_id, quantity| ticket_types.fetch(ticket_type_id).available_quantity < quantity }
       raise InsufficientAvailability, "ticket inventory is no longer available" if unavailable
     end

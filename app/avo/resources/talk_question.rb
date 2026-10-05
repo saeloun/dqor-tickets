@@ -5,7 +5,9 @@ class Avo::Resources::TalkQuestion < Avo::BaseResource
   def fields
     field :id, as: :id
     field :talk, as: :belongs_to
-    field :user, as: :belongs_to
+    field :author, as: :text, only_on: [ :index, :show ] do
+      record.user&.name.presence || "Attendee"
+    end
     field :body, as: :textarea
     field :answered_at, as: :date_time, help: "Set to mark this question as answered on the talk page."
     field :created_at, as: :date_time, only_on: :index, sortable: true

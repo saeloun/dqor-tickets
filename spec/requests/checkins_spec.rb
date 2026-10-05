@@ -5,9 +5,9 @@ RSpec.describe "Check-ins", type: :request do
 
   it "shows check-in progress stats for the selected day" do
     sign_in_admin
-    checked = create(:ticket)
+    checked = create(:ticket, order: create(:order, :paid))
     checked.check_in!(date)
-    create(:ticket)
+    create(:ticket, order: create(:order, :paid))
 
     get checkin_path, params: { date: }
 
@@ -25,12 +25,12 @@ RSpec.describe "Check-ins", type: :request do
 
   it "searches by attendee details and order code" do
     sign_in_admin
-    ticket = create(:ticket, attendee_name: "Grace Hopper")
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Grace Hopper")
 
     get checkin_path, params: { q: "grace", date: }
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Grace Hopper", ticket.order.code, ticket.secret)
+    expect(response.body).to include("Grace Hopper", ticket.order.code)
   end
 
   it "defaults an invalid date to the current event day" do
@@ -46,7 +46,7 @@ RSpec.describe "Check-ins", type: :request do
 
   it "checks in a ticket for the selected day" do
     sign_in_admin
-    ticket = create(:ticket)
+    ticket = create(:ticket, order: create(:order, :paid))
 
     post checkin_path, params: { secret: ticket.secret, date: }, as: :json
 
@@ -57,7 +57,7 @@ RSpec.describe "Check-ins", type: :request do
 
   it "returns a warning with the prior time for a duplicate" do
     sign_in_admin
-    ticket = create(:ticket)
+    ticket = create(:ticket, order: create(:order, :paid))
     checked_in_at = ticket.check_in!(date)
     time = Time.iso8601(checked_in_at).in_time_zone("Asia/Kolkata").strftime("%H:%M")
 
@@ -69,7 +69,7 @@ RSpec.describe "Check-ins", type: :request do
 
   it "rejects a canceled or refunded ticket" do
     sign_in_admin
-    ticket = create(:ticket, canceled_at: Time.current)
+    ticket = create(:ticket, order: create(:order, :paid), canceled_at: Time.current)
 
     post checkin_path, params: { secret: ticket.secret, date: }, as: :json
 

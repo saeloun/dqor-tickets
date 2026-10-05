@@ -14,6 +14,8 @@
 <% end %>
 <%= mail_note "More on the venue, travel and schedule is at deccanqueenonrails.com." %>
 
+<%= render "order_mailer/agenda" %>
+
 <% unassigned = @active_tickets.reject(&:assigned?) %>
 <% if unassigned.any? %>
   <%= mail_text "You've got #{pluralize(@order.tickets.count, "ticket")}, and #{unassigned.size == @order.tickets.count ? "nobody is named on them yet" : "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}"}. That is fine — assign them whenever you are ready." %>

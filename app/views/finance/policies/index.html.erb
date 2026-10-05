@@ -1,0 +1,6 @@
+<h1>Seller policy reviews</h1>
+<p>Record the exact seller and tax policy facts for finance review. Saving or approving a review never changes live issuance settings.</p>
+<%= link_to "New policy draft", new_finance_policy_path, class: "button" %>
+<div class="panel scroll"><table><thead><tr><th>Review</th><th>Seller</th><th>Status</th><th>Reviewed by</th></tr></thead><tbody>
+<% @policies.each do |policy| %><tr><td><%= link_to "Review ##{policy.id}", finance_policy_path(policy) %></td><td><%= policy.policy_data["seller_name"].presence || "Not entered" %></td><td><%= policy.status.capitalize %></td><td><%= policy.approved_by&.display_name || "Awaiting approval" %></td></tr><% end %>
+</tbody></table></div>

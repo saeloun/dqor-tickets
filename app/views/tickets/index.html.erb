@@ -83,23 +83,37 @@
         </div>
       </div>
 
-      <details class="gst-details">
+      <details class="gst-details" data-cart-target="billingDetails" <%= "open" if params[:checkout].present? %>>
         <summary>Buying for a company? Add GST details</summary>
-        <p class="gst-hint">We put these on your tax invoice so your company can claim input credit. Leave blank for a personal booking.</p>
+        <p class="gst-hint">Required for GST-registered buyers and orders of ₹50,000 or more. For smaller personal bookings, leave these blank unless you want billing details on the invoice. Billing details stay private.</p>
         <div class="field-grid">
           <div class="field">
             <%= form.label :gst_legal_name, "Registered company name" %>
-            <%= form.text_field :gst_legal_name, autocomplete: "organization", placeholder: "Saeloun India Pvt Ltd" %>
+            <%= form.text_field :gst_legal_name, value: params.dig(:checkout, :gst_legal_name), data: { cart_target: "legalName" }, autocomplete: "organization", placeholder: "Saeloun India Pvt Ltd" %>
           </div>
           <div class="field">
             <%= form.label :gstin, "GSTIN" %>
-            <%= form.text_field :gstin, maxlength: 15, autocomplete: "off", placeholder: "27AAAAA0000A1Z5" %>
+            <%= form.text_field :gstin, value: params.dig(:checkout, :gstin), data: { cart_target: "gstin", action: "input->cart#updateBilling" }, maxlength: 15, autocomplete: "off", placeholder: "27AAAAA0000A1Z5" %>
           </div>
           <div class="field">
             <%= form.label :billing_state_code, "State code" %>
-            <%= form.text_field :billing_state_code, maxlength: 2, inputmode: "numeric", autocomplete: "off", placeholder: "27" %>
+            <%= form.text_field :billing_state_code, value: params.dig(:checkout, :billing_state_code), data: { cart_target: "billingField" }, maxlength: 2, inputmode: "numeric", autocomplete: "off", placeholder: "27" %>
+          </div>
+          <div class="field">
+            <%= form.label :billing_address, "Billing address" %>
+            <%= form.text_area :billing_address, value: params.dig(:checkout, :billing_address), maxlength: 1000, autocomplete: "street-address", data: { cart_target: "billingField", action: "input->cart#updateBilling" } %>
+          </div>
+          <div class="field">
+            <%= form.label :billing_state_name, "State or union territory name" %>
+            <%= form.text_field :billing_state_name, value: params.dig(:checkout, :billing_state_name), maxlength: 100, autocomplete: "address-level1", data: { cart_target: "billingField", action: "input->cart#updateBilling" } %>
+          </div>
+          <div class="field">
+            <%= form.label :delivery_address, "Delivery address, if different (optional)" %>
+            <%= form.text_area :delivery_address, value: params.dig(:checkout, :delivery_address), maxlength: 1000, autocomplete: "off" %>
           </div>
         </div>
+        <label><%= form.check_box :billing_details_requested, data: { cart_target: "billingRequested", action: "change->cart#updateBilling" } %> Include my billing details on the invoice</label>
+        <p data-cart-target="billingNotice" role="status"></p>
       </details>
 
       <section class="add-on-gate" data-cart-target="addOnGate" hidden aria-labelledby="conference-heading">

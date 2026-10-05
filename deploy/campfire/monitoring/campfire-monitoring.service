@@ -1,0 +1,19 @@
+[Unit]
+Description=Native Campfire runtime telemetry
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/dqor-campfire/monitoring/collector.py
+Restart=always
+RestartSec=5
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/dqor-campfire/monitoring /opt/dqor-campfire/storage
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

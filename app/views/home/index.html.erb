@@ -1,88 +1,43 @@
 <% content_for :title, "Deccan Queen on Rails | Rails Conference Pune 2026" %>
 <% content_for :meta_description, "Oct 8–11, 2026 · Pune, India. A Rails conference rooted in Pune’s heritage. Rails developers from India, invited voices from the world. Book your pass." %>
 <% content_for :head, json_ld_tag(event_structured_data) %>
+<% conference_state = @conference_pass ? ticket_sale_state(@conference_pass, available: @available_quantities.fetch(@conference_pass.id), at: @ticket_sale_at) : "unavailable" %>
+<% rails_girls_state = @rails_girls_pass ? ticket_sale_state(@rails_girls_pass, available: @available_quantities.fetch(@rails_girls_pass.id), at: @ticket_sale_at) : "unavailable" %>
+<% explore_state = @explore_pass ? ticket_sale_state(@explore_pass, available: @available_quantities.fetch(@explore_pass.id), at: @ticket_sale_at) : "unavailable" %>
 
 <main>
 
   <!-- ================================================================
        HERO
        ================================================================ -->
-  <section class="hero" id="hero">
-    <div class="hero-bg-overlay" aria-hidden="true"></div>
-    <div class="background-decorations" aria-hidden="true">
-      <!-- floating ruby gems — commented out
-      <svg class="ruby-gem gem-1" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
-      <svg class="ruby-gem gem-2" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
-      <svg class="ruby-gem gem-3" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
-      <svg class="ruby-gem gem-4" viewBox="0 0 50 60" fill="none"><path d="M25 5L45 20L40 55L25 60L10 55L5 20L25 5Z" fill="hsl(348,70%,35%)" stroke="hsl(348,75%,25%)" stroke-width="1"/><path d="M25 5L45 20L25 25L5 20L25 5Z" fill="hsl(348,65%,45%)" opacity=".8"/><path d="M5 20L25 25L25 60L10 55L5 20Z" fill="hsl(348,70%,35%)" opacity=".9"/><path d="M45 20L25 25L25 60L40 55L45 20Z" fill="hsl(348,75%,25%)" opacity=".7"/><path d="M15 15L25 10L35 15L25 22L15 15Z" fill="white" opacity=".3"/></svg>
-      gradient orbs — commented out
-      <div class="gradient-orb orb-left"></div>
-      <div class="gradient-orb orb-right"></div>
-      -->
-    </div>
-
+  <section class="hero hero--premium" id="hero" aria-labelledby="hero-title">
     <div class="hero-content">
-      <img class="hero-logo animate-fade-in" src="/dqor/deccan-logo.png" alt="Deccan Queen on Rails" style="animation-delay:.05s" />
-
-      <p class="hero-marathi animate-fade-in" style="animation-delay:.07s" aria-label="Aapale svagat ahe — Welcome">आपले स्वागत आहे</p>
-
-      <div class="badge-pill animate-fade-in" style="animation-delay:.1s">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.85rem;height:.85rem;color:var(--color-saffron)" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-        Rails Conference &middot; <span class="mr" lang="mr" data-en="Pune">पुणे</span>, India &middot; Oct 2026
+      <p class="hero-marathi" lang="mr" aria-label="Aapale svagat ahe — Welcome">आपले स्वागत आहे</p>
+      <p class="section-label">A Rails gathering in Pune</p>
+      <h1 class="hero-heading" id="hero-title"><span class="text-ruby">Deccan Queen</span><br>on Rails</h1>
+      <p class="hero-date">October 8–11, 2026 · Pune, India</p>
+      <p class="hero-subtitle">Deep ideas. Warm <span class="mr" lang="mr" data-en="tea">चहा</span>. A community-first Rails conference, rooted in Pune and open to the world.</p>
+      <div class="hero-actions">
+        <%= link_to "Get your pass →", tickets_store_path, class: "btn btn-primary btn-lg" %>
+        <%= link_to "Explore the schedule", schedule_path, class: "btn btn-secondary btn-lg" %>
       </div>
-
-      <h1 class="hero-heading animate-fade-in-up" style="animation-delay:.2s">
-        <span class="text-ruby">Deccan Queen</span><br />on Rails
-      </h1>
-
-      <p class="hero-date animate-fade-in-up" style="animation-delay:.3s">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-        October 8–11, 2026 &middot; <span class="mr" lang="mr" data-en="Pune">पुणे</span>, India
-      </p>
-
-      <% if Conference.status == :before %>
-        <p class="hero-countdown animate-fade-in-up" style="animation-delay:.35s" aria-label="<%= Conference.days_to_go %> days until the conference">
-          <span class="hero-countdown__num"><%= Conference.days_to_go %></span> days to go
-        </p>
-      <% elsif Conference.status == :during %>
-        <p class="hero-countdown hero-countdown--live animate-fade-in-up" style="animation-delay:.35s">Happening now in <span class="mr" lang="mr" data-en="Pune">पुणे</span></p>
-      <% end %>
-
-      <p class="hero-subtitle animate-fade-in-up" style="animation-delay:.4s">
-        A Rails conference born in the city of <strong><span class="mr" lang="mr" data-en="Maratha warrior-king">शिवाजी महाराज</span>, <span class="mr" lang="mr" data-en="Maratha prime ministers">पेशवे</span>, and the Deccan Queen</strong>. Where Rails developers from across India gather, and invited voices from the world arrive. Deep ideas. Warm <span class="mr" lang="mr" data-en="tea">चहा</span>. The city opens its doors.
-      </p>
-
-      <div class="hero-actions animate-fade-in-up" style="animation-delay:.55s">
-        <a href="#tickets" class="btn btn-primary btn-lg">Get Your Pass &rarr;</a>
-        <%= link_to calendar_path, class: "btn btn-secondary btn-lg hero-cal" do %>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          Add to calendar
+      <div class="hero-gathering">
+        <%= render "shared/whos_coming" %>
+        <% if Conference.status == :before %>
+          <p class="hero-countdown"><span class="hero-countdown__num"><%= Conference.days_to_go %></span> <%= "day".pluralize(Conference.days_to_go) %> to go</p>
+        <% elsif Conference.status == :during %>
+          <p class="hero-countdown hero-countdown--live">Happening now</p>
         <% end %>
       </div>
-
-      <div class="animate-fade-in-up" style="animation-delay:.65s">
-        <%= render "shared/whos_coming" %>
-      </div>
-
-      <div id="social-proof" class="social-proof animate-fade-in hidden" style="animation-delay:.7s">
-        <div id="social-proof-avatars" class="avatars"></div>
-        <span class="waitlist-count">Join <strong id="count-number" class="count-number">0</strong>+ on the waitlist</span>
-      </div>
-
-      <div class="hero-socials animate-fade-in" style="animation-delay:.8s">
-        <a href="https://x.com/hideccanqueen" target="_blank" rel="noopener noreferrer" aria-label="Follow on X / Twitter">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
-        </a>
-        <a href="https://www.linkedin.com/company/deccan-queen-on-rails" target="_blank" rel="noopener noreferrer" aria-label="Follow on LinkedIn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
-        </a>
-        <a href="https://www.instagram.com/hideccanqueen/" target="_blank" rel="noopener noreferrer" aria-label="Follow on Instagram">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-        </a>
-      </div>
+      <%= link_to "Add the dates to your calendar ↗", calendar_path, class: "hero-calendar" %>
     </div>
-
-    <div class="bottom-gradient" aria-hidden="true"></div>
+    <figure class="hero-art">
+      <picture>
+        <source srcset="/dqor/deccan-gathering.webp" type="image/webp">
+        <img src="/dqor/deccan-gathering.jpg" alt="An imagined Deccan evening: warm courtyards, flowering branches and hills under a golden moon." width="1254" height="1254" fetchpriority="high">
+      </picture>
+      <figcaption><span lang="mr">पुणे</span> · A city of stories, a gathering of builders<br><span>Original illustration of an imagined Deccan evening</span></figcaption>
+    </figure>
   </section>
 
   <!-- ================================================================
@@ -237,7 +192,7 @@
           <img src="/dqor/keshav.png" alt="Keshav" class="speaker-card-photo" />
           <div class="speaker-card-body">
             <p class="speaker-card-name">Keshav</p>
-            <p class="speaker-card-role">Creator of Confuscript</p>
+            <p class="speaker-card-role">Staff Engineer at Saeloun</p>
           </div>
         </div>
         <div class="speaker-card card">
@@ -317,7 +272,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           </div>
           <h3>Conference Day 1</h3>
-          <p>Keynotes and talks from Rails developers who've been building with Rails from day one — and those pushing its future. Full single track.</p>
+          <p>Keynotes and talks from Rails developers who've been building with Rails from day one — and those pushing its future. Full single track, followed by the conference afterparty on October 8.</p>
         </div>
 
         <div class="journey-card card">
@@ -329,7 +284,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
           <h3>Conference Day 2</h3>
-          <p>More talks, lightning sessions, hallway conversations — and the afterparty, where the best ideas always happen.</p>
+          <p>More talks, lightning sessions, and hallway conversations.</p>
         </div>
 
         <div class="journey-card card">
@@ -461,7 +416,11 @@
           <p>A one-day workshop for women and non-binary people who are new to programming or Rails. Work through a small Rails app with coaches from the Ruby community.</p>
           <p>No Rails experience is needed. Bring a laptop. Lunch and snacks are included.</p>
           <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.75rem">
-            <a href="/tickets" class="btn btn-primary">Buy a ticket · ₹350</a>
+            <% if rails_girls_state == "on sale" %>
+              <%= link_to "Buy a ticket · #{inr(@rails_girls_pass.price_paise)}", tickets_store_path, class: "btn btn-primary" %>
+            <% else %>
+              <p class="ticket-unavailable"><%= rails_girls_state %></p>
+            <% end %>
           </div>
         </div>
 
@@ -499,7 +458,7 @@
       <!-- Unified applications notice -->
       <div class="rg-notice" id="rg-apply">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.3rem;height:1.3rem;flex-shrink:0;color:var(--color-saffron)" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <p>Conference and Rails Girls tickets are <strong>open now</strong>. Coach and volunteer sign-ups are open too.</p>
+        <p>Choose conference and Rails Girls tickets below. Coach and volunteer sign-ups are open too.</p>
         <a href="#tickets" class="btn btn-primary" style="white-space:nowrap">Get Your Pass</a>
       </div>
     </div>
@@ -767,7 +726,7 @@
           <span class="sponsor-tier-badge sponsor-tier-badge--gold">Gold Sponsor</span>
           <div class="sponsor-logos sponsor-logos-lg">
             <div class="sponsor-card sponsor-card--platinum">
-              <img src="/dqor/zendesk-logo.png" alt="Zendesk" class="sponsor-logo-img" />
+              <img src="/dqor/zendesk-logo-v2.png" alt="Zendesk" class="sponsor-logo-img" />
             </div>
           </div>
         </div>
@@ -810,7 +769,7 @@
             <span class="sponsor-tier-badge sponsor-tier-badge--wifi">Rails Girls Sponsor</span>
             <div class="sponsor-logos sponsor-logos-sm">
               <div class="sponsor-card sponsor-card--wifi">
-                <img src="/dqor/zendesk-logo.png" alt="Zendesk" class="sponsor-logo-img" />
+                <img src="/dqor/zendesk-logo-v2.png" alt="Zendesk" class="sponsor-logo-img" />
               </div>
             </div>
           </div>
@@ -867,16 +826,18 @@
             <ul class="ticket-includes">
               <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>All talks &amp; keynotes (single track)</li>
               <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Lunch &amp; chai, both days</li>
-              <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Conference afterparty (Oct 9)</li>
+              <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Conference afterparty (Oct 8)</li>
               <li class="ticket-check--conference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Explore Pune Day add-on available (Oct 11)</li>
             </ul>
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount"><%= @conference_from ? "From #{inr(@conference_from.price_paise)}" : "Get your pass" %></span>
-              <span class="ticket-price-note">· incl. GST</span>
+              <span class="ticket-price-amount"><%= @conference_from ? "From #{inr(@conference_from.price_paise)}" : conference_state %></span>
+              <% if conference_state == "on sale" %><span class="ticket-price-note">· incl. GST</span><% end %>
             </div>
-            <a href="/tickets" class="btn btn-primary" style="justify-content:center">Buy Conference Pass</a>
+            <% if conference_state == "on sale" %>
+              <a href="/tickets" class="btn btn-primary" style="justify-content:center">Buy Conference Pass</a>
+            <% end %>
           </div>
         </div>
 
@@ -902,10 +863,12 @@
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount">₹350</span>
-              <span class="ticket-price-note">· incl. GST</span>
+              <span class="ticket-price-amount"><%= rails_girls_state == "on sale" ? inr(@rails_girls_pass.price_paise) : rails_girls_state %></span>
+              <% if rails_girls_state == "on sale" %><span class="ticket-price-note">· incl. GST</span><% end %>
             </div>
-            <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-saffron);color:var(--color-saffron)">Buy Rails Girls Ticket</a>
+            <% if rails_girls_state == "on sale" %>
+              <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-saffron);color:var(--color-saffron)">Buy Rails Girls Ticket</a>
+            <% end %>
           </div>
         </div>
 
@@ -931,10 +894,12 @@
           </div>
           <div class="ticket-card-footer">
             <div class="ticket-price">
-              <span class="ticket-price-amount"><%= @explore_pass ? inr(@explore_pass.price_paise) : "₹2,000" %></span>
-              <span class="ticket-price-note">· add on with your pass</span>
+              <span class="ticket-price-amount"><%= explore_state == "on sale" ? inr(@explore_pass.price_paise) : explore_state %></span>
+              <% if explore_state == "on sale" %><span class="ticket-price-note">· add on with your pass</span><% end %>
             </div>
-            <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-gold);color:hsl(35,65%,35%)">Add to Conference Pass</a>
+            <% if explore_state == "on sale" %>
+              <a href="/tickets" class="btn btn-secondary" style="justify-content:center;border-color:var(--color-gold);color:hsl(35,65%,35%)">Add to Conference Pass</a>
+            <% end %>
             <a href="#explore-pune-day" class="btn btn-ghost" style="justify-content:center;color:var(--color-gold)">See what's planned →</a>
           </div>
         </div>

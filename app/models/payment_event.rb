@@ -1,4 +1,6 @@
 class PaymentEvent < ApplicationRecord
+  scope :legacy, -> { joins(:order).merge(Order.legacy) }
+  validate { errors.add(:order, "must belong to legacy checkout") if order&.event_id.present? }
   belongs_to :order
 
   before_validation :stamp_mode, on: :create
@@ -10,6 +12,7 @@ class PaymentEvent < ApplicationRecord
   validates :mode, inclusion: { in: %w[test live] }, allow_nil: true
 
   def self.record_webhook!(order:, event_id:, kind:, amount_paise:, raw:, razorpay_payment_id: nil)
+    LegacyCommerce.assert!(order)
     now = Time.current
     result = transaction(requires_new: true) do
       insert_all!(

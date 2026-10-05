@@ -37,7 +37,7 @@ RSpec.describe "Registration desk accounts", type: :request do
 
     it "lets a desk account check a ticket in" do
       sign_in_admin(desk_account)
-      ticket = create(:ticket)
+      ticket = create(:ticket, order: create(:order, :paid))
 
       post checkin_path, params: { secret: ticket.secret, date: }, as: :json
 

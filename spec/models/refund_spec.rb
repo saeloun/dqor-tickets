@@ -167,8 +167,8 @@ RSpec.describe Refund, type: :model do
         first_note = refund_for(first_order, first_tickets).then { |refund| refund.process!(refund_event(refund)) }
         second_note = refund_for(second_order, second_tickets).then { |refund| refund.process!(refund_event(refund)) }
 
-        expect([ first_invoice.number, second_invoice.number ]).to eq([ "DQOR/2026-27/0001", "DQOR/2026-27/0002" ])
-        expect([ first_note.number, second_note.number ]).to eq([ "DQOR-CN/2026-27/0001", "DQOR-CN/2026-27/0002" ])
+        expect([ first_invoice.number, second_invoice.number ]).to eq([ "TEST/2627/000001", "TEST/2627/000002" ])
+        expect([ first_note.number, second_note.number ]).to eq([ "TCN/2627/000001", "TCN/2627/000002" ])
       end
     end
 
@@ -179,8 +179,8 @@ RSpec.describe Refund, type: :model do
 
       credit_note = travel_to(Date.new(2027, 4, 1)) { refund.process!(refund_event(refund)) }
 
-      expect(order.invoices.invoice.sole.number).to eq("DQOR/2026-27/0001")
-      expect(credit_note.number).to eq("DQOR-CN/2027-28/0001")
+      expect(order.invoices.invoice.sole.number).to eq("TEST/2627/000001")
+      expect(credit_note.number).to eq("TCN/2728/000001")
       expect(credit_note.issued_on).to eq(Date.new(2027, 4, 1))
     end
 
@@ -228,7 +228,7 @@ RSpec.describe Refund, type: :model do
     end
 
     it "reverses IGST for a GST-registered buyer outside Maharashtra" do
-      order, tickets, = paid_order(gstin: "29AAAAA0000A1Z5", billing_state_code: "29")
+      order, tickets, = paid_order(gstin: "29AAAAA0000A1Z5", billing_state_code: "29", metadata: { "billing_address" => "Test address", "billing_state_name" => "Karnataka" })
       Invoice.issue_for!(order)
       refund = refund_for(order, tickets)
 
@@ -349,13 +349,13 @@ RSpec.describe Refund, type: :model do
       order, tickets, = paid_order
       Invoice.issue_for!(order)
       ticket = tickets.first
-      ticket.check_in!(Date.current)
+      ticket.check_in!(Date.new(2026, 10, 8))
       refund = refund_for(order, ticket)
 
       refund.process!(refund_event(refund))
 
       expect(ticket.reload.canceled_at).to be_present
-      expect(ticket.checked_in_at.keys).to eq([ Date.current.iso8601 ])
+      expect(ticket.checked_in_at.keys).to eq([ "2026-10-08" ])
     end
   end
 

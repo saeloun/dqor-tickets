@@ -68,7 +68,7 @@ RSpec.describe "Community", type: :request do
     end
   end
 
-  it "allows a direct profile visit without adding a hidden attendee to the directory" do
+  it "rejects a guessed direct profile ID for a private attendee" do
     me = User.create!(email: "me@example.com")
     hidden = User.create!(email: "hidden@example.com", name: "Hidden Attendee", discoverable: false)
     sign_in_as(me)
@@ -77,8 +77,22 @@ RSpec.describe "Community", type: :request do
     expect(response.body).not_to include("Hidden Attendee")
 
     get attendee_path(hidden)
-    expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Hidden Attendee")
-    expect(response.body).to include("Connect")
+    expect(response).to have_http_status(:not_found)
+    expect(response.body).not_to include("Hidden Attendee")
+  end
+
+  it "strips executable website protocols even if a stored value bypassed validation" do
+    me = User.create!(email: "me@example.com")
+    attendee = User.create!(email: "unsafe@example.com", website: "https://example.com")
+    User.where(id: attendee.id).update_all(website: "javascript://example.com/%0Aalert(1)")
+    sign_in_as(me)
+
+    get attendee_path(attendee)
+
+    link = Nokogiri::HTML(response.body).at_css(".attendee-profile__website a")
+    expect(link.text).to eq("Website")
+    expect(link["href"]).to be_nil
+    expect(link["rel"]).to eq("noopener")
+    expect(link["aria-label"]).to be_present
   end
 end

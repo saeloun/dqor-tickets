@@ -1,0 +1,10 @@
+<p style="padding:1rem"><%= link_to "Camera self-test — no admission", scanner_rehearsal_path, data: { turbo: false } %></p>
+<main style="max-width:48rem;margin:auto;padding:1rem">
+<h1>Choose scan purpose</h1>
+<p><%= link_to "Regular event entry →", checkin_path %></p>
+<% @slots.each do |slot| %>
+<article><h2><%= link_to slot.name, event_slot_path(slot) %></h2><p><%= slot.active? ? "Active" : "Draft — cannot redeem" %> · <%= slot.starts_at.in_time_zone("Asia/Kolkata").strftime("%d %b %H:%M IST") %></p>
+<%= link_to "Edit schedule and eligibility", edit_event_slot_path(slot) if Current.admin_user.admin? %></article>
+<% end %>
+<%= link_to "Create draft slot", new_event_slot_path if Current.admin_user.admin? %>
+</main>

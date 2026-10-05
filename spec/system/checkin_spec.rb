@@ -35,6 +35,7 @@ RSpec.describe "Check-in", type: :system do
     fill_in "email", with: admin_user.email
     fill_in "password", with: "password123"
     click_button "Sign in"
+    expect(page).not_to have_current_path(new_session_path)
   end
 
   def open_desk
@@ -59,7 +60,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   def check_in(ticket)
-    find("button[data-secret='#{ticket.secret}']").click
+    find("button[data-ticket-id='#{ticket.id}']:enabled").click
   end
 
   it "redirects an unauthenticated visitor to the sign-in page" do
@@ -78,7 +79,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "checks in a ticket found by attendee name" do
-    ticket = create(:ticket, attendee_name: "Grace Hopper")
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Grace Hopper")
 
     open_desk
     search_for("grace")
@@ -91,7 +92,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "finds a ticket by its order code and names the attendee on success" do
-    ticket = create(:ticket, attendee_name: "Alan Turing")
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Alan Turing")
 
     open_desk
     search_for(ticket.order.code)
@@ -102,7 +103,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "falls back to the attendee email when the ticket has no name" do
-    ticket = create(:ticket, attendee_name: nil, attendee_email: "unnamed@example.com")
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: nil, attendee_email: "unnamed@example.com")
 
     open_desk
     search_for("unnamed@example.com")
@@ -114,7 +115,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "warns with the original time when one ticket is checked in twice on the same date" do
-    ticket = create(:ticket, attendee_name: "Katherine Johnson")
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Katherine Johnson")
 
     open_desk
     search_for("katherine")
@@ -133,7 +134,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "allows the same ticket to be checked in again on another event date" do
-    ticket = create(:ticket, attendee_name: "Barbara Liskov")
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Barbara Liskov")
 
     open_desk
     search_for("barbara")
@@ -149,11 +150,51 @@ RSpec.describe "Check-in", type: :system do
     expect(ticket.reload.checked_in_at.keys).to match_array([ "2026-10-08", "2026-10-09" ])
   end
 
+  it "blocks admission while a changed date loads and keeps the searched attendee" do
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Barbara Liskov")
+    open_desk
+    search_for("barbara")
+    page.execute_script(<<~JS)
+      const originalFetch = window.fetch.bind(window);
+      window.dateTransitionAdmissions = 0;
+      window.fetch = (...args) => {
+        const url = new URL(args[0] instanceof Request ? args[0].url : args[0], location.href);
+        const method = (args[1]?.method || "GET").toUpperCase();
+        if (url.pathname === "/checkin" && method === "POST") window.dateTransitionAdmissions += 1;
+        if (url.pathname !== "/checkin" || method !== "GET") return originalFetch(...args);
+        return new Promise((resolve, reject) => setTimeout(() => originalFetch(...args).then(resolve, reject), 1000));
+      };
+    JS
+
+    select "Oct 9", from: "date"
+    expect(page).to have_css(".checkin-result--warning", text: "Loading the selected date")
+    expect(page).to have_css("button[data-ticket-id='#{ticket.id}']:disabled")
+    page.execute_script(%Q{document.querySelector("button[data-ticket-id='#{ticket.id}']").click()})
+    expect(page.evaluate_script("window.dateTransitionAdmissions")).to eq(0)
+    expect(ticket.reload.checked_in_at).to eq({})
+
+    expect(page).to have_css(".checkin-stat__label", text: "checked in · Fri Oct 9")
+    expect(page).to have_field("q", with: "barbara")
+    check_in(ticket)
+    expect(page).to have_css(".checkin-result--success", text: "Checked in Barbara Liskov")
+    expect(ticket.reload.checked_in_at.keys).to eq([ "2026-10-09" ])
+
+    page.go_back
+    expect(page).to have_css(".checkin-stat__label", text: "checked in · Thu Oct 8")
+    expect(page).to have_select("date", selected: "Oct 8")
+    expect(page).to have_button("Search", disabled: false)
+    expect(page).to have_css("input[data-checkin-target='selection']:enabled")
+    check_in(ticket)
+    expect(page).to have_css(".checkin-result--success", text: "Checked in Barbara Liskov")
+    expect(ticket.reload.checked_in_at.keys).to match_array([ "2026-10-08", "2026-10-09" ])
+  end
+
   it "refuses to check in a canceled ticket" do
-    ticket = create(:ticket, attendee_name: "Ada Lovelace", canceled_at: Time.current)
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Ada Lovelace", canceled_at: Time.current)
 
     open_desk
-    search_for("ada")
+    visit checkin_path(ticket_ids: [ ticket.id ])
+    start_scanner
 
     check_in(ticket)
 
@@ -162,22 +203,22 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "reports a not-found error for an unknown ticket secret" do
-    ticket = create(:ticket, attendee_name: "Margaret Hamilton")
+    ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Margaret Hamilton")
 
     open_desk
     search_for("margaret")
 
-    page.execute_script(<<~JS, ticket.secret)
-      document.querySelector(`button[data-secret="${arguments[0]}"]`).dataset.secret = "not-a-real-secret"
+    page.execute_script(<<~JS, ticket.id)
+      document.querySelector(`button[data-ticket-id="${arguments[0]}"]`).dataset.ticketId = "999999999"
     JS
-    find("button[data-secret='not-a-real-secret']").click
+    find("button[data-ticket-id='999999999']").click
 
     expect(page).to have_css(".checkin-result--error", text: "Ticket not found")
     expect(ticket.reload.checked_in_at).to be_empty
   end
 
   it "keeps the chosen event date across a search" do
-    create(:ticket, attendee_name: "Rear Admiral")
+    create(:ticket, order: create(:order, :paid), attendee_name: "Rear Admiral")
 
     visit checkin_path
     sign_in
@@ -191,7 +232,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   it "falls back to the first event day when the date param is garbage" do
-    create(:ticket, attendee_name: "Rear Admiral")
+    create(:ticket, order: create(:order, :paid), attendee_name: "Rear Admiral")
     sign_in
     visit checkin_path(date: "garbage")
 
@@ -199,7 +240,7 @@ RSpec.describe "Check-in", type: :system do
   end
 
   describe "on a device with no camera" do
-    before { driven_by :cuprite }
+    before { driven_by :cuprite_system }
 
     it "still checks in from the search results when no scanner is running" do
       ticket = create(:ticket, order: create(:order, :paid), attendee_name: "Grace Hopper")
@@ -208,7 +249,7 @@ RSpec.describe "Check-in", type: :system do
       sign_in
       fill_in "q", with: "Grace"
       click_button "Search"
-      find("button[data-secret='#{ticket.secret}']").click
+      find("button[data-ticket-id='#{ticket.id}']:enabled").click
 
       expect(page).to have_css(".checkin-result--success", text: "Checked in Grace Hopper")
       expect(ticket.reload.checked_in_at).to have_key("2026-10-08")

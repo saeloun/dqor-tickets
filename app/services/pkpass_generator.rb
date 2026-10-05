@@ -23,6 +23,7 @@ class PkpassGenerator
   end
 
   def initialize(ticket)
+    LegacyCommerce.assert!(ticket)
     @ticket = ticket
   end
 

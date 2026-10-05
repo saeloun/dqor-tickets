@@ -1,0 +1,6 @@
+<main>
+  <p class="eyebrow">Organizer workspace</p>
+  <div class="page-heading"><div><h1>Your organizations</h1><p class="muted">A home for your community and its events.</p></div><%= link_to "Create organization", new_free_organization_path, class: "button" %></div>
+  <div class="card-list"><% @organizations.each do |organization| %><article class="card"><h2><%= link_to organization.name, organizer_organization_events_path(organization) %></h2><p class="help">View events and manage your next gathering.</p></article><% end %></div>
+  <% if @organizations.empty? %><div class="empty"><h2>Start with your community</h2><p>Create an organization, save an event draft, then open free registration when you’re ready.</p></div><% end %>
+</main>
