@@ -21,6 +21,7 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
     onAuthorize: (AttendeeAuthorization) -> Unit, onWebsite: () -> Unit, onTickets: () -> Unit,
     browserProblem: String? = null) {
     val state by controller.state.collectAsStateWithLifecycle()
+    val retryAfterSeconds by controller.retryAfterSeconds.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     BackHandler { controller.cancel(); onClose() }
     LaunchedEffect(controller) { controller.expire() }
@@ -38,7 +39,7 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
                             Text("Native account access is not enabled", style = MaterialTheme.typography.titleLarge)
                             Text("Use your account securely in the system browser. Your browser keeps its own sign-in session.")
                         }
-                        AttendeeState.SignedOut -> item { SignIn(controller, onAuthorize) }
+                        AttendeeState.SignedOut -> item { SignIn(controller, onAuthorize, retryAfterSeconds) }
                         AttendeeState.Authorizing -> item {
                             Text("Continue in your browser", style = MaterialTheme.typography.titleLarge)
                             Text("Return here after verification and consent. If you leave the browser, you can cancel and start again.")
@@ -55,13 +56,13 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
                             TextButton(onClick = { scope.launch { controller.logout() } }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Sign out and clear account") }
                         }
                         is AttendeeState.Failed -> item {
-                            Text(problemText(current.problem), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-                            Text("Private information has been cleared. Sign in again to verify the latest status.")
-                            SignIn(controller, onAuthorize)
+                            Text(if (current.problem == AttendeeProblem.RATE_LIMITED && retryAfterSeconds == 0) "You can try signing in again." else problemText(current.problem), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                            Text(if (retryAfterSeconds > 0) "Private information has been cleared. Use the website now or sign in after the wait." else "Private information has been cleared. Sign in again to verify the latest status.")
+                            SignIn(controller, onAuthorize, retryAfterSeconds)
                         }
                         is AttendeeState.SignedOutResult -> item {
                             Text(when (current.revocation) { AttendeeRevocation.REVOKED -> "Signed out. Server session revoked."; AttendeeRevocation.ALREADY_INVALID -> "Signed out. This session is no longer accepted by the server."; null -> "Account cleared on this device. Server revocation could not be confirmed." }, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-                            SignIn(controller, onAuthorize)
+                            SignIn(controller, onAuthorize, retryAfterSeconds)
                         }
                         is AttendeeState.Ready -> {
                             item {
@@ -99,8 +100,9 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
     }
 }
 
-@Composable private fun SignIn(controller: AttendeeController, authorize: (AttendeeAuthorization) -> Unit) {
-    Button(onClick = { controller.begin()?.let(authorize) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Sign in through system browser") }
+@Composable private fun SignIn(controller: AttendeeController, authorize: (AttendeeAuthorization) -> Unit, retryAfterSeconds: Int) {
+    if (retryAfterSeconds > 0) Text("Try again in ${retryAfterSeconds / 60}:${(retryAfterSeconds % 60).toString().padStart(2, '0')}. You can use the official website while you wait.")
+    Button(onClick = { controller.begin()?.let(authorize) }, enabled = retryAfterSeconds == 0, modifier = Modifier.heightIn(min = 48.dp)) { Text("Sign in through system browser") }
 }
 
 private fun problemText(problem: AttendeeProblem) = when (problem) {
