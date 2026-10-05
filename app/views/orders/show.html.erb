@@ -20,7 +20,7 @@
         <% assigned_count = tickets.count(&:assigned?) %>
         <span class="success-icon" aria-hidden="true">✓</span>
         <h1>Your tickets are confirmed</h1>
-        <p>We sent the invoice to <strong><%= @order.email %></strong>.</p>
+        <p>We sent the invoice to <strong><!--email_off--><%= @order.email %><!--/email_off--></strong>.</p>
 
         <% if flash[:notice] %>
           <p class="notice" role="status"><%= flash[:notice] %></p>
@@ -48,7 +48,7 @@
             <article class="ticket-assignment">
               <h3><%= ticket.ticket_type.name %></h3>
               <% if ticket.assigned? %>
-                <p><strong><%= ticket.attendee_name %></strong><br><%= ticket.attendee_email %></p>
+                <p><strong><%= ticket.attendee_name %></strong><br><!--email_off--><%= ticket.attendee_email %><!--/email_off--></p>
                 <p class="assignment-summary">
                   <%= ticket.tshirt_size.presence || "No T-shirt size" %>
                   <span aria-hidden="true">·</span>
