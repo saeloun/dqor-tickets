@@ -234,6 +234,7 @@ RSpec.describe "Check-in", type: :system do
   it "falls back to the first event day when the date param is garbage" do
     create(:ticket, order: create(:order, :paid), attendee_name: "Rear Admiral")
     sign_in
+    expect(page).to have_current_path(Avo.configuration.home_path)
     visit checkin_path(date: "garbage")
 
     expect(page).to have_select("date", selected: "Oct 8")
