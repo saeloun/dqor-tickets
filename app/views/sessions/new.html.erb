@@ -1,13 +1,27 @@
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
-<%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
+<% content_for :title, "Staff sign in · Deccan Queen on Rails" %>
 
-<h1>Sign in</h1>
+<main class="status-page auth-page">
+  <section class="status-card">
+    <p class="section-label">Conference team</p>
+    <h1>Staff sign in</h1>
+    <p>Sign in to manage the conference or check in attendees.</p>
 
-<%= form_with url: session_path do |form| %>
-  <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email] %><br>
-  <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72 %><br>
-  <%= form.submit "Sign in" %>
-<% end %>
-<br>
+    <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
+    <% if flash[:alert] %><div class="alert" role="alert"><%= flash[:alert] %></div><% end %>
 
-<%= link_to "Forgot password?", new_password_path %>
+    <%= form_with url: session_path, class: "assignment-form auth-form" do |form| %>
+      <div class="field">
+        <%= form.label :email, "Email address" %>
+        <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "you@example.com", value: params[:email] %>
+      </div>
+      <div class="field">
+        <%= form.label :password %>
+        <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %>
+      </div>
+      <%= form.submit "Sign in", class: "btn btn-primary" %>
+    <% end %>
+
+    <p class="status-hint"><%= link_to "Forgot password?", new_password_path %></p>
+    <p class="status-hint">Attending the conference? <%= link_to "Sign in to your attendee account", account_sign_in_path %>.</p>
+  </section>
+</main>
