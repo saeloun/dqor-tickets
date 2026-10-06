@@ -6,8 +6,10 @@ enum AttendeeStyle {
         Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
     }
     static let canvas = adaptive(UIColor(red: 0.973, green: 0.961, blue: 0.949, alpha: 1), UIColor(red: 0.10, green: 0.08, blue: 0.12, alpha: 1))
-    static let card = adaptive(.white, UIColor(red: 0.17, green: 0.14, blue: 0.19, alpha: 1))
-    static let ink = adaptive(UIColor(red: 0.20, green: 0.149, blue: 0.192, alpha: 1), UIColor(red: 0.97, green: 0.94, blue: 0.91, alpha: 1))
+    static let cardUIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.17, green: 0.14, blue: 0.19, alpha: 1) : .white }
+    static let inkUIColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.97, green: 0.94, blue: 0.91, alpha: 1) : UIColor(red: 0.20, green: 0.149, blue: 0.192, alpha: 1) }
+    static let card = Color(uiColor: cardUIColor)
+    static let ink = Color(uiColor: inkUIColor)
     static let secondary = adaptive(UIColor(red: 0.39, green: 0.34, blue: 0.40, alpha: 1), UIColor(red: 0.78, green: 0.73, blue: 0.80, alpha: 1))
     static let border = adaptive(UIColor(red: 0.87, green: 0.82, blue: 0.84, alpha: 1), UIColor(red: 0.34, green: 0.28, blue: 0.36, alpha: 1))
     static let accent = adaptive(UIColor(red: 0.392, green: 0.184, blue: 0.278, alpha: 1), UIColor(red: 0.91, green: 0.68, blue: 0.80, alpha: 1))
