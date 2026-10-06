@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title><%= @event&.title || "Your free tickets" %> · DQOR</title>
+    <title><%= @event&.title || "Your free tickets" %><%= " · #{@event.organization.name}" if @event %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <%= csrf_meta_tags %><%= csp_meta_tag %>
     <%= stylesheet_link_tag "organizer_platform" %>
   </head>
   <body class="attendee-registration">
-    <% if FreeEvents::Access.enabled? %><header class="site-header"><%= link_to "Deccan Queen on Rails", root_path, class: "brand" %><nav aria-label="Attendee navigation"><%= link_to (current_user ? "Your free tickets" : "Sign in"), free_tickets_path %></nav></header><% end %>
+    <% if FreeEvents::Access.enabled? %><header class="site-header"><%= link_to (@event ? @event.title : "Your free tickets"), (@event ? published_event_path(@event.organization.slug, @event.slug) : free_tickets_path), class: "brand" %><nav aria-label="Attendee navigation"><%= link_to (current_user ? "Your free tickets" : "Sign in"), free_tickets_path %></nav></header><% end %>
     <% flash.each do |_type, message| %><p class="flash" role="status"><%= message %></p><% end %>
     <%= yield %>
   </body>

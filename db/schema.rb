@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_05_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -226,6 +226,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_110000) do
     t.bigint "ticket_type_ids", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.check_constraint "ends_at > starts_at AND redemption_limit > 0 AND (capacity IS NULL OR capacity > 0)", name: "event_slot_limits"
+  end
+
+  create_table "event_website_assets", force: :cascade do |t|
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_website_setting_id", null: false
+    t.integer "height", null: false
+    t.binary "image_data", null: false
+    t.datetime "updated_at", null: false
+    t.integer "width", null: false
+    t.index ["event_website_setting_id"], name: "index_event_website_assets_on_event_website_setting_id"
+    t.check_constraint "content_type::text = 'image/webp'::text AND octet_length(image_data) >= 1 AND octet_length(image_data) <= 1048576 AND width >= 1 AND width <= 4096 AND height >= 1 AND height <= 4096 AND (width::bigint * height) <= 12000000", name: "event_website_bounded_raster"
+  end
+
+  create_table "event_website_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "draft", null: false
+    t.bigint "event_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.jsonb "previous_published"
+    t.jsonb "published"
+    t.datetime "published_at"
+    t.bigint "published_by_id"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["event_id"], name: "index_event_website_settings_on_event_id", unique: true
+    t.index ["published_by_id"], name: "index_event_website_settings_on_published_by_id"
+    t.index ["updated_by_id"], name: "index_event_website_settings_on_updated_by_id"
+    t.check_constraint "jsonb_typeof(draft) = 'object'::text", name: "event_website_draft_object"
+    t.check_constraint "previous_published IS NULL OR jsonb_typeof(previous_published) = 'object'::text", name: "event_website_previous_object"
+    t.check_constraint "published IS NULL OR jsonb_typeof(published) = 'object'::text", name: "event_website_published_object"
   end
 
   create_table "events", force: :cascade do |t|
@@ -1042,6 +1073,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_110000) do
   add_foreign_key "event_slot_redemptions", "admin_users", column: "voided_by_id"
   add_foreign_key "event_slot_redemptions", "event_slots"
   add_foreign_key "event_slot_redemptions", "tickets"
+  add_foreign_key "event_website_assets", "event_website_settings"
+  add_foreign_key "event_website_settings", "events"
+  add_foreign_key "event_website_settings", "users", column: "published_by_id"
+  add_foreign_key "event_website_settings", "users", column: "updated_by_id"
   add_foreign_key "events", "organizations"
   add_foreign_key "free_checkins", "events"
   add_foreign_key "free_checkins", "tickets"

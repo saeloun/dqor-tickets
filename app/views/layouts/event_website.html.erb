@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title><%= @event.title %> · <%= @event.organization.name %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %><%= csp_meta_tag %>
+    <%= stylesheet_link_tag "event_website" %>
+    <% if @website_preview %><meta name="robots" content="noindex,nofollow"><% end %>
+    <% if (favicon = website_asset_path("favicon")) %><link rel="icon" href="<%= favicon %>" type="image/webp"><% end %>
+  </head>
+  <body class="event-website" data-theme="<%= @configuration.to_h.fetch("theme") %>" style="<%= @configuration.tokens.map { |key, value| "#{key}:#{value}" }.join(";") %>">
+    <a class="ew-skip" href="#event-content">Skip to event content</a>
+    <% if @website_preview %><div class="ew-preview">Private website preview · Saved content only <%= link_to "Back to website editor", organizer_organization_event_website_path(@event.organization, @event) %></div><% end %>
+    <%= yield %>
+  </body>
+</html>

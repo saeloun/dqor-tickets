@@ -1,0 +1,50 @@
+<% website = @configuration.to_h %>
+<main id="website-content" class="ew-editor" tabindex="-1">
+  <%= link_to "← Event details", organizer_organization_event_path(@organization, @event), class: "back" %>
+  <p class="eyebrow"><%= @organization.name %> · <%= @event.title %></p>
+  <h1>Event website</h1>
+  <p>Save a draft, preview it, then publish when you are ready. Event title and dates stay in event details.</p>
+  <% if @error %><p role="alert"><%= @error %></p><% end %>
+  <div class="actions"><%= link_to "Preview saved draft", preview_organizer_organization_event_website_path(@organization, @event), class: "button secondary" %>
+    <% if @setting.published %><%= link_to "Preview publication", preview_organizer_organization_event_website_path(@organization, @event, snapshot: "published") %><% end %>
+    <% if @setting.previous_published %><%= link_to "Preview previous publication", preview_organizer_organization_event_website_path(@organization, @event, snapshot: "previous") %><% end %>
+  </div>
+  <% if can_manage_events? %>
+    <%= form_with url: organizer_organization_event_website_path(@organization, @event), method: :patch, multipart: true, scope: :website, id: "website-fields" do |form| %>
+      <%= form.hidden_field :lock_version, value: @setting.lock_version %>
+      <fieldset><legend>Appearance</legend>
+        <p><%= form.label :theme, "Theme" %><%= form.select :theme, EventWebsites::Configuration::THEMES.map { |theme| [ theme.humanize, theme ] }, selected: website.fetch("theme") %></p>
+        <p><%= form.label :accent, "Accent color" %><%= form.text_field :accent, value: website.fetch("accent"), pattern: "#[0-9a-fA-F]{6}", maxlength: 7, required: true %></p>
+        <p><%= form.label :surface, "Surface color" %><%= form.text_field :surface, value: website.fetch("surface"), pattern: "#[0-9a-fA-F]{6}", maxlength: 7, required: true %></p>
+        <p><%= form.label :font, "Heading font" %><%= form.select :font, EventWebsites::Configuration::FONTS.keys.map { |font| [ font.humanize, font ] }, selected: website.fetch("font") %></p>
+        <p class="help">Text contrast is selected automatically for your colors. Fonts come from the available presets.</p>
+        <% EventWebsites::Configuration::ASSETS.each do |slot| %>
+          <p><%= form.label slot, slot.humanize %><%= form.file_field slot, accept: "image/png,image/jpeg,image/webp" %><span class="help">Still PNG, JPEG or WebP, up to 1 MB.</span></p>
+          <% if website.fetch("assets")[slot] %><label class="ew-check"><%= check_box_tag "website[remove_assets][]", slot, false, id: "website_remove_#{slot}" %>Remove <%= slot %></label><% end %>
+        <% end %>
+      </fieldset>
+      <fieldset><legend>Event content</legend>
+        <% EventWebsites::Configuration::TEXT_LIMITS.each do |key, limit| %><p><%= form.label key, key.humanize %><%= form.text_area key, value: website.fetch(key), maxlength: limit, rows: key == "summary" ? 3 : 4 %></p><% end %>
+      </fieldset>
+      <fieldset><legend>Sections and navigation</legend><p class="help">Choose visible sections in order. Navigation links must point to a visible section.</p>
+        <% 5.times do |index| %><p><%= label_tag "website_section_#{index}", "Section #{index + 1}" %><%= select_tag "website[sections][]", options_for_select([["Hidden", ""]] + EventWebsites::Configuration::SECTIONS.map { |section| [ website_section_label(section), section ] }, website.fetch("sections")[index]), id: "website_section_#{index}" %></p><% end %>
+        <% EventWebsites::Configuration::SECTIONS.each do |section| %><label class="ew-check" for="website_navigation_<%= section %>"><%= check_box_tag "website[navigation][]", section, website.fetch("navigation").include?(section), id: "website_navigation_#{section}" %>Link to <%= website_section_label(section) %></label><% end %>
+      </fieldset>
+      <details><summary>Programme entries (up to 20)</summary><p class="help">Leave unused entries completely blank.</p>
+        <% 20.times do |index| %><fieldset><legend>Programme entry <%= index + 1 %></legend><% entry = website.fetch("programme")[index] || {} %>
+          <% EventWebsites::Configuration::PROGRAMME_LIMITS.each do |key, limit| %><p><%= label_tag "website_programme_#{index}_#{key}", "Entry #{index + 1} #{key}" %><%= text_field_tag "website[programme][][#{key}]", entry[key], id: "website_programme_#{index}_#{key}", maxlength: limit %></p><% end %>
+        </fieldset><% end %>
+      </details>
+      <details><summary>Sponsors (up to 20)</summary><p class="help">Leave unused entries completely blank.</p>
+        <% 20.times do |index| %><fieldset><legend>Sponsor <%= index + 1 %></legend><% entry = website.fetch("sponsors")[index] || {} %>
+          <% EventWebsites::Configuration::SPONSOR_LIMITS.each do |key, limit| %><p><%= label_tag "website_sponsors_#{index}_#{key}", "Sponsor #{index + 1} #{key}" %><%= text_field_tag "website[sponsors][][#{key}]", entry[key], id: "website_sponsors_#{index}_#{key}", maxlength: limit %></p><% end %>
+        </fieldset><% end %>
+      </details>
+      <%= form.submit "Save draft" %>
+    <% end %>
+    <section class="ew-publication"><h2>Publication</h2><p>The public website uses your publication. Draft edits remain private.</p>
+      <%= form_with url: publish_organizer_organization_event_website_path(@organization, @event), method: :post do %><%= hidden_field_tag :lock_version, @setting.lock_version %><label class="ew-check"><%= check_box_tag :confirmed, "1", false, required: true, id: "website_publish_confirmed" %>Publish the saved draft</label><%= submit_tag "Publish website" %><% end %>
+      <% if @setting.previous_published %><%= form_with url: restore_organizer_organization_event_website_path(@organization, @event), method: :post do %><%= hidden_field_tag :lock_version, @setting.lock_version %><label class="ew-check"><%= check_box_tag :confirmed, "1", false, required: true, id: "website_restore_confirmed" %>Restore the previous publication</label><%= submit_tag "Restore previous publication" %><% end %><% end %>
+    </section>
+  <% else %><p class="notice">You can view saved content. An event manager can edit and publish this website.</p><% end %>
+</main>

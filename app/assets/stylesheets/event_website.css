@@ -1,0 +1,40 @@
+* { box-sizing: border-box; }
+.event-website { margin: 0; color: var(--ew-ink); background: var(--ew-surface); font: 18px/1.45 "Inter", system-ui, sans-serif; overflow-wrap: anywhere; }
+.event-website a { color: inherit; text-underline-offset: .2em; }
+.event-website :is(a, button, input):focus-visible { outline: 3px solid var(--ew-ink); outline-offset: 5px; }
+.ew-skip { position: absolute; left: 16px; top: -100px; padding: 12px; z-index: 3; color: var(--ew-accent-ink) !important; background: var(--ew-accent); }
+.ew-skip:focus { top: 16px; }
+.ew-header, .ew-main, .ew-footer { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
+.ew-header { display: flex; gap: 24px; justify-content: space-between; align-items: center; padding-block: 24px; border-bottom: 1px solid currentColor; }
+.ew-brand { display: flex; min-width: 0; gap: 12px; align-items: center; text-decoration: none; font-weight: 700; }
+.ew-logo { width: 56px; height: 56px; object-fit: contain; flex-shrink: 0; }
+.ew-header nav { display: flex; gap: 8px 20px; flex-wrap: wrap; }
+.ew-header nav a { min-height: 44px; display: inline-flex; align-items: center; }
+.ew-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; padding-block: 64px; }
+.ew-hero:has(.ew-cover) { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); align-items: center; }
+.event-website h1, .event-website h2, .event-website h3 { font-family: var(--ew-display-font); line-height: 1.15; margin: 0 0 20px; }
+.event-website h1 { font-size: clamp(40px, 6vw, 80px); letter-spacing: -.035em; }
+.event-website h2 { font-size: clamp(28px, 4vw, 44px); }
+.event-website h3 { font-size: 24px; }
+.event-website p { margin: 0 0 20px; max-width: 68ch; }
+.ew-eyebrow { text-transform: uppercase; font-size: 14px; letter-spacing: .1em; font-weight: 650; }
+.ew-cover { display: block; width: 100%; max-height: 440px; object-fit: contain; }
+.event-website .ew-button, .event-website button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 24px; border: 1px solid var(--ew-accent); border-radius: 8px; background: var(--ew-accent); color: var(--ew-accent-ink); text-decoration: none; font: 650 18px/1.35 "Inter", system-ui, sans-serif; cursor: pointer; }
+.ew-section { padding-block: 48px; border-top: 1px solid currentColor; scroll-margin-top: 20px; }
+.ew-prose { white-space: pre-line; }
+.ew-programme, .ew-sponsors { list-style: none; padding: 0; margin: 0; }
+.ew-programme li { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr); gap: 20px; padding-block: 24px; border-bottom: 1px solid currentColor; }
+.ew-sponsors { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 20px; }
+.ew-sponsors li { border: 1px solid currentColor; padding: 24px; border-radius: 12px; }
+.event-website .registration-state { margin-block: 24px; padding: 24px; border: 1px solid currentColor; border-radius: 12px; }
+.event-website .badge { display: inline-block; padding: 6px 12px; color: var(--ew-accent-ink); background: var(--ew-accent); border-radius: 100px; }
+.ew-footer { padding-block: 32px; border-top: 1px solid currentColor; }
+.ew-preview { padding: 16px 24px; color: var(--ew-accent-ink); background: var(--ew-accent); display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.event-website[data-theme=conference] .ew-hero-copy { max-width: 780px; }
+.event-website[data-theme=marathon] h1 { text-transform: uppercase; font-weight: 850; letter-spacing: -.055em; }
+.event-website[data-theme=marathon] .ew-section { border-top-width: 3px; }
+.event-website[data-theme=marathon] .ew-button, .event-website[data-theme=marathon] .ew-sponsors li { border-radius: 0; }
+.event-website[data-theme=campus] .ew-hero { margin-block: 32px; padding: 40px; border: 1px solid currentColor; border-radius: 20px; }
+.event-website[data-theme=campus] .ew-sponsors li { border-radius: 0 20px 20px; }
+@media (max-width: 640px) { .ew-header, .ew-main, .ew-footer { width: calc(100% - 32px); } .ew-header { align-items: start; flex-direction: column; gap: 12px; } .ew-hero, .ew-hero:has(.ew-cover) { grid-template-columns: minmax(0, 1fr); padding-block: 36px; gap: 24px; } .ew-section { padding-block: 32px; } .ew-programme li { grid-template-columns: minmax(0, 1fr); gap: 4px; } .event-website[data-theme=campus] .ew-hero { padding: 24px 16px; } .ew-button, .event-website button { max-width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .event-website *, .event-website *::before, .event-website *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; } }
