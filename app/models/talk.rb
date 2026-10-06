@@ -10,6 +10,7 @@ class Talk < ApplicationRecord
   scope :scheduled, -> { order(Arel.sql("starts_at IS NULL"), :starts_at, :position, :title) }
 
   validates :title, presence: true
+  validate :published_interval_is_ordered
 
   def local_start
     starts_at&.in_time_zone(EVENT_ZONE)
@@ -49,4 +50,10 @@ class Talk < ApplicationRecord
 
     talk_feedbacks.find_by(user_id: user.id)
   end
+  private
+    def published_interval_is_ordered
+      if published? && starts_at && ends_at && ends_at <= starts_at
+        errors.add(:ends_at, "must be after start time for a published session")
+      end
+    end
 end

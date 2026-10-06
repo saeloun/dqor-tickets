@@ -5,7 +5,11 @@ RSpec.describe "Conference panel day correction", type: :request do
   let(:migration) { CorrectConferencePanelDays.new }
   let!(:first) { Talk.create!(id: 18, title: "Guest panel: Indian speakers", starts_at: Time.utc(2026, 10, 8, 9, 50), ends_at: Time.utc(2026, 10, 8, 10, 20), published: true, speaker_name: "Existing panel label", abstract: "Existing Day 1 abstract", room: "Main hall") }
   let!(:second) { Talk.create!(id: 37, title: "Guest panel: international speakers", starts_at: Time.utc(2026, 10, 9, 9, 40), ends_at: Time.utc(2026, 10, 9, 10, 20), published: true, abstract: "Existing Day 2 abstract") }
-  let!(:other) { Talk.create!(id: 38, title: "Individual talk", starts_at: Time.utc(2026, 10, 9, 11), ends_at: Time.utc(2026, 10, 5, 12), published: true) }
+  let!(:other) do
+    Talk.create!(id: 38, title: "Individual talk", starts_at: Time.utc(2026, 10, 9, 11), ends_at: Time.utc(2026, 10, 5, 12), published: false).tap do |talk|
+      talk.update_columns(published: true)
+    end
+  end
 
   def facts
     { talks: Talk.order(:id).map(&:attributes), speakers: Speaker.order(:id).map(&:attributes), bookmarks: TalkBookmark.order(:id).map(&:attributes), types: TicketType.order(:id).map(&:attributes), coupons: Coupon.order(:id).map(&:attributes) }
