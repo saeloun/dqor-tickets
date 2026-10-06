@@ -10,34 +10,71 @@
   <!-- ================================================================
        HERO
        ================================================================ -->
-  <section class="hero hero--premium" id="hero" aria-labelledby="hero-title">
+  <section class="hero" id="hero" aria-labelledby="hero-title">
+    <div class="hero-bg-overlay" aria-hidden="true"></div>
     <div class="hero-content">
-      <p class="hero-marathi" lang="mr" aria-label="Aapale svagat ahe — Welcome">आपले स्वागत आहे</p>
-      <p class="section-label">A Rails gathering in Pune</p>
-      <h1 class="hero-heading" id="hero-title"><span class="text-ruby">Deccan Queen</span><br>on Rails</h1>
-      <p class="hero-date">October 8–11, 2026 · Pune, India</p>
-      <p class="hero-subtitle">Deep ideas. Warm <span class="mr" lang="mr" data-en="tea">चहा</span>. A community-first Rails conference, rooted in Pune and open to the world.</p>
-      <div class="hero-actions">
+      <img class="hero-logo animate-fade-in" src="/dqor/deccan-logo.png" alt="Deccan Queen on Rails" style="animation-delay:.05s" />
+
+      <p class="hero-marathi animate-fade-in" style="animation-delay:.07s" lang="mr" aria-label="Aapale svagat ahe — Welcome">आपले स्वागत आहे</p>
+
+      <div class="badge-pill animate-fade-in" style="animation-delay:.1s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.85rem;height:.85rem;color:var(--color-saffron)" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        Rails Conference &middot; <span class="mr" lang="mr" data-en="Pune">पुणे</span>, India &middot; Oct 2026
+      </div>
+
+      <h1 class="hero-heading animate-fade-in-up" id="hero-title" style="animation-delay:.2s">
+        <span class="text-ruby">Deccan Queen</span><br />on Rails
+      </h1>
+
+      <p class="hero-date animate-fade-in-up" style="animation-delay:.3s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        October 8–11, 2026 &middot; <span class="mr" lang="mr" data-en="Pune">पुणे</span>, India
+      </p>
+
+      <% if Conference.status == :before %>
+        <p class="hero-countdown animate-fade-in-up" style="animation-delay:.35s" aria-label="<%= Conference.days_to_go %> days until the conference">
+          <span class="hero-countdown__num"><%= Conference.days_to_go %></span> <%= "day".pluralize(Conference.days_to_go) %> to go
+        </p>
+      <% elsif Conference.status == :during %>
+        <p class="hero-countdown hero-countdown--live animate-fade-in-up" style="animation-delay:.35s">Happening now in <span class="mr" lang="mr" data-en="Pune">पुणे</span></p>
+      <% end %>
+
+      <p class="hero-subtitle animate-fade-in-up" style="animation-delay:.4s">
+        A Rails conference born in the city of <strong><span class="mr" lang="mr" data-en="Maratha warrior-king">शिवाजी महाराज</span>, <span class="mr" lang="mr" data-en="Maratha prime ministers">पेशवे</span>, and the Deccan Queen</strong>. Where Rails developers from across India gather, and invited voices from the world arrive. Deep ideas. Warm <span class="mr" lang="mr" data-en="tea">चहा</span>. The city opens its doors.
+      </p>
+
+      <div class="hero-actions animate-fade-in-up" style="animation-delay:.55s">
         <%= link_to "Get your pass →", tickets_store_path, class: "btn btn-primary btn-lg" %>
         <%= link_to "Explore the schedule", schedule_path, class: "btn btn-secondary btn-lg" %>
-      </div>
-      <div class="hero-gathering">
-        <%= render "shared/whos_coming" %>
-        <% if Conference.status == :before %>
-          <p class="hero-countdown"><span class="hero-countdown__num"><%= Conference.days_to_go %></span> <%= "day".pluralize(Conference.days_to_go) %> to go</p>
-        <% elsif Conference.status == :during %>
-          <p class="hero-countdown hero-countdown--live">Happening now</p>
+        <%= link_to calendar_path, class: "btn btn-secondary btn-lg hero-cal" do %>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          Add to calendar
         <% end %>
       </div>
-      <%= link_to "Add the dates to your calendar ↗", calendar_path, class: "hero-calendar" %>
+
+      <div class="animate-fade-in-up" style="animation-delay:.65s">
+        <%= render "shared/whos_coming" %>
+      </div>
+
+      <div id="social-proof" class="social-proof animate-fade-in hidden" style="animation-delay:.7s">
+        <div id="social-proof-avatars" class="avatars"></div>
+        <span class="waitlist-count">Join <strong id="count-number" class="count-number">0</strong>+ on the waitlist</span>
+      </div>
+
+      <div class="hero-socials animate-fade-in" style="animation-delay:.8s">
+        <a href="https://x.com/hideccanqueen" target="_blank" rel="noopener noreferrer" aria-label="Follow on X / Twitter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+        </a>
+        <a href="https://www.linkedin.com/company/deccan-queen-on-rails" target="_blank" rel="noopener noreferrer" aria-label="Follow on LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="https://www.instagram.com/hideccanqueen/" target="_blank" rel="noopener noreferrer" aria-label="Follow on Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+        </a>
+      </div>
     </div>
-    <figure class="hero-art">
-      <picture>
-        <source srcset="/dqor/deccan-gathering.webp" type="image/webp">
-        <img src="/dqor/deccan-gathering.jpg" alt="An imagined Deccan evening: warm courtyards, flowering branches and hills under a golden moon." width="1254" height="1254" fetchpriority="high">
-      </picture>
-      <figcaption><span lang="mr">पुणे</span> · A city of stories, a gathering of builders<br><span>Original illustration of an imagined Deccan evening</span></figcaption>
-    </figure>
+
+    <div class="bottom-gradient" aria-hidden="true"></div>
   </section>
 
   <!-- ================================================================
