@@ -59,8 +59,9 @@ class Order < ApplicationRecord
 
     ticket_type = TicketType.legacy.find_by!(slug: "complimentary-pass", hidden: true)
 
-    orders = transaction do
-      if ticket_type.capacity && ticket_type.available_quantity < email_list.size
+    orders = ConferenceInventory.synchronize do
+      ticket_type.lock!
+      if ticket_type.available_quantity < email_list.size
         raise InsufficientAvailability, "only #{ticket_type.available_quantity} complimentary tickets remain"
       end
 
@@ -149,18 +150,20 @@ class Order < ApplicationRecord
     raise ArgumentError, "payment event belongs to another order" unless payment_event.order_id == id
     raise ArgumentError, "payment amount does not match order total" unless payment_event.amount_paise == total_paise
 
-    with_lock do
-      return false if paid?
+    ConferenceInventory.synchronize do
+      with_lock do
+        return false if paid?
 
-      ensure_payable!
-      update!(status: :paid)
-      coupon&.increment!(:uses_count)
-      begin
-        Invoice.issue_for!(self)
-      rescue *Invoice::ISSUANCE_ERRORS => error
-        record_invoice_pending!(error)
+        ensure_payable!
+        update!(status: :paid)
+        coupon&.increment!(:uses_count)
+        begin
+          Invoice.issue_for!(self)
+        rescue *Invoice::ISSUANCE_ERRORS => error
+          record_invoice_pending!(error)
+        end
+        true
       end
-      true
     end
   end
 
@@ -344,10 +347,14 @@ class Order < ApplicationRecord
 
     def ensure_payable!
       raise InvalidTransition, "only pending or expired orders can be paid" unless pending? || expired?
-      return unless expired? || (expires_at && expires_at <= Time.current)
+      return if pending? && expires_at && expires_at > Time.current
 
-      quantities = tickets.group(:ticket_type_id).count
+      quantities = tickets.where(canceled_at: nil).group(:ticket_type_id).count
       ticket_types = TicketType.legacy.where(id: quantities.keys).order(:id).lock.index_by(&:id)
+      conference_quantity = quantities.sum { |ticket_type_id, quantity| ticket_types.fetch(ticket_type_id).conference_inventory? ? quantity : 0 }
+      if conference_quantity.positive? && ConferenceInventory.available_quantity < conference_quantity
+        raise InsufficientAvailability, "conference ticket inventory is no longer available"
+      end
       unavailable = quantities.any? { |ticket_type_id, quantity| ticket_types.fetch(ticket_type_id).available_quantity < quantity }
       raise InsufficientAvailability, "ticket inventory is no longer available" if unavailable
     end

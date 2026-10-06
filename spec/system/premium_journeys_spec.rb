@@ -8,7 +8,7 @@ RSpec.describe "Premium attendee journeys", type: :system do
     File.open(Rails.root.join("public/dqor/deccan-logo.png")) do |avatar|
       attendee.avatar.attach(io: avatar, filename: "synthetic-avatar.png", content_type: "image/png")
     end
-    create(:ticket, order: create(:order, :paid), attendee_name: attendee.name, attendee_email: attendee.email)
+    create(:ticket, ticket_type: create(:ticket_type, slug: "conference-pass-regular"), order: create(:order, :paid), attendee_name: attendee.name, attendee_email: attendee.email)
     visit root_path
     expect(page).to have_css(".hero-heading", text: "Deccan Queen")
     expect(page).to have_link("Explore the schedule")
