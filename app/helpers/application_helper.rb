@@ -1,4 +1,8 @@
 module ApplicationHelper
+  def staff_checkin_access?
+    authenticated? && (Current.admin_user&.admin? || Current.admin_user&.desk?)
+  end
+
   def inr(paise)
     rupees, cents = paise.divmod(100)
     digits = rupees.to_s
