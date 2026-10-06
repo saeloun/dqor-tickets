@@ -456,6 +456,8 @@ button { cursor: pointer; }
 .ticket-assignment h3 { margin-bottom: 0.75rem; }
 .ticket-assignment > p { color: var(--color-foreground-soft); }
 .assignment-form { text-align: left; }
+.auth-page { max-width: 36rem; }
+.auth-form { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
 .assignment-form .field-grid { margin-top: 0; }
 .profile-social-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
 .profile-social-fields__website { grid-column: 1 / -1; }
