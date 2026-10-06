@@ -236,6 +236,31 @@ final class StaffUITests: XCTestCase {
     }
 
     @MainActor
+    func testDemoDisclosureSupportsMaximumTextAndDarkAppearance() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--dark-preview", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        launchDemo(app)
+        let enter = app.buttons["enterDemo"]
+        for _ in 0..<12 { if enter.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(enter.isHittable)
+        enter.tap()
+        let disclosure = app.staticTexts["Demo environment"]
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
+        XCTAssertTrue(disclosure.isHittable)
+        XCTAssertTrue(app.frame.contains(disclosure.frame))
+        XCTAssertGreaterThan(disclosure.frame.height, 40, "The disclosure must follow the largest body text size.")
+        try app.performAccessibilityAudit(for: [.contrast, .textClipped, .sufficientElementDescription, .trait])
+        capture(app, name: "Largest dark demo disclosure")
+        revealStaffListElement("day-1", in: app)
+        app.buttons["day-1"].tap()
+        app.buttons["Events"].tap()
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Sign out"].isHittable)
+        app.buttons["Sign out"].tap()
+        XCTAssertTrue(enter.waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testScannerFallbackAndMixedResults() {
         let app = XCUIApplication(); launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
