@@ -11,11 +11,11 @@
     <%= form_with url: password_path(params[:token]), method: :put, class: "assignment-form auth-form" do |form| %>
       <div class="field">
         <%= form.label :password, "New password" %>
-        <%= form.password_field :password, required: true, autofocus: true, autocomplete: "new-password", minlength: 8, maxlength: 72 %>
+        <%= form.password_field :password, required: true, autofocus: true, autocomplete: "new-password", maxlength: 72 %>
       </div>
       <div class="field">
         <%= form.label :password_confirmation, "Confirm new password" %>
-        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", minlength: 8, maxlength: 72 %>
+        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72 %>
       </div>
       <%= form.submit "Save new password", class: "btn btn-primary" %>
     <% end %>
