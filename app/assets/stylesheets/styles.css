@@ -29,6 +29,14 @@
   text-align: center;
 }
 
+#hero.hero {
+  height: auto;
+  min-height: 480px;
+  min-height: max(480px, calc(100vh - var(--nav-height)));
+  min-height: max(480px, calc(100svh - var(--nav-height)));
+  min-height: max(480px, calc(100dvh - var(--nav-height)));
+}
+
 /* Hero background image overlay — keeps text readable */
 .hero-bg-overlay {
   position: absolute;

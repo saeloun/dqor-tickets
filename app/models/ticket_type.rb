@@ -13,9 +13,8 @@ class TicketType < ApplicationRecord
   validate :order_limits_are_ordered
 
   def available_quantity(at: Time.current)
-    return Float::INFINITY unless capacity
-
-    capacity - tickets.where(canceled_at: nil).joins(:order).merge(Order.reserving_inventory(at)).count
+    available = capacity ? capacity - tickets.where(canceled_at: nil).joins(:order).merge(Order.reserving_inventory(at)).count : Float::INFINITY
+    conference_inventory? ? [ available, ConferenceInventory.available_quantity(at:) ].min : available
   end
 
   def purchasable?(at: Time.current)
@@ -24,6 +23,10 @@ class TicketType < ApplicationRecord
 
   def conference_pass?
     slug.start_with?("conference-pass-")
+  end
+
+  def conference_inventory?
+    event_id.nil? && (conference_pass? || slug == "supporter-pass" || (slug == "complimentary-pass" && hidden?))
   end
 
   def valid_on?(date)

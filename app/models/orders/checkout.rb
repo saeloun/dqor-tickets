@@ -21,7 +21,7 @@ module Orders
 
     def call
       raise InvalidSelection, "legacy checkout cannot assign ownership" if @order_attributes.stringify_keys.key?("event_id") || @order_attributes.stringify_keys.key?("user_id")
-      Order.transaction do
+      ConferenceInventory.synchronize do
         selections = normalize_items
         ticket_types = TicketType.legacy.where(id: selections.pluck(:ticket_type_id)).order(:id).lock.load.index_by(&:id)
         raise InvalidSelection, "ticket type not found" unless ticket_types.size == selections.size
@@ -67,6 +67,10 @@ module Orders
 
       def validate_selections!(selections, ticket_types)
         now = Time.current
+        conference_quantity = selections.sum { |selection| ticket_types.fetch(selection[:ticket_type_id]).conference_inventory? ? selection[:quantity] : 0 }
+        if conference_quantity.positive? && ConferenceInventory.available_quantity(at: now) < conference_quantity
+          raise SoldOut, "conference tickets are sold out for this quantity"
+        end
         selections.each do |selection|
           type = ticket_types.fetch(selection[:ticket_type_id])
           quantity = selection[:quantity]

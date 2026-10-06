@@ -10,7 +10,7 @@ class Avo::Actions::IssueCompTickets < Avo::BaseAction
   def handle(fields:, **)
     orders = Order.issue_comps!(emails: fields[:emails], attendee_names: fields[:attendee_names])
     succeed "Issued #{orders.size} complimentary tickets"
-  rescue ArgumentError, ActiveRecord::RecordInvalid => error
+  rescue ArgumentError, ActiveRecord::RecordInvalid, Order::InsufficientAvailability => error
     error error.message
     keep_modal_open
   end
