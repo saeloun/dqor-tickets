@@ -1,0 +1,14 @@
+main.ew-editor { overflow-wrap: anywhere; line-height: 1.45; }
+.ew-editor fieldset { min-width: 0; padding: 20px; margin: 24px 0; border: 1px solid var(--line); border-radius: 12px; }
+.ew-editor legend { font-weight: 700; padding-inline: 8px; }
+.ew-editor .ew-check { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-block: 12px; }
+.ew-editor input[type=checkbox] { width: 20px; min-height: 20px; flex-shrink: 0; }
+.ew-editor details { padding: 20px; margin-block: 24px; border: 1px solid var(--line); border-radius: 12px; }
+.ew-editor summary { cursor: pointer; min-height: 44px; font-weight: 650; }
+.ew-editor summary:focus-visible { outline: 3px solid var(--forest); outline-offset: 4px; }
+.ew-editor .actions { margin-bottom: 32px; }
+.ew-editor .ew-publication { border-top: 1px solid var(--line); margin-top: 36px; padding-top: 28px; }
+.ew-editor .ew-publication form { margin-bottom: 28px; }
+.ew-editor-skip { display: inline-flex; min-height: 44px; align-items: center; margin-bottom: 12px; }
+@media (max-width: 640px) { .ew-editor fieldset, .ew-editor details { padding: 16px 12px; } .ew-editor input[type=file] { font-size: 14px; padding: 8px; } .ew-editor .button, .ew-editor input[type=submit] { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .ew-editor *, .ew-editor *::before, .ew-editor *::after { transition: none !important; animation: none !important; } }

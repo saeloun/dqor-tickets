@@ -56,6 +56,12 @@ Rails.application.routes.draw do
   namespace :organizer do
     resources :organizations, only: [] do
       resources :events, except: :destroy do
+        resource :website, only: %i[show update], controller: "event_websites" do
+          get :preview
+          post :publish
+          post :restore
+          get "assets/:asset_id", action: :asset, as: :asset
+        end
         post :publish, on: :member
         patch "operations/deals/:id/commit", to: "operations#commit_deal", as: :commit_operation_deal
         get "operations", to: "operations#index", as: :operations
@@ -66,6 +72,7 @@ Rails.application.routes.draw do
     end
   end
   get "events/:organization_slug/:event_slug", to: "published_events#show", as: :published_event
+  get "events/:organization_slug/:event_slug/website/assets/:asset_id", to: "published_events#website_asset", as: :event_website_asset
 
   root "home#index"
   get "tickets", to: "tickets#index", as: :tickets_store

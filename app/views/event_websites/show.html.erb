@@ -1,0 +1,39 @@
+<% website = @configuration.to_h %>
+<header class="ew-header">
+  <a class="ew-brand" href="#event-content">
+    <% if (logo = website_asset_path("logo")) %><img src="<%= logo %>" alt="" class="ew-logo"><% end %>
+    <span><%= @event.title %></span>
+  </a>
+  <nav aria-label="Event navigation"><% website.fetch("navigation").each do |section| %><%= link_to website_section_label(section), "##{section}" %><% end %></nav>
+</header>
+<main id="event-content" class="ew-main" tabindex="-1">
+  <section class="ew-hero">
+    <div class="ew-hero-copy">
+      <p class="ew-eyebrow">Hosted by <%= @event.organization.name %></p>
+      <h1><%= @event.title %></h1>
+      <% if website.fetch("summary").present? %><p class="ew-summary"><%= website.fetch("summary") %></p><% end %>
+      <% if @event.starts_at && @event.ends_at %><p class="ew-date"><%= event_local_range(@event) %><br><%= @event.timezone %></p><% else %><p>Event dates to be announced.</p><% end %>
+      <% if website.fetch("sections").include?("registration") %><%= link_to "Registration", "#registration", class: "ew-button" %><% end %>
+    </div>
+    <% if (cover = website_asset_path("cover")) %><img class="ew-cover" src="<%= cover %>" alt=""><% end %>
+  </section>
+  <% website.fetch("sections").each do |section| %>
+    <section id="<%= section %>" class="ew-section" aria-labelledby="<%= section %>-heading">
+      <h2 id="<%= section %>-heading"><%= website_section_label(section) %></h2>
+      <% if section == "about" %><p class="ew-prose"><%= website.fetch("about") %></p>
+      <% elsif section == "programme" %>
+        <% if website.fetch("programme").empty? %><p>The programme will be shared by the organizer.</p><% else %>
+          <ol class="ew-programme"><% website.fetch("programme").each do |entry| %><li><p class="ew-time"><%= entry.fetch("time") %></p><div><h3><%= entry.fetch("title") %></h3><% if entry.fetch("speaker").present? %><p><%= entry.fetch("speaker") %></p><% end %></div></li><% end %></ol>
+        <% end %>
+      <% elsif section == "sponsors" %>
+        <% if website.fetch("sponsors").empty? %><p>Sponsor details will be shared by the organizer.</p><% else %>
+          <ul class="ew-sponsors"><% website.fetch("sponsors").each do |entry| %><li><h3><%= entry.fetch("name") %></h3><% if entry.fetch("tier").present? %><p><%= entry.fetch("tier") %></p><% end %></li><% end %></ul>
+        <% end %>
+      <% elsif section == "venue" %><h3><%= website.fetch("venue_name") %></h3><p class="ew-prose"><%= website.fetch("venue_address") %></p><p class="ew-prose"><%= website.fetch("venue_details") %></p>
+      <% elsif section == "registration" %>
+        <% if @website_preview %><p>Registration is available on the published event page when the organizer opens it.</p><% else %><%= render "event_websites/registration" %><% end %>
+      <% end %>
+    </section>
+  <% end %>
+</main>
+<footer class="ew-footer"><p><%= @event.title %> · Hosted by <%= @event.organization.name %></p></footer>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= @event.title %> · Website editor</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %><%= csp_meta_tag %>
+    <%= stylesheet_link_tag "organizer_platform", "event_website_editor" %>
+  </head>
+  <body>
+    <a class="ew-editor-skip" href="#website-content">Skip to website content</a>
+    <header class="site-header"><%= link_to @organization.name, organizer_organization_events_path(@organization), class: "brand" %><nav aria-label="Organizer navigation"><%= link_to "Event details", organizer_organization_event_path(@organization, @event) %></nav></header>
+    <% flash.each do |_type, message| %><p class="flash" role="status"><%= message %></p><% end %>
+    <%= yield %>
+  </body>
+</html>

@@ -3,6 +3,7 @@
   <p class="eyebrow"><%= @organization.name %></p>
   <h1><%= @event.title %></h1><p><span class="badge">Status: <%= @event.status %></span> <span class="help"><%= @event.draft? ? "Only your team can view this draft." : "Your event page is public." %></span></p>
   <% @event.errors.full_messages.each do |message| %><p role="alert"><%= message %></p><% end %>
+  <p><%= link_to "Website", organizer_organization_event_website_path(@organization, @event) %></p>
   <div class="card"><h2>Event details</h2>
     <% if @event.starts_at && @event.ends_at %><p><%= @event.starts_at.in_time_zone(@event.timezone).strftime("%a, %-d %b %Y · %-I:%M %p") %> – <%= @event.ends_at.in_time_zone(@event.timezone).strftime("%a, %-d %b · %-I:%M %p") %><br><span class="help"><%= @event.timezone %></span></p><% else %><p class="muted">Add start and end dates before publishing.</p><% end %>
     <% if can_manage_events? %><%= link_to "Edit", edit_organizer_organization_event_path(@organization, @event) %><% end %>
