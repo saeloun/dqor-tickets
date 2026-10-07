@@ -27,13 +27,14 @@ for target,folder,kind in [('DQORStaff','Sources','application'),('DQORStaffTest
     phases = [phase]
     if ext == 'app':
         resources = []; resource_builds = []
-        for resource in sorted((root/'Resources').glob('*.png')):
-            f = add('Resources/'+resource.name, '{isa = PBXFileReference; lastKnownFileType = image.png; path = "'+resource.name+'"; sourceTree = "<group>";}')
+        for resource in sorted([*(root/'Resources').glob('*.png'), *(root/'Resources').glob('*.xcassets')]):
+            file_type = 'folder.assetcatalog' if resource.suffix == '.xcassets' else 'image.png'
+            f = add('Resources/'+resource.name, '{isa = PBXFileReference; lastKnownFileType = '+file_type+'; path = "'+resource.name+'"; sourceTree = "<group>";}')
             resources.append(f); resource_builds.append(add('resource-build/'+resource.name, '{isa = PBXBuildFile; fileRef = '+f+';}'))
         groups.append(add('Resources', '{isa = PBXGroup; children = '+seq(resources)+'; path = Resources; sourceTree = "<group>";}'))
         phases.append(add(target+'/resources', '{isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = '+seq(resource_builds)+'; runOnlyForDeploymentPostprocessing = 0;}'))
-    settings={'PRODUCT_NAME' :'"$(TARGET_NAME)"','PRODUCT_BUNDLE_IDENTIFIER':'org.dqor.staff'+('' if ext=='app' else '.'+folder.lower()),'GENERATE_INFOPLIST_FILE':'YES','TARGETED_DEVICE_FAMILY':'"1,2"','CODE_SIGN_STYLE':'Automatic','CURRENT_PROJECT_VERSION':'1','MARKETING_VERSION':'0.1.0','ENABLE_TESTABILITY':'YES'}
-    if ext=='app': settings.update({'INFOPLIST_KEY_NSCameraUsageDescription':'"Scan attendee ticket QR codes to prepare a check-in batch."','INFOPLIST_KEY_UIApplicationSceneManifest_Generation':'YES','INFOPLIST_KEY_UILaunchScreen_Generation':'YES','INFOPLIST_KEY_CFBundleDisplayName':'"DQOR"','INFOPLIST_KEY_UISupportedInterfaceOrientations':'"UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"'})
+    settings={'PRODUCT_NAME' :'"$(TARGET_NAME)"','PRODUCT_BUNDLE_IDENTIFIER':'org.dqor.staff'+('' if ext=='app' else '.'+folder.lower()),'GENERATE_INFOPLIST_FILE':'YES','TARGETED_DEVICE_FAMILY':'"1,2"','CODE_SIGN_STYLE':'Automatic','CURRENT_PROJECT_VERSION':'2','MARKETING_VERSION':'0.1.0','ENABLE_TESTABILITY':'YES'}
+    if ext=='app': settings.update({'ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','INFOPLIST_KEY_NSCameraUsageDescription':'"Scan attendee ticket QR codes to prepare a check-in batch."','INFOPLIST_KEY_UIApplicationSceneManifest_Generation':'YES','INFOPLIST_KEY_UILaunchScreen_Generation':'YES','INFOPLIST_KEY_CFBundleDisplayName':'"DQOR"','INFOPLIST_KEY_UISupportedInterfaceOrientations':'"UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"'})
     elif folder=='Tests': settings.update({'TEST_HOST':'"$(BUILT_PRODUCTS_DIR)/DQORStaff.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DQORStaff"','BUNDLE_LOADER':'"$(TEST_HOST)"'})
     else: settings['TEST_TARGET_NAME']='DQORStaff'
     cfg=configs(target,settings); deps=[]
