@@ -11,10 +11,12 @@
     <%= javascript_importmap_tags %>
     <style>
       body { margin: 0; background: #f6f3ee; color: #1a1a1a; font-family: system-ui, sans-serif; }
-      .desk-topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 1rem; background: #991b1b; color: #fff; }
+      .desk-topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 1rem; background: #991b1b; color: #fff; }
       .desk-topbar__brand { font-weight: 700; letter-spacing: 0.02em; }
       .desk-topbar__who { margin-left: auto; font-size: 0.9rem; opacity: 0.95; }
       .desk-topbar form { margin: 0; }
+      .desk-topbar a { color: inherit; text-underline-offset: 0.2em; }
+      .desk-topbar a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
       .desk-topbar button { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.45); border-radius: 0.4rem; padding: 0.4rem 0.85rem; font: inherit; font-weight: 600; cursor: pointer; }
       .desk-topbar button:hover { background: rgba(255,255,255,0.28); }
     </style>
@@ -23,6 +25,7 @@
     <header class="desk-topbar">
       <span class="desk-topbar__brand">Deccan Queen on Rails · Registration desk</span>
       <% if Current.admin_user %>
+        <%= link_to "Print conference badges", conference_badges_path, data: { turbo: false } %>
         <span class="desk-topbar__who"><%= Current.admin_user.display_name %> · <%= Current.admin_user.role.titleize %></span>
         <%= button_to "Sign out", session_path, method: :delete, form: { data: { turbo: controller_name != "scanner_rehearsals" } } %>
       <% end %>
