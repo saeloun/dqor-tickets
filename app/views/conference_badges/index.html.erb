@@ -1,0 +1,28 @@
+<main class="badge-editor">
+  <%= link_to "Registration desk", checkin_path, data: { turbo: false } %>
+  <% if Current.admin_user&.admin? %> · <%= link_to "Admin", "/avo" %><% end %>
+  <h1>Conference lanyard badges</h1>
+  <p>Provisional 90 × 120 mm inserts. Review the sample and holder size before printing at 100% scale. Printing does not check anyone in.</p>
+  <p><%= link_to "Review sample HTML", sample_conference_badges_path %> · <%= link_to "Review sample PDF", sample_conference_badges_path(format: :pdf) %></p>
+  <% if @error %><p role="alert" class="badge-error"><%= @error %></p><% end %>
+  <%= form_with url: print_conference_badges_path, method: :post, data: { turbo: false } do %>
+    <p>Select up to 50 confirmed conference passes. Company is optional, print-only text; it is not saved. Duplicate names or email identities need review and remain separate passes.</p>
+    <% @tickets.each do |ticket| %>
+      <div class="badge-selection">
+        <%= check_box_tag "ticket_ids[]", ticket.id, false, id: "badge_ticket_#{ticket.id}", disabled: ticket.attendee_name.blank? %>
+        <%= label_tag "badge_ticket_#{ticket.id}", "#{ticket.attendee_name.presence || 'Missing attendee name'} · Pass #{ticket.id}" %>
+        <% if ticket.attendee_name.blank? %><span>Add attendee details before printing.</span><% end %>
+        <% if @duplicates.include?(ticket.id) %><strong>Duplicate attendee identity — review</strong><% end %>
+        <%= label_tag "badge_company_#{ticket.id}", "Company for pass #{ticket.id} (optional)" %>
+        <%= text_field_tag "companies[#{ticket.id}]", "", id: "badge_company_#{ticket.id}", maxlength: 80, autocomplete: "off", disabled: ticket.attendee_name.blank? %>
+      </div>
+    <% end %>
+    <p><%= check_box_tag :confirmed, "true", false, required: true %> <%= label_tag :confirmed, "I reviewed the selected passes and duplicate warnings" %></p>
+    <%= button_tag "Prepare printable HTML", type: :submit %>
+    <%= button_tag "Prepare PDF", type: :submit, formaction: print_conference_badges_path(format: :pdf) %>
+  <% end %>
+  <nav aria-label="Badge roster pages">
+    <%= link_to "Previous passes", conference_badges_path(page: @page - 1) if @page > 1 %>
+    <%= link_to "Next passes", conference_badges_path(page: @page + 1) if @more %>
+  </nav>
+</main>
