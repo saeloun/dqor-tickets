@@ -120,10 +120,17 @@ RSpec.describe ConferenceBadges::Document do
     expect(described_class.pdf([ badge ])).to start_with("%PDF-")
   end
 
-  it "keeps ordinary Unicode names exact and refuses measured wide-glyph overflow with review guidance" do
+  it "keeps ordinary Unicode names exact and refuses measured layout overflow with review guidance" do
     badge = ConferenceBadges::Selection.sample.first.with(name: "आरती पाटील", company: "東京 Ruby")
     expect(Nokogiri::HTML(described_class.preview([ badge ])).at_css(".badge-name").text).to eq("आरती पाटील")
+    allow(described_class).to receive(:html).and_wrap_original do |renderer, badges|
+      renderer.call(badges).sub("</style>", ".badge-name { font-size: 120pt !important; line-height: 1.2 !important; }</style>")
+    end
     oversized = badge.with(name: "界" * 120, company: "界" * 80)
+    browser.content = described_class.html([ oversized ])
+    browser.page.command("Emulation.setEmulatedMedia", media: "print")
+    dimensions = browser.evaluate("[document.querySelector('.badge-name').getBoundingClientRect().height, document.querySelector('.conference-badge').getBoundingClientRect().height]")
+    expect(dimensions.first).to be > dimensions.last
     expect { described_class.preview([ oversized ]) }.to raise_error(ConferenceBadges::Selection::Invalid, /does not fit.*Review/)
     expect { described_class.pdf([ oversized ]) }.to raise_error(ConferenceBadges::Selection::Invalid, /does not fit.*Review/)
   end
