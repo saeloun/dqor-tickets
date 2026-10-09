@@ -1,0 +1,10 @@
+<% destination = ERB::Util.url_encode("Hyatt Regency Pune & Residences, Weikfield IT Park, Nagar Road, Pune 411014, Maharashtra, India") %>
+<aside class="conference-venue" aria-label="Conference venue">
+  <p class="section-label">Conference · October 8–9, 2026</p>
+  <p><strong>Hyatt Regency Pune &amp; Residences</strong></p>
+  <p>Weikfield IT Park, Nagar Road, Pune 411014, Maharashtra, India</p>
+  <div class="conference-venue__directions">
+    <%= link_to "Google Maps directions", "https://www.google.com/maps/dir/?api=1&destination=#{destination}", class: "btn btn-secondary", target: "_blank", rel: "noopener noreferrer", data: { map: "google" } %>
+    <%= link_to "Apple Maps directions", "https://maps.apple.com/directions?destination=#{destination}&mode=driving", class: "btn btn-secondary", target: "_blank", rel: "noopener noreferrer", data: { map: "apple" } %>
+  </div>
+</aside>

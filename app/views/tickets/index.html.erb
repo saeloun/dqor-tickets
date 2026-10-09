@@ -12,6 +12,7 @@
     <p class="section-label">Tickets</p>
     <h1>Choose your pass</h1>
     <p>Conference and Rails Girls tickets, plus an optional day out in Pune.</p>
+    <%= render "shared/conference_venue" %>
     <p><%= link_to "See the schedule →", schedule_path, class: "storefront-hero__link" %> <span aria-hidden="true">·</span> <%= link_to "Sponsors", sponsors_path, class: "storefront-hero__link" %> <span aria-hidden="true">·</span> <%= link_to "Add to calendar", calendar_path, class: "storefront-hero__link" %></p>
     <% if primary_ticket_types.any? %>
       <nav class="ticket-choices" aria-label="Ticket choices">
