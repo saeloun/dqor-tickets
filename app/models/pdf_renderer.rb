@@ -16,8 +16,7 @@ class PdfRenderer
         "disable-gpu" => nil,
         "disable-dev-shm-usage" => nil,
         "disable-setuid-sandbox" => nil,
-        "no-zygote" => nil,
-        "single-process" => nil
+        "no-zygote" => nil
       }
     end
     3.times do |attempt|
