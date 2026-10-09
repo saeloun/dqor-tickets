@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Conference lanyard badges · Deccan Queen on Rails</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'">
+    <style><%= raw css %></style>
+  </head>
+  <body class="badge-document">
+    <aside class="badge-instructions"><a href="<%= conference_badges_path %>">Back to badge selection</a><p>A4 · four-up · provisional 90 × 120 mm inserts. Print at 100% / actual size, with browser headers and footers off. Cut on the outer guides. Protect entry QR codes as admission credentials. Printing does not record check-in.</p></aside>
+    <% badges.each_slice(4) do |sheet| %>
+      <main class="badge-sheet" aria-label="A4 badge sheet">
+        <% sheet.each do |badge| %>
+          <article class="conference-badge<%= ' conference-badge--sample' if badge.sample %>" aria-label="<%= badge.sample ? 'Sample badge — not admission' : "Badge for #{badge.name}" %>">
+            <header class="badge-brand"><img src="<%= logo %>" alt="Deccan Queen on Rails"><p>Deccan Queen<br>on Rails <span>Pune · 2026</span></p></header>
+            <p class="badge-event">CONFERENCE · 8–9 OCTOBER</p>
+            <h1 class="badge-name<%= badge.name.length > 70 ? ' badge-name--extended' : (' badge-name--long' if badge.name.length > 24) %>"><%= badge.name %></h1>
+            <p class="badge-company"><%= badge.company %></p>
+            <p class="badge-warning"><% if badge.sample %>SAMPLE / REHEARSAL<br>NOT ADMISSION<% elsif badge.duplicate %>Duplicate attendee identity<br>Review this separate pass<% end %></p>
+            <div class="badge-qr" role="img" aria-label="<%= badge.sample ? 'Synthetic rehearsal QR' : 'Entry QR' %>"><%= badge.qr_svg %></div>
+            <footer class="badge-footer"><%= badge.sample ? 'SAMPLE — NOT ADMISSION' : "Pass #{badge.ticket_id} · Entry QR" %></footer>
+          </article>
+        <% end %>
+      </main>
+    <% end %>
+  </body>
+</html>

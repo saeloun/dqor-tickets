@@ -60,7 +60,7 @@ struct StaffRootView: View {
                         Button(store.day == nil ? "Sign out" : "Events") {
                             if !store.selection.isEmpty { leaving = true }
                             else { leave() }
-                        }.font(.body).foregroundStyle(.primary).disabled(store.busy)
+                        }.font(.body).foregroundStyle(Color(uiColor: .label)).disabled(store.busy)
                     }
                 }
             }
@@ -78,10 +78,7 @@ struct StaffRootView: View {
                         Text("\(store.selection.count) in batch").font(.title2.bold()).accessibilityAddTraits(.updatesFrequently)
                         Text(store.message ?? "Point at a ticket QR code. Attendees are added to a batch for review.")
                             .padding().accessibilityIdentifier("scanStatus")
-                        Button { scanning = false } label: {
-                            Text("Use attendee search").frame(minHeight: 48)
-                        }.buttonStyle(.bordered).tint(AttendeeStyle.accent)
-                            .foregroundStyle(Color(uiColor: .label))
+                        Button("Use attendee search") { scanning = false }.buttonStyle(.bordered)
                     } }.navigationTitle("Scan tickets")
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { scanning = false }.font(.body) } }
                 }
@@ -184,7 +181,7 @@ struct StaffRootView: View {
     }
     private var eventPicker: some View {
         List {
-            Section { Text("Demo environment").foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true) }
+            Section { Text("Demo environment").foregroundStyle(Color(uiColor: .label)).fixedSize(horizontal: false, vertical: true) }
             Section(header: Text("Choose an event and day").foregroundStyle(Color(uiColor: .label)).font(.headline)) {
                 ForEach(store.days) { day in
                     Button { store.choose(day) } label: {

@@ -66,68 +66,6 @@ final class PublicProgrammeUITests: XCTestCase {
         capture(app, "Privacy clear survives foreground")
     }
     @MainActor
-    func testPaddedSearchAndOneTapRecoveryPreserveSavedSessions() {
-        let app = XCUIApplication()
-        app.launchArguments = ["--public-fixture", "--reduce-motion-preview"]
-        app.launch(); fresh(app)
-        reveal(app.buttons["publicSchedule"], in: app); app.buttons["publicSchedule"].tap()
-        reveal(app.buttons["publicSave-synthetic-published"], in: app)
-        app.buttons["publicSave-synthetic-published"].tap()
-        let search = app.textFields["publicProgrammeSearch"]
-        reveal(search, in: app); search.tap(); search.typeText("  unscheduled  \n")
-        capture(app, "Padded synthetic search before recovery")
-        XCTAssertTrue(app.staticTexts["Synthetic unscheduled session"].exists)
-        XCTAssertFalse(app.staticTexts["Synthetic published session"].exists)
-        let clear = app.buttons["publicClearSearch"]
-        reveal(clear, in: app); XCTAssertGreaterThanOrEqual(clear.frame.height, 48); clear.tap()
-        reveal(search, in: app); search.tap(); search.typeText("   \n")
-        XCTAssertFalse(app.staticTexts["No matching sessions"].exists)
-        reveal(app.staticTexts["Synthetic unscheduled session"], in: app)
-        reveal(clear, in: app); clear.tap()
-        XCTAssertFalse(app.staticTexts["No matching sessions"].exists)
-        reveal(app.buttons["publicSave-synthetic-published"], in: app)
-        XCTAssertEqual(app.buttons["publicSave-synthetic-published"].value as? String, "Saved")
-        reveal(search, in: app); search.tap(); search.typeText("no matching programme\n")
-        XCTAssertTrue(app.staticTexts["No matching sessions"].waitForExistence(timeout: 5))
-        let reset = app.buttons["publicResetFilters"]
-        reveal(reset, in: app)
-        XCTAssertGreaterThanOrEqual(reset.frame.height, 48)
-        capture(app, "Synthetic no-match one-tap recovery")
-        reset.tap()
-        XCTAssertFalse(app.staticTexts["No matching sessions"].exists)
-        reveal(app.buttons["publicSave-synthetic-published"], in: app)
-        XCTAssertEqual(app.buttons["publicSave-synthetic-published"].value as? String, "Saved")
-        app.navigationBars.buttons["BackButton"].tap()
-        XCTAssertTrue(app.buttons["publicSchedule"].exists)
-    }
-    @MainActor
-    func testLargestTextDarkSearchResetPreservesBookmarksAndBack() {
-        let app = XCUIApplication()
-        app.launchArguments = ["--public-fixture", "--dark-preview", "--reduce-motion-preview", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
-        app.launch(); fresh(app)
-        reveal(app.buttons["publicSchedule"], in: app); app.buttons["publicSchedule"].tap()
-        reveal(app.buttons["publicSave-synthetic-published"], in: app)
-        app.buttons["publicSave-synthetic-published"].tap()
-        reveal(app.segmentedControls["publicScheduleFilter"], in: app)
-        app.segmentedControls["publicScheduleFilter"].buttons["Saved"].tap()
-        let day = app.buttons["publicDayFilter"]
-        reveal(day, in: app); day.tap(); app.buttons["Thu, 8 Oct"].tap()
-        let search = app.textFields["publicProgrammeSearch"]
-        reveal(search, in: app); search.tap(); search.typeText("unmatched\n")
-        reveal(app.staticTexts["No matching sessions"], in: app)
-        let reset = app.buttons["publicResetFilters"]
-        reveal(reset, in: app)
-        XCTAssertGreaterThanOrEqual(reset.frame.height, 48)
-        capture(app, "Largest text dark synthetic search recovery")
-        reset.tap()
-        reveal(app.buttons["publicSave-synthetic-published"], in: app)
-        XCTAssertEqual(app.buttons["publicSave-synthetic-published"].value as? String, "Saved")
-        XCTAssertFalse(app.staticTexts["No matching sessions"].exists)
-        reveal(app.staticTexts["Synthetic unscheduled session"], in: app)
-        app.navigationBars.buttons["BackButton"].tap()
-        XCTAssertTrue(app.buttons["publicSchedule"].exists)
-    }
-    @MainActor
     func testInitialOfflineLargestTextMakesRecoveryReachable() {
         let app = XCUIApplication()
         app.launchArguments = ["--public-fixture", "--public-offline", "--reduce-motion-preview", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]

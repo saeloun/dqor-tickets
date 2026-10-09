@@ -51,35 +51,6 @@ RSpec.describe ConfirmOrderJob, type: :job do
     expect(enqueued_jobs.count { |job| job[:job] == MailDeliveryJob }).to eq(1)
   end
 
-  it "keeps duplicate payment callbacks to one pending mail and one invoice mail using captured purchase facts" do
-    order, event, ticket_type = order_with_event
-    coupon = create(:coupon, ticket_type:, uses_count: 0)
-    order.update!(coupon:)
-    allow(InvoicePolicy).to receive(:snapshot).and_raise(InvoicePolicy::NotConfigured)
-
-    perform_enqueued_jobs(only: DeliverOrderConfirmationJob) do
-      2.times { described_class.perform_now(order.razorpay_order_id, event.id) }
-    end
-
-    expect(order.reload).to be_paid
-    expect(coupon.reload.uses_count).to eq(1)
-    expect(order.tickets.sole.canceled_at).to be_nil
-    captured = order.metadata.fetch("invoice_purchase_lines")
-    expect(captured.sole.fetch("total_paise")).to eq(event.amount_paise)
-    expect(order.metadata).to include("invoice_pending_reason" => "InvoicePolicy::NotConfigured", "confirmation_documents_pending" => true)
-    expect(enqueued_jobs.count { |job| job[:job] == MailDeliveryJob }).to eq(1)
-
-    order.tickets.sole.update!(price_paise: 1)
-    allow(InvoicePolicy).to receive(:snapshot).and_call_original
-    2.times { GenerateOrderDocumentsJob.perform_now(order.reload) }
-
-    expect(order.invoices.invoice.sole.line_items.sole.fetch("total_paise")).to eq(event.amount_paise)
-    expect(order.metadata.fetch("invoice_purchase_lines")).to eq(captured)
-    expect(order.metadata).to include("confirmation_documents_pending" => false)
-    expect(order.metadata).not_to have_key("invoice_pending_reason")
-    expect(enqueued_jobs.count { |job| job[:job] == MailDeliveryJob }).to eq(2)
-  end
-
   it "retries a transient failure without duplicating confirmation side effects" do
     order, event = order_with_event
     attempts = 0

@@ -4,7 +4,7 @@
   <section class="account-section">
     <h1>Attendees</h1>
     <p>People coming to Deccan Queen on Rails who’ve chosen to be listed. <%= link_to "Manage your listing", account_settings_path %>.</p>
-    <p><%= link_to "Open conference chat", ENV.fetch("CAMPFIRE_JOIN_URL", "https://chat.deccanqueenonrails.com"), target: "_blank", rel: "noopener", class: "btn btn-primary" %> <span>Opens in a new tab</span></p>
+    <p><%= link_to "Join the conference chat", ENV.fetch("CAMPFIRE_JOIN_URL", "https://chat.deccanqueenonrails.com"), target: "_blank", rel: "noopener", class: "btn btn-primary" %></p>
 
     <% if @attendees.any? %>
       <ul class="attendee-grid">

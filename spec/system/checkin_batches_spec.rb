@@ -89,6 +89,65 @@ RSpec.describe "Staff batch check-in", type: :system do
     expect(ticket.reload.checked_in_at).to be_empty
   end
 
+  it "recovers a batch response lost after commit without admitting or counting twice" do
+    ticket = create(:ticket, order:, attendee_name: "Synthetic Lost Response")
+    page.driver.browser.resize(width: 390, height: 844)
+    open_desk
+    click_button "Select shown tickets"
+    click_button "Review 1 selected ticket"
+    page.execute_script(<<~JS)
+      window.originalBatchFetch = window.fetch.bind(window);
+      window.batchResponseDiscarded = false;
+      window.fetch = async (...args) => {
+        const response = await window.originalBatchFetch(...args);
+        if (args[0] === '/checkin/batch' && !window.batchResponseDiscarded) {
+          window.batchResponseDiscarded = true;
+          throw new TypeError('synthetic response lost after commit');
+        }
+        return response;
+      };
+    JS
+    click_button "Confirm check-in"
+    expect(page).to have_css(".checkin-result--error", text: "not confirmed")
+    expect(page).to have_css("[data-checkin-target='count']", text: "0", exact_text: true)
+    expect(page).to have_button("Review 1 selected ticket")
+    original = ticket.reload.checked_in_at
+    expect(original.keys).to eq([ "2026-10-08" ])
+    expect(CheckinAudit.where(ticket:, outcome: "success").count).to eq(1)
+    page.save_screenshot(Rails.root.join("tmp/capybara/scanner-response-lost-after-commit.png"), full: true)
+
+    click_button "Review 1 selected ticket"
+    click_button "Confirm check-in"
+    expect(page).to have_css("[aria-label='Batch results']", text: "Already checked in")
+    expect(page).to have_css("[data-checkin-target='count']", text: "1", exact_text: true)
+    expect(page).to have_button("Review 0 selected tickets", disabled: true)
+    expect(ticket.reload.checked_in_at).to eq(original)
+    expect(CheckinAudit.where(ticket:).pluck(:outcome)).to match_array(%w[success duplicate])
+    expect(CheckinAudit.where(ticket:, outcome: "success").count).to eq(1)
+    expect(page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")).to be(true)
+    page.save_screenshot(Rails.root.join("tmp/capybara/scanner-response-recovered-once.png"), full: true)
+  end
+
+  it "refuses a reviewed batch when the staff session expires before confirmation" do
+    ticket = create(:ticket, order:, attendee_name: "Synthetic Expired Session")
+    page.driver.browser.resize(width: 390, height: 844)
+    open_desk
+    click_button "Select shown tickets"
+    click_button "Review 1 selected ticket"
+    expect(page).to have_css("dialog[open]", text: ticket.attendee_name)
+    operator.sessions.destroy_all
+    expect(operator.sessions.count).to eq(0)
+
+    click_button "Confirm check-in"
+    expect(page).to have_css(".checkin-result--error", text: "Session expired. Sign in before checking in.")
+    expect(page).to have_css("[data-checkin-target='count']", text: "0", exact_text: true)
+    expect(page).to have_button("Review 1 selected ticket")
+    expect(page).to have_no_css("[aria-label='Batch results'] li")
+    expect(ticket.reload.checked_in_at).to eq({})
+    expect(CheckinAudit.count).to eq(0)
+    page.save_screenshot(Rails.root.join("tmp/capybara/scanner-expired-session-no-admission.png"), full: true)
+  end
+
   it "decodes a QR image without BarcodeDetector using the bundled software decoder" do
     ticket = create(:ticket, order:, attendee_name: "Software Decoder", secret: Rails.root.join("spec/fixtures/checkin_software_decoder_secret.txt").read.strip)
     image_path = Rails.root.join("tmp", "checkin-fallback-#{ticket.id}.png")

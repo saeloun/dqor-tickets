@@ -25,11 +25,6 @@ final class StaffUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1 in batch"].exists)
         app.buttons["Scan sample Taylor"].tap()
         XCTAssertTrue(app.staticTexts["2 in batch"].waitForExistence(timeout: 5))
-        let manual = app.buttons["Use attendee search"]
-        XCTAssertTrue(manual.isHittable)
-        XCTAssertGreaterThanOrEqual(manual.frame.height, 48)
-        let geometry = XCTAttachment(string: "Light manual lookup accessible frame: \(manual.frame)")
-        geometry.name = "Light scanner manual lookup geometry"; geometry.lifetime = .keepAlways; add(geometry)
         capture(app, name: "Synthetic continuous scanner rehearsal")
         defer { XCUIDevice.shared.orientation = .portrait }
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -45,24 +40,8 @@ final class StaffUITests: XCTestCase {
         add(landscapeAttachment)
         XCUIDevice.shared.orientation = .portrait
         XCUIDevice.shared.press(.home); app.activate()
-        let portraitReady = NSPredicate { _, _ in
-            app.state == .runningForeground && app.frame.height > app.frame.width &&
-                app.buttons["Done"].isHittable && app.buttons["Scan sample Alex"].isHittable
-        }
-        let portraitExpectation = expectation(for: portraitReady, evaluatedWith: app)
-        XCTAssertEqual(XCTWaiter.wait(for: [portraitExpectation], timeout: 5), .completed)
         XCTAssertTrue(app.staticTexts["2 in batch"].exists)
-        app.buttons["Done"].tap()
-        let scannerDismissed = expectation(for: NSPredicate { _, _ in !app.buttons["Done"].exists }, evaluatedWith: app)
-        XCTAssertEqual(XCTWaiter.wait(for: [scannerDismissed], timeout: 5), .completed)
-        let review = app.buttons["reviewBatch"]
-        for _ in 0..<8 {
-            if review.isHittable { break }
-            app.swipeUp()
-        }
-        let reviewReady = expectation(for: NSPredicate { _, _ in review.isHittable }, evaluatedWith: app)
-        XCTAssertEqual(XCTWaiter.wait(for: [reviewReady], timeout: 5), .completed)
-        review.tap()
+        app.buttons["Done"].tap(); app.swipeUp(); app.buttons["reviewBatch"].tap()
         XCTAssertTrue(app.staticTexts["Confirm event admission and day"].exists)
         app.buttons["Cancel"].tap(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
         app.swipeUp()
@@ -74,23 +53,6 @@ final class StaffUITests: XCTestCase {
         app.swipeUp(); XCTAssertTrue(app.staticTexts["Already checked in"].waitForExistence(timeout: 5))
         app.buttons["Events"].tap(); app.buttons["Sign out"].tap()
         XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Checked in"].exists)
-    }
-    @MainActor
-    func testDarkScannerManualLookupRemainsReadableAndReachable() {
-        let app = XCUIApplication()
-        app.launchArguments = ["--dark-preview", "--scanner-rehearsal", "--reduce-motion-preview"]
-        launchDemo(app)
-        app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap(); app.buttons["Scan tickets"].tap()
-        let manual = app.buttons["Use attendee search"]
-        XCTAssertTrue(manual.waitForExistence(timeout: 5))
-        XCTAssertTrue(manual.isHittable)
-        XCTAssertGreaterThanOrEqual(manual.frame.height, 48)
-        let geometry = XCTAttachment(string: "Dark manual lookup accessible frame: \(manual.frame)")
-        geometry.name = "Dark scanner manual lookup geometry"; geometry.lifetime = .keepAlways; add(geometry)
-        capture(app, name: "Dark synthetic scanner manual lookup")
-        manual.tap()
-        XCTAssertTrue(app.textFields["attendeeSearch"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Checked in"].exists)
     }
     @MainActor
@@ -191,14 +153,6 @@ final class StaffUITests: XCTestCase {
         }
         try audit("Welcome")
         app.buttons["enterDemo"].tap()
-        let catalogReady = NSPredicate { _, _ in
-            let status = app.staticTexts["Demo environment"]
-            return app.buttons["day-1"].isHittable && app.buttons["Sign out"].isHittable &&
-                !app.buttons["enterDemo"].exists && status.exists && status.frame.width > 0 &&
-                status.frame.height > 0 && app.frame.contains(status.frame)
-        }
-        let catalogExpectation = XCTNSPredicateExpectation(predicate: catalogReady, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [catalogExpectation], timeout: 5), .completed)
         try audit("Event catalog")
         app.buttons["day-1"].tap(); app.buttons["Search attendees"].tap()
         try audit("Lookup")

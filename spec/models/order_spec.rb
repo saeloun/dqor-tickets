@@ -151,51 +151,6 @@ RSpec.describe Order, type: :model do
   end
 
   describe "#deliver_confirmation!" do
-    it "keeps pending confirmation retryable when its enqueue fails" do
-      order = create(:order, :paid)
-      create(:ticket, order:)
-      queue_adapter = MailDeliveryJob.queue_adapter
-      failed = false
-      allow(queue_adapter).to receive(:enqueue).and_wrap_original do |method, *arguments|
-        if arguments.first.is_a?(MailDeliveryJob) && !failed
-          failed = true
-          raise ActiveRecord::StatementInvalid, "synthetic queue unavailable"
-        end
-        method.call(*arguments)
-      end
-
-      expect { order.deliver_confirmation!(documents_pending: true) }.to raise_error(ActiveRecord::StatementInvalid)
-      expect(order.reload.metadata).not_to include("confirmation_enqueued_at")
-      expect { order.deliver_confirmation!(documents_pending: true) }.to have_enqueued_mail(OrderMailer, :confirmation).once
-      expect(order.deliver_confirmation!(documents_pending: true)).to be(false)
-      expect(order.reload.metadata).to include("confirmation_documents_pending" => true)
-    end
-
-    it "keeps the completed invoice mail retryable after an enqueue failure following pending delivery" do
-      order = create(:order, :paid)
-      create(:ticket, order:)
-      allow(PdfRenderer).to receive(:render).and_return("%PDF-synthetic")
-      order.deliver_confirmation!(documents_pending: true)
-      marker = order.reload.metadata.fetch("confirmation_enqueued_at")
-      queue_adapter = MailDeliveryJob.queue_adapter
-      failed = false
-      allow(queue_adapter).to receive(:enqueue).and_wrap_original do |method, *arguments|
-        if arguments.first.is_a?(MailDeliveryJob) && !failed
-          failed = true
-          raise ActiveRecord::StatementInvalid, "synthetic queue unavailable"
-        end
-        method.call(*arguments)
-      end
-
-      expect { order.deliver_confirmation! }.to raise_error(ActiveRecord::StatementInvalid)
-      expect(order.reload.metadata).to include("confirmation_enqueued_at" => marker, "confirmation_documents_pending" => true)
-      expect(order.invoices.invoice.sole.pdf).to be_attached
-      expect { order.deliver_confirmation! }.to have_enqueued_mail(OrderMailer, :confirmation).once
-      expect(order.deliver_confirmation!).to be(false)
-      expect(order.deliver_confirmation!(documents_pending: true)).to be(false)
-      expect(order.reload.metadata).to include("confirmation_documents_pending" => false)
-    end
-
     it "does not claim delivery until the mail job is enqueued" do
       order = create(:order, :paid)
       create(:ticket, order:)

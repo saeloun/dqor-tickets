@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  resources :conference_badges, only: :index do
+    collection do
+      get :sample
+      post :print
+    end
+  end
   resource :scanner_rehearsal, only: :show
   get "free", to: "free_events/organizations#index", as: :free_organizations
   get "free/organizations/new", to: "free_events/organizations#new", as: :new_free_organization

@@ -113,7 +113,7 @@ RSpec.describe "Order page", type: :system do
       expect(page).to have_css("h1", text: "Confirming your payment")
       expect(page).to have_content("Razorpay is confirming the payment. This page updates automatically.")
       expect(page).to have_content("Please keep this page open.")
-      expect(page).to have_css("turbo-frame#order_status[data-poll-active-value='true']")
+      expect(page).to have_css("turbo-frame#order_status .status-card[data-controller='poll'][data-poll-active-value='true']")
       expect(page).to have_css(".status-card--pending .spinner", visible: :all)
       expect(page).to have_no_link("Download tax invoice")
     end
@@ -154,7 +154,7 @@ RSpec.describe "Order page", type: :system do
       expect(page).to have_css("h1", text: "This order expired")
       expect(page).to have_content("The inventory hold ended before payment confirmation. No payment was captured.")
       expect(page).to have_link("Try again", href: tickets_store_path)
-      expect(page).to have_css("turbo-frame#order_status[data-poll-active-value='false']")
+      expect(page).to have_css("turbo-frame#order_status .status-card[data-controller='poll'][data-poll-active-value='false']")
       expect(page).to have_no_link("Download tax invoice")
     end
   end

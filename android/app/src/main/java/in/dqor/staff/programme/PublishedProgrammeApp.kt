@@ -72,7 +72,7 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
                             item {EventArtwork(event,Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(16.dp)))}
                             item {Text(programme.event.title,fontSize=34.sp,lineHeight=39.sp,fontWeight=FontWeight.SemiBold); Spacer(Modifier.height(10.dp)); Text("${programme.event.startDate.format(DateTimeFormatter.ofPattern("d MMM"))}–${programme.event.endDate.format(DateTimeFormatter.ofPattern("d MMM yyyy"))}"); Text(programme.event.venue); Text("Times in ${programme.event.timezone.id}",style=MaterialTheme.typography.bodySmall)}
                             item {Text("${programme.sessions.size} published sessions · ${programme.speakers.size} speakers",style=MaterialTheme.typography.titleMedium); Spacer(Modifier.height(12.dp)); Button(onClick={schedule=true},modifier=Modifier.fillMaxWidth().heightIn(min=52.dp)) {Text("Explore the programme")}}
-                            item {Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                            item {Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceContainer,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                                 Text("Your tickets",style=MaterialTheme.typography.titleLarge)
                                 Text("Find or manage your tickets securely on the official website.")
                                 OutlinedButton(onClick=onTickets,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) {Text("Open my tickets on website")}
@@ -139,7 +139,7 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
 
 @Composable private fun PublishedSessionCard(session: PublicSession,programme: PublicProgramme,saved: Boolean,expanded: Boolean,onDetail: ()->Unit,onSave: ()->Unit) {
     val motion=LocalAttendeeMotion.current
-    Surface(modifier=Modifier.testTag("public-session-${session.id}"),shape=MaterialTheme.shapes.medium,color=if(saved) Color(0xFFF8EFF2) else Color.White,border=BorderStroke(1.dp,if(saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
+    Surface(modifier=Modifier.testTag("public-session-${session.id}"),shape=MaterialTheme.shapes.medium,color=if(saved) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,border=BorderStroke(1.dp,if(saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
         Column(Modifier.animateContentSize(tween(motion.revealMillis)).padding(18.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             Text(session.timeLabel(programme.event.timezone),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
             Text(session.title,fontSize=21.sp,lineHeight=27.sp,fontWeight=FontWeight.SemiBold)

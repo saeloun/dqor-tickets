@@ -281,8 +281,8 @@ button { cursor: pointer; }
 .ticket-card:hover { transform: translateY(-3px); border-color: var(--color-border-strong); box-shadow: var(--shadow-md); }
 .ticket-card--featured { border-color: var(--color-gold); box-shadow: var(--shadow-md); }
 .ticket-card--featured::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: var(--color-gold); }
-.ticket-card--sold-out, .ticket-card--coming-soon { background: var(--color-muted); box-shadow: none; }
-.ticket-card--sold-out .ticket-card-body, .ticket-card--coming-soon .ticket-card-body { opacity: 0.62; }
+.ticket-card--sold-out, .ticket-card--coming-soon, .ticket-card--sales-closed { background: var(--color-muted); box-shadow: none; }
+.ticket-card--sold-out .ticket-card-body, .ticket-card--coming-soon .ticket-card-body, .ticket-card--sales-closed .ticket-card-body { opacity: 0.62; }
 
 .ticket-card-header { padding: 1.5rem 1.5rem 0; }
 .ticket-card-badges { min-height: 1.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; }
@@ -456,6 +456,8 @@ button { cursor: pointer; }
 .ticket-assignment h3 { margin-bottom: 0.75rem; }
 .ticket-assignment > p { color: var(--color-foreground-soft); }
 .assignment-form { text-align: left; }
+.auth-page { max-width: 36rem; }
+.auth-form { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
 .assignment-form .field-grid { margin-top: 0; }
 .profile-social-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
 .profile-social-fields__website { grid-column: 1 / -1; }
@@ -868,4 +870,15 @@ body.hotwire-native { padding-top: 0; }
 
 @media (max-width: 900px) {
   .nav-actions .nav-auth--desktop { display: none; }
+}
+
+.storefront .ticket-choices { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+.storefront .ticket-choices .btn { flex: 1 1 12rem; }
+.storefront .ticket-choices a:focus-visible { outline: 3px solid var(--color-ring); outline-offset: 3px; }
+.storefront .tickets-grid--primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.storefront .ticket-card { scroll-margin-top: calc(var(--nav-height) + 1rem); }
+.storefront .ticket-card:focus { outline: 3px solid var(--color-ring); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .storefront .tickets-grid--primary { grid-template-columns: 1fr; }
 }
