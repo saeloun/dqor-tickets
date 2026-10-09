@@ -12,10 +12,10 @@ RSpec.describe "Staff batch check-in", type: :system do
     expect(page).to have_current_path(checkin_path)
     expect(page).to have_button("Request Camera Permissions")
     select "Oct 8", from: "date" unless find(:select, "date").value == "2026-10-08"
-    expect(page).to have_select("date", selected: "Oct 8")
     expect(page).to have_css(".checkin-stat__label", text: "checked in · Thu Oct 8", exact_text: true)
     expect(page).to have_no_css('[data-controller="checkin"][aria-busy="true"]')
     expect(page).to have_button("Request Camera Permissions")
+    expect(page).to have_select("date", selected: "Oct 8")
   end
 
   def start_avo_selection_trace
@@ -82,10 +82,14 @@ RSpec.describe "Staff batch check-in", type: :system do
     open_desk
     visit "/avo/resources/tickets"
     start_avo_selection_trace
-    # A visible checkbox can precede Stimulus connection; wait for the actual
-    # selector controller before interacting, then verify its retained state.
+    expect(page).to have_css('body[data-controller~="browser-timezone"]') { |node|
+      page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'browser-timezone')) && Boolean(window.Turbo?.navigator) && (!window.Turbo.navigator.currentVisit || window.Turbo.navigator.currentVisit.state === 'completed') && !document.documentElement.hasAttribute('aria-busy') && !document.documentElement.hasAttribute('data-turbo-preview')", node)
+    }
+    expect(page).to have_css("turbo-frame#tickets_list") { |node|
+      page.evaluate_script("arguments[0].complete && !arguments[0].hasAttribute('aria-busy')", node)
+    }
     expect(page).to have_css('[data-controller~="item-selector"]') { |node|
-      page.evaluate_script("Boolean(window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'item-selector')?.stateHolderElement)", node)
+      page.evaluate_script("(() => { const holder = window.Stimulus?.getControllerForElementAndIdentifier(arguments[0], 'item-selector')?.stateHolderElement; return Boolean(holder?.isConnected && holder === document.querySelector('[data-selected-resources-name=\"tickets\"]')); })()", node)
     }
     within("tr", text: "Selected Attendee") do
       check "Select item"

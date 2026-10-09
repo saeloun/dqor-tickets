@@ -604,3 +604,26 @@
   max-width: 38rem;
   line-height: 1.7;
 }
+
+.conference-venue {
+  max-width: 40rem;
+  margin: 1.25rem auto;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  text-align: center;
+}
+
+.conference-venue p {
+  margin: 0.5rem 0;
+}
+
+.conference-venue__directions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
