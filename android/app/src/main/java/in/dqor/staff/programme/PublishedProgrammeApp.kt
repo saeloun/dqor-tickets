@@ -56,18 +56,13 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
             confirmButton={TextButton(onClick={clearDialog=false; expanded=emptyList(); query=""; date=""; savedOnly=false; schedule=false; onClear()}) {Text("Clear local data")}},
             dismissButton={TextButton(onClick={clearDialog=false}) {Text("Cancel")}})
         Surface(Modifier.fillMaxSize()) {
-            Box(Modifier.safeDrawingPadding(),contentAlignment=Alignment.TopCenter) {
+            BoxWithConstraints(Modifier.safeDrawingPadding(),contentAlignment=Alignment.TopCenter) {
+                val scrollHeader=LocalDensity.current.fontScale>1.3f || maxWidth<360.dp || maxHeight<420.dp
                 Column(Modifier.widthIn(max=680.dp).fillMaxSize().testTag(if(schedule) "published-schedule" else "published-overview")) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal=16.dp),verticalAlignment=Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {Text("dqor",fontSize=24.sp,fontWeight=FontWeight.Bold); Text("Official public programme",style=MaterialTheme.typography.bodySmall)}
-                        Column {onAccount?.let {TextButton(onClick=it,modifier=Modifier.heightIn(min=48.dp)) {Text("Account")}}
-                            TextButton(onClick=onPreview,modifier=Modifier.heightIn(min=48.dp)) {Text("Demo preview")}}
-                    }
-                    if(programme!=null) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal=16.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        FilterChip(selected=!schedule,onClick={schedule=false},label={Text("Overview")})
-                        FilterChip(selected=schedule,onClick={schedule=true},label={Text("Programme")})
-                    }
+                    if(!scrollHeader) PublishedHeader(onPreview,onAccount,false,Modifier.padding(horizontal=16.dp))
+                    if(programme!=null) PublishedNavigation(schedule,{schedule=it},Modifier.padding(horizontal=16.dp))
                     LazyColumn(Modifier.weight(1f).testTag("published-programme"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
+                        if(scrollHeader) item(key="public-header") {PublishedHeader(onPreview,onAccount,true)}
                         item {PublishedStatus(state,onRefresh)}
                         if(programme==null) {
                             item {Text("Deccan Queen on Rails",fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.SemiBold); Text("The official published programme will appear here when it can be verified.")}
@@ -77,7 +72,7 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
                             item {EventArtwork(event,Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(16.dp)))}
                             item {Text(programme.event.title,fontSize=34.sp,lineHeight=39.sp,fontWeight=FontWeight.SemiBold); Spacer(Modifier.height(10.dp)); Text("${programme.event.startDate.format(DateTimeFormatter.ofPattern("d MMM"))}–${programme.event.endDate.format(DateTimeFormatter.ofPattern("d MMM yyyy"))}"); Text(programme.event.venue); Text("Times in ${programme.event.timezone.id}",style=MaterialTheme.typography.bodySmall)}
                             item {Text("${programme.sessions.size} published sessions · ${programme.speakers.size} speakers",style=MaterialTheme.typography.titleMedium); Spacer(Modifier.height(12.dp)); Button(onClick={schedule=true},modifier=Modifier.fillMaxWidth().heightIn(min=52.dp)) {Text("Explore the programme")}}
-                            item {Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                            item {Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceContainer,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                                 Text("Your tickets",style=MaterialTheme.typography.titleLarge)
                                 Text("Find or manage your tickets securely on the official website.")
                                 OutlinedButton(onClick=onTickets,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) {Text("Open my tickets on website")}
@@ -106,6 +101,29 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable private fun PublishedHeader(onPreview: ()->Unit,onAccount: (() -> Unit)?,stacked: Boolean,modifier: Modifier=Modifier) {
+    val brand: @Composable ()->Unit={Column {Text("dqor",fontSize=24.sp,fontWeight=FontWeight.Bold); Text("Official public programme",style=MaterialTheme.typography.bodySmall)}}
+    val actions: @Composable ()->Unit={
+        onAccount?.let {TextButton(onClick=it,modifier=Modifier.heightIn(min=48.dp)) {Text("Account")}}
+        TextButton(onClick=onPreview,modifier=Modifier.heightIn(min=48.dp)) {Text("Demo preview")}
+    }
+    if(stacked) Column(modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+        brand()
+        FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {actions()}
+    } else Row(modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {brand()}
+        Column {actions()}
+    }
+}
+
+@Composable private fun PublishedNavigation(schedule: Boolean,onSchedule: (Boolean)->Unit,modifier: Modifier=Modifier) {
+    Row(modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        FilterChip(selected=!schedule,onClick={onSchedule(false)},label={Text("Overview")},modifier=Modifier.heightIn(min=48.dp))
+        FilterChip(selected=schedule,onClick={onSchedule(true)},label={Text("Programme")},modifier=Modifier.heightIn(min=48.dp))
+    }
+}
+
 @Composable private fun PublishedStatus(state: PublishedProgrammeState,onRefresh: ()->Unit) {
     Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceVariant) {
         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -121,7 +139,7 @@ fun PublishedProgrammeApp(state: PublishedProgrammeState,onRefresh: ()->Unit,onC
 
 @Composable private fun PublishedSessionCard(session: PublicSession,programme: PublicProgramme,saved: Boolean,expanded: Boolean,onDetail: ()->Unit,onSave: ()->Unit) {
     val motion=LocalAttendeeMotion.current
-    Surface(modifier=Modifier.testTag("public-session-${session.id}"),shape=MaterialTheme.shapes.medium,color=if(saved) Color(0xFFF8EFF2) else Color.White,border=BorderStroke(1.dp,if(saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
+    Surface(modifier=Modifier.testTag("public-session-${session.id}"),shape=MaterialTheme.shapes.medium,color=if(saved) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,border=BorderStroke(1.dp,if(saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
         Column(Modifier.animateContentSize(tween(motion.revealMillis)).padding(18.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             Text(session.timeLabel(programme.event.timezone),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
             Text(session.title,fontSize=21.sp,lineHeight=27.sp,fontWeight=FontWeight.SemiBold)
