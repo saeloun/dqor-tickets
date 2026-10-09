@@ -16,11 +16,12 @@ module ApplicationHelper
 
   # Social proof: how many passes are confirmed, and a few opt-in faces to show.
   def whos_coming_count
-    @whos_coming_count ||= Ticket.legacy.confirmed.count
+    @whos_coming_count ||= ConferenceInventory.confirmed.count
   end
 
   def whos_coming_faces(limit: 14)
-    User.publicly_attending.order(created_at: :desc).limit(limit)
+    emails = ConferenceInventory.confirmed.where.not(attendee_email: [ nil, "" ]).select(Arel.sql("lower(tickets.attendee_email)"))
+    User.where(public_attendee: true).where.not(name: [ nil, "" ]).where(email: emails).with_attached_avatar.order(created_at: :desc).limit(limit)
   end
 
   def entry_qr_svg(ticket)

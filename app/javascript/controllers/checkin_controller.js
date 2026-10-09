@@ -7,6 +7,7 @@ export default class extends Controller {
   connect() {
     this.connected = true
     this.busy = false
+    this.lastSecret = null
     this.updateSelection()
     this.initializeScanner()
   }
@@ -52,24 +53,30 @@ export default class extends Controller {
   }
 
   scan(secret) {
-    if (this.busy || document.hidden || this.cameraInterrupted || this.dialogTarget.open) return
-    if (secret === this.lastSecret && Date.now() - this.lastScan < 3000) return
+    if (this.busy || document.hidden || this.dialogTarget.open) return
+    if (this.cameraInterrupted) {
+      this.show("warning", "Camera paused. Tap Restart camera, then choose the back/rear camera. Attendee search remains available.")
+      return
+    }
+    if (secret === this.lastSecret) return
     this.lastSecret = secret
-    this.lastScan = Date.now()
     this.submitOne({ secret })
   }
 
   async submitOne(ticket) {
     if (this.busy) return
+    if (!ticket.secret) this.lastSecret = null
     this.setBusy(true)
     this.pauseScanner()
     this.show("warning", "Waiting for server confirmation…")
     try {
       const body = await this.request("/checkin", { ...ticket, date: this.dateTarget.value })
+      if (body.state !== "success" && body.state !== "warning") this.lastSecret = null
       this.show(body.state, body.message)
       this.updateCount(body)
       this.updateTicketStatus(body)
     } catch (error) {
+      this.lastSecret = null
       this.show("error", error.message)
     } finally {
       this.setBusy(false)
@@ -121,6 +128,7 @@ export default class extends Controller {
 
   async confirmBatch() {
     if (this.busy || !this.dialogTarget.open) return
+    this.lastSecret = null
     this.setBusy(true)
     this.outcomesTarget.replaceChildren()
     this.show("warning", "Waiting for batch results. Do not admit attendees until confirmed.")
@@ -197,8 +205,13 @@ export default class extends Controller {
   show(state, message) {
     if (!this.connected) return
     const safeState = ["success", "warning", "error"].includes(state) ? state : "error"
-    this.resultTarget.className = `checkin-result checkin-result--${safeState}`
-    this.resultTarget.textContent = message || "Check-in was not confirmed. Retry safely."
+    const className = `checkin-result checkin-result--${safeState}`
+    const text = message || "Check-in was not confirmed. Retry safely."
+    if (!this.resultTarget.hidden && this.resultTarget.className === className && this.resultTarget.textContent === text) return
+    this.resultTarget.className = className
+    this.resultTarget.textContent = text
     this.resultTarget.hidden = false
+    this.resultTarget.focus({ preventScroll: true })
+    this.resultTarget.scrollIntoView({ block: "nearest" })
   }
 }

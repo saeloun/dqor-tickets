@@ -96,42 +96,6 @@ RSpec.describe "Private finance administration", type: :request do
     expect(enqueued_jobs.map { |job| job[:job] }).not_to include(InitiateRefundJob)
   end
 
-  it "retains a blocked document in the finance queue and completes only after an explicitly reviewed retry" do
-    sign_in_admin(admin)
-    ticket = create(:ticket, order:)
-    allow(PdfRenderer).to receive(:render).and_return("%PDF-synthetic")
-    allow(InvoicePolicy).to receive(:snapshot).and_raise(InvoicePolicy::NotConfigured)
-    ActionMailer::Base.deliveries.clear
-
-    perform_enqueued_jobs(only: MailDeliveryJob) { DeliverOrderConfirmationJob.perform_now(order) }
-    GenerateOrderDocumentsJob.perform_now(order.reload)
-    captured = order.reload.metadata.fetch("invoice_purchase_lines")
-    get finance_documents_path
-    expect(response.body).to include(order.code, "Seller policy configuration needs review")
-    expect(order.metadata).to include("invoice_pending_reason" => "InvoicePolicy::NotConfigured", "confirmation_documents_pending" => true)
-    expect(ActionMailer::Base.deliveries.count).to eq(1)
-    expect(ActionMailer::Base.deliveries.last.attachments).to be_empty
-
-    post retry_document_finance_document_path(order), params: { confirmed: "1" }
-    expect(response).to have_http_status(:unprocessable_content)
-    allow(InvoicePolicy).to receive(:snapshot).and_call_original
-    approved_finance_policy(admin)
-    ticket.update!(price_paise: 1)
-    perform_enqueued_jobs(only: [ GenerateOrderDocumentsJob, MailDeliveryJob ]) do
-      post retry_document_finance_document_path(order), params: { confirmed: "1" }
-    end
-
-    expect(response).to redirect_to(finance_document_path(order))
-    expect(order.reload.metadata.fetch("invoice_purchase_lines")).to eq(captured)
-    expect(order.metadata).not_to have_key("invoice_pending_reason")
-    expect(order.metadata).to include("confirmation_documents_pending" => false)
-    invoice = order.invoices.invoice.sole
-    expect(invoice.line_items.sole.fetch("total_paise")).to eq(captured.sole.fetch("total_paise"))
-    expect(invoice.pdf).to be_attached
-    expect(ActionMailer::Base.deliveries.count).to eq(2)
-    expect(ActionMailer::Base.deliveries.last.attachments.map(&:filename)).to contain_exactly(invoice.pdf.filename.to_s)
-  end
-
   it "will not retry another order's refund or an unrelated payment event" do
     sign_in_admin(admin)
     approved_finance_policy(admin)

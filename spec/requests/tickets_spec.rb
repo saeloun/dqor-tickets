@@ -28,4 +28,111 @@ RSpec.describe "Tickets", type: :request do
     expect(unlimited_card.at_css(".ticket-availability")).to be_nil
     expect(unlimited_card.at_css("input[type=number]")["max"]).to eq("3")
   end
+
+  describe "ticket choices" do
+    let!(:early_bird) { create(:ticket_type, name: "Early Bird", slug: "conference-pass-early-bird", capacity: 0, position: 1) }
+    let!(:regular) { create(:ticket_type, name: "Regular Pass", slug: "conference-pass-regular", position: 2) }
+    let!(:late_bird) { create(:ticket_type, name: "Late Bird", slug: "conference-pass-late-bird", active: false, position: 3) }
+    let!(:supporter) { create(:ticket_type, name: "Supporter Pass", slug: "supporter-pass", position: 4) }
+    let!(:rails_girls) { create(:ticket_type, name: "Rails Girls Pune", slug: "rails-girls-pune", price_paise: 35_000, position: 5) }
+    let!(:add_on) { create(:ticket_type, name: "Explore Pune Day", slug: "explore-pune-day", requires_conference_pass: true, position: 6) }
+
+    it "puts an available conference pass and Rails Girls first, with one card and control per type" do
+      get tickets_store_path
+
+      document = response.parsed_body
+      expect(document.css(".tickets-grid--primary .ticket-card").map { |card| card["id"] }).to eq([ regular, rails_girls ].map { |type| "ticket_type_#{type.id}" })
+      expect(document.css(".ticket-card-title").map(&:text)).to eq([ regular, rails_girls, early_bird, late_bird, supporter, add_on ].map(&:name))
+      expect(document.css("form.checkout-form").size).to eq(1)
+      [ regular, rails_girls, supporter, add_on ].each do |type|
+        expect(document.css("input[name='checkout[quantities][#{type.id}]']").size).to eq(1)
+      end
+      expect(document.at_css(".ticket-choices a[href='#ticket_type_#{regular.id}']").text).to eq("DQOR tickets")
+      expect(document.at_css(".ticket-choices a[href='#ticket_type_#{rails_girls.id}']").text).to eq("Rails Girls tickets")
+    end
+
+    it "keeps sold-out and upcoming Rails Girls visible without enabling purchase" do
+      [ { capacity: 0 }, { capacity: 10, active: false } ].each do |attributes|
+        rails_girls.update!(attributes)
+        get tickets_store_path
+
+        card = response.parsed_body.at_css(".tickets-grid--primary #ticket_type_#{rails_girls.id}")
+        expect(card).to be_present
+        expect(card.at_css("input")).to be_nil
+        expect(card.at_css(".ticket-unavailable")).to be_present
+      end
+    end
+
+    it "uses the next available conference tier when the earlier tiers cannot be purchased" do
+      regular.update!(sales_end_at: 1.day.ago)
+      late_bird.update!(active: true, capacity: nil)
+
+      get tickets_store_path
+
+      expect(response.parsed_body.css(".tickets-grid--primary .ticket-card").map { |card| card["id"] }).to eq([ late_bird, rails_girls ].map { |type| "ticket_type_#{type.id}" })
+    end
+
+    it "falls back to the first visible conference tier when none are available" do
+      regular.update!(active: false)
+      early_bird.update!(hidden: true)
+
+      get tickets_store_path
+
+      expect(response.parsed_body.css(".tickets-grid--primary .ticket-card").map { |card| card["id"] }).to eq([ regular, rails_girls ].map { |type| "ticket_type_#{type.id}" })
+      expect(response.parsed_body.at_css("#ticket_type_#{early_bird.id}")).to be_nil
+    end
+
+    it "omits the Rails Girls shortcut and card when that choice is hidden or absent" do
+      rails_girls.update!(hidden: true)
+      get tickets_store_path
+
+      expect(response.parsed_body.at_css(".ticket-choices").text).to include("DQOR tickets")
+      expect(response.parsed_body.css(".ticket-choices a").map(&:text)).to eq([ "DQOR tickets" ])
+      expect(response.parsed_body.at_css("#ticket_type_#{rails_girls.id}")).to be_nil
+
+      rails_girls.destroy!
+      get tickets_store_path
+      expect(response.parsed_body.css(".ticket-choices a").map(&:text)).to eq([ "DQOR tickets" ])
+    end
+
+    it "offers Rails Girls on its own when all conference tiers are hidden" do
+      [ early_bird, regular, late_bird ].each { |type| type.update!(hidden: true) }
+      get tickets_store_path
+
+      expect(response.body).not_to include("DQOR tickets")
+      expect(response.parsed_body.css(".tickets-grid--primary .ticket-card").map { |card| card["id"] }).to eq([ "ticket_type_#{rails_girls.id}" ])
+    end
+
+    it "preserves private billing controls and retained facts on a checkout error" do
+      billing = {
+        gst_legal_name: "Synthetic GST Buyer", gstin: "27AAAAA0000A1Z5", billing_state_code: "27",
+        billing_address: "Synthetic billing street", billing_state_name: "Maharashtra", delivery_address: "Synthetic delivery street"
+      }
+      expect do
+        post orders_path, params: { checkout: billing.merge(buyer_name: "Ada", email: "ada@example.com", billing_details_requested: "1", quantities: { regular.id.to_s => "0" }) }
+      end.not_to change(Order, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      document = response.parsed_body
+      expect(document.at_css("details[data-cart-target='billingDetails'][open]")).to be_present
+      billing.each do |field, value|
+        input = document.at_css("#checkout_#{field}")
+        expect(input).to be_present
+        expect(input.name == "textarea" ? input.text : input["value"]).to eq(value)
+      end
+      expect(document.at_css("#checkout_gstin")["data-action"]).to eq("input->cart#updateBilling")
+      expect(document.at_css("input[data-cart-target='billingRequested']")).to be_present
+      expect(document.at_css("[data-cart-target='billingNotice'][role='status']")).to be_present
+      expect(response.body).to include("orders of ₹50,000 or more", "Billing details stay private")
+    end
+
+    it "retains both choices when checkout re-renders an invalid selection" do
+      post orders_path, params: { checkout: { buyer_name: "Ada", email: "ada@example.com", quantities: { regular.id.to_s => "0" } } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body.at_css(".alert").text).to include("select at least one ticket")
+      expect(response.parsed_body.css(".tickets-grid--primary .ticket-card").map { |card| card["id"] }).to eq([ regular, rails_girls ].map { |type| "ticket_type_#{type.id}" })
+      expect(response.parsed_body.css(".ticket-choices a").map(&:text)).to eq([ "DQOR tickets", "Rails Girls tickets" ])
+    end
+  end
 end

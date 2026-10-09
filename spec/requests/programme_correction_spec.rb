@@ -49,9 +49,9 @@ RSpec.describe "Day 1 programme correction", type: :request do
   end
 
   it "shows the corrected party date and exact attendee label with the real count" do
-    create(:ticket, order: create(:order, :paid))
-    create(:ticket, order: create(:order, :paid))
-    create(:ticket_type, slug: "conference-pass-regular")
+    conference_pass = create(:ticket_type, slug: "conference-pass-regular")
+    create(:ticket, ticket_type: conference_pass, order: create(:order, :paid))
+    create(:ticket, ticket_type: conference_pass, order: create(:order, :paid))
     [ root_path, tickets_store_path ].each do |path|
       get path
       expect(response.body).to include("Conference afterparty (Oct 8)", "Rails Developers attending")

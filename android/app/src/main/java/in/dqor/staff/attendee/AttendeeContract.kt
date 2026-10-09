@@ -37,7 +37,7 @@ data class AttendeePassPage(val passes: List<AttendeePass>, val moreResults: Boo
 data class AttendeeSnapshot(val identity: AttendeeIdentity, val passes: List<AttendeePass>,
     val moreResults: Boolean, val nextCursor: String?, val checkedAt: Instant)
 enum class AttendeeProblem { UNAVAILABLE, OFFLINE, TIMEOUT, INVALID_CALLBACK, INVALID_RESPONSE, EXPIRED, REVOKED, IDENTITY_CHANGED, RATE_LIMITED }
-class AttendeeFailure(val problem: AttendeeProblem, val retryAfterSeconds: Int? = null) : Exception(problem.name)
+class AttendeeFailure(val problem: AttendeeProblem) : Exception(problem.name)
 
 enum class AttendeeRevocation { REVOKED, ALREADY_INVALID }
 

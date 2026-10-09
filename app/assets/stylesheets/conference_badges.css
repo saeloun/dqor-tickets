@@ -1,0 +1,30 @@
+@page { size: A4 portrait; margin: 0; }
+.badge-admin, .badge-document { margin: 0; color: #26211e; font-family: Inter, Arial, sans-serif; font-size: 16px; line-height: 1.4; background: #f4f1ec; }
+.badge-editor { max-width: 70ch; margin: 2rem auto; padding: 1rem; }
+.badge-editor a, .badge-instructions a { color: #862e3d; }
+.badge-editor h1 { line-height: 1.2; }
+.badge-selection { display: grid; grid-template-columns: auto 1fr; gap: .5rem; padding: 1rem 0; border-bottom: 1px solid #bdb3a8; }
+.badge-selection > :nth-child(n+3) { grid-column: 2; }
+.badge-selection input[type="text"] { max-width: 100%; min-width: 0; box-sizing: border-box; padding: .5rem; font: inherit; }
+.badge-editor button { padding: .65rem 1rem; margin: .5rem .5rem .5rem 0; font: inherit; background: #862e3d; color: white; border: 1px solid #862e3d; cursor: pointer; }
+.badge-editor :focus-visible, .badge-instructions a:focus-visible { outline: 3px solid #862e3d; outline-offset: 3px; }
+.badge-error, .badge-selection strong { color: #862e3d; }
+.badge-instructions { max-width: 70ch; margin: 1rem auto; padding: 1rem; }
+.badge-sheet { width: 210mm; height: 297mm; box-sizing: border-box; padding: 15mm; margin: 0 auto 1rem; display: grid; grid-template-columns: 90mm 90mm; grid-template-rows: 120mm 120mm; background: white; break-after: page; }
+.badge-sheet:last-child { break-after: auto; }
+.conference-badge { position: relative; width: 90mm; height: 120mm; padding: 4mm; box-sizing: border-box; border: .2mm dashed #8a8a8a; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 18mm 6mm 22mm 19mm 8mm 34mm 4mm; justify-items: center; text-align: center; background: white; }
+.badge-brand { grid-row: 1; align-self: start; display: flex; align-items: center; gap: 3mm; width: 100%; padding-bottom: 2mm; border-bottom: .6mm solid #862e3d; }
+.badge-brand img { width: 12mm; height: 12mm; object-fit: contain; }
+.badge-brand p { margin: 0; text-align: left; font-family: Georgia, serif; font-weight: 700; font-size: 14pt; line-height: 1.15; }
+.badge-brand span { display: block; font: 9pt Inter, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.badge-event { grid-row: 2; align-self: center; font-size: 9pt; letter-spacing: .08em; margin: 0; }
+.badge-name { grid-row: 3; align-self: center; margin: 0; font-size: 24pt; line-height: 1.2; font-weight: 700; overflow-wrap: anywhere; }
+.badge-name--long { font-size: 18pt; }
+.badge-name--extended { font-size: 10pt; }
+.badge-company { grid-row: 4; align-self: start; font-size: 10pt; line-height: 1.2; margin: 0; padding-top: 2mm; overflow-wrap: anywhere; }
+.badge-warning { grid-row: 5; align-self: center; font-size: 9pt; color: #862e3d; font-weight: 700; line-height: 1.2; margin: 0; }
+.badge-qr { grid-row: 6; width: 34mm; height: 34mm;  background: white; }
+.badge-qr svg { display: block; width: 100%; height: 100%; }
+.badge-footer { grid-row: 7; align-self: center; font-size: 8pt; margin: 0; }
+@media screen and (max-width: 820px) { .badge-instructions { margin: 0; } .badge-document { overflow-x: auto; } }
+@media print { .badge-instructions { display: none; } .badge-document { background: white; } .badge-sheet { margin: 0; } }

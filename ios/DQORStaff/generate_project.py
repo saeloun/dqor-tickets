@@ -27,8 +27,8 @@ for target,folder,kind in [('DQORStaff','Sources','application'),('DQORStaffTest
     phases = [phase]
     if ext == 'app':
         resources = []; resource_builds = []
-        for resource in sorted([*(root/'Resources').glob('*.png'), *(root/'Resources').glob('*.xcassets')]):
-            file_type = 'folder.assetcatalog' if resource.suffix == '.xcassets' else 'image.png'
+        for resource in sorted([*(root/'Resources').glob('*.png'), *(root/'Resources').glob('*.xcassets'), *(root/'Resources').glob('*.xcprivacy')]):
+            file_type = {'.xcassets': 'folder.assetcatalog', '.png': 'image.png', '.xcprivacy': 'text.xml'}[resource.suffix]
             f = add('Resources/'+resource.name, '{isa = PBXFileReference; lastKnownFileType = '+file_type+'; path = "'+resource.name+'"; sourceTree = "<group>";}')
             resources.append(f); resource_builds.append(add('resource-build/'+resource.name, '{isa = PBXBuildFile; fileRef = '+f+';}'))
         groups.append(add('Resources', '{isa = PBXGroup; children = '+seq(resources)+'; path = Resources; sourceTree = "<group>";}'))

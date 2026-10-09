@@ -4,14 +4,17 @@ export default class extends Controller {
   static values = { url: String, active: Boolean }
 
   connect() {
-    if (this.activeValue) this.timer = window.setInterval(() => this.reload(), 3000)
+    this.disconnect()
+    if (this.activeValue) this.timer = window.setInterval(() => this.reload(), 8000)
   }
 
   disconnect() {
     window.clearInterval(this.timer)
+    this.timer = null
   }
 
   reload() {
-    this.element.src = `${this.urlValue}?poll=${Date.now()}`
+    const frame = this.element.closest("turbo-frame")
+    if (frame && !frame.hasAttribute("busy")) frame.src = `${this.urlValue}?poll=${Date.now()}`
   }
 }

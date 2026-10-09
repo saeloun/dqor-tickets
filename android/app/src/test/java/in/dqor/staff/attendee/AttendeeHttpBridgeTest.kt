@@ -15,9 +15,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class AttendeeHttpBridgeTest {
     private class Headers {
-        val values = mutableListOf<Pair<String,String>>()
-        fun getFirst(name: String): String? = values.firstOrNull {it.first.equals(name,true)}?.second
-        fun add(name: String,value: String) {values += name to value}
+        val values = linkedMapOf<String,String>()
+        fun getFirst(name: String): String? = values.entries.firstOrNull {it.key.equals(name,true)}?.value
+        fun add(name: String,value: String) {values[name]=value}
     }
     private class Exchange(private val socket: Socket) {
         val requestMethod: String
@@ -173,36 +173,6 @@ class AttendeeHttpBridgeTest {
         failure(AttendeeProblem.INVALID_RESPONSE) { AttendeeHttpBridge { AttendeeWireResponse(401, "{}") }.revoke(AttendeeCredential(token)) }
         failure(AttendeeProblem.UNAVAILABLE) { AttendeeHttpBridge { AttendeeWireResponse(401, error("invalid_grant")) }.revoke(AttendeeCredential(token)) }
     }
-    @Test fun actualHttp429PreservesCanonicalRetryAfterAndRejectsMalformedHeadersWithBoundedWait() = runBlocking {
-        val server = LocalHttpServer()
-        var duplicateHeader = false
-        server.createContext("/") { exchange ->
-            exchange.responseHeaders.add("Retry-After", "180")
-            if (duplicateHeader) exchange.responseHeaders.add("Retry-After", "180")
-            val body = error("rate_limited").toByteArray()
-            exchange.sendResponseHeaders(429, body.size.toLong()); exchange.responseBody.write(body); exchange.close()
-        }
-        server.start()
-        try {
-            val bridge = AttendeeHttpBridge(LoopbackTransport("http://127.0.0.1:${server.address.port}"))
-            try { bridge.account(AttendeeCredential(token)); fail("Expected bounded rate limit") }
-            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.RATE_LIMITED, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
-            try { bridge.revoke(AttendeeCredential(token)); fail("Expected bounded logout rate limit") }
-            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.RATE_LIMITED, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
-            duplicateHeader = true
-            try { bridge.account(AttendeeCredential(token)); fail("Accepted duplicate Retry-After headers") }
-            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.INVALID_RESPONSE, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
-        } finally { server.stop(0) }
-        for (header in listOf(null, "0", "179", "181", "0180", "+180", "180.0", "180, 180", "999999999999999999999", "Sat, 03 Oct 2026 12:03:00 GMT")) {
-            val bridge = AttendeeHttpBridge { AttendeeWireResponse(429, error("rate_limited"), header) }
-            try { bridge.exchange(AttendeeExchange(code, "v".repeat(43))); fail("Accepted noncanonical Retry-After") }
-            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.INVALID_RESPONSE, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
-        }
-        for (body in listOf("{}", error("made_up"), "{\"schema_version\":\"1\",\"error\":{\"code\":\"rate_limited\"}}")) {
-            try { AttendeeHttpBridge { AttendeeWireResponse(429, body, "180") }.account(AttendeeCredential(token)); fail("Accepted noncanonical 429 body") }
-            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.INVALID_RESPONSE, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
-        }
-    }
     @Test fun productionTransportGateAndRequestAllowlistFailClosed() {
         failure(AttendeeProblem.UNAVAILABLE) { AttendeeFixedHttpsTransport().send(AttendeeWireRequest("GET","/api/native/attendee/v1/account",AttendeeCredential(token),null)) }
         listOf("/api/public/v1/dqor/programme","/api/attendee/v1/account","/api/staff/checkins","/api/native/attendee/v1/session#secret","/api/native/attendee/v1/token?code=x","/api/native/attendee/v1/passes?cursor=01").forEach { path ->
@@ -223,7 +193,7 @@ class AttendeeHttpBridgeTest {
         }
     }
     @Test fun publishedTypedErrorsAndNullablePassDatesDecodeCorrectly() = runBlocking {
-        failure(AttendeeProblem.RATE_LIMITED) {AttendeeHttpBridge {AttendeeWireResponse(429,error("rate_limited"),"180")}.account(AttendeeCredential(token))}
+        failure(AttendeeProblem.RATE_LIMITED) {AttendeeHttpBridge {AttendeeWireResponse(429,error("rate_limited"))}.account(AttendeeCredential(token))}
         failure(AttendeeProblem.UNAVAILABLE) {AttendeeHttpBridge {AttendeeWireResponse(503,error("configuration_unavailable"))}.account(AttendeeCredential(token))}
         val pass="{\"id\":\"21\",\"type\":{\"id\":\"3\",\"name\":\"Synthetic pass\"},\"status\":\"confirmed\",\"admission\":{\"starts_on\":null,\"ends_on\":null},\"entry\":[{\"date\":\"2026-10-08\",\"eligible\":true,\"checked_in_at\":null}]}"
         val bridge=AttendeeHttpBridge {AttendeeWireResponse(200,"{$envelope,\"passes\":[$pass],\"more_results\":false,\"next_cursor\":null}")}

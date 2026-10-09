@@ -13,6 +13,8 @@ When and where<%= ticket_types.size > 1 ? " — #{ticket_type.name}" : "" %>:
 <% end %>
 More on the venue, travel and schedule: https://deccanqueenonrails.com
 
+<%= render "order_mailer/agenda" %>
+
 <% unassigned = @active_tickets.reject(&:assigned?) %>
 <% if unassigned.any? %>
 You've got <%= pluralize(@order.tickets.count, "ticket") %>, and <%= unassigned.size == @order.tickets.count ? "nobody is named on them yet" : "#{pluralize(unassigned.size, "ticket")} still #{unassigned.one? ? "has" : "have"} nobody named on #{unassigned.one? ? "it" : "them"}" %>.

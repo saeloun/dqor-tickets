@@ -24,8 +24,8 @@ RSpec.describe "Finance readiness screens", type: :system do
     admin = create(:admin_user, password: "test-password-123")
     order = create(:order, :paid, metadata: { "invoice_pending_reason" => "InvoicePolicy::NotConfigured" })
     visit new_session_path
-    fill_in "Enter your email address", with: admin.email
-    fill_in "Enter your password", with: "test-password-123"
+    fill_in "Email address", with: admin.email
+    fill_in "Password", with: "test-password-123"
     click_button "Sign in"
     expect(page).to have_current_path("/avo/dashboard")
     visit new_finance_policy_path

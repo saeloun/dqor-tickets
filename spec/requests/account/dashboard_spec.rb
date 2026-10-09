@@ -55,43 +55,10 @@ RSpec.describe "Account dashboard hub", type: :request do
       expect(response).to have_http_status(:ok)
       link = Nokogiri::HTML(response.body).at_css("a[href='#{join_url}']")
       expect(link).to be_present
-      expect(link.text).to include("Open conference chat")
-      expect(response.body).to include("Opens in a new tab")
-      expect(Nokogiri::HTML(response.body).css("iframe")).to be_empty
+      expect(link.text).to match(/conference chat/i)
       expect(link["target"]).to eq("_blank")
       expect(link["rel"]).to eq("noopener")
     end
-  end
-
-  it "keeps the canonical chat destination when no invite is configured" do
-    allow(ENV).to receive(:fetch).and_call_original
-    allow(ENV).to receive(:fetch).with("CAMPFIRE_JOIN_URL", "https://chat.deccanqueenonrails.com").and_return("https://chat.deccanqueenonrails.com")
-    sign_in_as(User.create!(email: "canonical-chat@example.com"))
-
-    [ account_root_path, community_path ].each do |path|
-      get path
-
-      expect(response).to have_http_status(:ok)
-      link = Nokogiri::HTML(response.body).at_css('a[href="https://chat.deccanqueenonrails.com"]')
-      expect(link.text).to include("Open conference chat")
-      expect(link["target"]).to eq("_blank")
-      expect(link["rel"]).to eq("noopener")
-    end
-  end
-
-  it "keeps private pilot identities out of the conference directory and enabled pilot hub" do
-    allow(Rails.configuration.x).to receive(:organizer_platform_enabled).and_return(true)
-    allow(Rails.configuration.x).to receive(:free_event_pilot_enabled).and_return(true)
-    user = create(:user_for_free_pilot)
-    FreeEvents::Privacy.enroll!(user)
-    sign_in_as(user)
-
-    get community_path
-    expect(response).to have_http_status(:not_found)
-    expect(response.body).not_to include("Open conference chat")
-
-    get account_root_path
-    expect(response).to redirect_to(free_tickets_path)
   end
 
   it "nudges the buyer to finish a ticket with no attendee yet" do

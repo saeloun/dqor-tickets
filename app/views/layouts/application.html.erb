@@ -320,6 +320,7 @@
               var target = document.getElementById(id);
               if (!target) return;
               e.preventDefault();
+              if (a.closest('.ticket-choices')) target.focus({ preventScroll: true });
               var navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 68;
               var top = target.getBoundingClientRect().top + window.scrollY - navHeight - 8;
               window.scrollTo({ top: top, behavior: 'smooth' });
