@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: b79793917284133f5c23f076ac2167ae16abb2d5
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -42,6 +44,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: b79793917284133f5c23f076ac2167ae16abb2d5
 
       - name: Install libvips
         run: |
@@ -64,6 +68,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: b79793917284133f5c23f076ac2167ae16abb2d5
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -105,8 +111,24 @@ jobs:
       DATABASE_URL: "postgres://postgres:postgres@localhost:5432/dqor_tickets_test"
       CHROME_NO_SANDBOX: "1"
     steps:
+      - name: Checkout verification harness
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: verification-harness
+          persist-credentials: false
+
+      - name: Preserve bounded date observer
+        run: |
+          test "$(git -C verification-harness rev-parse HEAD)" = "$GITHUB_SHA"
+          git -C verification-harness log -1 --format='Verified harness commit: %H%nVerified harness tree: %T'
+          echo "d8202166f5959d54f3acbfa5e0ee481375f9e5210d1c9252c4566183a4adfd18  verification-harness/script/scanner_date_verification_observer.rb" | sha256sum --check
+          cp verification-harness/script/scanner_date_verification_observer.rb "$RUNNER_TEMP/scanner_date_verification_observer.rb"
+
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: b79793917284133f5c23f076ac2167ae16abb2d5
 
       - name: Install PDF rendering dependencies
         run: |
@@ -131,7 +153,12 @@ jobs:
         run: bin/rails db:test:prepare
 
       - name: Run RSpec
-        run: bundle exec rspec
+        run: |
+          test "$(git rev-parse HEAD)" = "b79793917284133f5c23f076ac2167ae16abb2d5"
+          test "$(git rev-parse 'HEAD^{tree}')" = "ac03b473b521a1f009aa5d634f65c2cce5248d4b"
+          git log -1 --format='Verified candidate commit: %H%nVerified candidate tree: %T'
+          echo "d8202166f5959d54f3acbfa5e0ee481375f9e5210d1c9252c4566183a4adfd18  $RUNNER_TEMP/scanner_date_verification_observer.rb" | sha256sum --check
+          bundle exec rspec --seed 12307 --require "$RUNNER_TEMP/scanner_date_verification_observer.rb"
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v7
@@ -168,6 +195,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
+          ref: b79793917284133f5c23f076ac2167ae16abb2d5
           persist-credentials: false
       - name: Install distro CLI without starting services
         timeout-minutes: 3
