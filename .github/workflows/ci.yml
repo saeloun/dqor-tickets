@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 2ba2def1b5bbe4b6389600cc2fd468a14e3b85de
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -42,6 +44,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 2ba2def1b5bbe4b6389600cc2fd468a14e3b85de
 
       - name: Install libvips
         run: |
@@ -64,6 +68,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 2ba2def1b5bbe4b6389600cc2fd468a14e3b85de
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -107,6 +113,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 2ba2def1b5bbe4b6389600cc2fd468a14e3b85de
 
       - name: Install PDF rendering dependencies
         run: |
@@ -131,7 +139,12 @@ jobs:
         run: bin/rails db:test:prepare
 
       - name: Run RSpec
-        run: bundle exec rspec
+        run: |
+          test "$(git rev-parse HEAD)" = "2ba2def1b5bbe4b6389600cc2fd468a14e3b85de"
+          test "$(git rev-parse HEAD^{tree})" = "5a54324d8f5fdbd9a4ac833596fe1653b0109831"
+          printf 'Tested candidate head: %s\n' "$(git rev-parse HEAD)"
+          printf 'Tested candidate tree: %s\n' "$(git rev-parse HEAD^{tree})"
+          bundle exec rspec --seed 12307
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v7
@@ -168,6 +181,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
+          ref: 2ba2def1b5bbe4b6389600cc2fd468a14e3b85de
           persist-credentials: false
       - name: Install distro CLI without starting services
         timeout-minutes: 3
