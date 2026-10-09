@@ -119,6 +119,8 @@ enum PublicProgrammeFormatting {
     }
 }
 
+private enum DQORTab: Hashable { case home, programme, pass, you }
+
 struct PublicEventRootView: View {
     @ObservedObject var demoStore: StaffStore
     @StateObject private var programme: PublicProgrammeStore
@@ -129,6 +131,7 @@ struct PublicEventRootView: View {
     #endif
     @Environment(\.scenePhase) private var scenePhase
     @State private var clearing = false
+    @State private var selectedTab: DQORTab = .home
     init(demoStore: StaffStore) {
         self.demoStore = demoStore
         #if DEBUG
@@ -145,82 +148,113 @@ struct PublicEventRootView: View {
         #endif
     }
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    HStack {
-                        Text("DQOR").font(.title3.weight(.bold)).tracking(2)
-                        Spacer()
-                        Text("PUNE").font(.caption.weight(.semibold)).tracking(1.2)
-                    }
-                    if programme.snapshot != nil {
-                        EventArtwork(showsHeadline: false).aspectRatio(1.25, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 24)).accessibilityHidden(true)
-                    }
-                    PublicProgrammeStatus(store: programme)
-                    if programme.snapshot == nil { refreshButton.buttonStyle(.borderedProminent).foregroundStyle(AttendeeStyle.canvas).controlSize(.large) }
-                    if let snapshot = programme.snapshot {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(snapshot.event.title).font(.system(.largeTitle, design: .serif).weight(.medium))
-                                .accessibilityIdentifier("publicEventTitle")
-                            Text("Good company. Great possibilities.").font(.body).foregroundStyle(AttendeeStyle.secondary)
-                        }
-                        Label("\(PublicProgrammeFormatting.date(snapshot.event.startDate, timezone: snapshot.event.timezone)) – \(PublicProgrammeFormatting.date(snapshot.event.endDate, timezone: snapshot.event.timezone))", systemImage: "calendar")
-                        Label(snapshot.event.venue, systemImage: "mappin.and.ellipse")
-                        NavigationLink { PublicScheduleView(store: programme) } label: {
-                            HStack { Text("Explore the programme"); Spacer(); Image(systemName: "arrow.right") }
-                                .font(.headline).frame(maxWidth: .infinity, minHeight: 52)
-                                .padding(.horizontal, 16).foregroundStyle(AttendeeStyle.canvas)
-                                .background(AttendeeStyle.ink, in: RoundedRectangle(cornerRadius: 14))
-                        }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("publicSchedule")
-                        refreshButton.buttonStyle(.bordered).controlSize(.large)
-                    } else if !programme.loading {
-                        ContentUnavailableView(programme.cleared ? "Your local programme is cleared" : "Programme unavailable", systemImage: programme.cleared ? "checkmark.shield" : "wifi.exclamationmark", description: Text(programme.cleared ? "Load the public programme when you’re ready. Saved sessions have also been removed." : "The published programme will appear when a connection is available."))
-                    }
-                    VStack(alignment: .leading, spacing: 16) {
-                        Label("Your tickets", systemImage: "ticket").font(.title3.weight(.semibold))
-                        NavigationLink { attendeeAccount } label: { Label("Your account", systemImage: "person.crop.circle").frame(minHeight: 48) }.accessibilityIdentifier("attendeeAccount")
-                        Text("Open your existing tickets on the official website in your browser. Native sign-in and passes are not connected.")
-                            .foregroundStyle(AttendeeStyle.secondary)
-                        Link(destination: URL(string: "https://deccanqueenonrails.com/tickets/mine")!) {
-                            Label("Open tickets on the website", systemImage: "arrow.up.right.square").frame(minHeight: 48)
-                        }.accessibilityIdentifier("officialTickets")
-                        Link(destination: URL(string: "https://deccanqueenonrails.com")!) {
-                            Label("Visit the event website", systemImage: "safari").frame(minHeight: 48)
-                        }
-                    }.padding(24).background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 20))
-                    Divider()
-                    Text("A place for the moments that bring us together.").font(.system(.title2, design: .serif))
-                    NavigationLink { StaffRootView(store: demoStore) } label: {
-                        Label("Open offline staff & design demo", systemImage: "testtube.2").frame(minHeight: 48)
-                    }.accessibilityIdentifier("offlineDemo")
-                    Text("The demo contains fictional events, attendees and passes. It cannot change live attendance.")
-                        .font(.footnote).foregroundStyle(AttendeeStyle.secondary)
-                    Button("Clear local programme & saved sessions", role: .destructive) { clearing = true }
-                        .frame(minHeight: 48).disabled(programme.loading && programme.cleared)
-                        .accessibilityIdentifier("clearPublicProgramme")
-                    Text("The programme stays in memory. Saved session references stay on this device until cleared or withdrawn. No account, ticket or staff data is downloaded.")
-                        .font(.footnote).foregroundStyle(AttendeeStyle.secondary)
-                    #if DEBUG
-                    if programme.isFixture { PublicProgrammePreviewControls(store: programme) }
-                    #endif
-                }.padding(24).frame(maxWidth: 640).modifier(AttendeeReveal())
-            }.frame(maxWidth: .infinity).background(AttendeeStyle.canvas)
-                .foregroundStyle(AttendeeStyle.ink).tint(AttendeeStyle.accent)
-                .navigationTitle("Deccan Queen on Rails").navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button { clearing = true } label: { Label("Clear local programme and saved sessions", systemImage: "trash") }
-                            .disabled(programme.loading && programme.cleared).accessibilityIdentifier("clearPublicProgrammeToolbar")
-                    }
+        TabView(selection: $selectedTab) {
+            NavigationStack { home }
+                .tabItem { Label("Home", systemImage: "house") }.tag(DQORTab.home)
+            NavigationStack {
+                PublicScheduleView(store: programme).toolbar { homeToolbar }
+            }.tabItem { Label("Programme", systemImage: "calendar") }.tag(DQORTab.programme)
+            NavigationStack {
+                DQORPassView(store: attendee) { selectedTab = .you }.toolbar { homeToolbar }
+            }.tabItem { Label("Pass", systemImage: "ticket") }.tag(DQORTab.pass)
+            NavigationStack { attendeeAccount.toolbar { homeToolbar } }
+                .tabItem { Label("You", systemImage: "person.crop.circle") }.tag(DQORTab.you)
+        }.tint(DQORStyle.ink)
+            .toolbarBackground(DQORStyle.canvas, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
+            .onOpenURL { attendee.receiveExternalCallback($0) }
+            .task { programme.refresh(automatic: true) }
+            .onChange(of: selectedTab) { old, new in
+                if old == .you && new != .you { attendee.cancelLogin() }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { programme.refresh(automatic: true); attendee.foreground() }
+            }
+            .overlay {
+                if scenePhase != .active && attendee.phase == .ready {
+                    DQORStyle.canvas.overlay { Label("Private information hidden", systemImage: "lock").font(.headline).padding() }.ignoresSafeArea()
                 }
-                .alert("Clear the programme and saved sessions on this device?", isPresented: $clearing) {
-                    Button("Clear local data", role: .destructive) { Task { await programme.clear() } }
-                    Button("Cancel", role: .cancel) {}
+            }
+            .alert("Clear the programme and saved sessions on this device?", isPresented: $clearing) {
+                Button("Clear local data", role: .destructive) { Task { await programme.clear() } }
+                Button("Cancel", role: .cancel) {}
+            }
+            #if DEBUG
+            .environment(\.openURL, OpenURLAction { url in
+                ProcessInfo.processInfo.arguments.contains("--website-action-failure") ? .discarded : .systemAction(url)
+            })
+            #endif
+    }
+    private var home: some View {
+        List {
+            Group {
+                DQORRowCopy(text: "Make room\nfor the unexpected.", emphasized: true, size: .largeTitle)
+                    .fixedSize(horizontal: false, vertical: true)
+                DQORRowCopy(text: "Your event, all in one place.", size: .body)
+                Button { selectedTab = .programme } label: { DQORHero() }
+                    .buttonStyle(AttendeePressStyle()).accessibilityIdentifier("homeHeroProgramme")
+                    .accessibilityLabel("Explore the DQOR programme")
+                PublicProgrammeStatus(store: programme)
+                if let snapshot = programme.snapshot {
+                    VStack(alignment: .leading, spacing: 8) {
+                        DQORRowCopy(text: snapshot.event.title, emphasized: true).accessibilityIdentifier("publicEventTitle")
+                        DQORRowCopy(text: "\(PublicProgrammeFormatting.date(snapshot.event.startDate, timezone: snapshot.event.timezone)) – \(PublicProgrammeFormatting.date(snapshot.event.endDate, timezone: snapshot.event.timezone))", size: .body)
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Image(systemName: "mappin.and.ellipse").accessibilityHidden(true)
+                            DQORRowCopy(text: snapshot.event.venue, size: .body)
+                        }.foregroundStyle(DQORStyle.secondary)
+                    }.fixedSize(horizontal: false, vertical: true)
+                    DQORRowCopy(text: "Your next move", emphasized: true, size: .title)
+                    Button { selectedTab = .programme } label: {
+                        DQORActionRow(title: "Programme", detail: "Sessions, times and saved talks.", symbol: "calendar")
+                    }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("publicSchedule")
+                } else if !programme.loading {
+                    ContentUnavailableView(programme.cleared ? "Your local programme is cleared" : "Programme unavailable", systemImage: programme.cleared ? "checkmark.shield" : "wifi.exclamationmark", description: Text(programme.cleared ? "Load the public programme when you’re ready. Saved sessions have also been removed." : "The published programme will appear when a connection is available."))
                 }
-                .onOpenURL { attendee.receiveExternalCallback($0) }
-                .task { programme.refresh(automatic: true) }
-                .onChange(of: scenePhase) { _, phase in if phase == .active { programme.refresh(automatic: true) } }
+                Button { selectedTab = .pass } label: {
+                    DQORActionRow(title: "Your pass", detail: "Keep actual ticket access close.", symbol: "ticket")
+                }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("homePass")
+                Button { selectedTab = .you } label: {
+                    DQORActionRow(title: "Your account", detail: "Profile, privacy and preferences.", symbol: "person.crop.circle")
+                }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("attendeeAccount")
+                refreshButton.buttonStyle(DQORPrimaryButtonStyle())
+                DQORWebsiteAction(destination: .tickets, identifier: "officialTickets")
+                Divider()
+                Button(role: .destructive) { clearing = true } label: {
+                    DQORRowCopy(text: "Clear local programme & saved sessions", size: .body)
+                        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).contentShape(Rectangle())
+                }.buttonStyle(AttendeePressStyle()).disabled(programme.loading && programme.cleared)
+                    .accessibilityIdentifier("clearPublicProgramme")
+                DQORRowCopy(text: "Saved sessions stay on this device until cleared or withdrawn. Clearing them does not sign you out of a website or change your tickets.", size: .footnote)
+                NavigationLink { StaffRootView(store: demoStore) } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "testtube.2").accessibilityHidden(true)
+                        DQORRowCopy(text: "Open offline staff & design demo", emphasized: true)
+                    }.frame(minHeight: 48)
+                }.accessibilityIdentifier("offlineDemo")
+                DQORRowCopy(text: "The demo uses fictional attendees and passes. It cannot change live attendance.", size: .footnote)
+                #if DEBUG
+                if programme.isFixture { PublicProgrammePreviewControls(store: programme) }
+                #endif
+            }.modifier(DQORListRows())
+        }.modifier(DQORListAppearance()).modifier(AttendeeReveal())
+            .navigationTitle("DQOR").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { selectedTab = .you } label: { Label("Your account", systemImage: "person.crop.circle") }
+                        .accessibilityIdentifier("homeAccountToolbar")
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { clearing = true } label: { Label("Clear local programme and saved sessions", systemImage: "trash") }
+                        .disabled(programme.loading && programme.cleared).accessibilityIdentifier("clearPublicProgrammeToolbar")
+                }
+            }
+    }
+    @ToolbarContentBuilder
+    private var homeToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { selectedTab = .home } label: { Label("Home", systemImage: "chevron.left") }
+                .accessibilityIdentifier("BackButton")
         }
     }
     @ViewBuilder
@@ -251,12 +285,12 @@ struct PublicProgrammeStatus: View {
             }
             if let message = store.message { Text(message).font(.subheadline).accessibilityIdentifier("programmeError") }
             if !store.loading, !store.isStale, store.snapshot != nil {
-                Text("Programme revalidated").font(.caption).foregroundStyle(AttendeeStyle.secondary)
+                Text("Programme revalidated").font(.caption).foregroundStyle(DQORStyle.secondary)
                     .accessibilityIdentifier("programmeFresh")
             }
         }.fixedSize(horizontal: false, vertical: true).padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 16))
+            .background(DQORStyle.card, in: RoundedRectangle(cornerRadius: 12))
             .accessibilityElement(children: .contain)
     }
 }
@@ -268,10 +302,12 @@ struct PublicScheduleView: View {
     @State private var date = ""
     @FocusState private var searching: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var normalizedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var hasFilters: Bool { savedOnly || !date.isEmpty || !normalizedQuery.isEmpty }
     private var sessions: [PublicProgramme.Session] {
         (store.snapshot?.sessions ?? []).filter {
             (!savedOnly || store.savedIDs.contains($0.id)) && (date.isEmpty || $0.localDate == date) &&
-            (query.isEmpty || [$0.title, $0.abstract ?? "", $0.speakerName ?? "", $0.room ?? ""].joined(separator: " ").localizedCaseInsensitiveContains(query))
+            (normalizedQuery.isEmpty || [$0.title, $0.abstract ?? "", $0.speakerName ?? "", $0.room ?? ""].joined(separator: " ").localizedCaseInsensitiveContains(normalizedQuery))
         }
     }
     private var dates: [String] { Set(store.snapshot?.sessions.compactMap(\.localDate) ?? []).sorted() }
@@ -280,8 +316,8 @@ struct PublicScheduleView: View {
             LazyVStack(alignment: .leading, spacing: 24) {
                 PublicProgrammeStatus(store: store)
                 if let snapshot = store.snapshot {
-                    Text(snapshot.event.title).font(.system(.title2, design: .serif).weight(.medium))
-                    Text("Times in \(snapshot.event.timezone)").font(.subheadline).foregroundStyle(AttendeeStyle.secondary)
+                    Text(snapshot.event.title).font(.system(.title2, design: .default).weight(.medium))
+                    Text("Times in \(snapshot.event.timezone)").font(.subheadline).foregroundStyle(DQORStyle.secondary)
                     Picker("Schedule view", selection: $savedOnly) {
                         Text("All sessions").tag(false)
                         Text("Saved").tag(true)
@@ -290,14 +326,24 @@ struct PublicScheduleView: View {
                         Text("All days").tag("")
                         ForEach(dates, id: \.self) { value in Text(PublicProgrammeFormatting.date(value, timezone: snapshot.event.timezone)).tag(value) }
                     }.pickerStyle(.menu).accessibilityIdentifier("publicDayFilter")
-                    Text("Find a session or speaker").font(.subheadline).foregroundStyle(AttendeeStyle.secondary)
+                    Text("Find a session or speaker").font(.subheadline).foregroundStyle(DQORStyle.secondary)
                     TextField("Search programme", text: $query).textFieldStyle(.roundedBorder).focused($searching)
                         .accessibilityLabel("Find a session or speaker")
                         .onSubmit { searching = false }
                         .submitLabel(.search).accessibilityIdentifier("publicProgrammeSearch")
+                    if !query.isEmpty {
+                        Button { query = ""; searching = false } label: {
+                            Label("Clear search", systemImage: "xmark.circle").frame(minHeight: 48)
+                        }.buttonStyle(.bordered).accessibilityIdentifier("publicClearSearch")
+                    }
                     if sessions.isEmpty {
-                        ContentUnavailableView(snapshot.sessions.isEmpty ? "No sessions published" : savedOnly && query.isEmpty ? "Your programme, your way" : "No matching sessions", systemImage: snapshot.sessions.isEmpty ? "calendar" : "bookmark", description: Text(snapshot.sessions.isEmpty ? "Published sessions will appear here after a refresh." : savedOnly && query.isEmpty ? "Save a session to find it here. Your saved choices stay on this device." : "Try another search or programme day."))
-                        if savedOnly { Button("Explore all sessions") { savedOnly = false; date = ""; query = "" }.buttonStyle(.bordered).controlSize(.large) }
+                        let emptySaved = savedOnly && normalizedQuery.isEmpty && date.isEmpty
+                        ContentUnavailableView(snapshot.sessions.isEmpty ? "No sessions published" : emptySaved ? "Your programme, your way" : "No matching sessions", systemImage: snapshot.sessions.isEmpty ? "calendar" : "bookmark", description: Text(snapshot.sessions.isEmpty ? "Published sessions will appear here after a refresh." : emptySaved ? "Save a session to find it here. Your saved choices stay on this device." : "Try another search or programme day."))
+                        if hasFilters && !snapshot.sessions.isEmpty {
+                            Button { savedOnly = false; date = ""; query = ""; searching = false } label: {
+                                Text(emptySaved ? "Explore all sessions" : "Reset filters").frame(minHeight: 48)
+                            }.buttonStyle(.bordered).accessibilityIdentifier("publicResetFilters")
+                        }
                     }
                     ForEach(sessions, id: \.id) { session in
                         PublicSessionCard(session: session, timezone: snapshot.event.timezone, saved: store.savedIDs.contains(session.id)) {
@@ -309,10 +355,10 @@ struct PublicScheduleView: View {
                 }
                 Button("Refresh programme") { store.refresh() }.buttonStyle(.bordered).controlSize(.large).disabled(store.loading)
                 Text("Saved on this device. Refreshing removes withdrawn sessions, including saved ones.")
-                    .font(.footnote).foregroundStyle(AttendeeStyle.secondary)
+                    .font(.footnote).foregroundStyle(DQORStyle.secondary)
             }.padding(24).frame(maxWidth: 640)
-        }.frame(maxWidth: .infinity).background(AttendeeStyle.canvas).foregroundStyle(AttendeeStyle.ink)
-            .tint(AttendeeStyle.accent).navigationTitle("Programme").navigationBarTitleDisplayMode(.inline)
+        }.frame(maxWidth: .infinity).background(DQORStyle.canvas).foregroundStyle(DQORStyle.ink)
+            .tint(DQORStyle.accent).navigationTitle("Programme").navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -336,15 +382,15 @@ private struct PublicSessionCard: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
-                    if let date = session.localDate { Text(PublicProgrammeFormatting.date(date, timezone: timezone)).font(.caption).foregroundStyle(AttendeeStyle.secondary) }
-                    Text(PublicProgrammeFormatting.times(session, timezone: timezone)).font(.subheadline.monospacedDigit()).foregroundStyle(AttendeeStyle.secondary)
+                    if let date = session.localDate { Text(PublicProgrammeFormatting.date(date, timezone: timezone)).font(.caption).foregroundStyle(DQORStyle.secondary) }
+                    Text(PublicProgrammeFormatting.times(session, timezone: timezone)).font(.subheadline.monospacedDigit()).foregroundStyle(DQORStyle.secondary)
                     Text(session.title).font(.title3.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
                     if let speaker = session.speakerName, !speaker.isEmpty { Text(speaker).font(.subheadline) }
                     if let room = session.room, !room.isEmpty { Label(room, systemImage: "mappin").font(.subheadline) }
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 Button(action: toggle) {
                     Image(systemName: saved ? "bookmark.fill" : "bookmark").font(.title3).frame(width: 48, height: 48)
-                        .background(AttendeeStyle.canvas, in: RoundedRectangle(cornerRadius: 12))
+                        .background(DQORStyle.canvas, in: RoundedRectangle(cornerRadius: 12))
                 }.buttonStyle(AttendeePressStyle()).accessibilityLabel(saved ? "Remove \(session.title) from saved sessions" : "Save \(session.title)")
                     .accessibilityValue(saved ? "Saved" : "Not saved").accessibilityIdentifier("publicSave-" + session.id)
             }
@@ -352,9 +398,9 @@ private struct PublicSessionCard: View {
                 Button(expanded ? "Hide session details" : "Read session details") {
                     withAnimation(AttendeeMotion.reduced(reduceMotion) ? nil : AttendeeMotion.feedback) { expanded.toggle() }
                 }.frame(minHeight: 48).accessibilityIdentifier("publicDetails-" + session.id)
-                if expanded { Text(abstract).font(.body).foregroundStyle(AttendeeStyle.secondary).fixedSize(horizontal: false, vertical: true) }
+                if expanded { Text(abstract).font(.body).foregroundStyle(DQORStyle.secondary).fixedSize(horizontal: false, vertical: true) }
             }
-        }.padding(24).background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(AttendeeStyle.border.opacity(0.5), lineWidth: 1))
+        }.padding(24).background(DQORStyle.card, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(DQORStyle.border.opacity(0.5), lineWidth: 1))
     }
 }
