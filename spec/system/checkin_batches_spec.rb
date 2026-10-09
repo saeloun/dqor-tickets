@@ -18,12 +18,70 @@ RSpec.describe "Staff batch check-in", type: :system do
     expect(page).to have_button("Request Camera Permissions")
   end
 
+  def start_avo_selection_trace
+    page.execute_script(<<~JS)
+      const entries = [];
+      let bytes = 0;
+      let truncated = false;
+      const initialBody = document.body;
+      const snapshot = () => {
+        const holder = document.querySelector('[data-selected-resources-name="tickets"]');
+        const frame = document.getElementById('tickets_list');
+        const rows = Array.from(document.querySelectorAll('[data-controller~="item-selector"]')).map(element => {
+          const controller = window.Stimulus?.getControllerForElementAndIdentifier(element, 'item-selector');
+          return { id: element.dataset.resourceId, checked: element.querySelector('input[type="checkbox"]')?.checked, connected: element.isConnected, controller: !!controller, holderConnected: !!controller?.stateHolderElement?.isConnected, holderCurrent: controller?.stateHolderElement === holder };
+        });
+        return { bodyCurrent: initialBody === document.body, ids: holder?.dataset.selectedResources, frameComplete: frame?.complete, frameBusy: frame?.hasAttribute('aria-busy'), rows };
+      };
+      const record = (kind, event) => {
+        if (truncated || entries.length >= 100 || bytes >= 30000) { truncated = true; return; }
+        const entry = { kind, time: Math.round(performance.now()), trusted: event?.isTrusted, prevented: event?.defaultPrevented, state: snapshot() };
+        const serialized = JSON.stringify(entry);
+        const size = new TextEncoder().encode(serialized).byteLength;
+        if (entries.length < 100 && bytes + size <= 30000) { entries.push(JSON.parse(serialized)); bytes += size; } else { truncated = true; }
+      };
+      const listeners = [];
+      for (const name of ['click', 'input', 'change']) {
+        for (const capture of [true, false]) {
+          const listener = event => { if (event.target.matches('input[type="checkbox"][data-item-select-all-target="itemCheckbox"]')) record(`${name}:${capture ? 'capture' : 'bubble'}`, event); };
+          document.addEventListener(name, listener, { capture, passive: true });
+          listeners.push([name, listener, capture]);
+        }
+      }
+      for (const name of ['turbo:before-frame-render', 'turbo:frame-render', 'turbo:frame-load']) {
+        const listener = event => { if (event.target.id === 'tickets_list') record(name, event); };
+        document.addEventListener(name, listener, { passive: true });
+        listeners.push([name, listener, false]);
+      }
+      const observer = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          if (mutation.type === 'attributes' || [...mutation.addedNodes, ...mutation.removedNodes].some(node => node.nodeType === 1 && (node.matches('[data-selected-resources-name="tickets"],#tickets_list') || node.querySelector('[data-selected-resources-name="tickets"],#tickets_list')))) record(`mutation:${mutation.type}`);
+        }
+      });
+      observer.observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-selected-resources'] });
+      window.avoSelectionTrace = () => {
+        observer.disconnect();
+        listeners.forEach(([name, listener, capture]) => document.removeEventListener(name, listener, capture));
+        record('collected');
+        return { entries, truncated, bytes };
+      };
+      record('installed');
+    JS
+  end
+
+  def collect_avo_selection_trace
+    page.evaluate_script("window.avoSelectionTrace?.() || []")
+  rescue StandardError => error
+    [ { diagnostic_error: error.class.name } ]
+  end
+
   it "opens only the Avo selection without recording attendance" do
     operator.update!(role: :admin)
     selected = create(:ticket, order:, attendee_name: "Selected Attendee")
     create(:ticket, order:, attendee_name: "Other Attendee")
     open_desk
     visit "/avo/resources/tickets"
+    start_avo_selection_trace
     # A visible checkbox can precede Stimulus connection; wait for the actual
     # selector controller before interacting, then verify its retained state.
     expect(page).to have_css('[data-controller~="item-selector"]') { |node|
@@ -36,12 +94,15 @@ RSpec.describe "Staff batch check-in", type: :system do
     expect(page).to have_css("[data-selected-resources='[\"#{selected.id}\"]']")
     click_button "Actions"
     expect(page).to have_css('a[data-disabled="false"]', text: "Check in selected tickets")
+    selection_trace = collect_avo_selection_trace
     click_link "Check in selected tickets"
     expect(page).to have_current_path(checkin_path(ticket_ids: [ selected.id ]))
     expect(page).to have_content("Selected Attendee")
     expect(page).to have_no_content("Other Attendee")
     expect(selected.reload.checked_in_at).to be_empty
     expect(CheckinAudit.count).to eq(0)
+  ensure
+    puts "AVO_SELECTION_TRACE=#{(selection_trace || collect_avo_selection_trace).to_json}"
   end
 
   it "requires confirmation, supports cancel/Escape, and returns an outcome per selected attendee" do
