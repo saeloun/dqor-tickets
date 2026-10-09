@@ -13,5 +13,6 @@ class Avo::Resources::Speaker < Avo::BaseResource
       help: "Pipeline status. Only 'announced' speakers can appear publicly (and only when Published is on)."
     field :published, as: :boolean, help: "Show on the public /speakers page (requires status = announced)."
     field :position, as: :number
+    field :talks, as: :has_many
   end
 end
