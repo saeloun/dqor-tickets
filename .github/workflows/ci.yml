@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 3591a092fe1f98490390180c43477c5ecda92065
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -42,6 +44,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 3591a092fe1f98490390180c43477c5ecda92065
 
       - name: Install libvips
         run: |
@@ -64,6 +68,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 3591a092fe1f98490390180c43477c5ecda92065
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -107,6 +113,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: 3591a092fe1f98490390180c43477c5ecda92065
 
       - name: Install PDF rendering dependencies
         run: |
@@ -131,7 +139,11 @@ jobs:
         run: bin/rails db:test:prepare
 
       - name: Run RSpec
-        run: bundle exec rspec
+        run: |
+          test "$(git rev-parse HEAD)" = "3591a092fe1f98490390180c43477c5ecda92065"
+          test "$(git rev-parse 'HEAD^{tree}')" = "ac03b473b521a1f009aa5d634f65c2cce5248d4b"
+          git log -1 --format='Verified candidate commit: %H%nVerified candidate tree: %T'
+          bundle exec rspec --seed 22485
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v7
@@ -168,6 +180,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
+          ref: 3591a092fe1f98490390180c43477c5ecda92065
           persist-credentials: false
       - name: Install distro CLI without starting services
         timeout-minutes: 3
