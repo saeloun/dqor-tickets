@@ -17,9 +17,9 @@ RSpec.describe "Scanner result visibility", type: :system do
     click_button "Sign in"
     expect(page).to have_button("Request Camera Permissions")
     select "Oct 8", from: "date" unless find(:select, "date").value == "2026-10-08"
-    expect(page).to have_select("date", selected: "Oct 8")
     expect(page).to have_css(".checkin-stat__label", text: "checked in · Thu Oct 8", exact_text: true)
     expect(page).to have_no_css('[data-controller="checkin"][aria-busy="true"]')
+    expect(page).to have_select("date", selected: "Oct 8")
     expect(page).to have_button("Request Camera Permissions")
   end
 
