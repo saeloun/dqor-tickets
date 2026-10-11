@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_11_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -79,7 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.index ["announcement_campaign_id", "email"], name: "unique_announcement_recipient", unique: true
     t.index ["announcement_campaign_id"], name: "index_announcement_deliveries_on_announcement_campaign_id"
     t.index ["state", "id"], name: "index_announcement_deliveries_on_state_and_id"
-    t.check_constraint "state::text = ANY (ARRAY['pending'::character varying, 'preparing'::character varying, 'submitting'::character varying, 'submitted'::character varying, 'suppressed'::character varying, 'failed'::character varying, 'unknown'::character varying]::text[])", name: "announcement_delivery_state"
+    t.check_constraint "state::text = ANY (ARRAY['pending'::character varying::text, 'preparing'::character varying::text, 'submitting'::character varying::text, 'submitted'::character varying::text, 'suppressed'::character varying::text, 'failed'::character varying::text, 'unknown'::character varying::text])", name: "announcement_delivery_state"
   end
 
   create_table "announcement_dispatch_limits", force: :cascade do |t|
@@ -170,6 +170,79 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.index ["ticket_type_id"], name: "index_coupons_on_ticket_type_id"
   end
 
+  create_table "discovery_listings", force: :cascade do |t|
+    t.string "canonical_kind", default: "event", null: false
+    t.string "canonical_url", limit: 2000, null: false
+    t.string "city"
+    t.string "country_code"
+    t.datetime "created_at", null: false
+    t.integer "date_month"
+    t.string "date_precision", default: "unknown", null: false
+    t.integer "date_year"
+    t.datetime "ends_at"
+    t.date "ends_on"
+    t.string "format", default: "unknown", null: false
+    t.string "identity_key", null: false
+    t.string "local_end_time"
+    t.string "local_start_time"
+    t.date "occurrence_dates", default: [], null: false, array: true
+    t.string "occurrence_key"
+    t.bigint "primary_source_id", null: false
+    t.string "registration_url", limit: 2000
+    t.string "review_reason"
+    t.string "review_state", default: "clear", null: false
+    t.datetime "starts_at"
+    t.date "starts_on"
+    t.string "status", default: "unknown", null: false
+    t.string "timezone"
+    t.string "title", null: false
+    t.string "topics", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.index ["canonical_url"], name: "index_discovery_listings_on_canonical_url"
+    t.index ["country_code", "starts_on"], name: "index_discovery_listings_on_country_code_and_starts_on"
+    t.index ["identity_key"], name: "index_discovery_listings_on_identity_key", unique: true
+    t.index ["primary_source_id"], name: "index_discovery_listings_on_primary_source_id"
+    t.index ["starts_at"], name: "index_discovery_listings_on_starts_at"
+    t.index ["topics"], name: "index_discovery_listings_on_topics", using: :gin
+    t.check_constraint "(canonical_kind::text = ANY (ARRAY['event'::character varying, 'collection'::character varying]::text[])) AND (canonical_kind::text <> 'collection'::text OR occurrence_key IS NOT NULL)", name: "discovery_occurrence_identity"
+    t.check_constraint "date_precision::text <> 'date'::text OR starts_on IS NOT NULL", name: "discovery_date_precision"
+    t.check_constraint "date_precision::text <> 'time'::text OR starts_at IS NOT NULL AND starts_on IS NOT NULL AND timezone IS NOT NULL", name: "discovery_time_precision"
+    t.check_constraint "date_precision::text = ANY (ARRAY['time'::character varying, 'local_time'::character varying, 'date'::character varying, 'month'::character varying, 'year'::character varying, 'unknown'::character varying]::text[])", name: "discovery_valid_precision"
+    t.check_constraint "ends_at IS NULL OR starts_at IS NOT NULL AND ends_at >= starts_at", name: "discovery_ordered_times"
+    t.check_constraint "ends_on IS NULL OR starts_on IS NOT NULL AND ends_on >= starts_on", name: "discovery_ordered_dates"
+    t.check_constraint "format::text = ANY (ARRAY['in_person'::character varying, 'online'::character varying, 'hybrid'::character varying, 'unknown'::character varying]::text[])", name: "discovery_valid_format"
+    t.check_constraint "review_state::text = ANY (ARRAY['clear'::character varying, 'hold'::character varying]::text[])", name: "discovery_valid_review"
+    t.check_constraint "status::text = ANY (ARRAY['scheduled'::character varying, 'canceled'::character varying, 'unknown'::character varying]::text[])", name: "discovery_valid_status"
+  end
+
+  create_table "discovery_references", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.datetime "last_seen_at", null: false
+    t.bigint "listing_id", null: false
+    t.string "revision", null: false
+    t.bigint "source_id", null: false
+    t.string "source_url", limit: 2000, null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_id"], name: "index_discovery_references_on_listing_id"
+    t.index ["source_id", "external_id"], name: "index_discovery_references_on_source_id_and_external_id", unique: true
+    t.index ["source_id"], name: "index_discovery_references_on_source_id"
+  end
+
+  create_table "discovery_sources", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "fetched_at", null: false
+    t.datetime "imported_at", null: false
+    t.string "key", null: false
+    t.datetime "last_attempt_at", null: false
+    t.string "last_error_code"
+    t.string "name", null: false
+    t.string "revision", null: false
+    t.datetime "updated_at", null: false
+    t.string "url", limit: 2000, null: false
+    t.index ["key"], name: "index_discovery_sources_on_key", unique: true
+  end
+
   create_table "event_branding_assets", force: :cascade do |t|
     t.string "content_type", null: false
     t.datetime "created_at", null: false
@@ -242,7 +315,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.index ["organization_id"], name: "index_events_on_organization_id"
     t.check_constraint "ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at", name: "events_ordered_dates"
     t.check_constraint "status::text <> 'published'::text OR starts_at IS NOT NULL AND ends_at IS NOT NULL", name: "events_publication_dates"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying]::text[])", name: "events_valid_status"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'published'::character varying::text])", name: "events_valid_status"
   end
 
   create_table "faqs", force: :cascade do |t|
@@ -460,7 +533,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.index ["organization_id", "user_id"], name: "index_memberships_on_organization_id_and_user_id", unique: true
     t.index ["organization_id"], name: "index_memberships_on_organization_id"
     t.index ["user_id"], name: "index_memberships_on_user_id"
-    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying, 'admin'::character varying, 'editor'::character varying, 'viewer'::character varying]::text[])", name: "memberships_valid_role"
+    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying::text, 'admin'::character varying::text, 'editor'::character varying::text, 'viewer'::character varying::text])", name: "memberships_valid_role"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -584,7 +657,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.index ["sponsor_deal_id"], name: "index_operations_manual_entries_on_sponsor_deal_id"
     t.index ["vendor_engagement_id"], name: "index_operations_manual_entries_on_vendor_engagement_id"
     t.check_constraint "amount_paise > 0", name: "manual_entries_positive_amount"
-    t.check_constraint "sponsor_deal_id IS NOT NULL AND vendor_engagement_id IS NULL AND (kind::text = ANY (ARRAY['receipt'::character varying, 'refund'::character varying]::text[])) OR sponsor_deal_id IS NULL AND vendor_engagement_id IS NOT NULL AND (kind::text = ANY (ARRAY['expense'::character varying, 'expense_refund'::character varying]::text[]))", name: "manual_entry_target"
+    t.check_constraint "sponsor_deal_id IS NOT NULL AND vendor_engagement_id IS NULL AND (kind::text = ANY (ARRAY['receipt'::character varying::text, 'refund'::character varying::text])) OR sponsor_deal_id IS NULL AND vendor_engagement_id IS NOT NULL AND (kind::text = ANY (ARRAY['expense'::character varying::text, 'expense_refund'::character varying::text]))", name: "manual_entry_target"
   end
 
   create_table "operations_sponsor_deals", force: :cascade do |t|
@@ -598,7 +671,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.datetime "updated_at", null: false
     t.index ["business_contact_id"], name: "index_operations_sponsor_deals_on_business_contact_id"
     t.index ["event_id"], name: "index_operations_sponsor_deals_on_event_id"
-    t.check_constraint "(stage::text = ANY (ARRAY['pledged'::character varying, 'committed'::character varying]::text[])) AND (contribution::text = ANY (ARRAY['cash'::character varying, 'in_kind'::character varying]::text[]))", name: "sponsor_deal_categories"
+    t.check_constraint "(stage::text = ANY (ARRAY['pledged'::character varying::text, 'committed'::character varying::text])) AND (contribution::text = ANY (ARRAY['cash'::character varying::text, 'in_kind'::character varying::text]))", name: "sponsor_deal_categories"
     t.check_constraint "amount_paise > 0", name: "sponsor_deals_positive_amount"
   end
 
@@ -1040,7 +1113,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.index ["user_id"], name: "index_wall_love_notes_on_user_id", unique: true
     t.check_constraint "char_length(note) >= 1 AND char_length(note) <= 2000", name: "wall_love_notes_note_length"
     t.check_constraint "status::text <> 'approved'::text OR publication_consent", name: "wall_love_notes_publication_consent"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'unpublished'::character varying, 'withdrawn'::character varying]::text[])", name: "wall_love_notes_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'approved'::character varying::text, 'rejected'::character varying::text, 'unpublished'::character varying::text, 'withdrawn'::character varying::text])", name: "wall_love_notes_status"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
@@ -1055,6 +1128,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
   add_foreign_key "conversations", "users", column: "participant_one_id"
   add_foreign_key "conversations", "users", column: "participant_two_id"
   add_foreign_key "coupons", "ticket_types"
+  add_foreign_key "discovery_listings", "discovery_sources", column: "primary_source_id"
+  add_foreign_key "discovery_references", "discovery_listings", column: "listing_id"
+  add_foreign_key "discovery_references", "discovery_sources", column: "source_id"
   add_foreign_key "event_branding_assets", "event_branding_settings"
   add_foreign_key "event_branding_settings", "admin_users", column: "published_by_id"
   add_foreign_key "event_branding_settings", "admin_users", column: "updated_by_id"

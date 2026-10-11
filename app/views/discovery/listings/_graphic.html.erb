@@ -1,0 +1,4 @@
+<div class="event-art <%= topics.include?("ruby") ? "event-art--ruby" : "event-art--react" %>" aria-hidden="true">
+  <svg viewBox="0 0 320 180" focusable="false"><circle cx="160" cy="90" r="68"/><ellipse cx="160" cy="90" rx="108" ry="34" transform="rotate(-35 160 90)"/><ellipse cx="160" cy="90" rx="108" ry="34" transform="rotate(35 160 90)"/><path d="M125 90l35-35 35 35-35 35z"/><circle class="event-art__dot" cx="160" cy="90" r="8"/></svg>
+  <span><%= topics.map(&:capitalize).join(" + ") %></span>
+</div>

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-99fb1df30fc3422b",
+    "name": "GrUSP",
+    "url": "https://www.grusp.org/en/media-kit/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "reactjsday-2026:verona:2026-11-19",
+      "source_url": "https://www.reactjsday.it/",
+      "canonical_url": "https://www.reactjsday.it/",
+      "canonical_kind": "event",
+      "registration_url": "https://www.reactjsday.it/",
+      "title": "reactjsday 2026",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Verona",
+      "country_code": "IT",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2026-11-19",
+      "ends_on": "2026-11-19"
+    }
+  ]
+}

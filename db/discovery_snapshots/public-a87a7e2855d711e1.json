@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-a87a7e2855d711e1",
+    "name": "GitNation",
+    "url": "https://gitnation.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "jsnation-us-2026:jersey-city:2026-11-16",
+      "source_url": "https://jsnation.us/",
+      "canonical_url": "https://jsnation.us/",
+      "canonical_kind": "event",
+      "registration_url": "https://jsnation.us/",
+      "title": "JSNation US 2026",
+      "topics": [
+        "javascript"
+      ],
+      "city": "Jersey City",
+      "country_code": "US",
+      "timezone": null,
+      "format": "hybrid",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2026-11-16",
+      "ends_on": "2026-11-19",
+      "occurrence_dates": [
+        "2026-11-16",
+        "2026-11-19"
+      ]
+    }
+  ]
+}

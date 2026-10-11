@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-407a8b010703fb06",
+    "name": "Infinite Red, Expo, and React Foundation",
+    "url": "https://chainreactconf.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "chain-react-2026:portland:2026-07-30",
+      "source_url": "https://chainreactconf.com/",
+      "canonical_url": "https://chainreactconf.com/",
+      "canonical_kind": "event",
+      "registration_url": "https://chainreactconf.com/",
+      "title": "Chain React 2026",
+      "topics": [
+        "react"
+      ],
+      "city": "Portland",
+      "country_code": "US",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2026-07-30",
+      "ends_on": "2026-07-31"
+    }
+  ]
+}

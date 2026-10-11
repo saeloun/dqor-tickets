@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-d4d375f14347e592",
+    "name": "React India",
+    "url": "https://www.reactindia.io/meetups",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "react-india-meetup-bengaluru:bengaluru:date-tba",
+      "source_url": "https://www.reactindia.io/meetups/meetup-1791555214847",
+      "canonical_url": "https://www.reactindia.io/meetups/meetup-1791555214847",
+      "canonical_kind": "event",
+      "registration_url": null,
+      "title": "React India Meetup - Bengaluru",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Bengaluru",
+      "country_code": "IN",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "hold",
+      "review_reason": "The inspected public sources have missing or conflicting date/time information.",
+      "date_precision": "unknown"
+    }
+  ]
+}

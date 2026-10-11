@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-4e5cecb7295d1a5b",
+    "name": "GDG Chennai",
+    "url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-5-all-about-data-engineering-cloud-agents-analytics-amp-beyond/cohost-gdg-chennai/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "devfest-roadshow-5-all-about-data-engineering-cloud-agents-analytics-beyond:chennai:2026-09-26",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-5-all-about-data-engineering-cloud-agents-analytics-amp-beyond/cohost-gdg-chennai/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-5-all-about-data-engineering-cloud-agents-analytics-amp-beyond/cohost-gdg-chennai/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-5-all-about-data-engineering-cloud-agents-analytics-amp-beyond/cohost-gdg-chennai/",
+      "title": "DevFest Roadshow #5 - All About Data: Engineering, Cloud, Agents, Analytics & Beyond",
+      "topics": [
+        "developer"
+      ],
+      "city": "Chennai",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-09-26",
+      "ends_on": "2026-09-26",
+      "local_start_time": "03:30",
+      "local_end_time": "08:30",
+      "starts_at": "2026-09-26T03:30:00Z",
+      "ends_at": "2026-09-26T08:30:00Z"
+    },
+    {
+      "external_id": "devfest-roadshow-1-life-with-agents:chennai:2026-09-12",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-1-life-with-agents/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-1-life-with-agents/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-1-life-with-agents/",
+      "title": "DevFest Roadshow #1 - Life with Agents",
+      "topics": [
+        "developer"
+      ],
+      "city": "Chennai",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-09-12",
+      "ends_on": "2026-09-12",
+      "local_start_time": "04:30",
+      "local_end_time": "11:00",
+      "starts_at": "2026-09-12T04:30:00Z",
+      "ends_at": "2026-09-12T11:00:00Z"
+    },
+    {
+      "external_id": "devfest-2026-chennai:chennai:2026-10-17",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-2026-chennai/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-2026-chennai/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-2026-chennai/",
+      "title": "DevFest 2026 Chennai",
+      "topics": [
+        "developer"
+      ],
+      "city": "Chennai",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "hold",
+      "review_reason": "The inspected public sources have missing or conflicting date/time information.",
+      "date_precision": "local_time",
+      "starts_on": "2026-10-17",
+      "ends_on": null,
+      "local_start_time": "03:00",
+      "local_end_time": null
+    }
+  ]
+}

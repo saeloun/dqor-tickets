@@ -1,0 +1,14 @@
+<main id="directory-main" class="listing-detail">
+  <%= link_to "← Back to events", discovery_listings_path, class: "listing-back" %>
+  <div class="listing-detail__grid">
+    <article><p class="eyebrow"><%= @listing.topics.map(&:capitalize).join(" + ") %> · External event</p><span class="event-state <%= "event-state--canceled" if @listing.status_canceled? %>"><%= discovery_state(@listing) %></span><h1><%= @listing.title %></h1>
+      <dl class="listing-facts"><div><dt>When</dt><dd><%= discovery_date(@listing) %></dd></div><div><dt>Where</dt><dd><%= discovery_location(@listing) %></dd></div><div><dt>Timezone</dt><dd><%= @listing.timezone || "Not published by source" %></dd></div></dl>
+      <% if @listing.review_state == "hold" %><p class="source-notice">Published dates need review. <%= @listing.review_reason %></p><% end %>
+      <% registration_url = discovery_external_url(@listing.registration_url) %>
+      <% if @listing.status_canceled? %><p class="source-notice">The source marks this event canceled. Check the original page for updates.</p><% elsif @listing.period != "past" && registration_url %><%= link_to "View on #{URI.parse(registration_url).host} ↗", registration_url, class: "discovery-button", target: "_blank", rel: "noopener noreferrer" %><% end %>
+      <p class="registration-note">This is an attributed listing. DQOR does not organize this event or collect its registrations. Confirm the latest details with the original organizer.</p>
+      <section class="listing-provenance" aria-labelledby="listing-sources-heading"><h2 id="listing-sources-heading">Original sources</h2><% @listing.references.sort_by { |reference| reference.source.name }.each do |reference| %><div class="source-reference"><% source_url = discovery_external_url(reference.source_url) %><% if source_url %><%= link_to "#{reference.source.name} ↗", source_url, target: "_blank", rel: "noopener noreferrer" %><% else %><p><%= reference.source.name %> · Source link unavailable</p><% end %><p>Fetched <%= reference.last_seen_at.utc.strftime("%-d %b %Y, %H:%M UTC") %></p><p class="source-revision">Revision <%= reference.revision %></p><% if reference.stale? %><p class="source-notice">Source information may be out of date. The last verified listing remains available.</p><% end %></div><% end %></section>
+    </article>
+    <aside aria-hidden="true"><%= render "graphic", topics: @listing.topics %></aside>
+  </div>
+</main>

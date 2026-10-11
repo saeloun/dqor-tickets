@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-b405981f61a88ff3",
+    "name": "JS Community",
+    "url": "https://luma.com/rebxdfl9",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "js-pune-women-in-tech-ai:pune:2026-10-03",
+      "source_url": "https://luma.com/rebxdfl9",
+      "canonical_url": "https://luma.com/rebxdfl9",
+      "canonical_kind": "event",
+      "registration_url": "https://luma.com/rebxdfl9",
+      "title": "JS Pune: Women in Tech × AI",
+      "topics": [
+        "javascript"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "local_time",
+      "starts_on": "2026-10-03",
+      "ends_on": "2026-10-03",
+      "local_start_time": "10:00",
+      "local_end_time": "15:10"
+    },
+    {
+      "external_id": "js-pune-05:pune:2026-06-27",
+      "source_url": "https://luma.com/nzfau6k8",
+      "canonical_url": "https://luma.com/nzfau6k8",
+      "canonical_kind": "event",
+      "registration_url": "https://luma.com/nzfau6k8",
+      "title": "JS PUNE #05",
+      "topics": [
+        "javascript"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "local_time",
+      "starts_on": "2026-06-27",
+      "ends_on": "2026-06-27",
+      "local_start_time": "10:00",
+      "local_end_time": "15:00"
+    }
+  ]
+}

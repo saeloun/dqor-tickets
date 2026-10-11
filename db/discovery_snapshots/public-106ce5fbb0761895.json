@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-106ce5fbb0761895",
+    "name": "GDG Chennai and Chennai React",
+    "url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-3-chennai-react-meetup/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "devfest-roadshow-3-chennai-react-meetup:tambaram:2026-09-19",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-3-chennai-react-meetup/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-3-chennai-react-meetup/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-chennai-presents-devfest-roadshow-3-chennai-react-meetup/",
+      "title": "DevFest roadshow #3 - Chennai React meetup",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Tambaram",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-09-19",
+      "ends_on": "2026-09-19",
+      "local_start_time": "08:00",
+      "local_end_time": "11:30",
+      "starts_at": "2026-09-19T08:00:00Z",
+      "ends_at": "2026-09-19T11:30:00Z"
+    }
+  ]
+}

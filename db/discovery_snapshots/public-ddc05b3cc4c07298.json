@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-ddc05b3cc4c07298",
+    "name": "GitNation",
+    "url": "https://gitnation.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "react-summit-asia-2027:singapore:2027-04-15",
+      "source_url": "https://reactsummit.asia/",
+      "canonical_url": "https://reactsummit.asia/",
+      "canonical_kind": "event",
+      "registration_url": "https://ti.to/gitnation/react-summit-asia-2027",
+      "title": "React Summit Asia 2027",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Singapore",
+      "country_code": "SG",
+      "timezone": null,
+      "format": "hybrid",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2027-04-15",
+      "ends_on": "2027-04-19",
+      "occurrence_dates": [
+        "2027-04-15",
+        "2027-04-19"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-965785af9e9c0dd8",
+    "name": "GitNation",
+    "url": "https://gitnation.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "jsnation-2027:amsterdam:2027-05-21",
+      "source_url": "https://jsnation.com/",
+      "canonical_url": "https://jsnation.com/",
+      "canonical_kind": "event",
+      "registration_url": "https://jsnation.com/",
+      "title": "JSNation 2027",
+      "topics": [
+        "javascript"
+      ],
+      "city": "Amsterdam",
+      "country_code": "NL",
+      "timezone": null,
+      "format": "hybrid",
+      "status": "unknown",
+      "review_state": "hold",
+      "review_reason": "The inspected public sources have missing or conflicting date/time information.",
+      "date_precision": "date",
+      "starts_on": "2027-05-21",
+      "ends_on": "2027-05-25",
+      "occurrence_dates": [
+        "2027-05-21",
+        "2027-05-25"
+      ]
+    }
+  ]
+}
