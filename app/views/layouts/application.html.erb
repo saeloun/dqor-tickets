@@ -111,7 +111,7 @@
 
         <div class="nav-links" id="nav-links">
           <%= link_to "Speakers", root_path(anchor: "speakers"), class: "nav-link", data: { section: "speakers" } %>
-          <%= link_to "Schedule", root_path(anchor: "schedule"), class: "nav-link", data: { section: "schedule" } %>
+          <%= link_to "Schedule", schedule_path, class: class_names("nav-link", active: current_page?(schedule_path)) %>
           <%= link_to "CFP", root_path(anchor: "cfp"), class: "nav-link", data: { section: "cfp" } %>
           <%= link_to "Rails Girls", root_path(anchor: "rails-girls"), class: "nav-link", data: { section: "rails-girls" } %>
           <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-link", data: { section: "explore-pune-day" } %>
@@ -145,7 +145,7 @@
 
     <div class="nav-mobile-menu" id="nav-mobile-menu" role="dialog" aria-label="Mobile menu">
       <%= link_to "Speakers", root_path(anchor: "speakers"), class: "nav-mobile-link" %>
-      <%= link_to "Schedule", root_path(anchor: "schedule"), class: "nav-mobile-link" %>
+      <%= link_to "Schedule", schedule_path, class: "nav-mobile-link" %>
       <%= link_to "CFP", root_path(anchor: "cfp"), class: "nav-mobile-link" %>
       <%= link_to "Rails Girls", root_path(anchor: "rails-girls"), class: "nav-mobile-link" %>
       <%= link_to "Explore Pune Day", root_path(anchor: "explore-pune-day"), class: "nav-mobile-link" %>
@@ -198,7 +198,7 @@
             <p class="footer-col-title">Conference</p>
             <ul>
               <li><%= link_to "Speakers", root_path(anchor: "speakers") %></li>
-              <li><%= link_to "Schedule", root_path(anchor: "schedule") %></li>
+              <li><%= link_to "Schedule", schedule_path %></li>
               <li><%= link_to "Call for Proposals", root_path(anchor: "cfp") %></li>
               <li><%= link_to "Sponsors", root_path(anchor: "sponsors") %></li>
             </ul>
