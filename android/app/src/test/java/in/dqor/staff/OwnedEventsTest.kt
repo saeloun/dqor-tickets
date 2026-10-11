@@ -24,6 +24,21 @@ class OwnedEventsTest {
         override suspend fun fetch(resource: OwnedResource, validator: String?): OwnedResponse { validators.add(validator); return replies.removeAt(0) }
     }
     private fun response(status: Int = 200, body: String = catalog, etag: String? = tag) = OwnedResponse(status, etag, body)
+    @Test fun realRailsWirePreservesStoredMicroseconds() = runBlocking {
+        for((name, nanos) in listOf("subsecond" to 800_000_000L, "microsecond" to 1_000L)) {
+            val catalogBody = File("src/test/resources/owned_events/public_owned_events_v1.$name.catalog.example.json").readText()
+            val detailBody = File("src/test/resources/owned_events/public_owned_events_v1.$name.example.json").readText()
+            val client = OwnedEventsClient(Queue(mutableListOf(response(body = catalogBody), response(body = detailBody))))
+            val rows = client.refresh(resource).catalog!!
+            val event = client.refresh(OwnedResource.Detail("hosted-event-9000000000000001")).event!!
+            assertEquals(listOf(event), rows.events)
+            val start = event.startsAt.toInstant()
+            val end = event.endsAt.toInstant()
+            assertTrue(end.isAfter(start))
+            assertEquals(nanos, java.time.Duration.between(start, end).toNanos())
+            assertEquals("Asia/Kolkata", event.timezone.id)
+        }
+    }
     @Test fun catalogAndDetailPreserveOrganizerLocalDatesAndFixedWebsite() = runBlocking {
         val client = OwnedEventsClient(Queue(mutableListOf(response(), response(body = detail))))
         val rows = client.refresh(resource).catalog!!

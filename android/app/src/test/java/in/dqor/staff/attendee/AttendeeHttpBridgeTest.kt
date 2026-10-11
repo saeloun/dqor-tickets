@@ -6,6 +6,7 @@ import java.net.Socket
 import java.net.URI
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -146,6 +147,11 @@ class AttendeeHttpBridgeTest {
     }
     @Test fun revokeDecodes401AwayFromCallerDispatcherAndKeeps204FastPath() {
         val dispatches = java.util.concurrent.atomic.AtomicInteger()
+        val defaults = java.util.concurrent.atomic.AtomicInteger()
+        val decoderThread = java.util.concurrent.atomic.AtomicReference<Thread>()
+        val contextTimedOut = java.util.concurrent.atomic.AtomicBoolean()
+        val entered = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
         val executor = java.util.concurrent.Executors.newSingleThreadExecutor()
         val caller = object : kotlinx.coroutines.CoroutineDispatcher() {
             override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) {
@@ -153,20 +159,47 @@ class AttendeeHttpBridgeTest {
                 executor.execute(block)
             }
         }
-        try {
-            runBlocking {
-                kotlinx.coroutines.withContext(caller) {
-                    val bridge = AttendeeHttpBridge { AttendeeWireResponse(401, error("unauthenticated")) }
-                    val beforeDecode = dispatches.get()
-                    assertEquals(AttendeeRevocation.ALREADY_INVALID, bridge.revoke(AttendeeCredential(token)))
-                    assertTrue("401 parsing must resume through the caller dispatcher", dispatches.get() > beforeDecode)
-                    val fast = AttendeeHttpBridge { AttendeeWireResponse(204, "") }
-                    val beforeFast = dispatches.get()
-                    assertEquals(AttendeeRevocation.REVOKED, fast.revoke(AttendeeCredential(token)))
-                    assertEquals(beforeFast, dispatches.get())
+        val observer = object : kotlinx.coroutines.ThreadContextElement<Unit>, kotlin.coroutines.AbstractCoroutineContextElement(object : kotlin.coroutines.CoroutineContext.Key<kotlinx.coroutines.ThreadContextElement<Unit>> {}) {
+            override fun updateThreadContext(context: kotlin.coroutines.CoroutineContext) {
+                if(context[kotlin.coroutines.ContinuationInterceptor] === kotlinx.coroutines.Dispatchers.Default) {
+                    defaults.incrementAndGet()
+                    decoderThread.set(Thread.currentThread())
+                    entered.countDown()
+                    if(!release.await(5, java.util.concurrent.TimeUnit.SECONDS)) contextTimedOut.set(true)
                 }
             }
+            override fun restoreThreadContext(context: kotlin.coroutines.CoroutineContext, oldState: Unit) { }
+        }
+        try {
+            runBlocking {
+                val request = async(caller + observer) {
+                    val thread = Thread.currentThread()
+                    val beforeDecode = dispatches.get()
+                    val bridge = AttendeeHttpBridge { AttendeeWireResponse(401, error("unauthenticated")) }
+                    val result = bridge.revoke(AttendeeCredential(token))
+                    assertSame(thread, Thread.currentThread())
+                    assertNotSame(thread, decoderThread.get())
+                    assertEquals(1, defaults.get())
+                    assertTrue("Suspended parsing must resume through the caller dispatcher", dispatches.get() > beforeDecode)
+                    result
+                }
+                try {
+                    assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS))
+                    executor.submit { }.get(5, java.util.concurrent.TimeUnit.SECONDS)
+                    release.countDown()
+                    assertEquals(AttendeeRevocation.ALREADY_INVALID, request.await())
+                    assertFalse(contextTimedOut.get())
+                    kotlinx.coroutines.withContext(caller + observer) {
+                        val fast = AttendeeHttpBridge { AttendeeWireResponse(204, "") }
+                        val beforeFast = dispatches.get()
+                        assertEquals(AttendeeRevocation.REVOKED, fast.revoke(AttendeeCredential(token)))
+                        assertEquals(beforeFast, dispatches.get())
+                        assertEquals(1, defaults.get())
+                    }
+                } finally { release.countDown(); request.cancel() }
+            }
         } finally {
+            release.countDown()
             executor.shutdownNow()
             assertTrue(executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS))
         }
