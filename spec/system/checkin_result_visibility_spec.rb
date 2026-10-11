@@ -107,17 +107,17 @@ RSpec.describe "Scanner result visibility", type: :system do
     decode_image
     expect(page).to have_css(".checkin-result--success", text: "Synthetic Camera Result")
     select "Oct 9", from: "date"
-    expect(page).to have_select("date", selected: "Oct 9")
     expect(page).to have_css(".checkin-stat__label", text: "checked in · Fri Oct 9", exact_text: true)
     expect(page).to have_no_css('[data-controller="checkin"][aria-busy="true"]')
+    expect(page).to have_select("date", selected: "Oct 9")
     expect(page).to have_button("Request Camera Permissions")
     decode_image
     expect(page).to have_css(".checkin-result--success", text: "Synthetic Camera Result")
     expect(ticket.reload.checked_in_at.keys).to match_array([ "2026-10-08", "2026-10-09" ])
     page.go_back
-    expect(page).to have_select("date", selected: "Oct 8")
     expect(page).to have_css(".checkin-stat__label", text: "checked in · Thu Oct 8", exact_text: true)
     expect(page).to have_no_css('[data-controller="checkin"][aria-busy="true"]')
+    expect(page).to have_select("date", selected: "Oct 8")
     expect(page).to have_button("Request Camera Permissions")
     page.execute_script(<<~JS, ticket.secret)
       window.Stimulus.getControllerForElementAndIdentifier(document.querySelector('[data-controller="checkin"]'), 'checkin').scan(arguments[0]);
