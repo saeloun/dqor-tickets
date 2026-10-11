@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { loadWidgets, recordingIframe } from "wall_love/embed_widgets"
+import { recordingIframe } from "wall_love/embed_widgets"
 
 export default class extends Controller {
   static targets = ["slide", "controls", "counter", "toggle", "status"]
@@ -85,7 +85,6 @@ export default class extends Controller {
     })
     this.counterTarget.textContent = `${this.index + 1} / ${count}`
     this.statusTarget.textContent = `Featured source ${this.index + 1} of ${count}. ${this.slideTargets[this.index].dataset.author}.`
-    if (this.slideTargets[this.index].dataset.platform === "X") this.loadPost()
   }
 
   clearMedia(slide) {
@@ -96,34 +95,6 @@ export default class extends Controller {
     if (preview) preview.hidden = false
     slide.dataset.generation = String(Number(slide.dataset.generation || 0) + 1)
     delete slide.dataset.loaded
-  }
-
-  async loadPost(event) {
-    if (event) { this.pause(); this.element.dispatchEvent(new Event("wall-love-media-activate", { bubbles: true })) }
-    const slide = this.slideTargets[this.index]
-    const id = slide.dataset.postId
-    if (slide.dataset.platform !== "X" || !/^\d{15,24}$/.test(id || "") || slide.dataset.loaded) return
-    const target = slide.querySelector("[data-native-embed]")
-    const button = slide.querySelector("[data-load-media]")
-    const generation = slide.dataset.generation || "0"
-    slide.dataset.loaded = "loading"
-    if (button) button.disabled = true
-    try {
-      const widgets = await loadWidgets()
-      if (!this.element.isConnected || slide.hidden || (slide.dataset.generation || "0") !== generation) return
-      const container = document.createElement("div")
-      target.replaceChildren(container)
-      const rendered = await widgets.createTweet(id, container, { dnt: true, conversation: "none", theme: document.documentElement.dataset.theme === "dark" ? "dark" : "light" })
-      if (!this.element.isConnected || slide.hidden || (slide.dataset.generation || "0") !== generation) { container.remove(); return }
-      if (!rendered) throw new Error("Post unavailable")
-      slide.dataset.loaded = "true"
-      if (button) button.hidden = true
-    } catch (_) {
-      if (!this.element.isConnected || (slide.dataset.generation || "0") !== generation) return
-      delete slide.dataset.loaded
-      if (button) button.disabled = false
-      if (!slide.hidden && this.element.isConnected) this.statusTarget.textContent = "This preview is unavailable. The original source link remains below."
-    }
   }
 
   loadRecording() {

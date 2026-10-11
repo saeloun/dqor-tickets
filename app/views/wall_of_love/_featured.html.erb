@@ -13,11 +13,11 @@
     <button type="button" class="btn btn-secondary" data-action="wall-love-media#next" aria-label="Next featured source">Next →</button>
     <button type="button" class="btn btn-secondary" data-wall-love-media-target="toggle" data-action="wall-love-media#toggleRotation" aria-pressed="false">Play slideshow</button>
   </div>
-  <p class="wall-love-media__status" data-wall-love-media-target="status" role="status" aria-live="polite">Browse at your own pace. Use the original links if previews are unavailable.</p>
+  <p class="wall-love-media__status" data-wall-love-media-target="status" role="status" aria-live="polite">Browse at your own pace. Open an original source to see the full post or recording.</p>
   <div class="wall-love-media__slides">
     <% WallLoveSourceCatalog.featured.each_with_index do |source, index| %>
       <% embed_ids = wall_love_embed_ids(source) %>
-      <article class="card wall-love-media__slide" aria-roledescription="slide" aria-label="<%= index + 1 %> of <%= WallLoveSourceCatalog.featured.size %>: <%= source.fetch("author") %>" data-wall-love-media-target="slide" data-author="<%= source.fetch("author") %>" data-platform="<%= source.fetch("platform") %>" data-post-id="<%= embed_ids[:post_id] %>" data-video-id="<%= embed_ids[:video_id] %>">
+      <article class="card wall-love-media__slide" aria-roledescription="slide" aria-label="<%= index + 1 %> of <%= WallLoveSourceCatalog.featured.size %>: <%= source.fetch("author") %>" data-wall-love-media-target="slide" data-author="<%= source.fetch("author") %>" data-platform="<%= source.fetch("platform") %>" data-video-id="<%= embed_ids[:video_id] %>">
         <div class="wall-love-media__visual">
           <% if embed_ids[:video_id] %>
             <div class="wall-love-media__recording-preview" data-recording-preview>
@@ -32,13 +32,11 @@
           <h3><%= source.fetch("author") %></h3>
           <p class="wall-love-media__summary-label">Post summary</p>
           <p class="wall-love-media__summary"><%= source.fetch("caption") %></p>
-          <% if embed_ids[:post_id] %>
-            <button type="button" class="btn btn-secondary wall-love-media__load" data-load-media data-action="wall-love-media#loadPost">Load post preview</button>
-          <% elsif embed_ids[:video_id] %>
+          <% if embed_ids[:video_id] %>
             <button type="button" class="btn btn-primary wall-love-media__load" data-load-media data-action="wall-love-media#loadRecording">Load recording player</button>
           <% end %>
           <%= link_to "Open original on #{source.fetch('platform')} ↗", wall_love_source_url(source.fetch("url")), class: "wall-love-media__source", target: "_blank", rel: "noopener noreferrer" %>
-          <% if embed_ids.any? %><p class="wall-love-media__fallback">Previews come from the original platform. If a preview cannot load, the source link is always available.</p><% end %>
+          <% if embed_ids[:video_id] %><p class="wall-love-media__fallback">Previews come from the original platform. If a preview cannot load, the source link is always available.</p><% end %>
         </div>
       </article>
     <% end %>
