@@ -22,6 +22,8 @@ class AttendeeAuthUiTest {
     private var authorization: AttendeeAuthorization? = null
     private var browserOpens = 0
     private var closes = 0
+    private var websiteOpens = 0
+    private var ticketOpens = 0
     private val bridge = SyntheticBridge()
     private val controller = AttendeeController.synthetic(bridge, { now }, { elapsed })
     private inner class SyntheticBridge : AttendeeBridge {
@@ -29,12 +31,16 @@ class AttendeeAuthUiTest {
         var expectedChallenge = ""
         private val consumed = mutableSetOf<String>()
         var empty = false
+        var rateLimited = false
+        var exchanges = 0
         var offline = false
         var pageSizes: List<Int>? = null
         var pageReads = 0
         var observed = now.minusSeconds(5)
         val identity = AttendeeIdentity("11", "Synthetic Attendee", "synthetic@example.invalid")
         override suspend fun exchange(request: AttendeeExchange): AttendeeLease {
+            exchanges++
+            if (rateLimited) throw AttendeeFailure(AttendeeProblem.RATE_LIMITED)
             if (request.code != expectedCode || AttendeePkce.challenge(request.verifier) != expectedChallenge || !consumed.add(request.code)) throw AttendeeFailure(AttendeeProblem.REVOKED)
             return AttendeeLease(AttendeeCredential("na1_" + "t".repeat(43)), now.plusSeconds(1800))
         }
@@ -57,11 +63,20 @@ class AttendeeAuthUiTest {
     }
     private fun start(fontScale: Float = 1f) {
         compose.setContent { CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
-            AttendeeAccountApp(controller, { closes++ }, { authorization=it; bridge.expectedCode="nac1_"+AttendeePkce.challenge(it.state); bridge.expectedChallenge=AttendeePkce.challenge(it.verifier); browserOpens++ }, {}, {})
+            AttendeeAccountApp(controller, { closes++ }, { authorization=it; bridge.expectedCode="nac1_"+AttendeePkce.challenge(it.state); bridge.expectedChallenge=AttendeePkce.challenge(it.verifier); browserOpens++ }, { websiteOpens++ }, { ticketOpens++ })
         } }
     }
     private fun show(text: String) { compose.onNodeWithTag("attendee-account").performScrollToNode(hasText(text)); compose.onNodeWithText(text).assertIsDisplayed() }
-    private fun showAt(index: Int,text: String) { compose.onNodeWithTag("attendee-account").performScrollToIndex(index); compose.onNodeWithText(text).assertIsDisplayed() }
+    private fun showAt(index: Int,text: String) {
+        val lists = compose.onAllNodesWithTag("attendee-account").fetchSemanticsNodes()
+        assertEquals("Exactly one account list must be present", 1, lists.size)
+        compose.runOnIdle {
+            val action = lists.single().config[androidx.compose.ui.semantics.SemanticsActions.ScrollToIndex].action
+            assertNotNull(action); assertTrue(action!!.invoke(index))
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText(text).assertIsDisplayed()
+    }
     private fun capture(name: String) {
         compose.waitForIdle()
         val instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
@@ -113,6 +128,60 @@ class AttendeeAuthUiTest {
         compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         assertEquals(1,closes)
     }
+    class CooldownFixtureModel : androidx.lifecycle.ViewModel() {
+        var controller: AttendeeController? = null
+        override fun onCleared() { controller?.forget() }
+    }
+    @Test fun rateLimitBlocksRepeatedBrowserStartsThroughBackgroundAndResume() {
+        bridge.rateLimited = true
+        start()
+        compose.activityRule.scenario.onActivity { androidx.lifecycle.ViewModelProvider(it)[CooldownFixtureModel::class.java].controller = controller }
+        show("Sign in through system browser"); compose.onNodeWithText("Sign in through system browser").performClick(); complete()
+        show("Too many attempts. Wait three minutes before trying again.")
+        capture("auth-synthetic-rate-limited")
+        compose.onNodeWithText("Sign in through system browser").assertIsNotEnabled().performClick().performClick()
+        assertNull(controller.begin()); assertEquals(1, browserOpens); assertEquals(1, bridge.exchanges)
+        compose.activityRule.scenario.moveToState(androidx.lifecycle.Lifecycle.State.CREATED)
+        controller.background()
+        compose.activityRule.scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
+        runBlocking { controller.foreground() }
+        show("Sign in through system browser"); compose.onNodeWithText("Sign in through system browser").assertIsNotEnabled()
+        show("Open account on official website"); compose.onNodeWithText("Open account on official website").assertIsEnabled()
+        compose.onNodeWithText("synthetic@example.invalid").assertDoesNotExist()
+        elapsed = 179_999L; compose.runOnIdle { controller.expire() }
+        show("Try again in 0:01. You can use the official website while you wait.")
+        assertNull(controller.begin())
+        elapsed = 180_000L; compose.runOnIdle { controller.expire() }
+        show("Sign in through system browser"); compose.onNodeWithText("Sign in through system browser").assertIsEnabled()
+        assertEquals(1, browserOpens); assertEquals(1, bridge.exchanges)
+        bridge.rateLimited = false
+        compose.onNodeWithText("Sign in through system browser").performClick(); complete()
+        show("Synthetic conference status"); capture("auth-synthetic-rate-limit-recovered")
+        assertEquals(2, browserOpens); assertEquals(2, bridge.exchanges)
+        bridge.rateLimited = true
+        runBlocking { controller.logout() }
+        show("Sign in through system browser"); compose.onNodeWithText("Sign in through system browser").performClick(); complete()
+        assertEquals(180, controller.retryAfterSeconds.value)
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity {
+            assertSame(controller, androidx.lifecycle.ViewModelProvider(it)[CooldownFixtureModel::class.java].controller)
+            assertEquals(180, controller.retryAfterSeconds.value); assertNull(controller.begin())
+        }
+        assertEquals(3, browserOpens); assertEquals(3, bridge.exchanges)
+        controller.forget()
+    }
+    @Test fun largeTextRateLimitKeepsWebsiteActionsAvailableWithoutStartingNativeAuth() {
+        bridge.rateLimited = true; start(1.6f)
+        show("Sign in through system browser"); compose.onNodeWithText("Sign in through system browser").performClick(); complete()
+        show("Sign in through system browser"); compose.onNodeWithText("Sign in through system browser").assertIsNotEnabled()
+        capture("auth-synthetic-rate-limited-large-text")
+        show("Open account on official website"); compose.onNodeWithText("Open account on official website").assertIsEnabled().performClick()
+        show("Open actual tickets on website"); compose.onNodeWithText("Open actual tickets on website").assertIsEnabled().performClick()
+        assertEquals(1, websiteOpens); assertEquals(1, ticketOpens); assertEquals(1, browserOpens); assertEquals(1, bridge.exchanges)
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        assertEquals(1, closes); assertNull(controller.begin())
+        controller.forget()
+    }
     @Test fun boundedPassPagesPreserveAccountAndOfferWebsiteInsteadOfMoreReads() {
         start()
         try {
@@ -121,14 +190,14 @@ class AttendeeAuthUiTest {
                 bridge.observed=now.minusSeconds(5)
                 show("Sign in through system browser");compose.onNodeWithText("Sign in through system browser").performClick();complete()
                 repeat(9) {index ->
-                    show("Load more pass status");compose.onNodeWithText("Load more pass status").performClick()
+                    showAt((controller.state.value as AttendeeState.Ready).snapshot.passes.size + 4,"Load more pass status");compose.onNodeWithText("Load more pass status").performClick()
                     compose.waitUntil(5_000) {(controller.state.value as? AttendeeState.Ready)?.snapshot?.passes?.size==minOf((index+2)*20,total)}
                 }
                 val verified=(controller.state.value as AttendeeState.Ready).snapshot
                 assertEquals((1..total).map(Int::toString),verified.passes.map {it.id})
                 bridge.observed=now.minusSeconds(1)
                 if(total==199) {
-                    show("Load more pass status");compose.onNodeWithText("Load more pass status").performClick()
+                    showAt((controller.state.value as AttendeeState.Ready).snapshot.passes.size + 4,"Load more pass status");compose.onNodeWithText("Load more pass status").performClick()
                     compose.waitUntil(5_000) {(controller.state.value as? AttendeeState.Ready)?.snapshot?.let {it.nextCursor==null}==true}
                 }
                 val bounded=(controller.state.value as AttendeeState.Ready).snapshot
@@ -142,8 +211,8 @@ class AttendeeAuthUiTest {
                 bridge.pageSizes=listOf(20)
                 showAt(3,"Refresh account status");compose.onNodeWithText("Refresh account status").performClick()
                 compose.waitUntil(5_000) {(controller.state.value as? AttendeeState.Ready)?.snapshot?.passes?.size==20}
-                show("Load more pass status");assertEquals(stopped+1,bridge.pageReads)
-                show("Sign out and clear account");compose.onNodeWithText("Sign out and clear account").performClick()
+                showAt((controller.state.value as AttendeeState.Ready).snapshot.passes.size + 4,"Load more pass status");assertEquals(stopped+1,bridge.pageReads)
+                showAt((controller.state.value as AttendeeState.Ready).snapshot.passes.size + 5,"Sign out and clear account");compose.onNodeWithText("Sign out and clear account").performClick()
                 show("Sign in through system browser")
             }
         } finally {controller.forget()}
