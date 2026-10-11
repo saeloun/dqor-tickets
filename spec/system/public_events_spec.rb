@@ -23,7 +23,7 @@ RSpec.describe "Published owned event browser contract", type: :system do
     expect(page).to have_css("h1", text: event.title)
     result = read_public_contract(public_event_path("hosted-event-#{event.id}"))
     expect(result.fetch("status")).to eq(200)
-    expect(result.fetch("body").fetch("event")).to include("id" => "hosted-event-#{event.id}", "ownership" => "hosted_event", "timezone" => "Asia/Kolkata", "starts_at" => "2026-11-07T17:30:00+05:30")
+    expect(result.fetch("body").fetch("event")).to include("id" => "hosted-event-#{event.id}", "ownership" => "hosted_event", "timezone" => "Asia/Kolkata", "starts_at" => "2026-11-07T17:30:00.000000+05:30")
     expect(result.fetch("etag")).to be_present
     event.update!(status: :draft)
     result = read_public_contract(public_event_path("hosted-event-#{event.id}"))

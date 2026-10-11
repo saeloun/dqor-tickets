@@ -22,7 +22,7 @@ module PublicEvents
       end_time = event.ends_at.in_time_zone(event.timezone)
       {
         id: "hosted-event-#{event.id}", ownership: "hosted_event", title: event.title,
-        starts_at: start_time.iso8601, ends_at: end_time.iso8601,
+        starts_at: start_time.iso8601(6), ends_at: end_time.iso8601(6),
         start_date: start_time.to_date.iso8601, end_date: end_time.to_date.iso8601,
         timezone: event.timezone,
         organizer: { name: event.organization.name, slug: event.organization.slug },

@@ -45,7 +45,7 @@ RSpec.describe "Published owned events v1", type: :request do
     expect(body.fetch("content_version")).to match(/\A[a-f0-9]{64}\z/)
     row = body.fetch("event")
     expect(row.keys).to match_array(%w[id ownership title starts_at ends_at start_date end_date timezone organizer details_path])
-    expect(row).to include("id" => "hosted-event-#{event.id}", "ownership" => "hosted_event", "starts_at" => "2026-11-07T00:15:00+05:30", "ends_at" => "2026-11-07T01:30:00+05:30", "start_date" => "2026-11-07", "end_date" => "2026-11-07", "timezone" => "Asia/Kolkata", "details_path" => published_event_path(organization.slug, event.slug))
+    expect(row).to include("id" => "hosted-event-#{event.id}", "ownership" => "hosted_event", "starts_at" => "2026-11-07T00:15:00.000000+05:30", "ends_at" => "2026-11-07T01:30:00.000000+05:30", "start_date" => "2026-11-07", "end_date" => "2026-11-07", "timezone" => "Asia/Kolkata", "details_path" => published_event_path(organization.slug, event.slug))
     expect(row.fetch("organizer")).to eq("name" => organization.name, "slug" => organization.slug)
     expect(response.body).not_to include("PRIVATE", ticket.secret, ticket.claim_token, "password", "entitlement", "membership")
     expect(response.headers["Set-Cookie"]).to be_nil
@@ -103,7 +103,7 @@ RSpec.describe "Published owned events v1", type: :request do
   it "preserves timezone offsets across a daylight-saving transition" do
     event.update!(timezone: "Europe/London", starts_at: Time.utc(2026, 10, 25, 0, 30), ends_at: Time.utc(2026, 10, 25, 1, 30))
     get detail_path
-    expect(response.parsed_body.fetch("event")).to include("starts_at" => "2026-10-25T01:30:00+01:00", "ends_at" => "2026-10-25T01:30:00+00:00", "start_date" => "2026-10-25", "end_date" => "2026-10-25", "timezone" => "Europe/London")
+    expect(response.parsed_body.fetch("event")).to include("starts_at" => "2026-10-25T01:30:00.000000+01:00", "ends_at" => "2026-10-25T01:30:00.000000+00:00", "start_date" => "2026-10-25", "end_date" => "2026-10-25", "timezone" => "Europe/London")
   end
 
   it "revalidates unchanged GET and HEAD snapshots with bodyless 304 and no timestamp validator" do
