@@ -16,6 +16,7 @@ module Discovery
       uri = URI.parse(value)
       host = uri.host.to_s.downcase
       valid_host = host.include?(".") && host.match?(/\A[a-z0-9][a-z0-9.-]*[a-z0-9]\z/) && !host.end_with?(".local", ".internal", ".test", ".localhost")
+      valid_host = false if host.split(".").last.to_s.match?(/\A(?:[0-9]+|0x[0-9a-f]*)\z/i)
       begin
         IPAddr.new(host)
         valid_host = false

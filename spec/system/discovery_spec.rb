@@ -59,4 +59,20 @@ RSpec.describe "Event discovery journey", type: :system do
   ensure
     page.driver.browser.page.command("Emulation.setEmulatedMedia", features: [])
   end
+  it "renders stored numeric-IP destinations as unavailable without navigating to them" do
+    visit discovery_listings_path
+    expect(page.evaluate_script("new URL('https://127.0.0.0x/').hostname")).to eq("127.0.0.0")
+    listing = Discovery::Listing.find_by!(canonical_url: "https://example.com/events/one")
+    %w[https://127.1/ https://0x7f.0.0.1/ https://192.168.1/ https://0177.0.0.1/ https://127.0.0.0x/].each do |url|
+      listing.update_columns(canonical_url: url, registration_url: url)
+      listing.references.first.update_column(:source_url, url)
+      visit discovery_listing_path(listing)
+      expect(page).to have_content("Ruby community gathering")
+      expect(page).to have_content("Source link unavailable")
+      expect(page).not_to have_link(href: url)
+      expect(page).not_to have_link(text: /View on/)
+    end
+    page.save_screenshot(Rails.root.join("tmp/discovery-numeric-host-withheld.png"), full: true)
+    expect(@console_errors).to be_empty
+  end
 end

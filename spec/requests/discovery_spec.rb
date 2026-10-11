@@ -105,4 +105,18 @@ RSpec.describe "External event discovery", type: :request do
     expect(response.parsed_body["events"].find { |event| event["id"] == "discovery-#{listing.id}" }).to include("registration_url" => nil)
     expect(response.body).not_to include("javascript:")
   end
+  it "withholds browser numeric-IP URLs from stored HTML links and public API fields" do
+    listing = Discovery::Listing.find_by!(canonical_url: "https://example.com/events/one")
+    %w[https://127.1/ https://0x7f.0.0.1/ https://192.168.1/ https://0177.0.0.1/ https://127.0.0.0x/].each do |url|
+      listing.update_columns(canonical_url: url, registration_url: url)
+      listing.references.first.update_column(:source_url, url)
+      get discovery_listing_path(listing)
+      expect(response.body).not_to include(url, "View on")
+      expect(response.body).to include("Source link unavailable")
+      get public_discovery_events_path
+      event = response.parsed_body["events"].find { |record| record["id"] == "discovery-#{listing.id}" }
+      expect(event).to include("canonical_url" => nil, "registration_url" => nil)
+      expect(response.body).not_to include(url)
+    end
+  end
 end

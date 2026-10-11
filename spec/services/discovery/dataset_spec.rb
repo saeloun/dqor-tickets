@@ -18,7 +18,7 @@ RSpec.describe Discovery::Dataset do
   end
 
   it "rejects unsafe, local and credential-bearing URLs" do
-    %w[javascript:alert(1) http://example.com/ https://127.0.0.1/ https://events.local/ https://example.com/?token=private].each do |url|
+    %w[javascript:alert(1) http://example.com/ https://127.0.0.1/ https://127.1/ https://0x7f.0.0.1/ https://192.168.1/ https://0177.0.0.1/ https://127.0.0.0x/ https://events.local/ https://example.com/?token=private].each do |url|
       expect { parse(discovery_record(canonical_url: url)) }.to raise_error(described_class::Invalid)
     end
   end
