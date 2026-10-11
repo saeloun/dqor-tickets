@@ -48,6 +48,7 @@ enum class EventSection(val label: String) { OVERVIEW("Overview"), SCHEDULE("Sch
 private fun dayLabel(day: String)=LocalDate.parse(day).format(DateTimeFormatter.ofPattern("EEE, d MMM",java.util.Locale.ENGLISH))
 private val PosterShape=RoundedCornerShape(16.dp)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Unit) {
     var eventId by rememberSaveable {mutableStateOf<String?>(null)}
@@ -77,7 +78,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                     else Text("dqor",Modifier.padding(horizontal=8.dp),fontSize=24.sp,fontWeight=FontWeight.Bold,letterSpacing=(-1).sp)
                 }
                 val staff: @Composable () -> Unit = {TextButton(onClick=onStaff,modifier=Modifier.heightIn(min=48.dp)) {Text("Staff workspace",style=MaterialTheme.typography.labelLarge)}}
-                if(LocalDensity.current.fontScale>1.3f) Column(Modifier.fillMaxWidth().padding(horizontal=12.dp)) {back(); staff()}
+                if(LocalDensity.current.fontScale>1.3f) FlowRow(Modifier.fillMaxWidth().padding(horizontal=12.dp),horizontalArrangement=Arrangement.SpaceBetween) {back(); staff()}
                 else Row(Modifier.fillMaxWidth().heightIn(min=56.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {back(); staff()}
                 if(event!=null && passId==null) ScrollableTabRow(selectedTabIndex=section.ordinal,edgePadding=8.dp,divider={},containerColor=Color.Transparent,
                     indicator={positions -> if(positions.isNotEmpty()) TabRowDefaults.SecondaryIndicator(Modifier.tabIndicatorOffset(positions[section.ordinal]),height=2.dp)}) {
@@ -117,7 +118,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
                             MetadataRow(LocalDate.parse(event.dates.first()).dayOfMonth.toString(),dayLabel(event.dates.first()),"${event.dates.size} event ${if(event.dates.size==1) "day" else "days"} · ${content.timeZone}")
                             Spacer(Modifier.height(12.dp)); MetadataRow("↗",event.location.substringBefore(" · "),"A gathering of curious minds")
                         }
-                        item {Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
+                        item {Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceContainer,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
                             Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                                 Text("Your place in the story",style=MaterialTheme.typography.titleMedium)
                                 Text("Explore a sample pass and plan your time here.",color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -181,7 +182,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
 @Composable private fun SessionCard(session: ProgramSession,saved: Boolean,expanded: Boolean,toggleExpanded: ()->Unit,onSave: ()->Unit) {
     val motion=LocalAttendeeMotion.current
     val border by animateColorAsState(if(saved) MaterialTheme.colorScheme.primary.copy(alpha=.55f) else MaterialTheme.colorScheme.outlineVariant,tween(motion.feedbackMillis),label="bookmark-border")
-    val surface by animateColorAsState(if(saved) Color(0xFFF8EFF2) else Color.White,tween(motion.feedbackMillis),label="bookmark-surface")
+    val surface by animateColorAsState(if(saved) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,tween(motion.feedbackMillis),label="bookmark-surface")
     Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(session.startsAt,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold)
@@ -208,7 +209,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
         if(content.wallet(event.id).isEmpty()) item {AttendeeEmptyState("No sample passes for this event","Try the DQOR event to explore admission and redemption states.")}
         items(content.wallet(event.id),key={it.id}) {pass ->
             val interaction=remember {MutableInteractionSource()}
-            Card(onClick={open(pass.id)},interactionSource=interaction,modifier=Modifier.fillMaxWidth().attendeePress(interaction),colors=CardDefaults.cardColors(containerColor=Color.White),border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
+            Card(onClick={open(pass.id)},interactionSource=interaction,modifier=Modifier.fillMaxWidth().attendeePress(interaction),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainer),border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
             EventArtwork(event,Modifier.fillMaxWidth().height(112.dp),compact=true)
             Column(Modifier.padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
                 Text(event.name,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -226,7 +227,7 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
 @Composable private fun PassDetail(event: Event,pass: DemoWalletPass) {
     var date by rememberSaveable(pass.id) {mutableStateOf(pass.admission.first().date)}
     LazyColumn(Modifier.fillMaxSize().testTag("pass-detail"),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(24.dp)) {
-        item {Surface(shape=RoundedCornerShape(24.dp),color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column {
+        item {Surface(shape=RoundedCornerShape(24.dp),color=MaterialTheme.colorScheme.surfaceContainer,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column {
             EventArtwork(event,Modifier.fillMaxWidth().height(128.dp),compact=true)
             Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 EventDisplayTitle(event.name,compact=true)
@@ -246,13 +247,13 @@ fun EventHubApp(events: List<Event>, content: EventExperience, onStaff: () -> Un
         }}}
         item {Text("Admission",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold); Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {pass.admission.forEach {day -> FilterChip(selected=date==day.date,onClick={date=day.date},label={Text(dayLabel(day.date))},modifier=Modifier.heightIn(min=48.dp))}}; StatusLine("Entrance · ${dayLabel(date)}",pass.admissionOn(date).label)}
         item {HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant); Spacer(Modifier.height(20.dp)); Text("Meals & community",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold); Spacer(Modifier.height(8.dp)); Text("Admission and benefit redemption are separate.",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)}
-        items(pass.entitlements,key={it.id}) {entitlement -> Surface(shape=MaterialTheme.shapes.medium,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.fillMaxWidth().padding(20.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {Text(entitlement.title,style=MaterialTheme.typography.titleMedium); Text("${entitlement.kind.label} · ${dayLabel(entitlement.date)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant); StatusLine("Redemption",entitlement.status.label)}}}
+        items(pass.entitlements,key={it.id}) {entitlement -> Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceContainer,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {Column(Modifier.fillMaxWidth().padding(20.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {Text(entitlement.title,style=MaterialTheme.typography.titleMedium); Text("${entitlement.kind.label} · ${dayLabel(entitlement.date)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant); StatusLine("Redemption",entitlement.status.label)}}}
         item {DemoNote("Read-only demo. No live account or redemption access.")}
     }
 }
 
 @Composable private fun AttendeeEmptyState(title: String,message: String,action: String?=null,onAction: () -> Unit={}) {
-    Surface(shape=MaterialTheme.shapes.large,color=Color.White,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
+    Surface(shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surfaceContainer,border=androidx.compose.foundation.BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
         Column(Modifier.fillMaxWidth().padding(24.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
             GatheringMotif(Modifier.size(112.dp,80.dp))
             Text(title,style=MaterialTheme.typography.titleLarge)
