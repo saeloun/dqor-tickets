@@ -32,8 +32,7 @@ module ConferenceBadges
           "disable-gpu" => nil,
           "disable-dev-shm-usage" => nil,
           "disable-setuid-sandbox" => nil,
-          "no-zygote" => nil,
-          "single-process" => nil
+          "no-zygote" => nil
         }
       end
       browser = Ferrum::Browser.new(**options)

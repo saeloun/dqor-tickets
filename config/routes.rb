@@ -73,6 +73,9 @@ Rails.application.routes.draw do
   end
   get "events/:organization_slug/:event_slug", to: "published_events#show", as: :published_event
 
+  resource :wall_of_love, path: "wall-of-love", only: %i[show create update destroy], controller: "wall_of_love"
+  resources :wall_love_reviews, path: "wall-of-love/review", only: %i[show update]
+
   root "home#index"
   get "tickets", to: "tickets#index", as: :tickets_store
 

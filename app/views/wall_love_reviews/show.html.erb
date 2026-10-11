@@ -1,0 +1,26 @@
+<% content_for :title, "Review Wall of Love note · Deccan Queen on Rails" %>
+<main class="section wall-love">
+  <div class="container">
+    <h1 class="section-heading">Review publication</h1>
+    <% if notice.present? %><p role="status"><%= notice %></p><% end %>
+    <% if alert.present? %><p role="alert"><%= alert %></p><% end %>
+    <p>Status: <strong><%= @note.status %></strong>. Publication consent: <%= @note.publication_consent? ? "Given" : "Not given" %>.</p>
+    <figure class="card wall-love__card">
+      <blockquote><p><%= @note.note %></p></blockquote>
+      <figcaption><strong><%= @note.public_name %></strong>
+        <% if (source_url = wall_love_source_url(@note.source_url)) %><br><%= link_to source_url, source_url, target: "_blank", rel: "nofollow ugc noopener noreferrer" %><% end %>
+      </figcaption>
+    </figure>
+    <p>Approve only the name, note and link shown here. Check that any linked content is public and belongs to the named author.</p>
+    <%= form_with url: wall_love_review_path(@note), method: :patch do |form| %>
+      <%= form.hidden_field :lock_version, value: @note.lock_version %>
+      <% if @note.pending? %>
+        <%= form.button "Approve publication", name: "decision", value: "approve", class: "btn btn-primary" %>
+        <%= form.button "Reject", name: "decision", value: "reject", class: "btn btn-secondary" %>
+      <% elsif @note.approved? %>
+        <%= form.button "Unpublish", name: "decision", value: "unpublish", class: "btn btn-secondary" %>
+      <% end %>
+    <% end %>
+    <p><%= link_to "Back to moderation queue", "/avo/resources/wall_love_notes" %></p>
+  </div>
+</main>

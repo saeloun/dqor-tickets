@@ -31,6 +31,7 @@ class User < ApplicationRecord
   has_many :bookmarked_talks, through: :talk_bookmarks, source: :talk
   has_many :talk_feedbacks, dependent: :destroy
   has_many :talk_questions, dependent: :destroy
+  has_one :wall_love_note, dependent: :destroy
   has_many :push_subscriptions, dependent: :destroy
   has_many :sent_messages, class_name: "Message", foreign_key: :sender_id, dependent: :destroy
 
