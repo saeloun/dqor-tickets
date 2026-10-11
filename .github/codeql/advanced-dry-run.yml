@@ -1,0 +1,4 @@
+name: DQOR advanced dry run
+disable-default-queries: false
+threat-models:
+  - remote
