@@ -11,6 +11,12 @@ RSpec.describe "Published owned events v1", type: :request do
   end
 
   it "requires both default-off publication gates even for existing members" do
+    member = User.create!(email: "member-gate@example.test")
+    Membership.create!(organization: organization, user: member, role: :owner)
+    token = Rails.application.message_verifier(:account_magic_link).generate(member.id, purpose: :account_magic_link, expires_in: 30.minutes)
+    get account_magic_path(token: token)
+    expect(response).to have_http_status(:redirect)
+
     [ [ false, true ], [ true, false ], [ false, false ] ].each do |platform, public_events|
       allow(Rails.configuration.x).to receive(:organizer_platform_enabled).and_return(platform)
       allow(Rails.configuration.x).to receive(:public_events_enabled).and_return(public_events)
@@ -140,6 +146,42 @@ RSpec.describe "Published owned events v1", type: :request do
     get public_events_path, headers: { "If-None-Match" => catalog_etag }
     expect(response).to have_http_status(:ok)
     expect(response.parsed_body.fetch("events")).to eq([])
+  end
+
+  it "withdraws a deleted event and its cached catalog entry without returning a stale validator" do
+    get detail_path
+    path = detail_path
+    detail_etag = response.headers.fetch("ETag")
+    get public_events_path
+    catalog_etag = response.headers.fetch("ETag")
+    event.destroy!
+
+    get path, headers: { "If-None-Match" => detail_etag }
+    expect(response).to have_http_status(:not_found)
+    expect(response.headers["Cache-Control"]).to eq("no-store")
+    expect(response.headers["ETag"]).to be_nil
+    get public_events_path, headers: { "If-None-Match" => catalog_etag }
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.fetch("events")).to eq([])
+    expect(response.headers.fetch("ETag")).not_to eq(catalog_etag)
+  end
+
+  it "recovers after a read error using the last valid catalog and detail validators" do
+    [ [ public_events_path, :index ], [ detail_path, :show ] ].each do |path, operation|
+      get path
+      etag = response.headers.fetch("ETag")
+      allow(PublicEvents::Snapshot).to receive(operation).and_raise(ActiveRecord::ConnectionTimeoutError)
+      get path, headers: { "If-None-Match" => etag }
+      expect(response).to have_http_status(:service_unavailable)
+      expect(response.headers["ETag"]).to be_nil
+      expect(response.headers["Cache-Control"]).to eq("no-store")
+      allow(PublicEvents::Snapshot).to receive(operation).and_call_original
+      get path, headers: { "If-None-Match" => etag }
+      expect(response).to have_http_status(:not_modified)
+      expect(response.body).to be_empty
+      expect(response.headers.fetch("ETag")).to eq(etag)
+      expect(response.headers["Cache-Control"]).to include("must-revalidate")
+    end
   end
 
   it "does not change public versions for unpublished drafts or unrelated private records" do
