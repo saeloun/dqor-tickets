@@ -151,7 +151,7 @@ struct OwnedEventsRootView: View {
             if let event = store.detail.event {
                 Text(event.title).font(.title2.bold()).accessibilityIdentifier("ownedTitle")
                 Text(event.organizer.name)
-                Text(PublicProgrammeFormatting.time(event.startsAt, timezone: event.timezone) ?? event.startsAt)
+                Text((PublicProgrammeFormatting.time(event.startsAt, timezone: event.timezone) ?? event.startsAt) + " – " + (PublicProgrammeFormatting.time(event.endsAt, timezone: event.timezone) ?? event.endsAt)).accessibilityIdentifier("ownedTimeRange")
                 Text(event.startDate + " – " + event.endDate)
                 Text(event.timezone)
                 Link("View event website", destination: event.website).accessibilityIdentifier("ownedWebsite")

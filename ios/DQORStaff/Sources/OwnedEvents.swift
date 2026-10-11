@@ -13,6 +13,7 @@ struct OwnedEvent: Decodable, Equatable, Identifiable, Sendable {
               title.count <= 255, !organizer.name.isEmpty, organizer.name.count <= 255,
               organizer.slug.range(of: "^[a-z0-9]+(?:-[a-z0-9]+)*$", options: .regularExpression) != nil,
               detailsPath.range(of: "^/events/" + organizer.slug + "/[a-z0-9]+(?:-[a-z0-9]+)*$", options: .regularExpression) != nil,
+              let namedZone = NSTimeZone(name: timezone), namedZone.data.starts(with: [0x54, 0x5a, 0x69, 0x66]),
               let zone = TimeZone(identifier: timezone), let start = Self.instant(startsAt), let end = Self.instant(endsAt), end >= start else { throw OwnedEventsError.invalidResponse }
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)

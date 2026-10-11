@@ -21,6 +21,7 @@ final class OwnedEventsUITests: XCTestCase {
         app.buttons["hosted-event-101"].tap()
         XCTAssertTrue(app.staticTexts["ownedTitle"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Synthetic organizers"].exists)
+        XCTAssertEqual(app.staticTexts["ownedTimeRange"].label, "12:15\u{202f}AM – 1:30\u{202f}AM")
         XCTAssertTrue(app.staticTexts["ownedPreview"].exists)
         XCTAssertTrue(app.buttons["ownedWebsite"].exists)
         capture(app, "Owned synthetic event detail")

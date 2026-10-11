@@ -117,6 +117,22 @@ final class OwnedEventsTests: XCTestCase {
         let data = try mutate { $0["account"] = ["email": "synthetic@example.invalid"] }
         do { _ = try await OwnedEventsClient(transport: OwnedQueue([response(data: data)])).refresh(resource); XCTFail("Closed contract") } catch { }
     }
+    func testIANATimezonesRejectFixedOffsetStringsAndPreserveAliases() async throws {
+        let accepted = ["Asia/Kolkata", "Asia/Calcutta", "UTC", "GMT", "CET", "EST", "US/Eastern", "Etc/GMT+5", "GMT+0"]
+        for zone in ["GMT+0530", "GMT+05:30", "UTC+05:30", "+05:30", "Z"] + accepted {
+            let data = try mutate(detail: true) { root in
+                var event = root["event"] as! [String: Any]
+                event["timezone"] = zone
+                if accepted.contains(zone) { event["starts_at"] = "2026-11-07T12:15:00Z"; event["ends_at"] = "2026-11-07T13:30:00Z" }
+                root["event"] = event
+            }
+            let client = OwnedEventsClient(transport: OwnedQueue([response(detail: true, data: data)]))
+            do {
+                let state = try await client.refresh(.detail("hosted-event-101"))
+                XCTAssertTrue(accepted.contains(zone)); XCTAssertNotNil(state.event)
+            } catch { XCTAssertFalse(accepted.contains(zone)) }
+        }
+    }
     func testSchemaPaginationAndDuplicateLimits() async throws {
         let cases = [try mutate { $0["schema_version"] = 2 }, try mutate { $0["content_version"] = "invalid" }, try mutate { $0["pagination"] = ["page": 2, "per_page": 24, "total": 1] }, try mutate { root in let rows = root["events"] as! [[String: Any]]; root["events"] = [rows[0], rows[0]] }, try mutate { root in let row = (root["events"] as! [[String: Any]])[0]; root["events"] = Array(repeating: row, count: 25) }]
         for data in cases {
