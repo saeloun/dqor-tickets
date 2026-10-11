@@ -117,6 +117,59 @@ final class OwnedEventsTests: XCTestCase {
         let data = try mutate { $0["account"] = ["email": "synthetic@example.invalid"] }
         do { _ = try await OwnedEventsClient(transport: OwnedQueue([response(data: data)])).refresh(resource); XCTFail("Closed contract") } catch { }
     }
+    func testUnicodeScalarLimitsPreserve255AndRejectLongerComposedNames() async throws {
+        let cases: [(String, Bool)] = [(String(repeating: "😀", count: 255), true), (String(repeating: "😀", count: 256), false), (String(repeating: "a\u{301}", count: 127) + "a", true), (String(repeating: "a\u{301}", count: 128), false), (String(repeating: "👩‍💻", count: 85), true), (String(repeating: "👩‍💻", count: 86), false)]
+        for field in ["title", "name"] {
+            for (value, valid) in cases {
+                let data = try mutate(detail: true) { root in
+                    var event = root["event"] as! [String: Any]
+                    if field == "title" { event[field] = value }
+                    else { var organizer = event["organizer"] as! [String: Any]; organizer[field] = value; event["organizer"] = organizer }
+                    root["event"] = event
+                }
+                do {
+                    let state = try await OwnedEventsClient(transport: OwnedQueue([response(detail: true, data: data)])).refresh(.detail("hosted-event-101"))
+                    XCTAssertTrue(valid, "\(field): \(value.unicodeScalars.count) code points"); XCTAssertNotNil(state.event)
+                } catch { XCTAssertFalse(valid, "\(field): \(value.unicodeScalars.count) code points") }
+            }
+        }
+    }
+    func testBlankTitlesAndOrganizerNamesRejected() async throws {
+        for field in ["title", "name"] {
+            let whitespace = [0x9, 0xa, 0xb, 0xc, 0xd, 0x20, 0x85, 0xa0, 0x1680] + Array(0x2000...0x200a) + [0x2028, 0x2029, 0x202f, 0x205f, 0x3000]
+            for value in ["", " \t\r\n"] + whitespace.map({ String(Unicode.Scalar($0)!) }) {
+                let data = try mutate(detail: true) { root in
+                    var event = root["event"] as! [String: Any]
+                    if field == "title" { event[field] = value }
+                    else { var organizer = event["organizer"] as! [String: Any]; organizer[field] = value; event["organizer"] = organizer }
+                    root["event"] = event
+                }
+                do { _ = try await OwnedEventsClient(transport: OwnedQueue([response(detail: true, data: data)])).refresh(.detail("hosted-event-101")); XCTFail("Blank \(field)") }
+                catch { XCTAssertEqual(error as? OwnedEventsError, .invalidResponse) }
+            }
+        }
+    }
+    func testNonWhitespaceControlsRemainBackendCompatible() async throws {
+        for field in ["title", "name"] {
+            for value in ["\u{1c}", "\u{200b}", "\u{feff}"] {
+                let data = try mutate(detail: true) { root in
+                    var event = root["event"] as! [String: Any]
+                    if field == "title" { event[field] = value }
+                    else { var organizer = event["organizer"] as! [String: Any]; organizer[field] = value; event["organizer"] = organizer }
+                    root["event"] = event
+                }
+                let state = try await OwnedEventsClient(transport: OwnedQueue([response(detail: true, data: data)])).refresh(.detail("hosted-event-101"))
+                XCTAssertNotNil(state.event)
+            }
+        }
+    }
+    func testEndMustBeStrictlyLaterIncludingEquivalentOffsetInstant() async throws {
+        for end in ["2026-11-07T00:15:00+05:30", "2026-11-06T18:45:00Z"] {
+            let data = try mutate(detail: true) { root in var event = root["event"] as! [String: Any]; event["ends_at"] = end; root["event"] = event }
+            do { _ = try await OwnedEventsClient(transport: OwnedQueue([response(detail: true, data: data)])).refresh(.detail("hosted-event-101")); XCTFail("Equal event times") }
+            catch { XCTAssertEqual(error as? OwnedEventsError, .invalidResponse) }
+        }
+    }
     func testIANATimezonesRejectFixedOffsetStringsAndPreserveAliases() async throws {
         let accepted = ["Asia/Kolkata", "Asia/Calcutta", "UTC", "GMT", "CET", "EST", "US/Eastern", "Etc/GMT+5", "GMT+0"]
         for zone in ["GMT+0530", "GMT+05:30", "UTC+05:30", "+05:30", "Z"] + accepted {

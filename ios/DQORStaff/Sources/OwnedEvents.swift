@@ -9,12 +9,12 @@ struct OwnedEvent: Decodable, Equatable, Identifiable, Sendable {
         value.range(of: "^hosted-event-[1-9][0-9]{0,18}$", options: .regularExpression) != nil && Int64(value.dropFirst(13)) != nil
     }
     func validate() throws {
-        guard Self.validID(id), ownership == "hosted_event", !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              title.count <= 255, !organizer.name.isEmpty, organizer.name.count <= 255,
+        guard Self.validID(id), ownership == "hosted_event", title.unicodeScalars.contains(where: { !$0.properties.isWhitespace }),
+              title.unicodeScalars.count <= 255, organizer.name.unicodeScalars.contains(where: { !$0.properties.isWhitespace }), organizer.name.unicodeScalars.count <= 255,
               organizer.slug.range(of: "^[a-z0-9]+(?:-[a-z0-9]+)*$", options: .regularExpression) != nil,
               detailsPath.range(of: "^/events/" + organizer.slug + "/[a-z0-9]+(?:-[a-z0-9]+)*$", options: .regularExpression) != nil,
               let namedZone = NSTimeZone(name: timezone), namedZone.data.starts(with: [0x54, 0x5a, 0x69, 0x66]),
-              let zone = TimeZone(identifier: timezone), let start = Self.instant(startsAt), let end = Self.instant(endsAt), end >= start else { throw OwnedEventsError.invalidResponse }
+              let zone = TimeZone(identifier: timezone), let start = Self.instant(startsAt), let end = Self.instant(endsAt), end > start else { throw OwnedEventsError.invalidResponse }
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = Locale(identifier: "en_US_POSIX")
