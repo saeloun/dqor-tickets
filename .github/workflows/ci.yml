@@ -103,21 +103,29 @@ jobs:
     env:
       RAILS_ENV: test
       DATABASE_URL: "postgres://postgres:postgres@localhost:5432/dqor_tickets_test"
-      CHROME_PATH: /usr/bin/chromium-browser
       CHROME_NO_SANDBOX: "1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Install Chromium and Devanagari fonts for PDF rendering
+      - name: Install PDF rendering dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends chromium-browser fonts-noto-core libvips-dev poppler-utils
+          sudo apt-get install -y --no-install-recommends fonts-noto-core libvips-dev poppler-utils
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
+      - name: Verify the runner browser can render a PDF
+        run: |
+          browser_path="$(command -v google-chrome)"
+          browser_path="$(readlink -f "$browser_path")"
+          test -x "$browser_path"
+          "$browser_path" --version
+          echo "CHROME_PATH=$browser_path" >> "$GITHUB_ENV"
+          CHROME_PATH="$browser_path" bundle exec ruby script/verify_test_browser.rb
 
       - name: Prepare test database
         run: bin/rails db:test:prepare

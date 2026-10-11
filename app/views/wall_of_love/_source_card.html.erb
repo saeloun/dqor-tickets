@@ -1,0 +1,18 @@
+<% embed_ids = wall_love_embed_ids(source) %>
+<article class="card wall-love-source" data-wall-love-collection-target="card" data-source-id="<%= source.fetch("id") %>" data-groups="<%= WallLoveSourceCatalog.filter_groups(source) %>"<% if embed_ids[:video_id] %> data-controller="wall-love-post" data-action="wall-love-media-activate@document->wall-love-post#deactivate" data-wall-love-post-video-id-value="<%= embed_ids[:video_id] %>"<% end %>>
+  <div class="wall-love-source__top"><span class="wall-love-media__platform"><%= source.fetch("platform") %></span><span class="wall-love-source__voice"><%= WallLoveSourceCatalog.voice_label(source) %></span></div>
+  <% if embed_ids[:video_id] %>
+    <div class="wall-love-media__recording-preview" data-wall-love-post-target="preview">
+      <%= image_tag wall_love_recording_preview_url(source), alt: "Preview of the official recording featuring #{source.fetch('author')}", loading: "lazy", width: 480, height: 360, referrerpolicy: "no-referrer" %>
+      <span class="wall-love-media__play-icon" aria-hidden="true">▶</span>
+    </div>
+  <% end %>
+  <h3><%= source.fetch("card_title") %></h3>
+  <p class="wall-love-source__author"><%= source.fetch("author") %></p>
+  <% if source["excerpt"].present? %><blockquote><p><%= source.fetch("excerpt") %></p></blockquote><% end %>
+  <p class="wall-love-source__summary"><span class="wall-love-media__summary-label">Summary:</span> <%= source.fetch("caption") %></p>
+  <div class="wall-love-source__embed" data-wall-love-post-target="embed"></div>
+  <% if embed_ids[:video_id] %><button class="btn btn-secondary wall-love-source__load" type="button" data-wall-love-post-target="button" data-action="wall-love-post#load" hidden>Load recording player</button><% end %>
+  <%= link_to "Open original on #{source.fetch('platform')} ↗", wall_love_source_url(source.fetch("url")), class: "wall-love-media__source", target: "_blank", rel: "noopener noreferrer" %>
+  <p class="wall-love-source__status" data-wall-love-post-target="status" role="status"></p>
+</article>

@@ -1,0 +1,45 @@
+<section class="wall-love-media" aria-labelledby="featured-sources-heading" aria-roledescription="carousel" data-controller="wall-love-media" data-action="keydown->wall-love-media#keydown focusin->wall-love-media#pause mouseenter->wall-love-media#pause">
+  <div class="wall-love-media__heading">
+    <div>
+      <span class="section-label">Voices & moments</span>
+      <h2 id="featured-sources-heading" class="wall-love__heading">The conference, through your eyes</h2>
+      <p>Public posts, community memories and official recordings. The original source is always close by.</p>
+    </div>
+    <a href="#source-archive" class="wall-love-media__archive-link">Explore all <%= WallLoveSourceCatalog::SOURCES.size %> sources <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="wall-love-media__controls" data-wall-love-media-target="controls" hidden>
+    <button type="button" class="btn btn-secondary" data-action="wall-love-media#previous" aria-label="Previous featured source">← Previous</button>
+    <span class="wall-love-media__counter" data-wall-love-media-target="counter" aria-label="Current featured source"></span>
+    <button type="button" class="btn btn-secondary" data-action="wall-love-media#next" aria-label="Next featured source">Next →</button>
+    <button type="button" class="btn btn-secondary" data-wall-love-media-target="toggle" data-action="wall-love-media#toggleRotation" aria-pressed="false">Play slideshow</button>
+  </div>
+  <p class="wall-love-media__status" data-wall-love-media-target="status" role="status" aria-live="polite">Browse at your own pace. Open an original source to see the full post or recording.</p>
+  <div class="wall-love-media__slides">
+    <% WallLoveSourceCatalog.featured.each_with_index do |source, index| %>
+      <% embed_ids = wall_love_embed_ids(source) %>
+      <article class="card wall-love-media__slide" aria-roledescription="slide" aria-label="<%= index + 1 %> of <%= WallLoveSourceCatalog.featured.size %>: <%= source.fetch("author") %>" data-wall-love-media-target="slide" data-author="<%= source.fetch("author") %>" data-platform="<%= source.fetch("platform") %>" data-video-id="<%= embed_ids[:video_id] %>">
+        <div class="wall-love-media__visual">
+          <% if embed_ids[:video_id] %>
+            <div class="wall-love-media__recording-preview" data-recording-preview>
+              <%= image_tag wall_love_recording_preview_url(source), alt: "Preview of the official recording featuring #{source.fetch('author')}", loading: "lazy", width: 480, height: 360, referrerpolicy: "no-referrer" %>
+              <span class="wall-love-media__play-icon" aria-hidden="true">▶</span>
+            </div>
+          <% end %>
+          <div class="wall-love-media__embed" data-native-embed></div>
+        </div>
+        <div class="wall-love-media__caption">
+          <span class="wall-love-media__platform"><%= source.fetch("platform") %> · <%= WallLoveSourceCatalog.voice_label(source) %></span>
+          <h3><%= source.fetch("author") %></h3>
+          <p class="wall-love-media__summary-label">Post summary</p>
+          <p class="wall-love-media__summary"><%= source.fetch("caption") %></p>
+          <% if embed_ids[:video_id] %>
+            <button type="button" class="btn btn-primary wall-love-media__load" data-load-media data-action="wall-love-media#loadRecording">Load recording player</button>
+          <% end %>
+          <%= link_to "Open original on #{source.fetch('platform')} ↗", wall_love_source_url(source.fetch("url")), class: "wall-love-media__source", target: "_blank", rel: "noopener noreferrer" %>
+          <% if embed_ids[:video_id] %><p class="wall-love-media__fallback">Previews come from the original platform. If a preview cannot load, the source link is always available.</p><% end %>
+        </div>
+      </article>
+    <% end %>
+  </div>
+  <noscript><p>All featured sources and recordings are linked above. Open an original source to see its photos or play its video.</p></noscript>
+</section>

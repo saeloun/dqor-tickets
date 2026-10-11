@@ -1,0 +1,16 @@
+<section class="wall-love-recordings" aria-labelledby="recordings-heading">
+  <span class="section-label">Watch the talks</span><h2 id="recordings-heading" class="wall-love__heading">Return to the ideas</h2>
+  <p>Four official keynote recordings. Load a player when you are ready; videos never start automatically.</p>
+  <div class="wall-love-recordings__grid">
+    <% WallLoveSourceCatalog.main_wall.select { |source| source.fetch("section") == "recordings" }.each do |source| %>
+      <article class="card wall-love-source" data-recording-source-id="<%= source.fetch("id") %>" data-controller="wall-love-post" data-action="wall-love-media-activate@document->wall-love-post#deactivate" data-wall-love-post-video-id-value="<%= wall_love_embed_ids(source)[:video_id] %>">
+        <div class="wall-love-media__recording-preview" data-wall-love-post-target="preview"><%= image_tag wall_love_recording_preview_url(source), alt: "Preview of the official recording featuring #{source.fetch('author')}", loading: "lazy", width: 480, height: 360, referrerpolicy: "no-referrer" %><span class="wall-love-media__play-icon" aria-hidden="true">▶</span></div>
+        <h3><%= source.fetch("card_title") %></h3><p class="wall-love-source__author"><%= source.fetch("author") %></p>
+        <div class="wall-love-source__embed" data-wall-love-post-target="embed"></div>
+        <button type="button" class="btn btn-secondary" data-wall-love-post-target="button" data-action="wall-love-post#load" hidden>Load recording player</button>
+        <%= link_to "Watch original on YouTube ↗", wall_love_source_url(source.fetch("url")), class: "wall-love-media__source", target: "_blank", rel: "noopener noreferrer" %>
+        <p class="wall-love-source__status" data-wall-love-post-target="status" role="status"></p>
+      </article>
+    <% end %>
+  </div>
+</section>
