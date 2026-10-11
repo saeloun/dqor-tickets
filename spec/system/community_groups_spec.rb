@@ -1,8 +1,9 @@
 require "rails_helper"
 
 Capybara.register_driver(:community_groups_system) do |app|
-  options = { window_size: [ 1400, 1000 ], process_timeout: 30, timeout: 20, headless: true, js_errors: true, browser_options: { "disable-back-forward-cache" => nil } }
+  options = { window_size: [ 1400, 1000 ], process_timeout: 30, timeout: 20, headless: true, js_errors: true }
   options[:browser_path] = ENV["CHROME_PATH"] if ENV["CHROME_PATH"].present?
+  options[:browser_options] = {}
   options[:browser_options].merge!("no-sandbox" => nil, "disable-dev-shm-usage" => nil) if ENV["CHROME_NO_SANDBOX"].present?
   Capybara::Cuprite::Driver.new(app, **options)
 end
@@ -14,6 +15,8 @@ RSpec.describe "Owned community organizer journey", type: :system do
       allow(Rails.configuration.x).to receive(flag).and_return(true)
     end
     @console_errors = []
+    @navigation_types = []
+    page.driver.browser.on("Page.frameNavigated") { |event| @navigation_types << event["type"] }
     page.driver.browser.on("Runtime.consoleAPICalled") { |event| @console_errors << event if event["type"] == "error" }
   end
 
@@ -66,6 +69,7 @@ RSpec.describe "Owned community organizer journey", type: :system do
     page.go_back
     page.driver.wait_for_network_idle
     expect(page).to have_content("Pune Ruby local rehearsal")
+    puts "COMMUNITY_NORMAL_CACHE_NAVIGATION #{JSON.generate(@navigation_types)}"
     visit organizer_organization_group_path(organization, group)
     click_button "Make community private"
     expect(page).to have_content("Draft · private")
@@ -82,11 +86,20 @@ RSpec.describe "Owned community organizer journey", type: :system do
     sign_in_verified(user)
     visit organizer_organization_group_path(organization, group)
     expect(page).to have_content("Private owned group")
+    click_link "← Communities"
     membership.destroy!
-    visit organizer_organization_group_path(organization, group)
+    page.go_back
+    page.driver.wait_for_network_idle
+    if page.has_button?("Publish community", wait: 0)
+      click_button "Publish community"
+    else
+      visit organizer_organization_group_path(organization, group)
+    end
     expect(page).not_to have_content("Private owned group")
     expect(page).not_to have_button("Publish community")
     expect(page.status_code).to eq(404)
+    expect(group.reload).to be_draft
+    puts "COMMUNITY_REVOKED_NORMAL_CACHE_NAVIGATION #{JSON.generate(@navigation_types)}"
   end
   it "wraps bounded unbroken community facts and retains usable organizer title links on mobile" do
     organization = Organization.create!(name: "O" * 120, slug: "long-organizer")
