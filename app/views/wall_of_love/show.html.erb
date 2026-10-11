@@ -1,0 +1,72 @@
+<% content_for :title, "Wall of Love · Deccan Queen on Rails" %>
+<% content_for :meta_description, "Public reactions and thank-you notes from the Deccan Queen on Rails community." %>
+<main class="section wall-love">
+  <div class="container">
+    <header class="wall-love__intro">
+      <span class="section-label">Deccan Queen on Rails · Pune</span>
+      <h1 class="section-heading">Wall of Love</h1>
+      <p class="section-subheading">The people, the conversations, the Ruby community. Thank you for being part of it.</p>
+      <a href="#your-note" class="btn btn-primary">Share a thank-you note</a>
+    </header>
+
+    <% if notice.present? %><p class="wall-love__notice" role="status"><%= notice %></p><% end %>
+    <% if alert.present? %><p class="wall-love__notice" role="alert"><%= alert %></p><% end %>
+
+    <section aria-labelledby="public-reactions-heading">
+      <h2 id="public-reactions-heading" class="wall-love__heading">From the community</h2>
+      <p>Brief excerpts from public posts. Follow each link to read the original.</p>
+      <div class="wall-love__grid">
+        <% WallLoveNote::PUBLIC_REACTIONS.each do |reaction| %>
+          <figure class="card wall-love__card">
+            <blockquote><p><%= reaction[:note] %></p></blockquote>
+            <figcaption><strong><%= reaction[:public_name] %></strong><br><%= link_to "Read original post", wall_love_source_url(reaction[:source_url]), target: "_blank", rel: "noopener noreferrer" %></figcaption>
+          </figure>
+        <% end %>
+        <% @notes.each do |note| %>
+          <figure class="card wall-love__card">
+            <blockquote><p><%= note.note %></p></blockquote>
+            <figcaption><strong><%= note.public_name %></strong>
+              <% if (source_url = wall_love_source_url(note.source_url)) %><br><%= link_to "Source or profile", source_url, target: "_blank", rel: "nofollow ugc noopener noreferrer" %><% end %>
+            </figcaption>
+          </figure>
+        <% end %>
+      </div>
+    </section>
+
+    <section id="your-note" class="card wall-love__submission" aria-labelledby="your-note-heading">
+      <h2 id="your-note-heading" class="wall-love__heading">Share your thanks</h2>
+      <p>Attendees can submit a note for this public page. Every submission and edit is reviewed before it appears.</p>
+      <% if !user_signed_in? %>
+        <%= link_to "Sign in to share a note", account_sign_in_path, class: "btn btn-primary" %>
+      <% else %>
+        <% if @submission.persisted? %>
+          <p>Your note is <strong><%= @submission.status %></strong>.</p>
+        <% end %>
+        <% if current_user.attending? %>
+          <% if @submission.errors.any? %>
+            <div role="alert"><p>Please check your note:</p><ul><% @submission.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div>
+          <% end %>
+          <%= form_with model: @submission, url: wall_of_love_path, method: @submission.persisted? ? :patch : :post, class: "wall-love__form" do |form| %>
+            <% if @submission.persisted? %><%= form.hidden_field :lock_version %><% end %>
+            <%= form.label :public_name, "Name to display publicly" %>
+            <%= form.text_field :public_name, required: true, maxlength: 80, autocomplete: "name", aria: { describedby: "public-name-help" } %>
+            <p id="public-name-help">Choose the name you want on this page. Your account email is never used as your public name.</p>
+            <%= form.label :note, "Your thank-you note" %>
+            <%= form.text_area :note, required: true, maxlength: 2000, rows: 6 %>
+            <%= form.label :source_url, "Original post or profile link (optional)" %>
+            <%= form.url_field :source_url, maxlength: 500, placeholder: "https://", aria: { describedby: "source-url-help" } %>
+            <p id="source-url-help">Use a public http or https link. No private messages or private group content, please.</p>
+            <label class="wall-love__consent"><%= form.check_box :publication_consent, checked: false, required: true %><span>I agree to publish this name, note and optional link on the public Wall of Love after review.</span></label>
+            <p>You can withdraw your note at any time. Editing a published note removes it from the wall until it is reviewed again.</p>
+            <%= form.submit @submission.persisted? ? "Submit changes for review" : "Submit note for review", class: "btn btn-primary" %>
+          <% end %>
+        <% else %>
+          <p>A confirmed conference pass is required to submit a note.</p>
+        <% end %>
+        <% if @submission.persisted? && !@submission.withdrawn? %>
+          <%= button_to "Withdraw my note", wall_of_love_path, method: :delete, class: "btn btn-secondary" %>
+        <% end %>
+      <% end %>
+    </section>
+  </div>
+</main>
