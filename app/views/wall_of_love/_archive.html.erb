@@ -1,0 +1,19 @@
+<section id="source-archive" class="wall-love-archive" aria-labelledby="source-archive-heading">
+  <span class="section-label">Keep exploring</span><h2 id="source-archive-heading" class="wall-love__heading">Around the gathering</h2>
+  <% [[ "Before the gathering", WallLoveSourceCatalog.archive ], [ "Related technical context", WallLoveSourceCatalog.related ]].each do |label, sources| %>
+    <details class="wall-love-archive__group">
+      <summary><span><%= label %></span><span class="wall-love-archive__count"><%= sources.size %> <%= "source".pluralize(sources.size) %></span></summary>
+      <% if label == "Related technical context" %><p>These RubyLLM discussions do not explicitly establish a connection to DQOR. They are technical context, not conference testimonials.</p><% end %>
+      <ul class="wall-love-archive__list">
+        <% sources.each do |source| %>
+          <li data-archive-source-id="<%= source.fetch("id") %>">
+            <span class="wall-love-media__platform"><%= source.fetch("platform") %></span><h3><%= source.fetch("author") %></h3>
+            <% if source["excerpt"].present? %><blockquote><p><%= source.fetch("excerpt") %></p></blockquote><% end %>
+            <p><span class="wall-love-media__summary-label">Summary:</span> <%= source.fetch("caption") %></p>
+            <%= link_to "Open original source ↗", wall_love_source_url(source.fetch("url")), target: "_blank", rel: "noopener noreferrer" %>
+          </li>
+        <% end %>
+      </ul>
+    </details>
+  <% end %>
+</section>

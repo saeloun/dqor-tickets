@@ -10,3 +10,5 @@ pin "html5-qrcode", to: "html5-qrcode.js"
 pin "jsqr", to: "jsqr-1.4.0.js" # @1.4.0
 
 pin "scanning/camera"
+
+pin "wall_love/embed_widgets"
