@@ -73,12 +73,39 @@ class OwnedEventsTest {
         assertTrue(queue.validators.isEmpty())
     }
     @Test fun unicodeLimitsAccept255CodePointsAndReject256ForTitlesAndOrganizers() = runBlocking {
-        for(length in listOf(255, 256)) for(field in listOf("title", "name")) {
+        val cases = listOf("😀".repeat(255) to true, "😀".repeat(256) to false, "a\u0301".repeat(127) + "a" to true, "a\u0301".repeat(128) to false, "👩‍💻".repeat(85) to true, "👩‍💻".repeat(86) to false)
+        for((value, valid) in cases) for(field in listOf("title", "name")) {
             val root = JSONObject(detail)
             val objectToEdit = if(field == "title") root.getJSONObject("event") else root.getJSONObject("event").getJSONObject("organizer")
-            objectToEdit.put(field, "😀".repeat(length))
+            objectToEdit.put(field, value)
             val state = OwnedEventsClient(Queue(mutableListOf(response(body = root.toString())))).refresh(OwnedResource.Detail("hosted-event-101"))
-            if(length == 255) assertNotNull(state.event) else { assertNull(state.event); assertEquals(OwnedProblem.INVALID_RESPONSE, state.problem) }
+            if(valid) assertNotNull(state.event) else { assertNull(state.event); assertEquals(OwnedProblem.INVALID_RESPONSE, state.problem) }
+        }
+    }
+    @Test fun blankTitlesAndOrganizerNamesRejected() = runBlocking {
+        val whitespace = listOf(0x9, 0xa, 0xb, 0xc, 0xd, 0x20, 0x85, 0xa0, 0x1680) + (0x2000..0x200a) + listOf(0x2028, 0x2029, 0x202f, 0x205f, 0x3000)
+        for(value in listOf("", " \t\r\n") + whitespace.map { it.toChar().toString() }) for(field in listOf("title", "name")) {
+            val root = JSONObject(detail)
+            val objectToEdit = if(field == "title") root.getJSONObject("event") else root.getJSONObject("event").getJSONObject("organizer")
+            objectToEdit.put(field, value)
+            val state = OwnedEventsClient(Queue(mutableListOf(response(body = root.toString())))).refresh(OwnedResource.Detail("hosted-event-101"))
+            assertNull(state.event); assertEquals(OwnedProblem.INVALID_RESPONSE, state.problem)
+        }
+    }
+    @Test fun nonWhitespaceControlsRemainBackendCompatible() = runBlocking {
+        for(value in listOf("\u001c", "\u200b", "\ufeff")) for(field in listOf("title", "name")) {
+            val root = JSONObject(detail)
+            val objectToEdit = if(field == "title") root.getJSONObject("event") else root.getJSONObject("event").getJSONObject("organizer")
+            objectToEdit.put(field, value)
+            val state = OwnedEventsClient(Queue(mutableListOf(response(body = root.toString())))).refresh(OwnedResource.Detail("hosted-event-101"))
+            assertNotNull(state.event)
+        }
+    }
+    @Test fun endMustBeStrictlyLaterIncludingEquivalentOffsetInstant() = runBlocking {
+        for(end in listOf("2026-11-07T00:15:00+05:30", "2026-11-06T18:45:00Z")) {
+            val root = JSONObject(detail); root.getJSONObject("event").put("ends_at", end)
+            val state = OwnedEventsClient(Queue(mutableListOf(response(body = root.toString())))).refresh(OwnedResource.Detail("hosted-event-101"))
+            assertNull(state.event); assertEquals(OwnedProblem.INVALID_RESPONSE, state.problem)
         }
     }
     @Test fun timezoneRejectsFixedOffsetsAndAcceptsPublishedAliases() = runBlocking {

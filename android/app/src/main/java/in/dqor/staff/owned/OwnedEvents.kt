@@ -11,17 +11,18 @@ import org.json.JSONObject
 data class OwnedEvent(val id: String, val title: String, val startsAt: OffsetDateTime, val endsAt: OffsetDateTime, val startDate: LocalDate, val endDate: LocalDate, val timezone: ZoneId, val organizer: String, val organizerSlug: String, val detailsPath: String) {
     val website: String get() = OwnedEventsHttp.ORIGIN + detailsPath
     companion object {
+        private fun hasNonWhitespace(value: String) = value.any { !Character.isSpaceChar(it) && it.code !in 0x9..0xd && it.code != 0x85 }
         fun validId(id: String) = id.matches(Regex("hosted-event-[1-9][0-9]{0,18}")) && id.removePrefix("hosted-event-").toLongOrNull() != null
         fun parse(root: JSONObject): OwnedEvent {
             root.keysExactly("id", "ownership", "title", "starts_at", "ends_at", "start_date", "end_date", "timezone", "organizer", "details_path")
             val id = root.text("id"); require(validId(id) && root.text("ownership") == "hosted_event")
-            val title = root.text("title"); require(title.isNotBlank() && title.codePointCount(0, title.length) <= 255)
+            val title = root.text("title"); require(hasNonWhitespace(title) && title.codePointCount(0, title.length) <= 255)
             val organization = root.getJSONObject("organizer"); organization.keysExactly("name", "slug")
-            val name = organization.text("name"); require(name.isNotBlank() && name.codePointCount(0, name.length) <= 255)
+            val name = organization.text("name"); require(hasNonWhitespace(name) && name.codePointCount(0, name.length) <= 255)
             val slug = organization.text("slug"); require(slug.matches(Regex("[a-z0-9]+(?:-[a-z0-9]+)*")))
             val path = root.text("details_path"); require(path.matches(Regex("/events/$slug/[a-z0-9]+(?:-[a-z0-9]+)*")))
             val zoneName = root.text("timezone"); require(zoneName in ZoneId.getAvailableZoneIds()); val zone = ZoneId.of(zoneName)
-            val start = OffsetDateTime.parse(root.text("starts_at")); val end = OffsetDateTime.parse(root.text("ends_at")); require(!end.toInstant().isBefore(start.toInstant()))
+            val start = OffsetDateTime.parse(root.text("starts_at")); val end = OffsetDateTime.parse(root.text("ends_at")); require(end.toInstant().isAfter(start.toInstant()))
             val first = LocalDate.parse(root.text("start_date")); val last = LocalDate.parse(root.text("end_date"))
             require(start.atZoneSameInstant(zone).toLocalDate() == first && end.atZoneSameInstant(zone).toLocalDate() == last)
             return OwnedEvent(id, title, start, end, first, last, zone, name, slug, path)
