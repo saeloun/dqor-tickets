@@ -17,7 +17,8 @@ struct DQORStaffApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if ProcessInfo.processInfo.arguments.contains("--demo") { StaffRootView(store: store) }
+                if OwnedEventsIntegration.enabled { OwnedEventsRootView() }
+                else if ProcessInfo.processInfo.arguments.contains("--demo") { StaffRootView(store: store) }
                 else { PublicEventRootView(demoStore: store) }
             }.preferredColorScheme(previewColorScheme)
         }

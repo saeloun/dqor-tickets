@@ -1,0 +1,9 @@
+# Owned public event browsing
+
+This isolated iOS update is stacked on the reviewed PR229 client. It consumes PR242's owned-event catalog and detail contract independently of the official DQOR programme. Release entry remains fixed off. Debug `--owned-events-fixture` opens explicitly labeled synthetic events and scenario controls; no production owned-event request occurs through that entry.
+
+Catalog rows show title, organizer, local date and IANA timezone. Detail fetches the stable `hosted-event-` ID separately and exposes only validated public facts and a fixed first-party event website. Native Back, pagination, retry, 503/offline stale states, matching 304 recovery, authoritative 404 withdrawal and local clearing are supported. Catalog 404 clears all snapshots; detail 404 also invalidates catalog snapshots and pending responses. Memory holds at most eight resources, bounded to one MiB each, with no persistent catalog, identity, credentials or validators. Clearing survives foreground until explicit refresh. Background and superseded reads cannot restore cleared content.
+
+The anonymous transport fixes HTTPS origin and resource paths, rejects redirects, removes cookies, credential storage, cache and default headers, bounds time and body size, and sends only GET, JSON Accept and a validated conditional ETag. Decoder requires the closed v1 public shape and valid IDs, date/timezone relationships, paths and pagination. Account, tickets, staff, scanner, payments, RSVP and entitlement flows retain their existing gates and implementation.
+
+Backend PR242 remains unmerged and default off. Enabling owned-event production browsing, backend flags, signing, physical-device verification and distribution require separate approval and validation. Synthetic previews and intercepted transport tests do not prove live integration.
