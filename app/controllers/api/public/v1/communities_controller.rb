@@ -3,7 +3,7 @@ class Api::Public::V1::CommunitiesController < ApplicationController
   before_action :require_groups
 
   def index
-    page = [ [ params[:page].to_i, 1 ].max, 1_000 ].min
+    page = CommunityGroups::PublicCatalog.page_number(params[:page])
     groups = CommunityGroup.published.includes(:organization).order(:name, :id).limit(24).offset((page - 1) * 24)
     render json: { schema_version: 1, ownership: "tenant_owned_community", page: page, per_page: 24, total: CommunityGroup.published.count, groups: groups.map { |group| CommunityGroups::PublicCatalog.serialize(group) } }
   end

@@ -202,4 +202,31 @@ RSpec.describe "Tenant-owned communities", type: :request do
     expect(community_path).to eq("/community")
     expect(public_path).to eq("/communities/synthetic-ruby/pune-ruby")
   end
+  it "accepts nested page input on the public HTML index without a server exception" do
+    group.update!(status: :published)
+    expect { get communities_path, params: { page: [ "1" ] } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+  end
+  it "accepts nested page input on the public API index without a server exception" do
+    group.update!(status: :published)
+    expect { get public_communities_path, params: { page: { nested: "1" } } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+  end
+  it "accepts nested upcoming page input on the public HTML detail without a server exception" do
+    group.update!(status: :published)
+    expect { get community_group_public_path(organization.slug, group.slug), params: { upcoming_page: [ "1" ] } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+  end
+  it "accepts nested past page input on the public API detail without a server exception" do
+    group.update!(status: :published)
+    expect { get public_community_path(organization.slug, group.slug), params: { past_page: { nested: "1" } } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+  end
+
+
+  it "preserves numeric community page parameters with leading zeroes" do
+    get public_communities_path, params: { page: "00002" }
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body["page"]).to eq(2)
+  end
 end

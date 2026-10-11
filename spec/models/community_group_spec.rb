@@ -34,3 +34,11 @@ RSpec.describe CommunityGroup do
     expect(event.reload.community_group_id).to eq(group.id)
   end
 end
+
+RSpec.describe CommunityGroups::PublicCatalog do
+  it "bounds scalar pagination and rejects structured or malformed inputs" do
+    { nil => 1, [] => 1, {} => 1, "no" => 1, "1x" => 1, "-1" => 1, "0" => 1, "2" => 2, "2000" => 1000, "9" * 10000 => 1000 }.each do |value, expected|
+      expect(described_class.page_number(value)).to eq(expected)
+    end
+  end
+end
