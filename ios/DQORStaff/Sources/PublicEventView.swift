@@ -268,10 +268,12 @@ struct PublicScheduleView: View {
     @State private var date = ""
     @FocusState private var searching: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var normalizedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var hasFilters: Bool { savedOnly || !date.isEmpty || !normalizedQuery.isEmpty }
     private var sessions: [PublicProgramme.Session] {
         (store.snapshot?.sessions ?? []).filter {
             (!savedOnly || store.savedIDs.contains($0.id)) && (date.isEmpty || $0.localDate == date) &&
-            (query.isEmpty || [$0.title, $0.abstract ?? "", $0.speakerName ?? "", $0.room ?? ""].joined(separator: " ").localizedCaseInsensitiveContains(query))
+            (normalizedQuery.isEmpty || [$0.title, $0.abstract ?? "", $0.speakerName ?? "", $0.room ?? ""].joined(separator: " ").localizedCaseInsensitiveContains(normalizedQuery))
         }
     }
     private var dates: [String] { Set(store.snapshot?.sessions.compactMap(\.localDate) ?? []).sorted() }
@@ -295,9 +297,19 @@ struct PublicScheduleView: View {
                         .accessibilityLabel("Find a session or speaker")
                         .onSubmit { searching = false }
                         .submitLabel(.search).accessibilityIdentifier("publicProgrammeSearch")
+                    if !query.isEmpty {
+                        Button { query = ""; searching = false } label: {
+                            Label("Clear search", systemImage: "xmark.circle").frame(minHeight: 48)
+                        }.buttonStyle(.bordered).accessibilityIdentifier("publicClearSearch")
+                    }
                     if sessions.isEmpty {
-                        ContentUnavailableView(snapshot.sessions.isEmpty ? "No sessions published" : savedOnly && query.isEmpty ? "Your programme, your way" : "No matching sessions", systemImage: snapshot.sessions.isEmpty ? "calendar" : "bookmark", description: Text(snapshot.sessions.isEmpty ? "Published sessions will appear here after a refresh." : savedOnly && query.isEmpty ? "Save a session to find it here. Your saved choices stay on this device." : "Try another search or programme day."))
-                        if savedOnly { Button("Explore all sessions") { savedOnly = false; date = ""; query = "" }.buttonStyle(.bordered).controlSize(.large) }
+                        let emptySaved = savedOnly && normalizedQuery.isEmpty && date.isEmpty
+                        ContentUnavailableView(snapshot.sessions.isEmpty ? "No sessions published" : emptySaved ? "Your programme, your way" : "No matching sessions", systemImage: snapshot.sessions.isEmpty ? "calendar" : "bookmark", description: Text(snapshot.sessions.isEmpty ? "Published sessions will appear here after a refresh." : emptySaved ? "Save a session to find it here. Your saved choices stay on this device." : "Try another search or programme day."))
+                        if hasFilters && !snapshot.sessions.isEmpty {
+                            Button { savedOnly = false; date = ""; query = ""; searching = false } label: {
+                                Text(emptySaved ? "Explore all sessions" : "Reset filters").frame(minHeight: 48)
+                            }.buttonStyle(.bordered).accessibilityIdentifier("publicResetFilters")
+                        }
                     }
                     ForEach(sessions, id: \.id) { session in
                         PublicSessionCard(session: session, timezone: snapshot.event.timezone, saved: store.savedIDs.contains(session.id)) {
