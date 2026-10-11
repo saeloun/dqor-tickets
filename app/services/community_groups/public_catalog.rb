@@ -3,8 +3,16 @@ module CommunityGroups
     Page = Data.define(:records, :page, :total)
 
     def self.page(scope, value)
-      page = [ [ value.to_i, 1 ].max, 1_000 ].min
+      page = page_number(value)
       Page.new(records: scope.limit(24).offset((page - 1) * 24), page: page, total: scope.count)
+    end
+
+    def self.page_number(value)
+      return 1 unless value.is_a?(String) && value.match?(/\A[0-9]+\z/)
+      value = value.sub(/\A0+/, "")
+      return 1_000 if value.length > 4
+
+      [ [ value.to_i, 1 ].max, 1_000 ].min
     end
 
     def self.group(organization_slug:, group_slug:)

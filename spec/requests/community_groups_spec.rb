@@ -202,4 +202,42 @@ RSpec.describe "Tenant-owned communities", type: :request do
     expect(community_path).to eq("/community")
     expect(public_path).to eq("/communities/synthetic-ruby/pune-ruby")
   end
+  it "accepts nested page input on the public HTML index without a server exception" do
+    group.update!(status: :published)
+    expect { get communities_path, params: { page: [ "2" ] } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(group.name)
+    expect(response.body).not_to include(other_group.name, "← Previous")
+  end
+  it "accepts nested page input on the public API index without a server exception" do
+    group.update!(status: :published)
+    expect { get public_communities_path, params: { page: { nested: "2" } } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body).to include("page" => 1, "total" => 1, "per_page" => 24)
+    expect(response.parsed_body["groups"].pluck("id")).to eq([ "community-#{group.id}" ])
+  end
+  it "accepts nested upcoming page input on the public HTML detail without a server exception" do
+    group.update!(status: :published)
+    event = organization.events.create!(title: "First upcoming page", slug: "first-upcoming", status: :published, community_group: group, starts_at: 1.day.from_now, ends_at: 2.days.from_now)
+    expect { get community_group_public_path(organization.slug, group.slug), params: { upcoming_page: [ "2" ] } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(event.title)
+    expect(response.body).not_to include("← Previous")
+  end
+  it "accepts nested past page input on the public API detail without a server exception" do
+    group.update!(status: :published)
+    event = organization.events.create!(title: "First past page", slug: "first-past", status: :published, community_group: group, starts_at: 2.days.ago, ends_at: 1.day.ago)
+    expect { get public_community_path(organization.slug, group.slug), params: { past_page: { nested: "2" } } }.not_to raise_error
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body["pagination"]["past"]).to include("page" => 1, "total" => 1, "per_page" => 24)
+    expect(response.parsed_body["past_events"].pluck("id")).to eq([ "hosted-event-#{event.id}" ])
+    expect(response.parsed_body["upcoming_events"]).to be_empty
+  end
+
+
+  it "preserves numeric community page parameters with leading zeroes" do
+    get public_communities_path, params: { page: "00002" }
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body["page"]).to eq(2)
+  end
 end

@@ -4,7 +4,7 @@ class CommunityGroupsController < ApplicationController
   before_action :require_groups
 
   def index
-    @page = [ [ params[:page].to_i, 1 ].max, 1_000 ].min
+    @page = CommunityGroups::PublicCatalog.page_number(params[:page])
     @total = CommunityGroup.published.count
     @groups = CommunityGroup.published.includes(:organization).order(:name, :id).limit(24).offset((@page - 1) * 24)
   end
