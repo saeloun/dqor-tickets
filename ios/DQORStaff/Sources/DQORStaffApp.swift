@@ -60,7 +60,7 @@ struct StaffRootView: View {
                         Button(store.day == nil ? "Sign out" : "Events") {
                             if !store.selection.isEmpty { leaving = true }
                             else { leave() }
-                        }.font(.body).foregroundStyle(Color(uiColor: .label)).disabled(store.busy)
+                        }.font(.body).foregroundStyle(AttendeeStyle.ink).disabled(store.busy)
                     }
                 }
             }
@@ -78,8 +78,18 @@ struct StaffRootView: View {
                         Text("\(store.selection.count) in batch").font(.title2.bold()).accessibilityAddTraits(.updatesFrequently)
                         Text(store.message ?? "Point at a ticket QR code. Attendees are added to a batch for review.")
                             .padding().accessibilityIdentifier("scanStatus")
-                        Button("Use attendee search") { scanning = false }.buttonStyle(.bordered)
-                    } }.navigationTitle("Scan tickets")
+                    } }
+                        .safeAreaInset(edge: .bottom) {
+                            Button { scanning = false } label: {
+                                Text("Use attendee search")
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, minHeight: 48)
+                            }.buttonStyle(.bordered).tint(AttendeeStyle.accent)
+                                .foregroundStyle(Color(uiColor: .label))
+                                .padding(.horizontal, 16).padding(.vertical, 8)
+                                .background(Color(uiColor: .systemBackground))
+                        }
+                        .navigationTitle("Scan tickets")
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { scanning = false }.font(.body) } }
                 }
             }
@@ -149,13 +159,13 @@ struct StaffRootView: View {
                         EventArtwork(showsHeadline: false).aspectRatio(1.25, contentMode: .fit)
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 16) {
-                            AttendeeEventTitle(day: DemoCompanion.previewDay)
+                            AttendeeEventTitle(day: DemoCompanion.previewDay).fixedSize(horizontal: false, vertical: true)
                             HStack {
-                                Text("Explore sample event").font(.headline)
+                                Text("Explore sample event").font(.headline).fixedSize(horizontal: false, vertical: true)
                                 Spacer()
                                 Image(systemName: "arrow.up.right")
                             }.frame(minHeight: 48)
-                        }.padding(24)
+                        }.fixedSize(horizontal: false, vertical: true).padding(24)
                     }.background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 24))
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                 }.buttonStyle(AttendeePressStyle()).accessibilityIdentifier("exploreSampleEvent")
@@ -181,7 +191,7 @@ struct StaffRootView: View {
     }
     private var eventPicker: some View {
         List {
-            Section { Text("Demo environment").foregroundStyle(Color(uiColor: .label)).fixedSize(horizontal: false, vertical: true) }
+            Section { StaffDemoDisclosure().fixedSize(horizontal: false, vertical: true).listRowBackground(AttendeeStyle.card) }
             Section(header: Text("Choose an event and day").foregroundStyle(Color(uiColor: .label)).font(.headline)) {
                 ForEach(store.days) { day in
                     Button { store.choose(day) } label: {
@@ -193,7 +203,9 @@ struct StaffRootView: View {
                     }.accessibilityIdentifier(day.id)
                 }
             }
-        }
+        }.scrollContentBackground(.hidden).background(AttendeeStyle.canvas)
+            .toolbarBackground(AttendeeStyle.canvas, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
     }
     private var checkIn: some View {
         List {
@@ -256,5 +268,52 @@ struct StaffRootView: View {
 private extension EventTheme {
     var color: Color {
         switch self { case .indigo: .indigo; case .forest: Color(uiColor: .init { $0.userInterfaceStyle == .dark ? .systemGreen : UIColor(red: 0.05, green: 0.38, blue: 0.22, alpha: 1) }); case .ember: Color(uiColor: .init { $0.userInterfaceStyle == .dark ? .systemOrange : UIColor(red: 0.62, green: 0.24, blue: 0.03, alpha: 1) }) }
+    }
+}
+
+private struct StaffDemoDisclosure: UIViewRepresentable {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.text = "Demo environment"
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.adjustsFontForContentSizeCategory = true
+        label.isAccessibilityElement = true
+        label.accessibilityTraits = .staticText
+        label.accessibilityLabel = "Demo environment"
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return label
+    }
+
+    func updateUIView(_ label: UILabel, context: Context) {
+        label.font = UIFont.preferredFont(forTextStyle: .body, compatibleWith: UITraitCollection(preferredContentSizeCategory: contentSizeCategory))
+        label.textColor = AttendeeStyle.inkUIColor
+        label.backgroundColor = AttendeeStyle.cardUIColor
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UILabel, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
+        let fitted = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: fitted.height)
+    }
+
+    private var contentSizeCategory: UIContentSizeCategory {
+        switch dynamicTypeSize {
+        case .xSmall: .extraSmall
+        case .small: .small
+        case .medium: .medium
+        case .large: .large
+        case .xLarge: .extraLarge
+        case .xxLarge: .extraExtraLarge
+        case .xxxLarge: .extraExtraExtraLarge
+        case .accessibility1: .accessibilityMedium
+        case .accessibility2: .accessibilityLarge
+        case .accessibility3: .accessibilityExtraLarge
+        case .accessibility4: .accessibilityExtraExtraLarge
+        case .accessibility5: .accessibilityExtraExtraExtraLarge
+        @unknown default: .large
+        }
     }
 }
