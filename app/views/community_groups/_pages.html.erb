@@ -1,0 +1,6 @@
+<% if result.page > 1 || result.page * 24 < result.total %>
+  <nav aria-label="<%= parameter == :upcoming_page ? "Upcoming" : "Past" %> event pages">
+    <% if result.page > 1 %><%= link_to "← Previous", community_group_public_path(@group.organization.slug, @group.slug, upcoming_page: @upcoming.page, past_page: @past.page, parameter => result.page - 1) %><% end %>
+    <% if result.page * 24 < result.total %><%= link_to "Next →", community_group_public_path(@group.organization.slug, @group.slug, upcoming_page: @upcoming.page, past_page: @past.page, parameter => result.page + 1) %><% end %>
+  </nav>
+<% end %>

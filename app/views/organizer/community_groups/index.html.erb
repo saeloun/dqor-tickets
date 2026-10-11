@@ -1,0 +1,7 @@
+<%= render "styles" %>
+<main class="community-workspace">
+  <%= link_to "← Organization events", organizer_organization_events_path(@organization), class: "back" %>
+  <div class="page-heading"><div><p class="eyebrow">Community workspace</p><h1><%= @organization.name %> communities</h1></div><% if can_manage_groups? %><%= link_to "Create community draft", new_organizer_organization_group_path(@organization), class: "button" %><% end %></div>
+  <div class="card-list"><% @groups.each do |group| %><article class="card"><h2><%= link_to group.name, organizer_organization_group_path(@organization, group) %></h2><span class="badge"><%= group.draft? ? "Draft · private" : "Published · public" %></span></article><% end %></div>
+  <% if @groups.empty? %><div class="empty"><h2>A place for your community</h2><p>Start with a private draft. Add your introduction and location before publishing.</p></div><% end %>
+</main>

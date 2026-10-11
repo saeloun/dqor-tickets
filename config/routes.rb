@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  get "communities", to: "community_groups#index", as: :communities
+  get "communities/:organization_slug/:group_slug", to: "community_groups#show", as: :community_group_public
+  get "api/public/v1/communities", to: "api/public/v1/communities#index", as: :public_communities, defaults: { format: :json }
+  get "api/public/v1/communities/:organization_slug/:group_slug", to: "api/public/v1/communities#show", as: :public_community, defaults: { format: :json }
   resources :conference_badges, only: :index do
     collection do
       get :sample
@@ -61,6 +65,11 @@ Rails.application.routes.draw do
   end
   namespace :organizer do
     resources :organizations, only: [] do
+      resources :groups, controller: :community_groups, except: :destroy do
+        post :publish, on: :member
+        post :unpublish, on: :member
+        post :add_event, on: :member
+      end
       resources :events, except: :destroy do
         post :publish, on: :member
         patch "operations/deals/:id/commit", to: "operations#commit_deal", as: :commit_operation_deal

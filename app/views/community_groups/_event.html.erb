@@ -1,0 +1,1 @@
+<article class="event-row"><p class="muted"><%= event.starts_at.in_time_zone(event.timezone).strftime("%-d %b %Y · %-I:%M %p") %> – <%= event.ends_at.in_time_zone(event.timezone).strftime("%-d %b %Y · %-I:%M %p") %> · <%= event.timezone %></p><h3><%= link_to event.title, published_event_path(@group.organization.slug, event.slug) %></h3></article>
