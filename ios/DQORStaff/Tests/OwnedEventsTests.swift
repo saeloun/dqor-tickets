@@ -30,6 +30,19 @@ final class OwnedEventsTests: XCTestCase {
         block(&object)
         return try JSONSerialization.data(withJSONObject: object)
     }
+    func testRealRailsWirePreservesStoredMicroseconds() async throws {
+        for (catalogBody, detailBody) in OwnedEventsWirePrecision.examples {
+            let client = OwnedEventsClient(transport: OwnedQueue([response(data: Data(catalogBody.utf8)), response(detail: true, data: Data(detailBody.utf8))]))
+            let catalog = try await client.refresh(resource)
+            let detail = try await client.refresh(.detail("hosted-event-9000000000000001"))
+            let event = try XCTUnwrap(detail.event)
+            XCTAssertEqual(catalog.catalog?.events, [event])
+            let start = try XCTUnwrap(OwnedEvent.instant(event.startsAt))
+            let end = try XCTUnwrap(OwnedEvent.instant(event.endsAt))
+            XCTAssertGreaterThan(end, start)
+            XCTAssertEqual(event.timezone, "Asia/Kolkata")
+        }
+    }
     func testContractCatalogAndIndependentDetailWithOrganizerDatesAndSafeWebsite() async throws {
         let client = OwnedEventsClient(transport: OwnedQueue([response(), response(detail: true)]))
         let catalog = try await client.refresh(resource)
@@ -224,4 +237,106 @@ final class OwnedEventsTests: XCTestCase {
         for value in ["bad", "\"a\r\nb\"", "\"a\\b\"", "\"a\"b\"", "\"" + String(repeating: "a", count: 255) + "\""] { XCTAssertFalse(OwnedEventsClient.validETag(value)) }
         XCTAssertTrue(OwnedEventsClient.validETag(etag)); XCTAssertFalse(OwnedEventsIntegration.productionEnabled)
     }
+}
+
+private enum OwnedEventsWirePrecision {
+    static let subsecondCatalog = #"""
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "id": "hosted-event-9000000000000001",
+      "ownership": "hosted_event",
+      "title": "Synthetic timestamp precision",
+      "starts_at": "2026-11-07T00:15:00.100000+05:30",
+      "ends_at": "2026-11-07T00:15:00.900000+05:30",
+      "start_date": "2026-11-07",
+      "end_date": "2026-11-07",
+      "timezone": "Asia/Kolkata",
+      "organizer": {
+        "name": "Synthetic precision organizers",
+        "slug": "synthetic-precision-organizers"
+      },
+      "details_path": "/events/synthetic-precision-organizers/synthetic-precision"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 24,
+    "total": 1
+  },
+  "content_version": "1e1082742ad4e88ba9832f301d1d48a4e3a0df7aa677a8b03d159786795c6e93"
+}
+"""#
+    static let subsecondDetail = #"""
+{
+  "schema_version": 1,
+  "event": {
+    "id": "hosted-event-9000000000000001",
+    "ownership": "hosted_event",
+    "title": "Synthetic timestamp precision",
+    "starts_at": "2026-11-07T00:15:00.100000+05:30",
+    "ends_at": "2026-11-07T00:15:00.900000+05:30",
+    "start_date": "2026-11-07",
+    "end_date": "2026-11-07",
+    "timezone": "Asia/Kolkata",
+    "organizer": {
+      "name": "Synthetic precision organizers",
+      "slug": "synthetic-precision-organizers"
+    },
+    "details_path": "/events/synthetic-precision-organizers/synthetic-precision"
+  },
+  "content_version": "90ac4c628ea81c8313ff72c9ee6bcbf0b29008f1a9744359b78f44332fac02b4"
+}
+"""#
+    static let microsecondCatalog = #"""
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "id": "hosted-event-9000000000000001",
+      "ownership": "hosted_event",
+      "title": "Synthetic timestamp precision",
+      "starts_at": "2026-11-07T00:15:00.000001+05:30",
+      "ends_at": "2026-11-07T00:15:00.000002+05:30",
+      "start_date": "2026-11-07",
+      "end_date": "2026-11-07",
+      "timezone": "Asia/Kolkata",
+      "organizer": {
+        "name": "Synthetic precision organizers",
+        "slug": "synthetic-precision-organizers"
+      },
+      "details_path": "/events/synthetic-precision-organizers/synthetic-precision"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 24,
+    "total": 1
+  },
+  "content_version": "4f31ee220742cc70334f42e62ae66ca8579cc055639b2b16b0b4256c8487702f"
+}
+"""#
+    static let microsecondDetail = #"""
+{
+  "schema_version": 1,
+  "event": {
+    "id": "hosted-event-9000000000000001",
+    "ownership": "hosted_event",
+    "title": "Synthetic timestamp precision",
+    "starts_at": "2026-11-07T00:15:00.000001+05:30",
+    "ends_at": "2026-11-07T00:15:00.000002+05:30",
+    "start_date": "2026-11-07",
+    "end_date": "2026-11-07",
+    "timezone": "Asia/Kolkata",
+    "organizer": {
+      "name": "Synthetic precision organizers",
+      "slug": "synthetic-precision-organizers"
+    },
+    "details_path": "/events/synthetic-precision-organizers/synthetic-precision"
+  },
+  "content_version": "9be6c81b6182093e87d16c73ca85a332832b9b4bbd7ab66c758e55ded953cb28"
+}
+"""#
+    static let examples = [(subsecondCatalog, subsecondDetail), (microsecondCatalog, microsecondDetail)]
 }

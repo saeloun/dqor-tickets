@@ -24,10 +24,8 @@ struct OwnedEvent: Decodable, Equatable, Identifiable, Sendable {
     }
     static func instant(_ text: String) -> Date? {
         guard text.range(of: "(?:Z|[+-][0-9]{2}:[0-9]{2})$", options: .regularExpression) != nil else { return nil }
-        let parser = ISO8601DateFormatter()
-        if let value = parser.date(from: text) { return value }
-        parser.formatOptions.insert(.withFractionalSeconds)
-        return parser.date(from: text)
+        if let value = try? Date.ISO8601FormatStyle().parse(text) { return value }
+        return try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(text)
     }
 }
 
