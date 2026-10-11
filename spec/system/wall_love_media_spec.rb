@@ -27,10 +27,11 @@ RSpec.describe "Wall of Love media journey", type: :system do
     within(".wall-love-media") do
       expect(page).to have_css(".wall-love-media__slide", count: 1)
       expect(page).to have_content("1 / 14")
+      find('button[aria-label="Next featured source"]').click
+      expect(page).to have_content("2 / 14")
       click_button "Play slideshow"
       expect(page).to have_css('button[aria-pressed="true"]', text: "Pause slideshow")
       find('button[aria-label="Next featured source"]').click
-      expect(page).to have_content("2 / 14")
       expect(page).to have_css('button[aria-pressed="false"]', text: "Play slideshow")
       find('button[aria-label="Next featured source"]').send_keys(:end)
       expect(page).to have_content("14 / 14")
