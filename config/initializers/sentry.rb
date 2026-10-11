@@ -12,7 +12,7 @@ if ENV["SENTRY_DSN"].present?
     config.send_default_pii = false
     # SystemExit/SignalException are normal process exits (rake tasks, deploy hooks), not errors.
     config.excluded_exceptions += %w[SystemExit SignalException Interrupt]
-    config.before_send = lambda do |event, _hint|
+    sanitize_request = lambda do |event, _hint|
       if event.request&.url.to_s.match?(%r{/wall-of-love(?:[/?#]|\z)})
         event.request.data = nil
         event.request.query_string = nil
@@ -22,5 +22,7 @@ if ENV["SENTRY_DSN"].present?
       end
       event
     end
+    config.before_send = sanitize_request
+    config.before_send_transaction = sanitize_request
   end
 end

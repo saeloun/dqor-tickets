@@ -12,6 +12,10 @@
     <% if notice.present? %><p class="wall-love__notice" role="status"><%= notice %></p><% end %>
     <% if alert.present? %><p class="wall-love__notice" role="alert"><%= alert %></p><% end %>
 
+    <%= render "featured" %>
+    <%= render "recordings" %>
+    <%= render "collection" %>
+
     <section aria-labelledby="public-reactions-heading">
       <h2 id="public-reactions-heading" class="wall-love__heading">From the community</h2>
       <p>Brief excerpts from public posts. Follow each link to read the original.</p>
@@ -32,6 +36,8 @@
         <% end %>
       </div>
     </section>
+
+    <%= render "archive" %>
 
     <section id="your-note" class="card wall-love__submission" aria-labelledby="your-note-heading">
       <h2 id="your-note-heading" class="wall-love__heading">Share your thanks</h2>
