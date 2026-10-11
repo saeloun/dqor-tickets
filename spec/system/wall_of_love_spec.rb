@@ -26,7 +26,9 @@ RSpec.describe "Wall of Love journey", type: :system do
     fill_in "Email address", with: admin.email
     fill_in "Password", with: "password123"
     click_button "Sign in"
+    expect(page).to have_current_path("/avo/dashboard")
     visit wall_love_review_path(WallLoveNote.last)
+    expect(page).to have_current_path(wall_love_review_path(WallLoveNote.last))
     expect(page).to have_content("Ruby Friend")
     click_button "Approve publication"
     expect(page).to have_content("Review decision saved.")
