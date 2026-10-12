@@ -1,0 +1,8 @@
+<%= render "styles" %>
+<main class="community-workspace">
+  <%= link_to "← Community", organizer_organization_group_path(@organization, @group), class: "back" %>
+  <p class="eyebrow"><%= @group.name %></p>
+  <h1>Create community event draft</h1>
+  <p class="muted">This draft belongs to <%= @group.name %>. Saving does not publish the event or open registration.</p>
+  <%= render "organizer/events/form", url: create_event_organizer_organization_group_path(@organization, @group) %>
+</main>

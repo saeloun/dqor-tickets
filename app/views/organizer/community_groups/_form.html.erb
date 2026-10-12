@@ -1,0 +1,12 @@
+<%= form_with model: [ :organizer, @organization, @group ], url: @group.persisted? ? organizer_organization_group_path(@organization, @group) : organizer_organization_groups_path(@organization) do |form| %>
+  <% if @group.errors.any? %><div class="errors" role="alert"><h2>Review these details</h2><ul><% @group.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div><% end %>
+  <%= form.label :name, "Community name" %><%= form.text_field :name, required: true, maxlength: 120 %>
+  <%= form.label :slug, "Community URL slug" %><%= form.text_field :slug, required: true, maxlength: 80 %>
+  <%= form.label :tagline, "Short introduction" %><%= form.text_field :tagline, maxlength: 160 %>
+  <%= form.label :description, "About this community" %><%= form.text_area :description, maxlength: 2000, rows: 6 %>
+  <%= form.label :city, "City" %><%= form.text_field :city, maxlength: 120 %>
+  <%= form.label :country_code, "Country code" %><%= form.text_field :country_code, maxlength: 2, placeholder: "IN" %>
+  <%= form.label :timezone, "Community timezone" %><%= form.text_field :timezone, required: true, placeholder: "Asia/Kolkata" %>
+  <p class="muted">The community timezone is a display default. Each event keeps its own published dates and timezone. Introduction and location are optional for a private draft.</p>
+  <%= form.submit @group.persisted? ? "Save community" : "Save private draft", class: "button" %>
+<% end %>

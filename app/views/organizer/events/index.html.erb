@@ -1,5 +1,6 @@
 <main>
   <% if FreeEvents::Access.enabled? %><%= link_to "← Your organizations", free_organizations_path, class: "back" %><% end %>
+  <% if CommunityGroups::Access.enabled? %><%= link_to "Organization communities", organizer_organization_groups_path(@organization), class: "back" %><% end %>
   <p class="eyebrow">Organizer workspace</p>
   <div class="page-heading"><div><h1><%= @organization.name %> events</h1><p class="muted">Build your next gathering, one step at a time.</p></div><% if can_manage_events? %><%= link_to "Create draft event", new_organizer_organization_event_path(@organization), class: "button" %><% end %></div>
   <div class="card-list"><% @events.each do |event| %><article class="card"><h2><%= link_to event.title, organizer_organization_event_path(@organization, event) %></h2><span class="badge"><%= event.draft? ? "Draft · private" : "Published · public" %></span></article><% end %></div>

@@ -63,6 +63,11 @@ Rails.application.routes.draw do
   end
   namespace :organizer do
     resources :organizations, only: [] do
+      resources :groups, controller: :community_groups, except: :destroy do
+        get :new_event, on: :member
+        post :create_event, on: :member
+        post :add_event, on: :member
+      end
       resources :events, except: :destroy do
         post :publish, on: :member
         patch "operations/deals/:id/commit", to: "operations#commit_deal", as: :commit_operation_deal

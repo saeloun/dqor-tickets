@@ -1,5 +1,5 @@
 <p class="help">1 Details → 2 Publish event → 3 Free tickets</p>
-<%= form_with model: [ :organizer, @organization, @event ] do |form| %>
+<%= form_with model: [ :organizer, @organization, @event ], url: local_assigns[:url] do |form| %>
   <% @event.errors.full_messages.each do |message| %><p role="alert"><%= message %></p><% end %>
   <p><%= form.label :title %><%= form.text_field :title, required: true %></p>
   <p><%= form.label :slug, "Event URL name" %><%= form.text_field :slug, required: true, placeholder: "ruby-meetup" %><span class="help">Use lowercase words with hyphens, for example ruby-meetup.</span></p>
