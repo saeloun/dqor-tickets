@@ -27,13 +27,15 @@ actor PublicProgrammePreviewTransport: ProgrammeTransport {
 struct PublicProgrammePreviewControls: View {
     @ObservedObject var store: PublicProgrammeStore
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Offline test controls · synthetic responses").font(.headline)
+        Group {
+            DQORRowCopy(text: "Offline test controls · synthetic responses", emphasized: true)
             ForEach(PublicProgrammePreviewTransport.Scenario.allCases, id: \.self) { scenario in
-                Button(scenario.rawValue) { Task { await store.preview(scenario) } }
-                    .frame(minHeight: 48).disabled(store.loading)
+                Button { Task { await store.preview(scenario) } } label: {
+                    DQORRowCopy(text: scenario.rawValue, emphasized: true)
+                        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).contentShape(Rectangle())
+                }.buttonStyle(AttendeePressStyle()).disabled(store.loading)
             }
-        }.padding(24).background(AttendeeStyle.card, in: RoundedRectangle(cornerRadius: 20))
+        }
     }
 }
 #endif

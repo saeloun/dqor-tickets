@@ -17,8 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 internal data class AttendeeMotion(val enabled: Boolean = true) {
-    val feedbackMillis get() = if(enabled) 140 else 0
-    val revealMillis get() = if(enabled) 200 else 0
+    val feedbackMillis get() = if(enabled) 220 else 0
+    val revealMillis get() = if(enabled) 240 else 0
 }
 internal val LocalAttendeeMotion = staticCompositionLocalOf {AttendeeMotion()}
 

@@ -33,6 +33,10 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
     private val lock = Any()
     private val expiryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var expiryJob: Job? = null
+    private var retryJob: Job? = null
+    private var retryDeadline = 0L
+    private val mutableRetryAfter = MutableStateFlow(0)
+    val retryAfterSeconds: StateFlow<Int> = mutableRetryAfter.asStateFlow()
     private var generation = 0L
     private var pending: AttendeeAuthorization? = null
     private var lease: AttendeeLease? = null
@@ -54,7 +58,7 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
 
     fun begin(): AttendeeAuthorization? = synchronized(lock) {
         expireLocked()
-        if (!enabled || disposed || pending != null || lease != null || mutable.value == AttendeeState.Exchanging || readInFlight) return null
+        if (mutableRetryAfter.value > 0 || !enabled || disposed || pending != null || lease != null || mutable.value == AttendeeState.Exchanging || readInFlight) return null
         generation++
         AttendeePkce.create(elapsedTime()).also {
             pending = it
@@ -72,6 +76,9 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
     fun forget() = synchronized(lock) {
         clearLocked(if (enabled) AttendeeState.SignedOutResult(null) else AttendeeState.Unavailable)
         disposed = true
+        retryJob?.cancel()
+        retryDeadline = 0L
+        mutableRetryAfter.value = 0
         expiryScope.cancel()
     }
 
@@ -94,6 +101,7 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
     }
 
     private fun expireLocked() {
+        updateRetryLocked()
         val transaction = pending
         if (transaction != null && elapsedTime() - transaction.startedAt >= 600_000L) {
             clearLocked(AttendeeState.Failed(AttendeeProblem.EXPIRED))
@@ -109,6 +117,28 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
         expiryJob = expiryScope.launch {
             delay(afterMillis)
             synchronized(lock) { if (generation == version) expireLocked() }
+        }
+    }
+
+    private fun updateRetryLocked() {
+        val remaining = if (retryDeadline == 0L) 0L else (retryDeadline - elapsedTime()).coerceAtLeast(0L)
+        mutableRetryAfter.value = ((remaining + 999L) / 1000L).toInt()
+    }
+
+    private fun rateLimitLocked(failure: Exception) {
+        if (failure !is AttendeeFailure || (failure.problem != AttendeeProblem.RATE_LIMITED && failure.retryAfterSeconds != 180)) return
+        retryDeadline = maxOf(retryDeadline, elapsedTime() + 180_000L)
+        updateRetryLocked()
+        retryJob?.cancel()
+        retryJob = expiryScope.launch {
+            while (true) {
+                delay(1000L)
+                synchronized(lock) {
+                    if (disposed) return@launch
+                    updateRetryLocked()
+                    if (mutableRetryAfter.value == 0) return@launch
+                }
+            }
         }
     }
 
@@ -268,6 +298,7 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
                     else -> AttendeeProblem.OFFLINE
                 }
                 clearLocked(AttendeeState.Failed(problem))
+                rateLimitLocked(failure)
             }
         }
         if (failure is CancellationException && failure !is kotlinx.coroutines.TimeoutCancellationException) throw failure
@@ -282,7 +313,10 @@ class AttendeeController internal constructor(private val bridge: AttendeeBridge
         if (old.second == null) return
         val confirmed = try { withTimeout(10_000L) { bridge.revoke(old.second!!) } }
             catch (failure: CancellationException) { if (failure is kotlinx.coroutines.TimeoutCancellationException) null else throw failure }
-            catch (_: Exception) { null }
+            catch (failure: Exception) {
+                synchronized(lock) { if (generation == old.first) rateLimitLocked(failure) }
+                null
+            }
         synchronized(lock) {
             if (generation == old.first) mutable.value = AttendeeState.SignedOutResult(confirmed)
         }

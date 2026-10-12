@@ -306,6 +306,18 @@ final class AttendeeAuthTests: XCTestCase {
     }
 
     @MainActor
+    func testRepeatedForegroundDuringPendingRefreshCoalescesSessionReads() async throws {
+        let (store, api, _, _) = fixture(); store.signIn(); try await until { store.phase == .ready }
+        await api.pause(.session); store.foreground(); store.foreground()
+        XCTAssertTrue(store.loading); XCTAssertTrue(store.stale)
+        try await untilCount(api, .session, 1)
+        await assertCount(api, .session, 1)
+        await api.resume(.session); try await until { !store.loading }
+        XCTAssertEqual(store.phase, .ready); XCTAssertFalse(store.stale)
+        await assertCount(api, .session, 1)
+    }
+
+    @MainActor
     func testPendingCallbackExpiresAfterSimulatedSleepDespiteWallClockRollback() async throws {
         let (store, api, browser, clock) = fixture(); browser.automatic = false
         store.signIn(); try await until { browser.calls == 1 }; let callback = browser.callback()!

@@ -6,6 +6,7 @@ import java.net.Socket
 import java.net.URI
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -15,9 +16,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class AttendeeHttpBridgeTest {
     private class Headers {
-        val values = linkedMapOf<String,String>()
-        fun getFirst(name: String): String? = values.entries.firstOrNull {it.key.equals(name,true)}?.value
-        fun add(name: String,value: String) {values[name]=value}
+        val values = mutableListOf<Pair<String,String>>()
+        fun getFirst(name: String): String? = values.firstOrNull {it.first.equals(name,true)}?.second
+        fun add(name: String,value: String) {values += name to value}
     }
     private class Exchange(private val socket: Socket) {
         val requestMethod: String
@@ -27,6 +28,7 @@ class AttendeeHttpBridgeTest {
         val responseBody=ByteArrayOutputStream()
         val requestBody: java.io.InputStream
         private var status=500
+        private var declaredLength: Long? = 0
         init {
             val input=socket.getInputStream().buffered()
             fun line(): String {
@@ -40,11 +42,11 @@ class AttendeeHttpBridgeTest {
             val bytes=ByteArray(count); var read=0; while(read<count) {val n=input.read(bytes,read,count-read); require(n>0); read+=n}
             requestBody=bytes.inputStream()
         }
-        fun sendResponseHeaders(code: Int,length: Long) {status=code}
+        fun sendResponseHeaders(code: Int,length: Long) {status=code; declaredLength=length.takeIf { it >= 0 }}
         fun close() {
             val output=socket.getOutputStream()
             val bytes=responseBody.toByteArray()
-            val headers=buildString {append("HTTP/1.1 $status Synthetic\r\n"); responseHeaders.values.forEach {(key,value)->append("$key: $value\r\n")}; append("Content-Length: ${bytes.size}\r\nConnection: close\r\n\r\n")}
+            val headers=buildString {append("HTTP/1.1 $status Synthetic\r\n"); responseHeaders.values.forEach {(key,value)->append("$key: $value\r\n")}; if(declaredLength != null) append("Content-Length: ${bytes.size}\r\n"); append("Connection: close\r\n\r\n")}
             try {output.write(headers.toByteArray()); output.write(bytes); output.flush()}
             catch (_: java.io.IOException) { }
             finally {socket.close()}
@@ -146,6 +148,11 @@ class AttendeeHttpBridgeTest {
     }
     @Test fun revokeDecodes401AwayFromCallerDispatcherAndKeeps204FastPath() {
         val dispatches = java.util.concurrent.atomic.AtomicInteger()
+        val defaults = java.util.concurrent.atomic.AtomicInteger()
+        val decoderThread = java.util.concurrent.atomic.AtomicReference<Thread>()
+        val contextTimedOut = java.util.concurrent.atomic.AtomicBoolean()
+        val entered = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
         val executor = java.util.concurrent.Executors.newSingleThreadExecutor()
         val caller = object : kotlinx.coroutines.CoroutineDispatcher() {
             override fun dispatch(context: kotlin.coroutines.CoroutineContext, block: Runnable) {
@@ -153,26 +160,112 @@ class AttendeeHttpBridgeTest {
                 executor.execute(block)
             }
         }
-        try {
-            runBlocking {
-                kotlinx.coroutines.withContext(caller) {
-                    val bridge = AttendeeHttpBridge { AttendeeWireResponse(401, error("unauthenticated")) }
-                    val beforeDecode = dispatches.get()
-                    assertEquals(AttendeeRevocation.ALREADY_INVALID, bridge.revoke(AttendeeCredential(token)))
-                    assertTrue("401 parsing must resume through the caller dispatcher", dispatches.get() > beforeDecode)
-                    val fast = AttendeeHttpBridge { AttendeeWireResponse(204, "") }
-                    val beforeFast = dispatches.get()
-                    assertEquals(AttendeeRevocation.REVOKED, fast.revoke(AttendeeCredential(token)))
-                    assertEquals(beforeFast, dispatches.get())
+        val observer = object : kotlinx.coroutines.ThreadContextElement<Unit>, kotlin.coroutines.AbstractCoroutineContextElement(object : kotlin.coroutines.CoroutineContext.Key<kotlinx.coroutines.ThreadContextElement<Unit>> {}) {
+            override fun updateThreadContext(context: kotlin.coroutines.CoroutineContext) {
+                if(context[kotlin.coroutines.ContinuationInterceptor] === kotlinx.coroutines.Dispatchers.Default) {
+                    defaults.incrementAndGet()
+                    decoderThread.set(Thread.currentThread())
+                    entered.countDown()
+                    if(!release.await(5, java.util.concurrent.TimeUnit.SECONDS)) contextTimedOut.set(true)
                 }
             }
+            override fun restoreThreadContext(context: kotlin.coroutines.CoroutineContext, oldState: Unit) { }
+        }
+        try {
+            runBlocking {
+                val request = async(caller + observer) {
+                    val thread = Thread.currentThread()
+                    val beforeDecode = dispatches.get()
+                    val bridge = AttendeeHttpBridge { AttendeeWireResponse(401, error("unauthenticated")) }
+                    val result = bridge.revoke(AttendeeCredential(token))
+                    assertSame(thread, Thread.currentThread())
+                    assertNotSame(thread, decoderThread.get())
+                    assertEquals(1, defaults.get())
+                    assertTrue("Suspended parsing must resume through the caller dispatcher", dispatches.get() > beforeDecode)
+                    result
+                }
+                try {
+                    assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS))
+                    executor.submit { }.get(5, java.util.concurrent.TimeUnit.SECONDS)
+                    release.countDown()
+                    assertEquals(AttendeeRevocation.ALREADY_INVALID, request.await())
+                    assertFalse(contextTimedOut.get())
+                    kotlinx.coroutines.withContext(caller + observer) {
+                        val fast = AttendeeHttpBridge { AttendeeWireResponse(204, "") }
+                        val beforeFast = dispatches.get()
+                        assertEquals(AttendeeRevocation.REVOKED, fast.revoke(AttendeeCredential(token)))
+                        assertEquals(beforeFast, dispatches.get())
+                        assertEquals(1, defaults.get())
+                    }
+                } finally { release.countDown(); request.cancel() }
+            }
         } finally {
+            release.countDown()
             executor.shutdownNow()
             assertTrue(executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS))
         }
         failure(AttendeeProblem.INVALID_RESPONSE) { AttendeeHttpBridge { AttendeeWireResponse(401, "{}") }.revoke(AttendeeCredential(token)) }
         failure(AttendeeProblem.UNAVAILABLE) { AttendeeHttpBridge { AttendeeWireResponse(401, error("invalid_grant")) }.revoke(AttendeeCredential(token)) }
     }
+    @Test fun actualHttp429PreservesCanonicalRetryAfterAndRejectsMalformedHeadersWithBoundedWait() = runBlocking {
+        val server = LocalHttpServer()
+        var duplicateHeader = false
+        server.createContext("/") { exchange ->
+            exchange.responseHeaders.add("Retry-After", "180")
+            if (duplicateHeader) exchange.responseHeaders.add("Retry-After", "180")
+            val body = error("rate_limited").toByteArray()
+            exchange.sendResponseHeaders(429, body.size.toLong()); exchange.responseBody.write(body); exchange.close()
+        }
+        server.start()
+        try {
+            val bridge = AttendeeHttpBridge(LoopbackTransport("http://127.0.0.1:${server.address.port}"))
+            try { bridge.account(AttendeeCredential(token)); fail("Expected bounded rate limit") }
+            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.RATE_LIMITED, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
+            try { bridge.revoke(AttendeeCredential(token)); fail("Expected bounded logout rate limit") }
+            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.RATE_LIMITED, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
+            duplicateHeader = true
+            try { bridge.account(AttendeeCredential(token)); fail("Accepted duplicate Retry-After headers") }
+            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.INVALID_RESPONSE, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
+        } finally { server.stop(0) }
+        for (header in listOf(null, "0", "179", "181", "0180", "+180", "180.0", "180, 180", "999999999999999999999", "Sat, 03 Oct 2026 12:03:00 GMT")) {
+            val bridge = AttendeeHttpBridge { AttendeeWireResponse(429, error("rate_limited"), header) }
+            try { bridge.exchange(AttendeeExchange(code, "v".repeat(43))); fail("Accepted noncanonical Retry-After") }
+            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.INVALID_RESPONSE, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
+        }
+        for (body in listOf("{}", error("made_up"), "{\"schema_version\":\"1\",\"error\":{\"code\":\"rate_limited\"}}")) {
+            try { AttendeeHttpBridge { AttendeeWireResponse(429, body, "180") }.account(AttendeeCredential(token)); fail("Accepted noncanonical 429 body") }
+            catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.INVALID_RESPONSE, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
+        }
+    }
+    private suspend fun malformed429WireCooldown(body: ByteArray, declared: Boolean) {
+        val server = LocalHttpServer()
+        server.createContext("/") { exchange ->
+            exchange.responseHeaders.add("Retry-After", "180")
+            exchange.sendResponseHeaders(429, if(declared) body.size.toLong() else -1)
+            exchange.responseBody.write(body); exchange.close()
+        }
+        server.start()
+        try {
+            val bridge = AttendeeHttpBridge(LoopbackTransport("http://127.0.0.1:${server.address.port}"))
+            val issues = mutableListOf<String>()
+            for(action in listOf("account", "revoke", "exchange")) {
+                try {
+                    when(action) {
+                        "account" -> bridge.account(AttendeeCredential(token))
+                        "revoke" -> bridge.revoke(AttendeeCredential(token))
+                        else -> bridge.exchange(AttendeeExchange(code, "v".repeat(43)))
+                    }
+                    issues += "$action accepted malformed 429"
+                } catch(failure: AttendeeFailure) {
+                    if(failure.problem != AttendeeProblem.INVALID_RESPONSE || failure.retryAfterSeconds != 180) issues += "$action:${failure.problem}/${failure.retryAfterSeconds}"
+                }
+            }
+            assertEquals("Malformed known-429 wire failure must preserve cooldown", emptyList<String>(), issues)
+        } finally { server.stop(0) }
+    }
+    @Test fun actualDeclaredOversized429PreservesCooldown() = runBlocking { malformed429WireCooldown(ByteArray(1_048_577) { 32 }, true) }
+    @Test fun actualUnknownLengthOversized429PreservesCooldown() = runBlocking { malformed429WireCooldown(ByteArray(1_048_577) { 32 }, false) }
+    @Test fun actualInvalidUtf8429PreservesCooldown() = runBlocking { malformed429WireCooldown(byteArrayOf(0xc3.toByte(), 0x28), true) }
     @Test fun productionTransportGateAndRequestAllowlistFailClosed() {
         failure(AttendeeProblem.UNAVAILABLE) { AttendeeFixedHttpsTransport().send(AttendeeWireRequest("GET","/api/native/attendee/v1/account",AttendeeCredential(token),null)) }
         listOf("/api/public/v1/dqor/programme","/api/attendee/v1/account","/api/staff/checkins","/api/native/attendee/v1/session#secret","/api/native/attendee/v1/token?code=x","/api/native/attendee/v1/passes?cursor=01").forEach { path ->
@@ -193,7 +286,7 @@ class AttendeeHttpBridgeTest {
         }
     }
     @Test fun publishedTypedErrorsAndNullablePassDatesDecodeCorrectly() = runBlocking {
-        failure(AttendeeProblem.RATE_LIMITED) {AttendeeHttpBridge {AttendeeWireResponse(429,error("rate_limited"))}.account(AttendeeCredential(token))}
+        failure(AttendeeProblem.RATE_LIMITED) {AttendeeHttpBridge {AttendeeWireResponse(429,error("rate_limited"),"180")}.account(AttendeeCredential(token))}
         failure(AttendeeProblem.UNAVAILABLE) {AttendeeHttpBridge {AttendeeWireResponse(503,error("configuration_unavailable"))}.account(AttendeeCredential(token))}
         val pass="{\"id\":\"21\",\"type\":{\"id\":\"3\",\"name\":\"Synthetic pass\"},\"status\":\"confirmed\",\"admission\":{\"starts_on\":null,\"ends_on\":null},\"entry\":[{\"date\":\"2026-10-08\",\"eligible\":true,\"checked_in_at\":null}]}"
         val bridge=AttendeeHttpBridge {AttendeeWireResponse(200,"{$envelope,\"passes\":[$pass],\"more_results\":false,\"next_cursor\":null}")}

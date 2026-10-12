@@ -107,9 +107,10 @@ RSpec.describe "Scanner result visibility", type: :system do
     decode_image
     expect(page).to have_css(".checkin-result--success", text: "Synthetic Camera Result")
     select "Oct 9", from: "date"
-    expect(page).to have_select("date", selected: "Oct 9")
+    expect(page).to have_current_path(checkin_path(date: "2026-10-09", q: ""))
     expect(page).to have_css(".checkin-stat__label", text: "checked in · Fri Oct 9", exact_text: true)
     expect(page).to have_no_css('[data-controller="checkin"][aria-busy="true"]')
+    expect(page).to have_select("date", selected: "Oct 9")
     expect(page).to have_button("Request Camera Permissions")
     decode_image
     expect(page).to have_css(".checkin-result--success", text: "Synthetic Camera Result")

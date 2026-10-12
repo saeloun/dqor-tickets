@@ -41,6 +41,7 @@ class AttendeeControllerTest {
         val revokedTokens = mutableSetOf<String>()
         val receivedTokens = mutableListOf<String>()
         var failure: AttendeeProblem? = null
+        var retryAfterSeconds: Int? = null
         var empty = false
         var identity = AttendeeIdentity("8", "Synthetic Attendee", "synthetic@example.invalid")
         var accountIdentity: AttendeeIdentity? = null
@@ -52,7 +53,7 @@ class AttendeeControllerTest {
         var pageOverride: AttendeePassPage? = null
         var passedVerifier: String? = null
         val observation = base.minusSeconds(5)
-        private fun check(credential: AttendeeCredential? = null) { failure?.let { throw AttendeeFailure(it) }; if (revoked || credential?.value in revokedTokens) throw AttendeeFailure(AttendeeProblem.REVOKED) }
+        private fun check(credential: AttendeeCredential? = null) { failure?.let { throw AttendeeFailure(it, retryAfterSeconds) }; if (revoked || credential?.value in revokedTokens) throw AttendeeFailure(AttendeeProblem.REVOKED) }
         override suspend fun exchange(request: AttendeeExchange): AttendeeLease {
             exchanges++
             val sequence = exchanges
@@ -73,6 +74,80 @@ class AttendeeControllerTest {
         override suspend fun revoke(credential: AttendeeCredential): AttendeeRevocation { revokes++; check(); revokedTokens += credential.value; return AttendeeRevocation.REVOKED }
     }
 
+    @Test fun rateLimitedExchangeBlocksRepeatedAttemptsAcrossLifecycleAndWallClockRollback() = runBlocking {
+        val c = controller()
+        try {
+            bridge.failure = AttendeeProblem.RATE_LIMITED
+            signedIn(c)
+            assertEquals(AttendeeState.Failed(AttendeeProblem.RATE_LIMITED), c.state.value)
+            assertEquals(180, c.retryAfterSeconds.value)
+            repeat(3) { assertNull(c.begin()) }
+            c.background(); c.foreground(); c.cancel()
+            now = base.minusSeconds(86400)
+            elapsed = 179_999L; c.expire()
+            assertEquals(1, c.retryAfterSeconds.value); assertNull(c.begin())
+            assertEquals(1, bridge.exchanges); assertEquals(0, bridge.reads)
+            elapsed = 180_000L; c.expire()
+            assertEquals(0, c.retryAfterSeconds.value)
+            assertEquals(1, bridge.exchanges)
+            assertNotNull(c.begin()); assertNull(c.begin())
+            assertEquals(1, bridge.exchanges)
+        } finally { c.forget() }
+    }
+    @Test fun rateLimitedReadClearsPrivateStatusAndDoesNotQueueRequestsDuringCooldown() = runBlocking {
+        val c = controller()
+        try {
+            signedIn(c); bridge.failure = AttendeeProblem.RATE_LIMITED
+            c.refresh()
+            assertEquals(AttendeeState.Failed(AttendeeProblem.RATE_LIMITED), c.state.value)
+            assertEquals(180, c.retryAfterSeconds.value)
+            val reads = bridge.reads
+            repeat(3) { c.refresh(); c.nextPage(); assertNull(c.begin()) }
+            c.background(); c.foreground()
+            assertEquals(reads, bridge.reads)
+            elapsed = 180_000L; c.expire()
+            assertEquals(0, c.retryAfterSeconds.value)
+            assertEquals(reads, bridge.reads)
+            assertEquals(AttendeeState.Failed(AttendeeProblem.RATE_LIMITED), c.state.value)
+        } finally { c.forget() }
+    }
+    @Test fun rateLimitedLogoutPreservesLocalClearAndWaitWithoutClaimingServerRevocation() = runBlocking {
+        val c = controller()
+        try {
+            signedIn(c); bridge.failure = AttendeeProblem.RATE_LIMITED; c.logout()
+            assertEquals(AttendeeState.SignedOutResult(null), c.state.value)
+            assertEquals(180, c.retryAfterSeconds.value); assertNull(c.begin())
+            assertEquals(1, bridge.revokes)
+        } finally { c.forget() }
+    }
+    @Test fun malformed429CooldownClearsPrivateStateAndSurvivesLifecycleWithoutQueuedRetry() = runBlocking {
+        for(operation in listOf("exchange", "read", "logout")) {
+            bridge.failure = null; bridge.retryAfterSeconds = 180; elapsed = 0L; now = base
+            val c = controller()
+            try {
+                if(operation != "exchange") signedIn(c)
+                bridge.failure = AttendeeProblem.INVALID_RESPONSE
+                when(operation) { "exchange" -> signedIn(c); "read" -> c.refresh(); else -> c.logout() }
+                if(operation == "logout") assertEquals(AttendeeState.SignedOutResult(null), c.state.value)
+                else assertEquals(AttendeeState.Failed(AttendeeProblem.INVALID_RESPONSE), c.state.value)
+                assertEquals(180, c.retryAfterSeconds.value)
+                val counts = listOf(bridge.exchanges, bridge.reads, bridge.revokes)
+                repeat(3) { assertNull(c.begin()); c.refresh(); c.nextPage() }
+                c.background(); c.foreground()
+                assertEquals(counts, listOf(bridge.exchanges, bridge.reads, bridge.revokes))
+                elapsed = 180_000L; c.expire()
+                assertEquals(0, c.retryAfterSeconds.value)
+                assertEquals(counts, listOf(bridge.exchanges, bridge.reads, bridge.revokes))
+            } finally { c.forget() }
+        }
+    }
+    @Test fun cooldownCounterUsesMonotonicDeadlineWhileIdleAndStopsAfterDisposal() = runBlocking {
+        val c = controller()
+        bridge.failure = AttendeeProblem.RATE_LIMITED; signedIn(c)
+        elapsed = 180_000L; delay(1100)
+        assertEquals(0, c.retryAfterSeconds.value); assertEquals(1, bridge.exchanges)
+        c.forget(); assertNull(c.begin()); assertEquals(0, c.retryAfterSeconds.value)
+    }
     @Test fun disabledNeverStartsOrExchanges() = runBlocking {
         val c = AttendeeController(bridge, false)
         assertNull(c.begin()); assertFalse(c.callback("${AttendeeIntegration.CALLBACK}?code=c&state=s"))

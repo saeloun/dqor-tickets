@@ -11,6 +11,35 @@ final class StaffUITests: XCTestCase {
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
     @MainActor
+    private func revealStaffListElement(_ identifier: String, in app: XCUIApplication, button: Bool = true, scrollUp: Bool = true) {
+        for attempt in 0..<20 {
+            guard let list = app.collectionViews.allElementsBoundByIndex.last else { XCTFail("No active staff list"); return }
+            let listFrame = list.frame
+            let top = max(listFrame.minY, app.navigationBars.allElementsBoundByIndex.last?.frame.maxY ?? listFrame.minY) + 8
+            let bottom = min(app.frame.maxY, listFrame.maxY)
+            let usable = CGRect(x: listFrame.minX, y: top, width: listFrame.width, height: max(0, bottom - top))
+            guard usable.height > 0 else { XCTFail("No visible staff list area"); return }
+            let element = button ? app.buttons[identifier] : app.staticTexts[identifier]
+            var down = !scrollUp
+            if element.exists {
+                let frame = element.frame
+                if element.isHittable && usable.contains(frame) {
+                    let geometry = XCTAttachment(string: "target=\(frame); usable=\(usable); ordinary drags=\(attempt)")
+                    geometry.name = "Visible staff target \(identifier)"; geometry.lifetime = .keepAlways; add(geometry)
+                    capture(app, name: "Visible staff target \(identifier)")
+                    return
+                }
+                down = frame.minY < usable.minY
+            }
+            let delta = usable.height * 0.1
+            let origin = list.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: usable.midX - listFrame.minX, dy: usable.midY + (down ? -delta : delta) - listFrame.minY))
+            let end = origin.withOffset(CGVector(dx: usable.midX - listFrame.minX, dy: usable.midY + (down ? delta : -delta) - listFrame.minY))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
+        }
+        XCTFail("Staff target \(identifier) did not become fully visible after 20 ordinary drags")
+    }
+    @MainActor
     func testContinuousScannerRehearsalPreviewRepeatCancelMixedAndBackground() {
         let app = XCUIApplication(); app.launchArguments = ["--scanner-rehearsal"]; launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap(); app.buttons["Scan tickets"].tap()
@@ -25,6 +54,11 @@ final class StaffUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1 in batch"].exists)
         app.buttons["Scan sample Taylor"].tap()
         XCTAssertTrue(app.staticTexts["2 in batch"].waitForExistence(timeout: 5))
+        let manual = app.buttons["Use attendee search"]
+        XCTAssertTrue(manual.isHittable)
+        XCTAssertGreaterThanOrEqual(manual.frame.height, 48)
+        let geometry = XCTAttachment(string: "Light manual lookup accessible frame: \(manual.frame)")
+        geometry.name = "Light scanner manual lookup geometry"; geometry.lifetime = .keepAlways; add(geometry)
         capture(app, name: "Synthetic continuous scanner rehearsal")
         defer { XCUIDevice.shared.orientation = .portrait }
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -40,8 +74,24 @@ final class StaffUITests: XCTestCase {
         add(landscapeAttachment)
         XCUIDevice.shared.orientation = .portrait
         XCUIDevice.shared.press(.home); app.activate()
+        let portraitReady = NSPredicate { _, _ in
+            app.state == .runningForeground && app.frame.height > app.frame.width &&
+                app.buttons["Done"].isHittable && app.buttons["Scan sample Alex"].isHittable
+        }
+        let portraitExpectation = expectation(for: portraitReady, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [portraitExpectation], timeout: 5), .completed)
         XCTAssertTrue(app.staticTexts["2 in batch"].exists)
-        app.buttons["Done"].tap(); app.swipeUp(); app.buttons["reviewBatch"].tap()
+        app.buttons["Done"].tap()
+        let scannerDismissed = expectation(for: NSPredicate { _, _ in !app.buttons["Done"].exists }, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [scannerDismissed], timeout: 5), .completed)
+        let review = app.buttons["reviewBatch"]
+        for _ in 0..<8 {
+            if review.isHittable { break }
+            app.swipeUp()
+        }
+        let reviewReady = expectation(for: NSPredicate { _, _ in review.isHittable }, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [reviewReady], timeout: 5), .completed)
+        review.tap()
         XCTAssertTrue(app.staticTexts["Confirm event admission and day"].exists)
         app.buttons["Cancel"].tap(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
         app.swipeUp()
@@ -53,6 +103,23 @@ final class StaffUITests: XCTestCase {
         app.swipeUp(); XCTAssertTrue(app.staticTexts["Already checked in"].waitForExistence(timeout: 5))
         app.buttons["Events"].tap(); app.buttons["Sign out"].tap()
         XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Checked in"].exists)
+    }
+    @MainActor
+    func testDarkScannerManualLookupRemainsReadableAndReachable() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--dark-preview", "--scanner-rehearsal", "--reduce-motion-preview"]
+        launchDemo(app)
+        app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap(); app.buttons["Scan tickets"].tap()
+        let manual = app.buttons["Use attendee search"]
+        XCTAssertTrue(manual.waitForExistence(timeout: 5))
+        XCTAssertTrue(manual.isHittable)
+        XCTAssertGreaterThanOrEqual(manual.frame.height, 48)
+        let geometry = XCTAttachment(string: "Dark manual lookup accessible frame: \(manual.frame)")
+        geometry.name = "Dark scanner manual lookup geometry"; geometry.lifetime = .keepAlways; add(geometry)
+        capture(app, name: "Dark synthetic scanner manual lookup")
+        manual.tap()
+        XCTAssertTrue(app.textFields["attendeeSearch"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Checked in"].exists)
     }
     @MainActor
@@ -153,11 +220,44 @@ final class StaffUITests: XCTestCase {
         }
         try audit("Welcome")
         app.buttons["enterDemo"].tap()
+        let catalogReady = NSPredicate { _, _ in
+            let status = app.staticTexts["Demo environment"]
+            return app.buttons["day-1"].isHittable && app.buttons["Sign out"].isHittable &&
+                !app.buttons["enterDemo"].exists && status.exists && status.frame.width > 0 &&
+                status.frame.height > 0 && app.frame.contains(status.frame)
+        }
+        let catalogExpectation = XCTNSPredicateExpectation(predicate: catalogReady, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [catalogExpectation], timeout: 5), .completed)
         try audit("Event catalog")
         app.buttons["day-1"].tap(); app.buttons["Search attendees"].tap()
         try audit("Lookup")
         app.buttons["demo-001"].tap(); app.swipeUp(); app.buttons["reviewBatch"].tap()
         try audit("Review")
+    }
+
+    @MainActor
+    func testDemoDisclosureSupportsMaximumTextAndDarkAppearance() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--dark-preview", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        launchDemo(app)
+        let enter = app.buttons["enterDemo"]
+        for _ in 0..<12 { if enter.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(enter.isHittable)
+        enter.tap()
+        let disclosure = app.staticTexts["Demo environment"]
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
+        XCTAssertTrue(disclosure.isHittable)
+        XCTAssertTrue(app.frame.contains(disclosure.frame))
+        XCTAssertGreaterThan(disclosure.frame.height, 40, "The disclosure must follow the largest body text size.")
+        try app.performAccessibilityAudit(for: [.contrast, .textClipped, .sufficientElementDescription, .trait])
+        capture(app, name: "Largest dark demo disclosure")
+        revealStaffListElement("day-1", in: app)
+        app.buttons["day-1"].tap()
+        app.buttons["Events"].tap()
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Sign out"].isHittable)
+        app.buttons["Sign out"].tap()
+        XCTAssertTrue(enter.waitForExistence(timeout: 5))
     }
 
     @MainActor
@@ -168,12 +268,28 @@ final class StaffUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Use attendee search"].waitForExistence(timeout: 5))
         capture(app, name: "Scanner fallback")
         app.buttons["Use attendee search"].tap()
-        app.buttons["Search attendees"].tap()
-        app.buttons["demo-001"].tap(); app.buttons["demo-003"].tap()
-        app.swipeUp(); app.buttons["reviewBatch"].tap(); app.buttons["Confirm check-in"].tap()
-        app.swipeUp()
+        revealStaffListElement("Search attendees", in: app); app.buttons["Search attendees"].tap()
+        revealStaffListElement("demo-001", in: app); app.buttons["demo-001"].tap()
+        revealStaffListElement("demo-003", in: app)
+        app.buttons["demo-003"].tap()
+        revealStaffListElement("reviewBatch", in: app)
+        app.buttons["reviewBatch"].tap()
+        revealStaffListElement("review-demo-001", in: app, button: false)
+        XCTAssertTrue(app.staticTexts["review-demo-001"].exists)
+        revealStaffListElement("review-demo-003", in: app, button: false)
+        XCTAssertTrue(app.staticTexts["review-demo-003"].exists)
+        app.buttons["Cancel"].tap()
+        revealStaffListElement("reviewBatch", in: app); app.buttons["reviewBatch"].tap()
+        revealStaffListElement("Confirm check-in", in: app); app.buttons["Confirm check-in"].tap()
+        revealStaffListElement("Checked in", in: app, button: false)
+        XCTAssertTrue(app.staticTexts["Checked in"].exists)
+        revealStaffListElement("Not eligible for this day", in: app, button: false)
         XCTAssertTrue(app.staticTexts["Not eligible for this day"].waitForExistence(timeout: 5))
         capture(app, name: "Mixed outcomes")
+        app.buttons["Events"].tap()
+        revealStaffListElement("day-2", in: app)
+        XCTAssertTrue(app.buttons["day-2"].waitForExistence(timeout: 5))
+        capture(app, name: "Staff catalog after confirmed results and Back")
     }
     @MainActor
     func testLargestDynamicTypeKeyboardAndCameraFallback() {
@@ -207,12 +323,20 @@ final class StaffUITests: XCTestCase {
     func testDuplicateNamesRemainDistinguishable() {
         let app = XCUIApplication(); app.launchArguments = ["--duplicate-names"]; launchDemo(app)
         app.buttons["enterDemo"].tap(); app.buttons["day-1"].tap()
-        app.buttons["Search attendees"].tap()
+        revealStaffListElement("Search attendees", in: app); app.buttons["Search attendees"].tap()
+        revealStaffListElement("demo-001", in: app)
         XCTAssertTrue(app.buttons["demo-001"].label.contains("alex@example.test"))
+        revealStaffListElement("demo-004", in: app)
         XCTAssertTrue(app.buttons["demo-004"].label.contains("alex.second@example.test"))
-        app.buttons["demo-001"].tap(); app.buttons["demo-004"].tap()
-        app.swipeUp(); app.buttons["reviewBatch"].tap()
+        revealStaffListElement("demo-001", in: app, scrollUp: false)
+        app.buttons["demo-001"].tap()
+        revealStaffListElement("demo-004", in: app)
+        app.buttons["demo-004"].tap()
+        revealStaffListElement("reviewBatch", in: app)
+        app.buttons["reviewBatch"].tap()
+        revealStaffListElement("review-demo-001", in: app, button: false)
         XCTAssertTrue(app.staticTexts["review-demo-001"].label.contains("alex@example.test"))
+        revealStaffListElement("review-demo-004", in: app, button: false)
         XCTAssertTrue(app.staticTexts["review-demo-004"].label.contains("alex.second@example.test"))
         capture(app, name: "Duplicate-name review")
     }
@@ -356,6 +480,98 @@ final class StaffUITests: XCTestCase {
         app.buttons["eventSchedule"].tap()
         app.segmentedControls["scheduleFilter"].buttons["Saved"].tap()
         XCTAssertTrue(app.staticTexts["Your evening, your way"].exists)
+    }
+
+    @MainActor
+    func testScheduleRowEntireTouchAreaAndBackStack() {
+        let app = XCUIApplication()
+        XCUIDevice.shared.orientation = .portrait
+        launchDemo(app)
+        defer {
+            XCUIDevice.shared.orientation = .portrait
+            XCUIDevice.shared.press(.home); app.activate()
+            let restored = expectation(for: NSPredicate { _, _ in app.frame.height > app.frame.width }, evaluatedWith: app)
+            XCTAssertEqual(XCTWaiter.wait(for: [restored], timeout: 5), .completed)
+        }
+        app.buttons["exploreSampleEvent"].tap()
+        let schedule = app.buttons["eventSchedule"]
+        for _ in 0..<12 {
+            if schedule.isHittable && app.frame.contains(schedule.frame) { break }
+            let scroll = app.scrollViews.firstMatch
+            scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)).press(forDuration: 0.05,
+                thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
+        }
+        XCTAssertTrue(schedule.isHittable)
+        XCTAssertTrue(app.frame.contains(schedule.frame))
+        XCTAssertGreaterThanOrEqual(schedule.frame.height, 48)
+        let geometry = XCTAttachment(string: "Schedule row frame: \(schedule.frame)")
+        geometry.name = "Schedule full touch area"; geometry.lifetime = .keepAlways; add(geometry)
+        capture(app, name: "Schedule row full touch area portrait")
+        for point in [CGVector(dx: 0.5, dy: 0.5), CGVector(dx: 0.5, dy: 0.9)] {
+            schedule.coordinate(withNormalizedOffset: point).tap()
+            XCTAssertTrue(app.navigationBars["Schedule"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.segmentedControls["scheduleFilter"].exists)
+            app.navigationBars.buttons["BackButton"].tap()
+            XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        }
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCUIDevice.shared.press(.home); app.activate()
+        let landscapeReady = expectation(for: NSPredicate { _, _ in app.frame.width > app.frame.height }, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [landscapeReady], timeout: 5), .completed)
+        for _ in 0..<12 {
+            if schedule.isHittable && app.frame.contains(schedule.frame) { break }
+            let scroll = app.scrollViews.firstMatch
+            scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)).press(forDuration: 0.05,
+                thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
+        }
+        XCTAssertTrue(schedule.isHittable)
+        XCTAssertTrue(app.frame.contains(schedule.frame))
+        XCTAssertGreaterThanOrEqual(schedule.frame.height, 48)
+        let landscape = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        landscape.name = "Schedule row full touch area landscape"; landscape.lifetime = .keepAlways; add(landscape)
+        schedule.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9)).tap()
+        XCTAssertTrue(app.navigationBars["Schedule"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testWelcomeActionWrapAndScheduleWithSystemTextSettings() throws {
+        let app = XCUIApplication()
+        XCUIDevice.shared.orientation = .portrait
+        launchDemo(app)
+        let portraitReady = expectation(for: NSPredicate { _, _ in app.frame.height > app.frame.width }, evaluatedWith: app)
+        XCTAssertEqual(XCTWaiter.wait(for: [portraitReady], timeout: 5), .completed)
+        let action = app.staticTexts["Explore sample event"]
+        for _ in 0..<16 { if action.isHittable && app.frame.contains(action.frame) { break }; app.swipeUp() }
+        XCTAssertTrue(action.isHittable)
+        XCTAssertTrue(app.frame.contains(action.frame))
+        XCTAssertEqual(action.label, "Explore sample event")
+        try app.performAccessibilityAudit(for: .textClipped)
+        let geometry = XCTAttachment(string: "Welcome action frame: \(action.frame); complete label: \(action.label)")
+        geometry.name = "System text settings welcome action"; geometry.lifetime = .keepAlways; add(geometry)
+        capture(app, name: "System text settings whole welcome action")
+        action.tap()
+        XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        let schedule = app.buttons["eventSchedule"]
+        for _ in 0..<16 { if schedule.isHittable && app.frame.contains(schedule.frame) { break }; app.swipeUp() }
+        XCTAssertTrue(schedule.isHittable)
+        XCTAssertTrue(app.frame.contains(schedule.frame))
+        XCTAssertGreaterThanOrEqual(schedule.frame.height, 48)
+        capture(app, name: "System text settings schedule action")
+        schedule.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.navigationBars["Schedule"].waitForExistence(timeout: 5))
+        let filter = app.segmentedControls["scheduleFilter"]
+        for _ in 0..<16 { if filter.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(filter.isHittable)
+        filter.buttons["Saved"].tap()
+        XCTAssertTrue(app.staticTexts["Your evening, your way"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.navigationBars["Event preview"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(app.buttons["enterDemo"].waitForExistence(timeout: 5))
     }
 
 }
