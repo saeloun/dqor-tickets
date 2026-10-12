@@ -1,0 +1,10 @@
+<%= render "styles" %>
+<main class="community-workspace">
+  <%= link_to "← Communities", organizer_organization_groups_path(@organization), class: "back" %><p class="eyebrow">Community workspace</p><h1><%= @group.name %></h1><span class="badge"><%= @group.draft? ? "Draft · private" : "Private workspace" %></span>
+  <% if @group.errors.any? %><div class="errors" role="alert"><ul><% @group.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul></div><% end %>
+  <p><%= @group.tagline %></p><p><%= @group.city %> · <%= @group.timezone %></p>
+  <% if can_manage_groups? %><div class="actions"><%= link_to "Create community event draft", new_event_organizer_organization_group_path(@organization, @group), class: "button" %><%= link_to "Edit community", edit_organizer_organization_group_path(@organization, @group), class: "button secondary" %></div><% end %>
+  <h2>Events in this community</h2><% @events.each do |event| %><article class="card"><h3><%= link_to event.title, organizer_organization_event_path(@organization, event) %></h3><p><%= event.status.capitalize %></p></article><% end %><% if @events.empty? %><p>No events have been added yet.</p><% end %>
+  <% if can_manage_groups? && @available_events.any? %><%= form_with url: add_event_organizer_organization_group_path(@organization, @group), method: :post do |form| %><%= form.label :event_id, "Add an existing organization event" %><%= form.select :event_id, @available_events.map { |event| [ event.title, event.id ] } %><%= form.submit "Add event", class: "button" %><% end %><% end %>
+  <p class="muted">This community workspace is private. Event publication and registration settings are managed separately.</p>
+</main>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_11_030300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -132,6 +132,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.index ["ticket_id"], name: "index_checkin_audits_on_ticket_id"
   end
 
+  create_table "community_groups", force: :cascade do |t|
+    t.string "city"
+    t.string "country_code"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.bigint "organization_id", null: false
+    t.string "slug", null: false
+    t.string "status", default: "draft", null: false
+    t.string "tagline"
+    t.string "timezone", default: "UTC", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id", "organization_id"], name: "index_community_groups_on_id_and_organization_id", unique: true
+    t.index ["organization_id", "slug"], name: "index_community_groups_on_organization_id_and_slug", unique: true
+    t.index ["organization_id"], name: "index_community_groups_on_organization_id"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying]::text[])", name: "community_group_status"
+  end
+
   create_table "connections", force: :cascade do |t|
     t.bigint "connected_user_id", null: false
     t.datetime "created_at", null: false
@@ -229,6 +247,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
   end
 
   create_table "events", force: :cascade do |t|
+    t.bigint "community_group_id"
     t.datetime "created_at", null: false
     t.datetime "ends_at"
     t.bigint "organization_id", null: false
@@ -238,6 +257,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
     t.string "timezone", default: "UTC", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["organization_id", "community_group_id", "starts_at"], name: "idx_on_organization_id_community_group_id_starts_at_360868f23d"
     t.index ["organization_id", "slug"], name: "index_events_on_organization_id_and_slug", unique: true
     t.index ["organization_id"], name: "index_events_on_organization_id"
     t.check_constraint "ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at", name: "events_ordered_dates"
@@ -1050,6 +1070,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
   add_foreign_key "announcement_deliveries", "announcement_campaigns"
   add_foreign_key "checkin_audits", "admin_users", on_delete: :nullify
   add_foreign_key "checkin_audits", "tickets", on_delete: :nullify
+  add_foreign_key "community_groups", "organizations"
   add_foreign_key "connections", "users"
   add_foreign_key "connections", "users", column: "connected_user_id"
   add_foreign_key "conversations", "users", column: "participant_one_id"
@@ -1062,6 +1083,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
   add_foreign_key "event_slot_redemptions", "admin_users", column: "voided_by_id"
   add_foreign_key "event_slot_redemptions", "event_slots"
   add_foreign_key "event_slot_redemptions", "tickets"
+  add_foreign_key "events", "community_groups", column: ["community_group_id", "organization_id"], primary_key: ["id", "organization_id"], name: "events_same_organization_group"
   add_foreign_key "events", "organizations"
   add_foreign_key "free_checkins", "events"
   add_foreign_key "free_checkins", "tickets"
