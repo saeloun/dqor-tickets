@@ -128,6 +128,14 @@ RSpec.describe "Authentication", type: :system do
       click_button "Email reset instructions"
     end
 
+    def submit_new_password(password:, confirmation: password)
+      within("form:has(#password_confirmation)") do
+        fill_in "New password", with: password
+        fill_in "Confirm new password", with: confirmation
+        click_button "Save new password"
+      end
+    end
+
     def reset_token_from_last_email
       body = ActionMailer::Base.deliveries.last.body.encoded
       raw = body[%r{/passwords/([^"\s]+)/edit}, 1]
@@ -162,9 +170,7 @@ RSpec.describe "Authentication", type: :system do
       expect(token).to be_present
 
       visit edit_password_path(token)
-      fill_in "password", with: "brand-new-secret"
-      fill_in "password_confirmation", with: "brand-new-secret"
-      click_button "Save"
+      submit_new_password(password: "brand-new-secret")
 
       expect(page).to have_current_path(new_session_path)
       expect(page).to have_content("Password has been reset.")
@@ -175,9 +181,7 @@ RSpec.describe "Authentication", type: :system do
 
     it "rejects the old password once it has been reset" do
       visit edit_password_path(admin.password_reset_token)
-      fill_in "password", with: "brand-new-secret"
-      fill_in "password_confirmation", with: "brand-new-secret"
-      click_button "Save"
+      submit_new_password(password: "brand-new-secret")
 
       expect(page).to have_content("Password has been reset.")
 
@@ -193,9 +197,7 @@ RSpec.describe "Authentication", type: :system do
       expect(Session.count).to eq(1)
 
       visit edit_password_path(admin.password_reset_token)
-      fill_in "password", with: "brand-new-secret"
-      fill_in "password_confirmation", with: "brand-new-secret"
-      click_button "Save"
+      submit_new_password(password: "brand-new-secret")
 
       expect(page).to have_content("Password has been reset.")
       expect(Session.count).to eq(0)
@@ -206,9 +208,7 @@ RSpec.describe "Authentication", type: :system do
 
     it "keeps the admin on the form when the confirmation does not match" do
       visit edit_password_path(admin.password_reset_token)
-      fill_in "password", with: "brand-new-secret"
-      fill_in "password_confirmation", with: "something-else"
-      click_button "Save"
+      submit_new_password(password: "brand-new-secret", confirmation: "something-else")
 
       expect(page).to have_content("Password confirmation doesn't match Password")
       expect(page).to have_button("Save")
@@ -217,9 +217,7 @@ RSpec.describe "Authentication", type: :system do
 
     it "reports the real reason when the new password is too short" do
       visit edit_password_path(admin.password_reset_token)
-      fill_in "password", with: "short1"
-      fill_in "password_confirmation", with: "short1"
-      click_button "Save"
+      submit_new_password(password: "short1")
 
       expect(page).to have_content("Password is too short (minimum is 8 characters)")
       expect(page).to have_no_content("Passwords did not match.")
