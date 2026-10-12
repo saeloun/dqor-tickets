@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_07_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1023,6 +1023,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_010000) do
     t.index ["referral_code"], name: "index_users_on_referral_code", unique: true
   end
 
+  create_table "wall_love_notes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.text "note", null: false
+    t.string "public_name", limit: 80, null: false
+    t.boolean "publication_consent", default: false, null: false
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
+    t.string "source_url", limit: 500
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["reviewed_by_id"], name: "index_wall_love_notes_on_reviewed_by_id"
+    t.index ["status", "id"], name: "index_wall_love_notes_on_status_and_id"
+    t.index ["user_id"], name: "index_wall_love_notes_on_user_id", unique: true
+    t.check_constraint "char_length(note) >= 1 AND char_length(note) <= 2000", name: "wall_love_notes_note_length"
+    t.check_constraint "status::text <> 'approved'::text OR publication_consent", name: "wall_love_notes_publication_consent"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'unpublished'::character varying, 'withdrawn'::character varying]::text[])", name: "wall_love_notes_status"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "announcement_campaigns", "admin_users"
@@ -1126,4 +1146,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_010000) do
   add_foreign_key "tickets", "orders", column: ["order_id", "ownership_key"], primary_key: ["id", "ownership_key"], name: "tickets_order_ownership"
   add_foreign_key "tickets", "ticket_types"
   add_foreign_key "tickets", "ticket_types", column: ["ticket_type_id", "ownership_key"], primary_key: ["id", "ownership_key"], name: "tickets_type_ownership"
+  add_foreign_key "wall_love_notes", "admin_users", column: "reviewed_by_id"
+  add_foreign_key "wall_love_notes", "users"
 end

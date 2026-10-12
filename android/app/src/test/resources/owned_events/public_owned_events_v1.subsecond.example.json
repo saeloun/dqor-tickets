@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "event": {
+    "id": "hosted-event-9000000000000001",
+    "ownership": "hosted_event",
+    "title": "Synthetic timestamp precision",
+    "starts_at": "2026-11-07T00:15:00.100000+05:30",
+    "ends_at": "2026-11-07T00:15:00.900000+05:30",
+    "start_date": "2026-11-07",
+    "end_date": "2026-11-07",
+    "timezone": "Asia/Kolkata",
+    "organizer": {
+      "name": "Synthetic precision organizers",
+      "slug": "synthetic-precision-organizers"
+    },
+    "details_path": "/events/synthetic-precision-organizers/synthetic-precision"
+  },
+  "content_version": "90ac4c628ea81c8313ff72c9ee6bcbf0b29008f1a9744359b78f44332fac02b4"
+}
