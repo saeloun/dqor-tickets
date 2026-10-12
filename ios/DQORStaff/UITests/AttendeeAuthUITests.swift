@@ -134,6 +134,29 @@ final class AttendeeAuthUITests: XCTestCase {
         capture("Quiet synthetic revocation clears private account and passes on active tab return")
     }
     @MainActor
+    func testEnteringPassDirectlyRevalidatesQuietlyRevokedSessionWhileAppStaysActive() {
+        let app = XCUIApplication(); open(app)
+        reveal(app.buttons["attendeeSignIn"], in: app); app.buttons["attendeeSignIn"].tap()
+        reveal(app.buttons["Approve synthetic return"], in: app); app.buttons["Approve synthetic return"].tap()
+        XCTAssertTrue(app.staticTexts["attendeeName"].waitForExistence(timeout: 5))
+        reveal(app.buttons["attendeeQuietRevocation"], in: app); app.buttons["attendeeQuietRevocation"].tap()
+        XCTAssertTrue(app.staticTexts["attendeeQuietRevocationQueued"].waitForExistence(timeout: 5))
+        reveal(app.staticTexts["attendeeName"], in: app, preferTop: true)
+        XCTAssertTrue(app.staticTexts["attendeeName"].exists)
+        app.tabBars.buttons["Home"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Home"].isSelected)
+        app.tabBars.buttons["Pass"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Pass"].isSelected)
+        let pass = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH 'attendeePass-'")).firstMatch
+        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: pass)
+        XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 5), .completed)
+        capture("Quiet synthetic revocation direct Pass entry")
+        XCTAssertFalse(pass.exists)
+        app.tabBars.buttons["You"].tap()
+        XCTAssertTrue(app.buttons["attendeeSignIn"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["attendeeName"].exists)
+    }
+    @MainActor
     func testSlowExchangeCancelBackAndForegroundCannotRestoreIdentity() {
         let app = XCUIApplication(); open(app)
         reveal(app.buttons["attendeeScenario-Slow response"], in: app)
