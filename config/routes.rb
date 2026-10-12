@@ -34,6 +34,8 @@ Rails.application.routes.draw do
   get "announcement_unsubscribe/:token", to: "announcement_preferences#unsubscribe", as: :announcement_unsubscribe
   post "announcement_unsubscribe/:token", to: "announcement_preferences#suppress"
   get "api/public/v1/dqor/programme", to: "api/public/v1/programmes#show", defaults: { format: :json }
+  get "api/public/v1/events", to: "api/public/v1/events#index", as: :public_events, defaults: { format: :json }
+  get "api/public/v1/events/:id", to: "api/public/v1/events#show", as: :public_event, defaults: { format: :json }
 
   resources :event_slots, only: %i[index show new create edit update] do
     member do
