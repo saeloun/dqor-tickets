@@ -23,6 +23,7 @@ data class OwnedEvent(val id: String, val title: String, val startsAt: OffsetDat
             val path = root.text("details_path"); require(path.matches(Regex("/events/$slug/[a-z0-9]+(?:-[a-z0-9]+)*")))
             val zoneName = root.text("timezone"); require(zoneName in ZoneId.getAvailableZoneIds()); val zone = ZoneId.of(zoneName)
             val start = OffsetDateTime.parse(root.text("starts_at")); val end = OffsetDateTime.parse(root.text("ends_at")); require(end.toInstant().isAfter(start.toInstant()))
+            require(start.offset == zone.rules.getOffset(start.toInstant()) && end.offset == zone.rules.getOffset(end.toInstant()))
             val first = LocalDate.parse(root.text("start_date")); val last = LocalDate.parse(root.text("end_date"))
             require(start.atZoneSameInstant(zone).toLocalDate() == first && end.atZoneSameInstant(zone).toLocalDate() == last)
             return OwnedEvent(id, title, start, end, first, last, zone, name, slug, path)

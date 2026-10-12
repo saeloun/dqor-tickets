@@ -189,7 +189,11 @@ final class OwnedEventsTests: XCTestCase {
             let data = try mutate(detail: true) { root in
                 var event = root["event"] as! [String: Any]
                 event["timezone"] = zone
-                if accepted.contains(zone) { event["starts_at"] = "2026-11-07T12:15:00Z"; event["ends_at"] = "2026-11-07T13:30:00Z" }
+                if accepted.contains(zone) {
+                    let formatter = ISO8601DateFormatter(); formatter.timeZone = TimeZone(identifier: zone)!
+                    event["starts_at"] = formatter.string(from: OwnedEvent.instant("2026-11-07T12:15:00Z")!)
+                    event["ends_at"] = formatter.string(from: OwnedEvent.instant("2026-11-07T13:30:00Z")!)
+                }
                 root["event"] = event
             }
             let client = OwnedEventsClient(transport: OwnedQueue([response(detail: true, data: data)]))
@@ -197,6 +201,43 @@ final class OwnedEventsTests: XCTestCase {
                 let state = try await client.refresh(.detail("hosted-event-101"))
                 XCTAssertTrue(accepted.contains(zone)); XCTAssertNotNil(state.event)
             } catch { XCTAssertFalse(accepted.contains(zone)) }
+        }
+    }
+    func testTimestampOffsetsMustMatchNamedZoneInCatalogAndDetail() async throws {
+        for detail in [false, true] {
+            for field in ["starts_at", "ends_at", "both"] {
+                let data = try mutate(detail: detail) { root in
+                    var event = detail ? root["event"] as! [String: Any] : (root["events"] as! [[String: Any]])[0]
+                    if field == "starts_at" { event[field] = "2026-11-07T00:15:00+04:30" }
+                    else if field == "ends_at" { event[field] = "2026-11-07T01:30:00+04:30" }
+                    else { event["starts_at"] = "2026-11-07T00:15:00Z"; event["ends_at"] = "2026-11-07T01:30:00Z" }
+                    if detail { root["event"] = event } else { root["events"] = [event] }
+                }
+                do {
+                    _ = try await OwnedEventsClient(transport: OwnedQueue([response(detail: detail, data: data)])).refresh(detail ? .detail("hosted-event-101") : resource)
+                    XCTFail("Accepted named-zone offset mismatch: \(detail)/\(field)")
+                } catch { XCTAssertEqual(error as? OwnedEventsError, .invalidResponse) }
+            }
+        }
+    }
+    func testActualZoneOffsetsPreserveUtcAliasesAndDaylightSavingFold() async throws {
+        let cases = [
+            ["UTC", "2026-11-07T00:15:00Z", "2026-11-07T01:30:00Z", "2026-11-07"],
+            ["UTC", "2026-11-07T00:15:00+00:00", "2026-11-07T01:30:00+00:00", "2026-11-07"],
+            ["Asia/Calcutta", "2026-11-07T00:15:00+05:30", "2026-11-07T01:30:00+05:30", "2026-11-07"],
+            ["Europe/London", "2026-10-25T01:30:00+01:00", "2026-10-25T01:30:00+00:00", "2026-10-25"]
+        ]
+        for values in cases {
+            for detail in [false, true] {
+                let data = try mutate(detail: detail) { root in
+                    var event = detail ? root["event"] as! [String: Any] : (root["events"] as! [[String: Any]])[0]
+                    event["timezone"] = values[0]; event["starts_at"] = values[1]; event["ends_at"] = values[2]
+                    event["start_date"] = values[3]; event["end_date"] = values[3]
+                    if detail { root["event"] = event } else { root["events"] = [event] }
+                }
+                let state = try await OwnedEventsClient(transport: OwnedQueue([response(detail: detail, data: data)])).refresh(detail ? .detail("hosted-event-101") : resource)
+                XCTAssertNotNil(detail ? state.event : state.catalog?.events.first)
+            }
         }
     }
     func testSchemaPaginationAndDuplicateLimits() async throws {

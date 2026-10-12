@@ -28,6 +28,7 @@ class AttendeeHttpBridgeTest {
         val responseBody=ByteArrayOutputStream()
         val requestBody: java.io.InputStream
         private var status=500
+        private var declaredLength: Long? = 0
         init {
             val input=socket.getInputStream().buffered()
             fun line(): String {
@@ -41,11 +42,11 @@ class AttendeeHttpBridgeTest {
             val bytes=ByteArray(count); var read=0; while(read<count) {val n=input.read(bytes,read,count-read); require(n>0); read+=n}
             requestBody=bytes.inputStream()
         }
-        fun sendResponseHeaders(code: Int,length: Long) {status=code}
+        fun sendResponseHeaders(code: Int,length: Long) {status=code; declaredLength=length.takeIf { it >= 0 }}
         fun close() {
             val output=socket.getOutputStream()
             val bytes=responseBody.toByteArray()
-            val headers=buildString {append("HTTP/1.1 $status Synthetic\r\n"); responseHeaders.values.forEach {(key,value)->append("$key: $value\r\n")}; append("Content-Length: ${bytes.size}\r\nConnection: close\r\n\r\n")}
+            val headers=buildString {append("HTTP/1.1 $status Synthetic\r\n"); responseHeaders.values.forEach {(key,value)->append("$key: $value\r\n")}; if(declaredLength != null) append("Content-Length: ${bytes.size}\r\n"); append("Connection: close\r\n\r\n")}
             try {output.write(headers.toByteArray()); output.write(bytes); output.flush()}
             catch (_: java.io.IOException) { }
             finally {socket.close()}
@@ -236,6 +237,35 @@ class AttendeeHttpBridgeTest {
             catch (failure: AttendeeFailure) { assertEquals(AttendeeProblem.INVALID_RESPONSE, failure.problem); assertEquals(180, failure.retryAfterSeconds) }
         }
     }
+    private suspend fun malformed429WireCooldown(body: ByteArray, declared: Boolean) {
+        val server = LocalHttpServer()
+        server.createContext("/") { exchange ->
+            exchange.responseHeaders.add("Retry-After", "180")
+            exchange.sendResponseHeaders(429, if(declared) body.size.toLong() else -1)
+            exchange.responseBody.write(body); exchange.close()
+        }
+        server.start()
+        try {
+            val bridge = AttendeeHttpBridge(LoopbackTransport("http://127.0.0.1:${server.address.port}"))
+            val issues = mutableListOf<String>()
+            for(action in listOf("account", "revoke", "exchange")) {
+                try {
+                    when(action) {
+                        "account" -> bridge.account(AttendeeCredential(token))
+                        "revoke" -> bridge.revoke(AttendeeCredential(token))
+                        else -> bridge.exchange(AttendeeExchange(code, "v".repeat(43)))
+                    }
+                    issues += "$action accepted malformed 429"
+                } catch(failure: AttendeeFailure) {
+                    if(failure.problem != AttendeeProblem.INVALID_RESPONSE || failure.retryAfterSeconds != 180) issues += "$action:${failure.problem}/${failure.retryAfterSeconds}"
+                }
+            }
+            assertEquals("Malformed known-429 wire failure must preserve cooldown", emptyList<String>(), issues)
+        } finally { server.stop(0) }
+    }
+    @Test fun actualDeclaredOversized429PreservesCooldown() = runBlocking { malformed429WireCooldown(ByteArray(1_048_577) { 32 }, true) }
+    @Test fun actualUnknownLengthOversized429PreservesCooldown() = runBlocking { malformed429WireCooldown(ByteArray(1_048_577) { 32 }, false) }
+    @Test fun actualInvalidUtf8429PreservesCooldown() = runBlocking { malformed429WireCooldown(byteArrayOf(0xc3.toByte(), 0x28), true) }
     @Test fun productionTransportGateAndRequestAllowlistFailClosed() {
         failure(AttendeeProblem.UNAVAILABLE) { AttendeeFixedHttpsTransport().send(AttendeeWireRequest("GET","/api/native/attendee/v1/account",AttendeeCredential(token),null)) }
         listOf("/api/public/v1/dqor/programme","/api/attendee/v1/account","/api/staff/checkins","/api/native/attendee/v1/session#secret","/api/native/attendee/v1/token?code=x","/api/native/attendee/v1/passes?cursor=01").forEach { path ->

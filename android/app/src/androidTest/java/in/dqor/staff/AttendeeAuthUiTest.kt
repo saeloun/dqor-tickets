@@ -35,6 +35,7 @@ class AttendeeAuthUiTest {
         var exchanges = 0
         var offline = false
         var pageSizes: List<Int>? = null
+        var pendingPassRead: CompletableDeferred<Unit>? = null
         var pageReads = 0
         var observed = now.minusSeconds(5)
         val identity = AttendeeIdentity("11", "Synthetic Attendee", "synthetic@example.invalid")
@@ -47,6 +48,7 @@ class AttendeeAuthUiTest {
         override suspend fun session(credential: AttendeeCredential) = AttendeeSession(AttendeeIntegration.CLIENT_ID, setOf("account:read", "passes:read"), now.plusSeconds(1800), now)
         override suspend fun account(credential: AttendeeCredential) = AttendeeAccountResult(identity, now.minusSeconds(5))
         override suspend fun passes(credential: AttendeeCredential, cursor: String?): AttendeePassPage {
+            pendingPassRead?.await()
             pageReads++
             pageSizes?.takeIf {it.isNotEmpty()}?.let {sizes ->
                 val first=(cursor?.toInt() ?: 0)+1
@@ -216,6 +218,39 @@ class AttendeeAuthUiTest {
                 show("Sign in through system browser")
             }
         } finally {controller.forget()}
+    }
+    @Test fun scrolledPassListClearsSafelyDuringHeldPaginationRefreshAndLogout() {
+        start()
+        var pending = CompletableDeferred<Unit>()
+        try {
+            bridge.pageSizes = listOf(20, 20, 20)
+            show("Sign in through system browser"); compose.onNodeWithText("Sign in through system browser").performClick(); complete()
+            showAt(24, "Load more pass status")
+            bridge.pendingPassRead = pending
+            compose.onNodeWithText("Load more pass status").performClick()
+            compose.waitUntil(5_000) { controller.state.value == AttendeeState.Loading }
+            show("Checking current account and pass status…")
+            compose.onNodeWithText("synthetic@example.invalid").assertDoesNotExist()
+            compose.onNodeWithText("Synthetic conference status 20").assertDoesNotExist()
+            pending.complete(Unit)
+            compose.waitUntil(5_000) { (controller.state.value as? AttendeeState.Ready)?.snapshot?.passes?.size == 40 }
+            showAt(43, "Synthetic conference status 40")
+            showAt(3, "Refresh account status")
+            pending = CompletableDeferred()
+            bridge.pendingPassRead = pending
+            compose.onNodeWithText("Refresh account status").performClick()
+            compose.waitUntil(5_000) { controller.state.value == AttendeeState.Loading }
+            show("Checking current account and pass status…")
+            compose.onNodeWithText("synthetic@example.invalid").assertDoesNotExist()
+            pending.complete(Unit)
+            compose.waitUntil(5_000) { (controller.state.value as? AttendeeState.Ready)?.snapshot?.passes?.size == 20 }
+            showAt(23, "Synthetic conference status 20")
+            showAt(25, "Sign out and clear account"); compose.onNodeWithText("Sign out and clear account").performClick()
+            show("Sign in through system browser")
+            compose.onNodeWithText("synthetic@example.invalid").assertDoesNotExist()
+            compose.onNodeWithText("Synthetic conference status 20").assertDoesNotExist()
+            capture("auth-synthetic-held-list-transitions-cleared")
+        } finally { pending.complete(Unit); controller.forget() }
     }
     @Test fun emptyPassesAndOfflineLogoutAreHonest() {
         bridge.empty=true; start()

@@ -88,7 +88,9 @@ internal suspend fun attendeeWireResponse(client: OkHttpClient, request: Request
                         if (continuation.isActive) continuation.resume(AttendeeWireResponse(it.code, decoded, it.headers.values("Retry-After").singleOrNull()))
                     }
                 } catch (failure: Exception) {
-                    if (continuation.isActive) continuation.resumeWithException(if (failure is AttendeeFailure) failure else AttendeeFailure(AttendeeProblem.OFFLINE))
+                    val reason = if (response.code == 429) AttendeeFailure(AttendeeProblem.INVALID_RESPONSE, 180)
+                        else if (failure is AttendeeFailure) failure else AttendeeFailure(AttendeeProblem.OFFLINE)
+                    if (continuation.isActive) continuation.resumeWithException(reason)
                 }
             }
         })

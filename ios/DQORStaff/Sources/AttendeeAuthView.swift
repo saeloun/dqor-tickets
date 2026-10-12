@@ -137,6 +137,7 @@ private struct AttendeeAuthPreviewControls: View {
     @ObservedObject var store: AttendeeSessionStore
     @ObservedObject var browser: SyntheticAttendeeBrowser
     let api: SyntheticAttendeeBridge
+    @State private var quietRevocationQueued = false
     var body: some View {
         Group {
             Text("Synthetic test controls").font(.headline)
@@ -147,6 +148,10 @@ private struct AttendeeAuthPreviewControls: View {
                 Button("Return wrong origin") { browser.finish(.wrongOrigin) }.frame(minHeight: 48)
                 Button("Return duplicate parameters") { browser.finish(.duplicate) }.frame(minHeight: 48)
             }
+            Button("Queue synthetic revocation without refresh") {
+                Task { await api.set(.revoked); quietRevocationQueued = true }
+            }.frame(minHeight: 48).accessibilityIdentifier("attendeeQuietRevocation")
+            if quietRevocationQueued { Text("Synthetic revocation queued for the next read").accessibilityIdentifier("attendeeQuietRevocationQueued") }
             ForEach(SyntheticAttendeeBridge.Scenario.allCases, id: \.rawValue) { scenario in
                 Button(scenario.rawValue) { Task { await api.set(scenario); store.refresh() } }.frame(minHeight: 48).accessibilityIdentifier("attendeeScenario-\(scenario.rawValue)")
             }

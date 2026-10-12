@@ -166,6 +166,7 @@ struct PublicEventRootView: View {
             .task { programme.refresh(automatic: true) }
             .onChange(of: selectedTab) { old, new in
                 if old == .you && new != .you { attendee.cancelLogin() }
+                if new == .you && scenePhase == .active { attendee.foreground() }
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { programme.refresh(automatic: true); attendee.foreground() }

@@ -114,6 +114,26 @@ final class AttendeeAuthUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["attendeeName"].exists); XCTAssertTrue(app.buttons["attendeeSignIn"].exists)
     }
     @MainActor
+    func testReturningToYouRevalidatesQuietlyRevokedSessionWhileAppStaysActive() {
+        let app = XCUIApplication(); open(app)
+        reveal(app.buttons["attendeeSignIn"], in: app); app.buttons["attendeeSignIn"].tap()
+        reveal(app.buttons["Approve synthetic return"], in: app); app.buttons["Approve synthetic return"].tap()
+        XCTAssertTrue(app.staticTexts["attendeeName"].waitForExistence(timeout: 5))
+        reveal(app.buttons["attendeeQuietRevocation"], in: app); app.buttons["attendeeQuietRevocation"].tap()
+        XCTAssertTrue(app.staticTexts["attendeeQuietRevocationQueued"].waitForExistence(timeout: 5))
+        reveal(app.staticTexts["attendeeName"], in: app, preferTop: true)
+        XCTAssertTrue(app.staticTexts["attendeeName"].exists)
+        app.tabBars.buttons["Home"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Home"].isSelected)
+        app.tabBars.buttons["You"].tap()
+        XCTAssertTrue(app.tabBars.buttons["You"].isSelected)
+        XCTAssertTrue(app.buttons["attendeeSignIn"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["attendeeName"].exists)
+        app.tabBars.buttons["Pass"].tap()
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH 'attendeePass-'")).firstMatch.exists)
+        capture("Quiet synthetic revocation clears private account and passes on active tab return")
+    }
+    @MainActor
     func testSlowExchangeCancelBackAndForegroundCannotRestoreIdentity() {
         let app = XCUIApplication(); open(app)
         reveal(app.buttons["attendeeScenario-Slow response"], in: app)

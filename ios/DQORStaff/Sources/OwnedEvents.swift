@@ -20,7 +20,15 @@ struct OwnedEvent: Decodable, Equatable, Identifiable, Sendable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = zone
         formatter.dateFormat = "yyyy-MM-dd"
-        guard formatter.string(from: start) == startDate, formatter.string(from: end) == endDate else { throw OwnedEventsError.invalidResponse }
+        guard Self.offsetSeconds(startsAt) == zone.secondsFromGMT(for: start), Self.offsetSeconds(endsAt) == zone.secondsFromGMT(for: end),
+              formatter.string(from: start) == startDate, formatter.string(from: end) == endDate else { throw OwnedEventsError.invalidResponse }
+    }
+    private static func offsetSeconds(_ text: String) -> Int? {
+        if text.hasSuffix("Z") { return 0 }
+        let suffix = String(text.suffix(6))
+        guard suffix.range(of: "^[+-][0-9]{2}:[0-9]{2}$", options: .regularExpression) != nil,
+              let hours = Int(suffix.dropFirst().prefix(2)), let minutes = Int(suffix.suffix(2)), hours <= 23, minutes <= 59 else { return nil }
+        return (suffix.first == "-" ? -1 : 1) * (hours * 3600 + minutes * 60)
     }
     static func instant(_ text: String) -> Date? {
         guard text.range(of: "(?:Z|[+-][0-9]{2}:[0-9]{2})$", options: .regularExpression) != nil else { return nil }

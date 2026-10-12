@@ -130,6 +130,37 @@ class OwnedEventsTest {
             if(zone == "Asia/Calcutta") assertNotNull(state.event) else assertEquals(OwnedProblem.INVALID_RESPONSE, state.problem)
         }
     }
+    @Test fun timestampOffsetsMustMatchNamedZoneInCatalogAndDetail() = runBlocking {
+        for(detailResponse in listOf(false, true)) for(field in listOf("starts_at", "ends_at", "both")) {
+            val root = JSONObject(if(detailResponse) detail else catalog)
+            val event = if(detailResponse) root.getJSONObject("event") else root.getJSONArray("events").getJSONObject(0)
+            if(field == "starts_at") event.put(field, "2026-11-07T00:15:00+04:30")
+            else if(field == "ends_at") event.put(field, "2026-11-07T01:30:00+04:30")
+            else { event.put("starts_at", "2026-11-07T00:15:00Z"); event.put("ends_at", "2026-11-07T01:30:00Z") }
+            val target = if(detailResponse) OwnedResource.Detail("hosted-event-101") else resource
+            val state = OwnedEventsClient(Queue(mutableListOf(response(body = root.toString())))).refresh(target)
+            assertEquals("$detailResponse/$field", OwnedProblem.INVALID_RESPONSE, state.problem)
+            assertNull(state.event); assertNull(state.catalog)
+        }
+    }
+    @Test fun actualZoneOffsetsPreserveUtcAliasesAndDaylightSavingFold() = runBlocking {
+        val cases = listOf(
+            listOf("UTC", "2026-11-07T00:15:00Z", "2026-11-07T01:30:00Z", "2026-11-07"),
+            listOf("UTC", "2026-11-07T00:15:00+00:00", "2026-11-07T01:30:00+00:00", "2026-11-07"),
+            listOf("Asia/Calcutta", "2026-11-07T00:15:00+05:30", "2026-11-07T01:30:00+05:30", "2026-11-07"),
+            listOf("Europe/London", "2026-10-25T01:30:00+01:00", "2026-10-25T01:30:00+00:00", "2026-10-25")
+        )
+        for(values in cases) for(detailResponse in listOf(false, true)) {
+            val root = JSONObject(if(detailResponse) detail else catalog)
+            val event = if(detailResponse) root.getJSONObject("event") else root.getJSONArray("events").getJSONObject(0)
+            event.put("timezone", values[0]); event.put("starts_at", values[1]); event.put("ends_at", values[2])
+            event.put("start_date", values[3]); event.put("end_date", values[3])
+            val target = if(detailResponse) OwnedResource.Detail("hosted-event-101") else resource
+            val state = OwnedEventsClient(Queue(mutableListOf(response(body = root.toString())))).refresh(target)
+            assertNull("$values/$detailResponse", state.problem)
+            assertNotNull(if(detailResponse) state.event else state.catalog?.events?.single())
+        }
+    }
     @Test fun decodingLeavesCallerThreadAndClearIsNotBlockedByDecode() = runBlocking {
         val entered = CompletableDeferred<String>()
         val release = java.util.concurrent.CountDownLatch(1)

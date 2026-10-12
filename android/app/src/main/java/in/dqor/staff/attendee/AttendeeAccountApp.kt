@@ -21,6 +21,7 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
     onAuthorize: (AttendeeAuthorization) -> Unit, onWebsite: () -> Unit, onTickets: () -> Unit,
     browserProblem: String? = null) {
     val state by controller.state.collectAsStateWithLifecycle()
+    val renderedState = state
     val retryAfterSeconds by controller.retryAfterSeconds.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     BackHandler { controller.cancel(); onClose() }
@@ -29,12 +30,13 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().safeDrawingPadding()) {
                 if (controller.isSynthetic) Text("SYNTHETIC LOCAL BRIDGE · no real account, ticket or admission", Modifier.padding(16.dp), style = MaterialTheme.typography.labelLarge)
+                key(renderedState::class) {
                 LazyColumn(Modifier.widthIn(max = 680.dp).fillMaxWidth().weight(1f).testTag("attendee-account"),
                     contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     item { TextButton(onClick = { controller.cancel(); onClose() }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Back to programme") } }
                     item { Text("Your account", style = MaterialTheme.typography.headlineLarge) }
                     item { Text("Pass status is read only. Open the official ticket website for your actual ticket credentials.") }
-                    when (val current = state) {
+                    when (val current = renderedState) {
                         AttendeeState.Unavailable -> item {
                             Text("Native account access is not enabled", style = MaterialTheme.typography.titleLarge)
                             Text("Use your account securely in the system browser. Your browser keeps its own sign-in session.")
@@ -94,6 +96,7 @@ fun AttendeeAccountApp(controller: AttendeeController, onClose: () -> Unit,
                     item { OutlinedButton(onClick = onWebsite, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Open account on official website") } }
                     item { TextButton(onClick = onTickets, modifier = Modifier.heightIn(min = 48.dp)) { Text("Open actual tickets on website") } }
                     browserProblem?.let { item { Text(it, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) } }
+                }
                 }
             }
         }
