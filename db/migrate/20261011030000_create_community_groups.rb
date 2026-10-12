@@ -1,5 +1,7 @@
 class CreateCommunityGroups < ActiveRecord::Migration[8.1]
-  def change
+  def up
+    execute "SET LOCAL lock_timeout = '5s'"
+    execute "SET LOCAL statement_timeout = '20s'"
     create_table :community_groups do |t|
       t.references :organization, null: false, foreign_key: true
       t.string :name, null: false
@@ -16,7 +18,9 @@ class CreateCommunityGroups < ActiveRecord::Migration[8.1]
     add_index :community_groups, [ :id, :organization_id ], unique: true
     add_check_constraint :community_groups, "status IN ('draft', 'published')", name: "community_group_status"
     add_reference :events, :community_group, index: false
-    add_index :events, [ :organization_id, :community_group_id, :starts_at ]
-    add_foreign_key :events, :community_groups, column: [ :community_group_id, :organization_id ], primary_key: [ :id, :organization_id ], name: "events_same_organization_group"
+  end
+
+  def down
+    raise ActiveRecord::IrreversibleMigration, "Retain community groups and event links when rolling back application code"
   end
 end
