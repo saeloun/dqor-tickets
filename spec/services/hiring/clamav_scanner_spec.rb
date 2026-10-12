@@ -1,5 +1,6 @@
 require "rails_helper"
 require "rbconfig"
+require "open3"
 
 RSpec.describe Hiring::ClamavScanner do
   around do |example|
@@ -17,6 +18,67 @@ RSpec.describe Hiring::ClamavScanner do
     executable = File.join(@directory, "test-engine")
     File.write(executable, "#!#{RbConfig.ruby}\n#{body}\n", perm: 0o700)
     described_class.new(executable: executable, database: @database, timeout: timeout)
+  end
+
+  def wait_for_zombie(pid)
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 2
+    loop do
+      state, status = Open3.capture2("ps", "-o", "stat=", "-p", pid.to_s)
+      return if status.success? && state.strip.start_with?("Z")
+
+      raise "Owned synthetic child did not finish" if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+      sleep 0.01
+    end
+  end
+
+  def scan_with_group_denial(completed: false, wait_error: false)
+    body = 'puts "x" * 100000; STDOUT.flush'
+    body += "; sleep 2" unless completed
+    engine = scanner(body)
+    executable = File.join(@directory, "test-engine")
+    observed = { recovery_calls: 0 }
+    real_wait = Process.method(:waitpid2)
+
+    allow(Process).to receive(:spawn).and_wrap_original do |original, *args, **options|
+      pid = original.call(*args, **options)
+      if args[1] == [ executable, "clamscan" ]
+        observed.merge!(pid: pid, stdout: options.fetch(:out), input_directory: File.dirname(args.last))
+      end
+      pid
+    end
+
+    allow(Process).to receive(:waitpid2).and_wrap_original do |original, pid, flags = 0|
+      if pid == observed[:pid] && flags == Process::WNOHANG
+        next nil unless observed[:denied]
+
+        observed[:recovery_calls] += 1
+        raise Errno::ECHILD if wait_error
+
+        observed[:recovery] = original.call(pid, flags)
+      else
+        original.call(pid, flags)
+      end
+    end
+
+    allow(Process).to receive(:kill).and_wrap_original do |original, signal, target|
+      if observed[:pid] && signal == "KILL" && target == -observed[:pid]
+        observed[:flood_bytes] = File.size(observed.fetch(:stdout))
+        wait_for_zombie(observed[:pid]) if completed
+        observed[:denied] = true
+        raise Errno::EPERM
+      end
+      original.call(signal, target)
+    end
+
+    observed[:verdict] = engine.scan("%PDF-synthetic")
+    observed
+  ensure
+    if observed && observed[:pid] && !observed[:recovery]
+      begin
+        real_wait.call(observed[:pid])
+      rescue Errno::ECHILD
+      end
+    end
   end
 
   it "accepts only exact bytes, explicit OK and exit zero; uses private files and defensive arguments" do
@@ -56,6 +118,40 @@ RSpec.describe Hiring::ClamavScanner do
   it "rejects output floods and bytes modified by the child" do
     expect(scanner('puts "x" * 100000').scan("%PDF-synthetic").status).to eq("quarantined")
     expect(scanner('File.write(ARGV.last, "changed"); puts "#{ARGV.last}: OK"').scan("%PDF-synthetic").status).to eq("quarantined")
+  end
+
+  it "quarantines a real output flood when denied termination finds its child already completed" do
+    observed = scan_with_group_denial(completed: true)
+
+    expect(observed[:verdict].status).to eq("quarantined")
+    expect(observed[:flood_bytes]).to eq(100001)
+    expect(observed[:flood_bytes]).to be > described_class::OUTPUT_LIMIT
+    pid, status = observed.fetch(:recovery)
+    expect(pid).to eq(observed[:pid])
+    expect(status).to be_a(Process::Status)
+    expect(status.exitstatus).to eq(0)
+    expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+    expect(File.exist?(observed[:input_directory])).to be(false)
+  end
+
+  it "remains unavailable when denied termination finds its child still running" do
+    observed = scan_with_group_denial
+
+    expect(observed[:verdict].status).to eq("unavailable")
+    expect(observed[:flood_bytes]).to eq(100001)
+    expect(observed[:recovery]).to be_nil
+    expect(observed[:recovery_calls]).to eq(1)
+    expect(File.exist?(observed[:input_directory])).to be(false)
+  end
+
+  it "remains unavailable when child status cannot be recovered after denied termination" do
+    observed = scan_with_group_denial(completed: true, wait_error: true)
+
+    expect(observed[:verdict].status).to eq("unavailable")
+    expect(observed[:flood_bytes]).to eq(100001)
+    expect(observed[:recovery]).to be_nil
+    expect(observed[:recovery_calls]).to eq(1)
+    expect(File.exist?(observed[:input_directory])).to be(false)
   end
 
   it "fails closed for missing engine, missing databases and oversized input" do

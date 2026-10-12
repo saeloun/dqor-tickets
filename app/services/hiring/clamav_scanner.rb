@@ -75,10 +75,19 @@ class Hiring::ClamavScanner
       if pid
         begin
           Process.kill("KILL", -pid)
+        rescue Errno::EPERM => permission_error
+          begin
+            completed = Process.waitpid2(pid, Process::WNOHANG)
+          rescue SystemCallError, IOError, ArgumentError
+            raise permission_error
+          end
+          raise permission_error unless completed&.first == pid && (completed.last.exited? || completed.last.signaled?)
+
+          pid = nil
         rescue Errno::ESRCH
           # Child exited between timeout and termination.
         end
-        Process.waitpid(pid)
+        Process.waitpid(pid) if pid
       end
     end
 end
