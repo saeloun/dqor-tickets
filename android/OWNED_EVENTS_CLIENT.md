@@ -1,0 +1,9 @@
+# Owned public event browsing
+
+This isolated Android update is stacked on reviewed PR212. It consumes PR242's owned-event catalog and detail independently of the official DQOR programme. The Release variant fixes its entry off and includes no synthetic assets or scenario implementation. Debug can open labeled synthetic catalog/detail browsing with the explicit `dqor.owned_events_fixture` boolean launch extra. This does not activate any production backend.
+
+Rows expose public title, organizer, local date and IANA timezone; detail independently fetches a stable `hosted-event-` ID and offers only a validated first-party event website. Native Back, bounded pagination, retry, stale 503/offline recovery, conditional 304 revalidation, authoritative 404 withdrawal and local clearing are supported. Detail withdrawal invalidates catalog snapshots and pending responses; catalog withdrawal clears all snapshots. The memory cache holds at most eight resources, with each incoming body limited to one MiB; this is not a measured heap ceiling. Clear remains effective on foreground until explicit refresh, and delayed responses cannot restore removed content.
+
+The separate fixed-origin HTTPS GET transport uses no cookies, credentials, disk cache, redirects or automatic retries, bounds connection/read/call time and body size, and sends only JSON Accept plus a validated ETag. Closed v1 payloads reject unknown/private fields and validate identity, dates, timezone, paths and pagination. No changes to legacy account, staff, camera, signing, payments, RSVP or entitlements are included.
+
+Backend PR242 remains unmerged and default off. Production activation, real endpoint integration and native distribution require separate approval and validation. Synthetic emulator journeys and intercepted response tests do not establish live integration.

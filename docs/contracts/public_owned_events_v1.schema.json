@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deccanqueenonrails.com/contracts/public_owned_events_v1.schema.json",
+  "title": "Published owned events v1 success snapshots",
+  "definitions": {
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ownership",
+        "title",
+        "timezone",
+        "starts_at",
+        "ends_at",
+        "start_date",
+        "end_date",
+        "organizer",
+        "details_path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^hosted-event-[1-9][0-9]{0,18}$"
+        },
+        "ownership": {
+          "const": "hosted_event"
+        },
+        "title": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "starts_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ends_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "start_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "organizer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "slug"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "slug": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          }
+        },
+        "details_path": {
+          "type": "string",
+          "pattern": "^/events/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_version",
+        "events",
+        "pagination"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "content_version": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 24,
+          "items": {
+            "$ref": "#/definitions/event"
+          }
+        },
+        "pagination": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "page",
+            "per_page",
+            "total"
+          ],
+          "properties": {
+            "page": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "per_page": {
+              "const": 24
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "content_version",
+        "event"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "content_version": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "event": {
+          "$ref": "#/definitions/event"
+        }
+      }
+    }
+  ]
+}

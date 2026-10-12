@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 internal class AttendeeWireRequest(val method: String, val path: String, val credential: AttendeeCredential?, val json: String?) {
     override fun toString() = "AttendeeWireRequest([redacted])"
 }
-internal class AttendeeWireResponse(val status: Int, val body: String) {
+internal class AttendeeWireResponse(val status: Int, val body: String, val retryAfter: String? = null) {
     override fun toString() = "AttendeeWireResponse([redacted])"
 }
 internal fun interface AttendeeWireTransport { suspend fun send(request: AttendeeWireRequest): AttendeeWireResponse }
@@ -85,7 +85,7 @@ internal suspend fun attendeeWireResponse(client: OkHttpClient, request: Request
                         }
                         val decoded = try { Charsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(output.toByteArray())).toString() }
                             catch (_: Exception) { throw AttendeeFailure(AttendeeProblem.INVALID_RESPONSE) }
-                        if (continuation.isActive) continuation.resume(AttendeeWireResponse(it.code, decoded))
+                        if (continuation.isActive) continuation.resume(AttendeeWireResponse(it.code, decoded, it.headers.values("Retry-After").singleOrNull()))
                     }
                 } catch (failure: Exception) {
                     if (continuation.isActive) continuation.resumeWithException(if (failure is AttendeeFailure) failure else AttendeeFailure(AttendeeProblem.OFFLINE))
@@ -101,6 +101,16 @@ internal class AttendeeHttpBridge(private val transport: AttendeeWireTransport) 
     private suspend fun <T> decode(block: () -> T): T = withContext(Dispatchers.Default) {
         try { block() } catch (failure: AttendeeFailure) { throw failure } catch (_: Exception) { invalid() }
     }
+    private suspend fun rateLimited(response: AttendeeWireResponse): Nothing = decode {
+        val valid = runCatching {
+            if (response.body.toByteArray(Charsets.UTF_8).size > 1_048_576) invalid()
+            val data = AttendeeJson(response.body).parse()
+            data.exact("schema_version", "error")
+            val error = data.getJSONObject("error"); error.exact("code")
+            data.get("schema_version") == 1 && error.string("code") == "rate_limited" && response.retryAfter == "180"
+        }.getOrDefault(false)
+        throw AttendeeFailure(if (valid) AttendeeProblem.RATE_LIMITED else AttendeeProblem.INVALID_RESPONSE, 180)
+    }
     private fun JSONObject.exact(vararg keys: String) { if (keys().asSequence().toSet() != keys.toSet()) invalid() }
     private fun JSONObject.string(key: String): String = (get(key) as? String)?.takeIf { it.length <= 4096 } ?: invalid()
     private fun JSONObject.instant(key: String) = runCatching { Instant.parse(string(key)) }.getOrElse { invalid() }
@@ -113,6 +123,7 @@ internal class AttendeeHttpBridge(private val transport: AttendeeWireTransport) 
     }
     private suspend fun call(method: String, path: String, credential: AttendeeCredential? = null, json: String? = null): JSONObject {
         val response = transport.send(AttendeeWireRequest(method, "/api/native/attendee/v1/$path", credential, json))
+        if (response.status == 429) return rateLimited(response)
         return decode {
             if (response.body.toByteArray(Charsets.UTF_8).size > 1_048_576) invalid()
             val data = try { AttendeeJson(response.body).parse() } catch (_: Exception) { invalid() }
@@ -196,6 +207,7 @@ internal class AttendeeHttpBridge(private val transport: AttendeeWireTransport) 
     override suspend fun revoke(credential: AttendeeCredential): AttendeeRevocation {
         val response = transport.send(AttendeeWireRequest("DELETE", "/api/native/attendee/v1/session", credential, null))
         if (response.status == 204 && response.body.isEmpty()) return AttendeeRevocation.REVOKED
+        if (response.status == 429) return rateLimited(response)
         if (response.status == 401) return decode {
             val data = runCatching { AttendeeJson(response.body).parse() }.getOrElse { invalid() }
             data.exact("schema_version", "error")

@@ -102,3 +102,7 @@ reviewing, uncertain or backgrounded. Explicit same-code retry never confirms at
 disabled. Physical camera, TalkBack audio, approved staging integration and full
 real-device interruption testing remain release gates. No live integration is
 claimed from in-process mocks or emulator tests.
+
+## Owned-event browsing preview
+
+The separate [owned-event client](OWNED_EVENTS_CLIENT.md) is stacked on this prepared native client. Release entry is fixed off. Debug accepts the explicit `dqor.owned_events_fixture` boolean launch extra for labeled synthetic public catalog/detail browsing. Default public programme and protected legacy flows retain their gates. Backend activation and distribution remain held.

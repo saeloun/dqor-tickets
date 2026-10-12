@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<rect width="1024" height="1024" fill="#1a1a1a"/>
+<circle cx="910" cy="504" r="200" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="292" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="384" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="476" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="568" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="660" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="752" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="844" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="910" cy="504" r="936" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+<circle cx="784" cy="279" r="80" fill="#94294c"/>
+<text x="69" y="610" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="230" font-weight="700" letter-spacing="-8" fill="#ffffff">DQOR</text>
+</svg>

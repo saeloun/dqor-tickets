@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
     } catch (_: ActivityNotFoundException) { false }
 
     private val model by lazy { ViewModelProvider(this)[NativeDemoModel::class.java] }
+    private val ownedEvents by lazy { ViewModelProvider(this)[`in`.dqor.staff.owned.OwnedEventsModel::class.java] }
     private val published by lazy { ViewModelProvider(this)[PublishedProgrammeModel::class.java] }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,7 +92,9 @@ class MainActivity : ComponentActivity() {
             var staff by rememberSaveable {mutableStateOf(false)}
             var browserProblem by remember {mutableStateOf<String?>(null)}
             val savedScreens=rememberSaveableStateHolder()
-            if(account) {
+            if(`in`.dqor.staff.owned.OwnedEventsIntegration.enabled(intent)) {
+                `in`.dqor.staff.owned.OwnedEventsScreen(ownedEvents.controller, ::openWebsite, ownedEvents::scenario)
+            } else if(account) {
                 `in`.dqor.staff.attendee.AttendeeAccountApp(attendee.controller,onClose={account=false},
                     onAuthorize={authorization -> if(!openWebsite(authorization.url)) {attendee.controller.cancel(); browserProblem="No system browser is available."}},
                     onWebsite={browserProblem=if(openWebsite(`in`.dqor.staff.attendee.AttendeeIntegration.ACCOUNT_WEBSITE)) null else "No system browser is available."},
