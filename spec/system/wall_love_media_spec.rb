@@ -22,6 +22,24 @@ RSpec.describe "Wall of Love media journey", type: :system do
     expect(page).to have_css(".wall-love-recordings [data-recording-source-id]", count: 4)
   end
 
+  it "keeps X sources attributed without loading the platform SDK across Turbo navigation" do
+    visit wall_of_love_path
+    expect(page).to have_css(".wall-love-media[data-enhanced]")
+    expect(page).to have_link("Open original on X ↗", href: "https://x.com/marcoroth_/status/2108067887999336677")
+    expect(page).not_to have_button("Load X preview", visible: :all)
+    expect(page).not_to have_button("Load post preview", visible: :all)
+    expect(page.evaluate_script("performance.getEntriesByType('resource').some(entry => new URL(entry.name).hostname === 'platform.twitter.com')")).to be(false)
+    expect(page).not_to have_css("iframe[id='rufous-sandbox']", visible: :all)
+    find("a.nav-logo").click
+    expect(page).to have_current_path(root_path)
+    page.driver.browser.page.back
+    expect(page).to have_current_path(wall_of_love_path)
+    expect(page).to have_css(".wall-love-media[data-enhanced]")
+    expect(page).to have_link("Open original on X ↗")
+    expect(page.evaluate_script("performance.getEntriesByType('resource').some(entry => new URL(entry.name).hostname === 'platform.twitter.com')")).to be(false)
+    expect(page).not_to have_css("iframe[id='rufous-sandbox']", visible: :all)
+  end
+
   it "supports manual keyboard navigation and stops optional rotation when navigating" do
     visit wall_of_love_path
     within(".wall-love-media") do
