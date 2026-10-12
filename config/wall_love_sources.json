@@ -1,0 +1,1360 @@
+{
+  "sources": [
+    {
+      "id": "S001",
+      "url": "https://x.com/adrianthedev/status/2108047263843205457",
+      "author": "Adrian Marin",
+      "platform": "X",
+      "card_title": "Ready for DQOR",
+      "caption": "Adrian shares readiness for the conference.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 14,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108047263843205457",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S002",
+      "url": "https://x.com/adrianthedev/status/2108056964303651174",
+      "author": "Adrian Marin",
+      "platform": "X",
+      "card_title": "A Pune welcome worth sharing",
+      "caption": "Adrian Marin enthusiastically shares the opening of the conference in a video post.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": "That’s how you start a conference",
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 2,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108056964303651174",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S003",
+      "url": "https://x.com/theOnlyMaDDogx/status/2108056043465138534",
+      "author": "Animesh Ghosh",
+      "platform": "X",
+      "card_title": "The dhol-tasha opening",
+      "caption": "Animesh documents the dhol-tasha opening.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 7,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108056043465138534",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S004",
+      "url": "https://x.com/theOnlyMaDDogx/status/2108062132353081845",
+      "author": "Animesh Ghosh",
+      "platform": "X",
+      "card_title": "Amanda’s welcome",
+      "caption": "Animesh documents Amanda's welcome address.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 16,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108062132353081845",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S005",
+      "url": "https://x.com/theOnlyMaDDogx/status/2108140875373330768",
+      "author": "Animesh Ghosh",
+      "platform": "X",
+      "card_title": "The room joins in",
+      "caption": "Animesh Ghosh documents Carmine Paolino’s RubyLLM session with four photographs and an audience-participation moment.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 5,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108140875373330768",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S006",
+      "url": "https://x.com/theOnlyMaDDogx/status/2108160521778418004",
+      "author": "Animesh Ghosh",
+      "platform": "X",
+      "card_title": "The international guest panel",
+      "caption": "Animesh documents the international guest panel.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 17,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108160521778418004",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S007",
+      "url": "https://x.com/theOnlyMaDDogx/status/2108170446503866398",
+      "author": "Animesh Ghosh",
+      "platform": "X",
+      "card_title": "ReActionView excitement",
+      "caption": "Animesh Ghosh follows Marco Roth’s closing keynote and reacts positively to ReActionView.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": "ReActionView looked cool!",
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 3,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108170446503866398",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S008",
+      "url": "https://x.com/aatish2393/status/2108047644199457009",
+      "author": "Atish Maske",
+      "platform": "X",
+      "card_title": "A passport to the Ruby community",
+      "caption": "Ruby passport and event booklet.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 10,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108047644199457009",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S009",
+      "url": "https://paolino.me/rubyllm-2-1",
+      "author": "Carmine Paolino",
+      "platform": "Personal blog",
+      "card_title": "RubyLLM 2.1, released on stage",
+      "caption": "Carmine reports releasing RubyLLM 2.1 on stage at DQOR in Pune, with MCP, judgments, evaluations and instrumentation among its additions.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 8,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": null,
+        "mode": "linked_card"
+      }
+    },
+    {
+      "id": "S010",
+      "url": "https://x.com/deepakmahakale/status/2108059730010849541",
+      "author": "Deepak Mahakale",
+      "platform": "X",
+      "card_title": "A six-second conference moment",
+      "caption": "A six-second conference video.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 18,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108059730010849541",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S011",
+      "url": "https://x.com/deepakmahakale/status/2108095385311019271",
+      "author": "Deepak Mahakale",
+      "platform": "X",
+      "card_title": "Collecting Ruby passport stamps",
+      "caption": "Deepak reminds participants to collect and stamp their Ruby Passports.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 15,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108095385311019271",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S012",
+      "url": "https://x.com/inazarova/status/2108059774562742562",
+      "author": "Irina Nazarova",
+      "platform": "X",
+      "card_title": "Joy at being in Pune",
+      "caption": "Irina Nazarova expresses happiness at attending DQOR in Pune and connects its inspiration to the San Francisco Ruby conference.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": "So so happy",
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 1,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108059774562742562",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S013",
+      "url": "https://x.com/inazarova/status/2108062920294994176",
+      "author": "Irina Nazarova",
+      "platform": "X",
+      "card_title": "Trusting and checking the magic",
+      "caption": "Irina highlights Amanda's opening message about both trusting and checking magic.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 9,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108062920294994176",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S014",
+      "url": "https://x.com/inazarova/status/2108139794358587692",
+      "author": "Irina Nazarova",
+      "platform": "X",
+      "card_title": "Praise for RubyLLM",
+      "caption": "Irina Nazarova praises the clarity and efficiency of integrating MCPs in Rails apps and thanks Carmine for RubyLLM.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": "Beautiful, clear and efficient",
+      "section": "related_technical_context",
+      "voice_role": "conference_association_unverified",
+      "display_order": 54,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108139794358587692",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S015",
+      "url": "https://x.com/keshavbiswa21/status/2108079473627369614",
+      "author": "Keshav Biswa",
+      "platform": "X",
+      "card_title": "A Ruby passport to take home",
+      "caption": "Keshav Biswa celebrates finally having a Ruby passport.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 4,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108079473627369614",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S016",
+      "url": "https://x.com/marcoroth_/status/2108067887999336677",
+      "author": "Marco Roth",
+      "platform": "X",
+      "card_title": "Thanks from a visiting speaker",
+      "caption": "Marco Roth celebrates being in India and thanks Vipul and the DQOR team for putting the event together.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": "It's really great to be in India",
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 0,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108067887999336677",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S017",
+      "url": "https://x.com/NiSuSam/status/2108165190378475698",
+      "author": "NiSuSam",
+      "platform": "X",
+      "card_title": "Herb in Rails 8.2",
+      "caption": "NiSuSam documents Marco's Herb in Rails 8.2 session.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 13,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108165190378475698",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S018",
+      "url": "https://x.com/ahmad_719/status/2108460502028554445",
+      "author": "Ahmad hamza (@ahmad_719)",
+      "platform": "X",
+      "card_title": "A conference video from Ahmad",
+      "caption": "A conference video from Ahmad, lasting one minute and 31 seconds.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 19,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108460502028554445",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S019",
+      "url": "https://x.com/deepakmahakale/status/2108487140908925189",
+      "author": "Deepak Mahakale",
+      "platform": "X",
+      "card_title": "Stickers to remember DQOR",
+      "caption": "Saeloun and DQOR stickers.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 11,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108487140908925189",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S020",
+      "url": "https://x.com/samruby/status/2108415283719479314",
+      "author": "Sam Ruby",
+      "platform": "X",
+      "card_title": "Optimism about Rails",
+      "caption": "Sam Ruby expresses optimism about Rails ahead of his Day 2 keynote and links a longer reflection.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "attendee_or_speaker",
+      "display_order": 12,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108415283719479314",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S021",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7513878997722853376",
+      "author": "Sarang Rajale",
+      "platform": "LinkedIn",
+      "card_title": "Hosting the community in Pune",
+      "caption": "Sarang celebrates the community arriving in Pune, describes sharing the welcome stage with Sujay Sudheendra, and thanks organizers, volunteers, speakers and sponsors.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "community",
+      "voice_role": "host_and_sponsor",
+      "display_order": 6,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": null,
+        "mode": "linked_card"
+      }
+    },
+    {
+      "id": "S022",
+      "url": "https://x.com/hideccanqueen/status/2108065109981487315",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "A dhol-tasha welcome",
+      "caption": "Organizer celebrates the dhol-tasha welcome.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 20,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108065109981487315",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S023",
+      "url": "https://x.com/hideccanqueen/status/2108067475749282200",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "The opening keynote",
+      "caption": "Organizer shares the live keynote and energetic conference atmosphere.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 21,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108067475749282200",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S024",
+      "url": "https://x.com/hideccanqueen/status/2108072034236321957",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "DHH’s recorded message",
+      "caption": "David Heinemeier Hansson message on stage screen.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 22,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108072034236321957",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S025",
+      "url": "https://x.com/hideccanqueen/status/2108093697573179647",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Ratnadeep on stage",
+      "caption": "Ratnadeep Deshmane talk.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 23,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108093697573179647",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S026",
+      "url": "https://x.com/hideccanqueen/status/2108101353692098670",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Paweł on stage",
+      "caption": "Paweł Strzałkowski talk.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 24,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108101353692098670",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S027",
+      "url": "https://x.com/hideccanqueen/status/2108136131665477760",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks, Keshav",
+      "caption": "Organizer thanks Keshav for his talk.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 25,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108136131665477760",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S028",
+      "url": "https://x.com/hideccanqueen/status/2108144338584637524",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks, Carmine",
+      "caption": "Organizer thanks Carmine for his session.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 26,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108144338584637524",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S029",
+      "url": "https://x.com/hideccanqueen/status/2108164466089033996",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "A conversation across the Ruby world",
+      "caption": "Organizer thanks the international guest panel.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 27,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108164466089033996",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S030",
+      "url": "https://x.com/hideccanqueen/status/2108167533698187640",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "The Day 1 closing keynote",
+      "caption": "Organizer shares the Day 1 closing keynote stream.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 28,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108167533698187640",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S031",
+      "url": "https://x.com/hideccanqueen/status/2108175251976691950",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks, Marco",
+      "caption": "Organizer thanks Marco for the Day 1 closing keynote.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 29,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108175251976691950",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S032",
+      "url": "https://blog.saeloun.com/2026/10/08/when-rails-world-met-punes-ruby-community",
+      "author": "Vipul A M",
+      "platform": "Saeloun Blog",
+      "card_title": "When Rails met Pune",
+      "caption": "Organizer celebrates the Puneri welcome and thanks Sonam, Saeloun, PuneRB and visiting speakers. Includes an all-women dhol-tasha welcome, ceremonial diya lighting, and plans for more time together.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 30,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": null,
+        "mode": "linked_card"
+      }
+    },
+    {
+      "id": "S033",
+      "url": "https://x.com/vipulnsward/status/2108069710189531229",
+      "author": "Vipul A M",
+      "platform": "X",
+      "card_title": "Thanks for the message, DHH",
+      "caption": "Vipul thanks DHH for his encouraging recorded message.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 31,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108069710189531229",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S034",
+      "url": "https://x.com/vipulnsward/status/2108088909402141054",
+      "author": "Vipul A M",
+      "platform": "X",
+      "card_title": "More conversations about the talks",
+      "caption": "Vipul invites attendees to discussions about the conference talks.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 32,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108088909402141054",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S035",
+      "url": "https://x.com/hideccanqueen/status/2108414178960539711",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Welcome to Day 2",
+      "caption": "Organizer welcomes the second conference day.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 33,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108414178960539711",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S036",
+      "url": "https://x.com/hideccanqueen/status/2108430219103056234",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "The Day 2 opening keynote",
+      "caption": "Organizer shares the Day 2 keynote stream.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 34,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108430219103056234",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S037",
+      "url": "https://x.com/hideccanqueen/status/2108441486337450254",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks, Sam",
+      "caption": "Organizer thanks Sam Ruby for his talk.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 35,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108441486337450254",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S038",
+      "url": "https://x.com/hideccanqueen/status/2108447830864007594",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks, Manu",
+      "caption": "Organizer thanks Manu for his talk.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 36,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108447830864007594",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S039",
+      "url": "https://x.com/hideccanqueen/status/2108505775110865285",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks, Adrian",
+      "caption": "Organizer thanks Adrian for his talk.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 37,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108505775110865285",
+        "mode": "linked_card"
+      }
+    },
+    {
+      "id": "S040",
+      "url": "https://x.com/hideccanqueen/status/2108509252453093492",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks, Irina",
+      "caption": "Organizer thanks Irina for her talk.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 38,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108509252453093492",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S041",
+      "url": "https://x.com/hideccanqueen/status/2108527890241294543",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "A sweet community gesture",
+      "caption": "Organizer appreciates Samuel's chocolate gift.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 39,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108527890241294543",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S042",
+      "url": "https://x.com/hideccanqueen/status/2108534506462306612",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "The second-day guest panel",
+      "caption": "Organizer thanks the second-day guest panel.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 40,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108534506462306612",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S043",
+      "url": "https://x.com/vipulnsward/status/2108339773475823925",
+      "author": "Vipul A M",
+      "platform": "X",
+      "card_title": "Lighting the ceremonial diya",
+      "caption": "Opening ceremony.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 41,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108339773475823925",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S044",
+      "url": "https://x.com/vipulnsward/status/2108536775383933007",
+      "author": "Vipul A M",
+      "platform": "X",
+      "card_title": "Together after the conference",
+      "caption": "Vipul invites the community to a gathering at Saeloun after the conference.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 42,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108536775383933007",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S045",
+      "url": "https://x.com/vipulnsward/status/2108566871335460948",
+      "author": "Vipul A M",
+      "platform": "X",
+      "card_title": "Appreciation returned",
+      "caption": "Vipul warmly acknowledges Mezbah's praise.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 43,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108566871335460948",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S046",
+      "url": "https://x.com/hideccanqueen/status/2108940467694145748",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Rails Girls: experimenting together",
+      "caption": "Organizer highlights Rails Girls experimentation and collaboration.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "rails_girls",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 44,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108940467694145748",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S047",
+      "url": "https://x.com/hideccanqueen/status/2108942402815934941",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Rails Girls: learning and building",
+      "caption": "Organizer celebrates Rails Girls participants learning and building.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "rails_girls",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 45,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108942402815934941",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S048",
+      "url": "https://x.com/hideccanqueen/status/2108944993025221043",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Thanks to the Rails Girls team",
+      "caption": "Organizer thanks Rails Girls mentors, volunteers and Zendesk hosts.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "rails_girls",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 46,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108944993025221043",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S049",
+      "url": "https://x.com/hideccanqueen/status/2108950836722151559",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Amanda and Irina coach Rails Girls",
+      "caption": "Organizer thanks Amanda and Irina for coaching Rails Girls participants.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "rails_girls",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 47,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108950836722151559",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S050",
+      "url": "https://x.com/hideccanqueen/status/2108952313519809011",
+      "author": "Deccan Queen on Rails",
+      "platform": "X",
+      "card_title": "Samuel helps Rails Girls participants",
+      "caption": "Organizer thanks Samuel for helping Rails Girls participants.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "rails_girls",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 48,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108952313519809011",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S051",
+      "url": "https://x.com/vipulnsward/status/2109132886570160342",
+      "author": "Vipul A M",
+      "platform": "X",
+      "card_title": "Thanks to Sonam and the team",
+      "caption": "Vipul acknowledges the positive response to DQOR and thanks Sonam for making the event possible.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "organiser",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 49,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2109132886570160342",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S052",
+      "url": "https://www.linkedin.com/posts/amandabrookeperino_ruby-on-rails-the-rails-foundation-partnered-activity-7511482211578327040--4sb",
+      "author": "Amanda Perino",
+      "platform": "LinkedIn",
+      "card_title": "Opening doors for students",
+      "caption": "Amanda highlights Rails Foundation partnership providing free conference access to students; embedded organizer announcement says 15 student tickets.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 56,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": null,
+        "mode": "linked_card"
+      }
+    },
+    {
+      "id": "S053",
+      "url": "https://x.com/adrianthedev/status/2107380079756247255",
+      "author": "Adrian Marin",
+      "platform": "X",
+      "card_title": "Ruby passports packed",
+      "caption": "Adrian prepares to travel and reminds attendees about Ruby Passports.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 57,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107380079756247255",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S054",
+      "url": "https://x.com/adrianthedev/status/2107432518597456093",
+      "author": "Adrian Marin",
+      "platform": "X",
+      "card_title": "A pre-event reply",
+      "caption": "Adrian acknowledges a pre-event message from Bilal.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 58,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107432518597456093",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S055",
+      "url": "https://x.com/marcoroth_/status/2107371914163298383",
+      "author": "Marco Roth",
+      "platform": "X",
+      "card_title": "Wishes for Samuel’s journey",
+      "caption": "Marco sends Samuel good wishes for the journey.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 59,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107371914163298383",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S056",
+      "url": "https://x.com/marcoroth_/status/2107383596268802421",
+      "author": "Marco Roth",
+      "platform": "X",
+      "card_title": "Wishes for Paweł’s journey",
+      "caption": "Marco sends Paweł good wishes for the journey.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 60,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107383596268802421",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S057",
+      "url": "https://x.com/ioquatix/status/2107357310947577875",
+      "author": "Samuel Williams",
+      "platform": "X",
+      "card_title": "On the way to Pune",
+      "caption": "Samuel begins his journey to the conference.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 61,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107357310947577875",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S058",
+      "url": "https://x.com/ioquatix/status/2107371971197681973",
+      "author": "Samuel Williams",
+      "platform": "X",
+      "card_title": "Travel wishes returned",
+      "caption": "Samuel returns Marco's travel good wishes.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 62,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107371971197681973",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S059",
+      "url": "https://x.com/ioquatix/status/2107435433114349924",
+      "author": "Samuel Williams",
+      "platform": "X",
+      "card_title": "Looking forward to the gathering",
+      "caption": "Samuel responds enthusiastically to Carmine ahead of the event.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 63,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107435433114349924",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S060",
+      "url": "https://x.com/vipulnsward/status/2107522305333277088",
+      "author": "Vipul A M",
+      "platform": "X",
+      "card_title": "Before the event: growing interest",
+      "caption": "Vipul celebrates attendance growth to 180; this is his dated claim, not a final audited count.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 64,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107522305333277088",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S061",
+      "url": "https://x.com/xMezbah/status/2107789990692606146",
+      "author": "Mezbah (handle xMezbah)",
+      "platform": "X",
+      "card_title": "Appreciation before the event",
+      "caption": "Mezbah admires Vipul's ability to assemble a team and turn plans into reality; pre-event appreciation.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 65,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107789990692606146",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S062",
+      "url": "https://x.com/ioquatix/status/2107791837914386941",
+      "author": "Samuel Williams",
+      "platform": "X",
+      "card_title": "On the Deccan Queen train",
+      "caption": "Samuel documents riding the Deccan Queen train.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 66,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107791837914386941",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S063",
+      "url": "https://x.com/ioquatix/status/2107793724864676200",
+      "author": "Samuel Williams",
+      "platform": "X",
+      "card_title": "Sharing the conference website",
+      "caption": "Samuel shares the event website in a reply.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "before_the_event",
+      "voice_role": "pre_event_context",
+      "display_order": 67,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2107793724864676200",
+        "mode": "official_embed_optional"
+      }
+    },
+    {
+      "id": "S064",
+      "url": "https://www.youtube.com/watch?v=a_pj2pci6iE",
+      "author": "Marco Roth",
+      "platform": "YouTube",
+      "card_title": "Watch Marco Roth’s keynote",
+      "caption": "Marco Roth keynote recording.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "recordings",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 52,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "youtube",
+        "video_id": "a_pj2pci6iE",
+        "mode": "official_embed"
+      }
+    },
+    {
+      "id": "S065",
+      "url": "https://www.youtube.com/watch?v=gxi9ZFuvuKw",
+      "author": "Samuel Williams, Katie Lawhorn and Tavian Barnes",
+      "platform": "YouTube",
+      "card_title": "Watch the opening keynote",
+      "caption": "Samuel Williams, Katie Lawhorn and Tavian Barnes keynote recording.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "recordings",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 50,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "youtube",
+        "video_id": "gxi9ZFuvuKw",
+        "mode": "official_embed"
+      }
+    },
+    {
+      "id": "S066",
+      "url": "https://www.youtube.com/watch?v=xB1s4dWWkM0",
+      "author": "Irina Nazarova",
+      "platform": "YouTube",
+      "card_title": "Watch Irina Nazarova’s keynote",
+      "caption": "Irina Nazarova keynote recording.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "recordings",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 53,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "youtube",
+        "video_id": "xB1s4dWWkM0",
+        "mode": "official_embed"
+      }
+    },
+    {
+      "id": "S067",
+      "url": "https://www.youtube.com/watch?v=V5y_KvZDcsg",
+      "author": "Sam Ruby",
+      "platform": "YouTube",
+      "card_title": "Watch Sam Ruby’s keynote",
+      "caption": "Sam Ruby keynote recording.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "recordings",
+      "voice_role": "organiser_published_ownership_not_proven",
+      "display_order": 51,
+      "include_in_main_wall": true,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "youtube",
+        "video_id": "V5y_KvZDcsg",
+        "mode": "official_embed"
+      }
+    },
+    {
+      "id": "S068",
+      "url": "https://x.com/inazarova/status/2108167527004246356",
+      "author": "Irina Nazarova",
+      "platform": "X",
+      "card_title": "RubyLLM 2.1 technical context",
+      "caption": "Irina celebrates RubyLLM 2.1 capabilities; surrounding event context, but no explicit conference name.",
+      "caption_type": "editorial_summary_not_a_quote",
+      "excerpt": null,
+      "section": "related_technical_context",
+      "voice_role": "conference_association_unverified",
+      "display_order": 55,
+      "include_in_main_wall": false,
+      "include_as_linked_archive": true,
+      "embed": {
+        "provider": "x",
+        "status_id": "2108167527004246356",
+        "mode": "official_embed_optional"
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+<section class="wall-love-collection" aria-labelledby="collected-sources-heading" data-controller="wall-love-collection" data-wall-love-collection-limit-value="18">
+  <div class="wall-love-media__heading">
+    <div><span class="section-label">All the love</span><h2 id="collected-sources-heading" class="wall-love__heading">A community worth celebrating</h2></div>
+    <p><%= WallLoveSourceCatalog.main_wall.size %> public sources · Original voices, original links</p>
+  </div>
+  <p>Community voices, host perspectives, organizer posts, related Rails Girls moments and all four official recordings. Captions are summaries; only the brief excerpts in quotation cards are direct quotes.</p>
+  <div class="wall-love-collection__filter" data-wall-love-collection-target="filters" hidden>
+    <label for="wall-love-filter">Browse moments</label>
+    <select id="wall-love-filter" data-wall-love-collection-target="filter" data-action="wall-love-collection#filter">
+      <option value="all">All moments</option><option value="community">Community voices</option><option value="on_stage">On stage</option><option value="organiser">From the organisers</option><option value="rails_girls">Rails Girls</option><option value="recordings">Watch the talks</option>
+    </select>
+  </div>
+  <p class="wall-love-collection__status" role="status" data-wall-love-collection-target="status"></p>
+  <div class="wall-love-collection__grid">
+    <% WallLoveSourceCatalog.main_wall.each do |source| %><%= render "source_card", source: source %><% end %>
+  </div>
+  <button type="button" class="btn btn-secondary wall-love-collection__more" data-wall-love-collection-target="more" data-action="wall-love-collection#more" hidden>Load more moments</button>
+  <noscript><p>All 54 source cards are shown above. Follow the original links to see posts and recordings.</p></noscript>
+</section>
