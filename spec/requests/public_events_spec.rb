@@ -88,6 +88,7 @@ RSpec.describe "Published owned events v1", type: :request do
     expect(first_ids).not_to include(response.parsed_body.fetch("events").first.fetch("id"))
     get public_events_path, params: { page: 999999999 }
     expect(response.parsed_body.fetch("pagination").fetch("page")).to eq(1000)
+    expect(response.parsed_body.fetch("pagination").fetch("total")).to eq(25)
     expect(response.parsed_body.fetch("events")).to eq([])
     get public_events_path, params: { page: [ "2" ] }
     expect(response.parsed_body.fetch("pagination").fetch("page")).to eq(1)

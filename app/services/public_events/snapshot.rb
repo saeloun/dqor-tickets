@@ -4,8 +4,9 @@ module PublicEvents
 
     def self.index(value)
       page = value.is_a?(String) && value.match?(/\A[0-9]{1,9}\z/) ? value.to_i.clamp(1, 1_000) : 1
-      events = Event.published.includes(:organization).order(:starts_at, :id).limit(PER_PAGE).offset((page - 1) * PER_PAGE)
-      versioned(schema_version: 1, events: events.map { |event| serialize(event) }, pagination: { page: page, per_page: PER_PAGE, total: Event.published.count })
+      events = Event.published.select("events.*, COUNT(*) OVER () AS public_catalog_total").includes(:organization).order(:starts_at, :id).limit(PER_PAGE).offset((page - 1) * PER_PAGE).to_a
+      total = events.empty? ? Event.published.count : events.first.read_attribute(:public_catalog_total).to_i
+      versioned(schema_version: 1, events: events.map { |event| serialize(event) }, pagination: { page: page, per_page: PER_PAGE, total: total })
     end
 
     def self.show(event)
