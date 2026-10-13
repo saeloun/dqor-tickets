@@ -15,8 +15,14 @@ class Organizer::EventsController < Organizer::BaseController
 
   def create
     @event = @organization.events.new(event_params)
-    if @event.save
-      redirect_to organizer_organization_event_path(@organization, @event), notice: "Draft created."
+    result = Event::DraftImport.call(@event)
+    @event = result.event
+    case result.status
+    when :created, :existing
+      notice = result.status == :created ? "Draft created." : "This source is already imported. Existing event retained."
+      redirect_to organizer_organization_event_path(@organization, @event), notice: notice
+    when :conflict
+      render :new, status: :conflict
     else
       render :new, status: :unprocessable_content
     end
@@ -31,6 +37,9 @@ class Organizer::EventsController < Organizer::BaseController
     else
       render :edit, status: :unprocessable_content
     end
+  rescue ActiveRecord::RecordNotUnique
+    @event.errors.add(:source_url, "already belongs to another event in this organization")
+    render :edit, status: :unprocessable_content
   end
 
   def publish
@@ -47,6 +56,6 @@ class Organizer::EventsController < Organizer::BaseController
     end
 
     def event_params
-      params.expect(event: [ :title, :slug, :starts_at, :ends_at, :timezone ])
+      params.expect(event: [ :title, :slug, :starts_at, :ends_at, :timezone, :description, :venue_name, :venue_address, :source_url, :external_registration_url, :cfp_url, :topics, :import_notes ])
     end
 end

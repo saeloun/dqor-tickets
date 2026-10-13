@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -229,16 +229,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_010000) do
   end
 
   create_table "events", force: :cascade do |t|
+    t.text "cfp_url"
     t.datetime "created_at", null: false
+    t.text "description"
     t.datetime "ends_at"
+    t.text "external_registration_url"
+    t.text "import_notes"
     t.bigint "organization_id", null: false
     t.string "slug", null: false
+    t.text "source_url"
     t.datetime "starts_at"
     t.string "status", default: "draft", null: false
     t.string "timezone", default: "UTC", null: false
     t.string "title", null: false
+    t.text "topics"
     t.datetime "updated_at", null: false
+    t.text "venue_address"
+    t.text "venue_name"
     t.index ["organization_id", "slug"], name: "index_events_on_organization_id_and_slug", unique: true
+    t.index ["organization_id", "source_url"], name: "index_events_on_organization_and_source_url", unique: true, where: "(source_url IS NOT NULL)"
     t.index ["organization_id"], name: "index_events_on_organization_id"
     t.check_constraint "ends_at IS NULL OR starts_at IS NULL OR ends_at > starts_at", name: "events_ordered_dates"
     t.check_constraint "status::text <> 'published'::text OR starts_at IS NOT NULL AND ends_at IS NOT NULL", name: "events_publication_dates"

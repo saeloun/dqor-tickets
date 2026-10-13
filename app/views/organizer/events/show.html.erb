@@ -7,6 +7,8 @@
     <% if @event.starts_at && @event.ends_at %><p><%= @event.starts_at.in_time_zone(@event.timezone).strftime("%a, %-d %b %Y · %-I:%M %p") %> – <%= @event.ends_at.in_time_zone(@event.timezone).strftime("%a, %-d %b · %-I:%M %p") %><br><span class="help"><%= @event.timezone %></span></p><% else %><p class="muted">Add start and end dates before publishing.</p><% end %>
     <% if can_manage_events? %><%= link_to "Edit", edit_organizer_organization_event_path(@organization, @event) %><% end %>
   </div>
+  <%= render "events/external_details", event: @event %>
+  <% if @event.import_notes.present? %><section class="card"><h2>Private import notes</h2><p style="white-space: pre-wrap"><%= @event.import_notes %></p></section><% end %>
   <% if @event.draft? && can_manage_events? %><div class="notice" style="margin-top: 24px"><h2>Ready to share?</h2><p>Publishing makes the event details public. Free registration opens separately after you add ticket capacity.</p><%= button_to "Publish event", publish_organizer_organization_event_path(@organization, @event), method: :post %></div><% end %>
   <% if @event.published? %>
     <div class="actions"><%= link_to "View public event", published_event_path(@organization.slug, @event.slug), class: "button secondary" %></div>

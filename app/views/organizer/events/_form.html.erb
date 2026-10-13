@@ -7,5 +7,16 @@
   <div class="notice"><p><strong>Enter dates and times in UTC.</strong> For example, 6:00 PM in India is 12:30 PM UTC. The display timezone changes how attendees see the dates; it does not convert what you enter below.</p><p class="help">You can save a draft without dates. Both dates are required before publication.</p></div>
   <p><%= form.label :starts_at, "Start (UTC)" %><%= form.datetime_local_field :starts_at, value: @event.starts_at&.utc&.strftime("%Y-%m-%dT%H:%M") %></p>
   <p><%= form.label :ends_at, "End (UTC)" %><%= form.datetime_local_field :ends_at, value: @event.ends_at&.utc&.strftime("%Y-%m-%dT%H:%M") %></p>
+  <fieldset>
+    <legend>External event details (optional)</legend>
+    <p><%= form.label :description %><%= form.text_area :description %></p>
+    <p><%= form.label :venue_name %><%= form.text_field :venue_name %></p>
+    <p><%= form.label :venue_address %><%= form.text_area :venue_address %></p>
+    <p><%= form.label :source_url, "Public source URL" %><%= form.url_field :source_url %></p>
+    <p><%= form.label :external_registration_url, "External registration URL" %><%= form.url_field :external_registration_url %><span class="help">Registration stays with the external organizer. This does not create tickets here.</span></p>
+    <p><%= form.label :cfp_url, "Call for speakers URL" %><%= form.url_field :cfp_url %></p>
+    <p><%= form.label :topics %><%= form.text_field :topics, placeholder: "Ruby, AI, Open Source" %></p>
+    <p><%= form.label :import_notes, "Private import notes" %><%= form.text_area :import_notes %><span class="help">Record conflicting source dates here. These notes are visible to your team only.</span></p>
+  </fieldset>
   <%= form.submit %>
 <% end %>

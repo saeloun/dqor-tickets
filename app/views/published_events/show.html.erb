@@ -2,6 +2,7 @@
   <p class="eyebrow">Hosted by <%= @event.organization.name %></p>
   <h1><%= @event.title %></h1>
   <p class="muted"><%= event_local_range(@event) %><br><%= @event.timezone %></p>
+  <%= render "events/external_details", event: @event %>
   <% @free_types.each do |type| %>
     <section class="card registration-state"><span class="badge">Free event</span><h2 style="margin-top: 16px"><%= type.name %> · Free</h2>
       <% availability = FreeEvents::Availability.call(event: @event, ticket_type: type) %>
@@ -16,5 +17,5 @@
       <p class="help ticket-retrieval">Already registered? <%= link_to "View your ticket", free_event_ticket_path(@event.organization.slug, @event.slug) %></p>
     </section>
   <% end %>
-  <% if @free_types.empty? %><p class="notice">Registration is not open here yet. Check back with the organizer for details.</p><% end %>
+  <% if @free_types.empty? && @event.external_registration_url.blank? %><p class="notice">Registration is not open here yet. Check back with the organizer for details.</p><% end %>
 </main>
