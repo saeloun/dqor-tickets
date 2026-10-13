@@ -1,0 +1,6 @@
+<% if event.description.present? %><p style="white-space: pre-wrap"><%= event.description %></p><% end %>
+<% if event.venue_name.present? || event.venue_address.present? %><section class="card"><h2>Venue</h2><p><%= event.venue_name %></p><p style="white-space: pre-wrap"><%= event.venue_address %></p></section><% end %>
+<% if event.topics.present? %><p><strong>Topics:</strong> <%= event.topics %></p><% end %>
+<% if event.source_url.present? %><p><%= link_to "Original event source", event.source_url, rel: "noopener noreferrer" %></p><% end %>
+<% if event.cfp_url.present? %><p><%= link_to "Call for speakers", event.cfp_url, rel: "noopener noreferrer" %></p><% end %>
+<% if event.external_registration_url.present? %><section class="card"><h2>External registration</h2><p>Registration and current availability are managed by the external organizer.</p><%= link_to "View external registration", event.external_registration_url, class: "button", rel: "noopener noreferrer" %></section><% end %>
