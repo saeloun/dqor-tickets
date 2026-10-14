@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-5c985958f4fb6464",
+    "name": "GDG Pune",
+    "url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-devfest-pune-2026-agentic-ai-tokenization-amp-quantum-start-build-amp-grow/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "devfest-pune-2026-agentic-ai-tokenization-quantum-start-build-grow:pune:2026-12-13",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-devfest-pune-2026-agentic-ai-tokenization-amp-quantum-start-build-amp-grow/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-devfest-pune-2026-agentic-ai-tokenization-amp-quantum-start-build-amp-grow/",
+      "canonical_kind": "event",
+      "registration_url": "https://devfest.gdgpune.in/register/",
+      "title": "DevFest Pune 2026: Agentic AI, Tokenization & Quantum — Start, Build & Grow",
+      "topics": [
+        "developer"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-12-13",
+      "ends_on": "2026-12-13",
+      "local_start_time": "03:30",
+      "local_end_time": "12:30",
+      "starts_at": "2026-12-13T03:30:00Z",
+      "ends_at": "2026-12-13T12:30:00Z"
+    },
+    {
+      "external_id": "build-with-ai-pre-devfest-pune-26-workshop-series-5-0-altimetrik-india:pune:2026-10-10",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-pre-devfest-pune26-workshop-series-50-altimetrik-india/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-pre-devfest-pune26-workshop-series-50-altimetrik-india/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-pre-devfest-pune26-workshop-series-50-altimetrik-india/",
+      "title": "Build with AI - Pre DevFest Pune'26 Workshop Series 5.0 | Altimetrik India",
+      "topics": [
+        "developer"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-10-10",
+      "ends_on": "2026-10-10",
+      "local_start_time": "03:30",
+      "local_end_time": "08:30",
+      "starts_at": "2026-10-10T03:30:00Z",
+      "ends_at": "2026-10-10T08:30:00Z"
+    },
+    {
+      "external_id": "build-with-ai-code-for-communities-pre-devfest-pune-26-workshop-series-4-0-thoughtworks:pune:2026-09-12",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-code-for-communities-pre-devfest-pune26-workshop-series-40-thoughtworks/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-code-for-communities-pre-devfest-pune26-workshop-series-40-thoughtworks/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-code-for-communities-pre-devfest-pune26-workshop-series-40-thoughtworks/",
+      "title": "Build with AI - Code for Communities - Pre DevFest Pune'26 Workshop Series 4.0 | Thoughtworks",
+      "topics": [
+        "developer"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-09-12",
+      "ends_on": "2026-09-12",
+      "local_start_time": "03:30",
+      "local_end_time": "08:30",
+      "starts_at": "2026-09-12T03:30:00Z",
+      "ends_at": "2026-09-12T08:30:00Z"
+    },
+    {
+      "external_id": "build-with-ai-code-for-communities-pre-devfest-pune-26-workshop-series-3-0-josh-software:pune:2026-09-05",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-code-for-communities-pre-devfest-pune26-workshop-series-30-josh-software/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-code-for-communities-pre-devfest-pune26-workshop-series-30-josh-software/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-code-for-communities-pre-devfest-pune26-workshop-series-30-josh-software/",
+      "title": "Build with AI - Code for Communities - Pre DevFest Pune'26 Workshop Series 3.0 | Josh Software",
+      "topics": [
+        "developer"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-09-05",
+      "ends_on": "2026-09-05",
+      "local_start_time": "03:30",
+      "local_end_time": "08:30",
+      "starts_at": "2026-09-05T03:30:00Z",
+      "ends_at": "2026-09-05T08:30:00Z"
+    },
+    {
+      "external_id": "build-with-ai-pre-devfest-pune-26-workshop-series-pubmatic:pune:2026-08-22",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-pre-devfest-pune26-workshop-series-pubmatic/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-pre-devfest-pune26-workshop-series-pubmatic/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-pre-devfest-pune26-workshop-series-pubmatic/",
+      "title": "Build with AI - Pre DevFest Pune'26 Workshop Series | PubMatic",
+      "topics": [
+        "developer"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-08-22",
+      "ends_on": "2026-08-22",
+      "local_start_time": "03:30",
+      "local_end_time": "08:30",
+      "starts_at": "2026-08-22T03:30:00Z",
+      "ends_at": "2026-08-22T08:30:00Z"
+    },
+    {
+      "external_id": "build-with-ai-google-developer-group-pune-deutsche-bank:pune:2026-08-08",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-google-developer-group-pune-deutsche-bank-1/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-google-developer-group-pune-deutsche-bank-1/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-pune-presents-build-with-ai-google-developer-group-pune-deutsche-bank-1/",
+      "title": "Build with AI - Google Developer Group Pune | Deutsche Bank",
+      "topics": [
+        "developer"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-08-08",
+      "ends_on": "2026-08-08",
+      "local_start_time": "03:30",
+      "local_end_time": "08:30",
+      "starts_at": "2026-08-08T03:30:00Z",
+      "ends_at": "2026-08-08T08:30:00Z"
+    }
+  ]
+}

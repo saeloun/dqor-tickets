@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-8cfa2ed749f6ce53",
+    "name": "BackersStage Capital and Capvise Global",
+    "url": "https://luma.com/n0a39ago",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "onchain-dev-city-devcon-8-india:mumbai:2026-11-02",
+      "source_url": "https://luma.com/n0a39ago",
+      "canonical_url": "https://luma.com/n0a39ago",
+      "canonical_kind": "event",
+      "registration_url": "https://luma.com/n0a39ago",
+      "title": "Onchain Dev City - Devcon [8] INDIA",
+      "topics": [
+        "developer"
+      ],
+      "city": "Mumbai",
+      "country_code": "IN",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2026-11-02",
+      "ends_on": "2026-11-02"
+    }
+  ]
+}

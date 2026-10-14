@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-0adad4d41e5ef91c",
+    "name": "GitNation",
+    "url": "https://gitnation.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "techlead-conf-london-2026-adopting-ai-in-orgs-edition:london:2026-10-23",
+      "source_url": "https://techleadconf.com/",
+      "canonical_url": "https://techleadconf.com/",
+      "canonical_kind": "event",
+      "registration_url": "https://techleadconf.com/",
+      "title": "TechLead Conf London 2026: Adopting AI in Orgs Edition",
+      "topics": [
+        "javascript"
+      ],
+      "city": "London",
+      "country_code": "GB",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2026-10-23",
+      "ends_on": "2026-10-23"
+    }
+  ]
+}

@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  get "api/public/v1/discovery/events", to: "api/public/v1/discovery#index", as: :public_discovery_events, defaults: { format: :json }
+  get "discover", to: "discovery/listings#index", as: :discovery_listings
+  get "discover/events/:id", to: "discovery/listings#show", as: :discovery_listing
   resources :conference_badges, only: :index do
     collection do
       get :sample

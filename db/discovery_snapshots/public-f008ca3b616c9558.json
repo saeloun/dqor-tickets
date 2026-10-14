@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-f008ca3b616c9558",
+    "name": "React Nexus",
+    "url": "https://2026.reactnexus.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "react-nexus-2026:bengaluru:2026-07-02",
+      "source_url": "https://2026.reactnexus.com/",
+      "canonical_url": "https://2026.reactnexus.com/",
+      "canonical_kind": "event",
+      "registration_url": "https://2026.reactnexus.com/",
+      "title": "React Nexus 2026",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Bengaluru",
+      "country_code": "IN",
+      "timezone": "Asia/Kolkata",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-07-02",
+      "ends_on": "2026-07-03",
+      "local_start_time": "09:00",
+      "local_end_time": "18:00",
+      "starts_at": "2026-07-02T03:30:00Z",
+      "ends_at": "2026-07-03T12:30:00Z"
+    }
+  ]
+}

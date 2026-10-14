@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-002121726ac0d453",
+    "name": "Frontier Alicante / React Alicante",
+    "url": "https://reactalicante.es/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "frontier-alicante-2027:alicante:2027-09-30",
+      "source_url": "https://reactalicante.es/",
+      "canonical_url": "https://reactalicante.es/",
+      "canonical_kind": "event",
+      "registration_url": "https://reactalicante.es/",
+      "title": "Frontier Alicante 2027",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Alicante",
+      "country_code": "ES",
+      "timezone": null,
+      "format": "hybrid",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2027-09-30",
+      "ends_on": "2027-10-02"
+    }
+  ]
+}

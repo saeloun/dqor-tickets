@@ -1,0 +1,20 @@
+<main id="directory-main">
+  <section class="discovery-hero" aria-labelledby="directory-heading">
+    <p class="eyebrow">Meetups & conferences</p><h1 id="directory-heading">Find your next gathering.</h1><p>Ruby, React and developer communities. Pune, India and beyond.</p>
+  </section>
+  <section class="directory" aria-labelledby="results-heading">
+    <%= form_with url: discovery_listings_path, method: :get, class: "discovery-filters" do |form| %>
+      <div class="filter-search"><%= form.label :q, "Search events or cities" %><%= form.search_field :q, value: @filters[:q], maxlength: 100, placeholder: "Try Pune, RubyConf or React" %></div>
+      <div><%= form.label :topic, "Topic" %><%= form.select :topic, [["All topics", ""], ["Ruby", "ruby"], ["React", "react"], ["JavaScript", "javascript"], ["Developer events", "developer"]], selected: @filters[:topic] %></div>
+      <div><%= form.label :region, "Where" %><%= form.select :region, [["Worldwide", "global"], ["India", "india"], ["Pune, India", "pune"]], selected: @filters[:region] %></div>
+      <div><%= form.label :period, "When" %><%= form.select :period, [["All dates", "all"], ["Upcoming / ongoing", "upcoming"], ["This weekend (India)", "weekend"], ["Past events", "past"], ["Date unconfirmed", "uncertain"]], selected: @filters[:period] %></div>
+      <%= form.hidden_field :view, value: @filters[:view] %>
+      <%= form.submit "Find events" %>
+    <% end %>
+    <div class="results-heading"><div><h2 id="results-heading"><%= pluralize(@total, "event") %></h2></div><%= link_to "Clear filters", discovery_listings_path %></div>
+    <p class="results-context"><%= @period_counts["upcoming"] %> upcoming / ongoing · <%= @period_counts["past"] %> past · <%= @period_counts["uncertain"] %> date unconfirmed · <%= pluralize(@source_count, "source profile") %> in the directory</p>
+    <% if @listings.any? %><div class="<%= @filters[:view] == "rows" ? "event-rows" : "event-grid" %>"><%= render partial: "listing", collection: @listings, locals: { view: @filters[:view] } %></div><% else %><div class="directory-empty"><h3><%= @period_counts["all"].positive? ? "No events match these dates" : "No matching events yet" %></h3><p>Try another topic, place or date filter. Historical and undated listings are kept separate from upcoming dates.</p><%= link_to "Browse all events", discovery_listings_path(period: "all") %></div><% end %>
+    <nav class="directory-views" aria-label="Result layout"><%= link_to "Compact list", discovery_listings_path(@filters.merge(view: "rows")), aria: { current: @filters[:view] == "rows" ? "true" : nil } %><%= link_to "Cards", discovery_listings_path(@filters.merge(view: "cards")), aria: { current: @filters[:view] == "cards" ? "true" : nil } %></nav>
+    <% if @page > 1 || @page * 24 < @total %><nav class="directory-pagination" aria-label="Event pages"><% if @page > 1 %><%= link_to "← Previous", discovery_listings_path(@filters.merge(page: @page - 1)) %><% end %><span>Page <%= @page %></span><% if @page * 24 < @total %><%= link_to "Next →", discovery_listings_path(@filters.merge(page: @page + 1)) %><% end %></nav><% end %>
+  </section>
+</main>

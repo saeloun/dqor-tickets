@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-bea16e9f71bc52c6",
+    "name": "GDG New Delhi",
+    "url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-builder-day/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "devfest-new-delhi-2026-builder-day:gurugram:2026-10-16",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-builder-day/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-builder-day/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-builder-day/",
+      "title": "DevFest New Delhi 2026 - Builder Day",
+      "topics": [
+        "developer"
+      ],
+      "city": "Gurugram",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-10-16",
+      "ends_on": "2026-10-16",
+      "local_start_time": "04:30",
+      "local_end_time": "10:30",
+      "starts_at": "2026-10-16T04:30:00Z",
+      "ends_at": "2026-10-16T10:30:00Z"
+    },
+    {
+      "external_id": "devfest-new-delhi-2026-storyteller-day:gurugram:2026-10-17",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-storyteller-day/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-storyteller-day/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-storyteller-day/",
+      "title": "DevFest New Delhi 2026 - Storyteller Day",
+      "topics": [
+        "developer"
+      ],
+      "city": "Gurugram",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-10-17",
+      "ends_on": "2026-10-17",
+      "local_start_time": "04:30",
+      "local_end_time": "10:30",
+      "starts_at": "2026-10-17T04:30:00Z",
+      "ends_at": "2026-10-17T10:30:00Z"
+    },
+    {
+      "external_id": "devfest-new-delhi-2026-leadership-day:gurugram:2026-10-18",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-leadership-day/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-leadership-day/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-new-delhi-presents-devfest-new-delhi-2026-leadership-day/",
+      "title": "Devfest New Delhi 2026 Leadership Day",
+      "topics": [
+        "developer"
+      ],
+      "city": "Gurugram",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-10-18",
+      "ends_on": "2026-10-18",
+      "local_start_time": "04:30",
+      "local_end_time": "10:30",
+      "starts_at": "2026-10-18T04:30:00Z",
+      "ends_at": "2026-10-18T10:30:00Z"
+    }
+  ]
+}

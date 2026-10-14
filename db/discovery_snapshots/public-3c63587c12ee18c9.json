@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-3c63587c12ee18c9",
+    "name": "GDG Indore",
+    "url": "https://gdg.community.dev/events/details/google-gdg-indore-presents-devfest-indore-2026/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "devfest-indore-2026:indore:2026-11-28",
+      "source_url": "https://gdg.community.dev/events/details/google-gdg-indore-presents-devfest-indore-2026/",
+      "canonical_url": "https://gdg.community.dev/events/details/google-gdg-indore-presents-devfest-indore-2026/",
+      "canonical_kind": "event",
+      "registration_url": "https://gdg.community.dev/events/details/google-gdg-indore-presents-devfest-indore-2026/",
+      "title": "Devfest Indore 2026",
+      "topics": [
+        "developer"
+      ],
+      "city": "Indore",
+      "country_code": "IN",
+      "timezone": "UTC",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-11-28",
+      "ends_on": "2026-11-28",
+      "local_start_time": "04:00",
+      "local_end_time": "11:00",
+      "starts_at": "2026-11-28T04:00:00Z",
+      "ends_at": "2026-11-28T11:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= @listing ? "#{@listing.title} · " : "" %>Discover events · <%= Rails.configuration.x.discovery_product_name %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="Find Ruby and React conferences and meetups, with dates and registration links attributed to their original sources.">
+    <%= csrf_meta_tags %><%= csp_meta_tag %>
+    <%= stylesheet_link_tag "event_discovery" %>
+  </head>
+  <body>
+    <a class="skip-link" href="#directory-main">Skip to events</a>
+    <header class="discovery-header">
+      <%= link_to Rails.configuration.x.discovery_product_name, discovery_listings_path, class: "discovery-brand" %>
+      <nav aria-label="Main navigation"><%= link_to "Event directory", discovery_listings_path %><%= link_to "DQOR conference", root_path %><% if FreeEvents::Access.enabled? %><%= link_to "Your organizations", free_organizations_path %><% end %></nav>
+    </header>
+    <%= yield %>
+    <footer class="discovery-footer"><p>Events from their original sources. Registration, updates and cancellation policies belong to the listed organizer.</p><%= link_to "Deccan Queen on Rails", root_path %></footer>
+  </body>
+</html>

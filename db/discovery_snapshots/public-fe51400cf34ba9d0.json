@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-fe51400cf34ba9d0",
+    "name": "GitNation",
+    "url": "https://gitnation.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "react-summit-2027:amsterdam:2027-05-21",
+      "source_url": "https://reactsummit.com/",
+      "canonical_url": "https://reactsummit.com/",
+      "canonical_kind": "event",
+      "registration_url": "https://reactsummit.com/",
+      "title": "React Summit 2027",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Amsterdam",
+      "country_code": "NL",
+      "timezone": "Europe/Amsterdam",
+      "format": "hybrid",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2027-05-21",
+      "ends_on": "2027-05-25",
+      "occurrence_dates": [
+        "2027-05-21",
+        "2027-05-25"
+      ],
+      "local_start_time": "09:00",
+      "local_end_time": null,
+      "starts_at": "2027-05-21T07:00:00Z"
+    }
+  ]
+}

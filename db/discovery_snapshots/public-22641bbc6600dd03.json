@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-22641bbc6600dd03",
+    "name": "CityJS Conferences",
+    "url": "https://athens.cityjsconf.org/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "cityjs-athens-2026:athens:2026-10-21",
+      "source_url": "https://athens.cityjsconf.org/",
+      "canonical_url": "https://athens.cityjsconf.org/",
+      "canonical_kind": "event",
+      "registration_url": "https://athens.cityjsconf.org/",
+      "title": "CityJS Athens 2026",
+      "topics": [
+        "javascript"
+      ],
+      "city": "Athens",
+      "country_code": "GR",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "hold",
+      "review_reason": "The inspected public sources have missing or conflicting date/time information.",
+      "date_precision": "date",
+      "starts_on": "2026-10-21",
+      "ends_on": "2026-10-23"
+    }
+  ]
+}

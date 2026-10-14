@@ -1,0 +1,10 @@
+<article class="event-card <%= "event-card--row" if view == "rows" %>" data-discovery-listing-id="<%= listing.id %>">
+  <%= render "graphic", topics: listing.topics %>
+  <div class="event-card__body">
+    <span class="event-state <%= "event-state--canceled" if listing.status_canceled? %>"><%= discovery_state(listing) %></span>
+    <h2><%= link_to listing.title, discovery_listing_path(listing) %></h2>
+    <p class="event-card__date"><%= discovery_date(listing) %></p>
+    <p class="event-card__location"><%= discovery_location(listing) %></p>
+    <p class="event-card__source">Source: <%= listing.primary_source.name %><% if listing.references.any?(&:stale?) %> · Update delayed<% end %></p>
+  </div>
+</article>

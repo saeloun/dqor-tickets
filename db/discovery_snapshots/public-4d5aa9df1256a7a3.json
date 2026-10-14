@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-4d5aa9df1256a7a3",
+    "name": "React India and React Pune",
+    "url": "https://www.meetup.com/react-pune/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "react-india-x-react-pune:pune:2026-10-10",
+      "source_url": "https://www.meetup.com/react-pune/",
+      "canonical_url": "https://www.meetup.com/react-pune/",
+      "canonical_kind": "event",
+      "registration_url": "https://dub.sh/rixripune26",
+      "title": "React India x React Pune",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Pune",
+      "country_code": "IN",
+      "timezone": "Asia/Kolkata",
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "time",
+      "starts_on": "2026-10-10",
+      "ends_on": "2026-10-10",
+      "local_start_time": "10:30",
+      "local_end_time": null,
+      "starts_at": "2026-10-10T05:00:00Z"
+    }
+  ]
+}

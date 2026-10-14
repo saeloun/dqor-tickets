@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-a82ea955f51fab01",
+    "name": "GitNation",
+    "url": "https://gitnation.com/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "react-day-berlin-2026:berlin:2026-12-04",
+      "source_url": "https://reactday.berlin/",
+      "canonical_url": "https://reactday.berlin/",
+      "canonical_kind": "event",
+      "registration_url": "https://reactday.berlin/",
+      "title": "React Day Berlin 2026",
+      "topics": [
+        "react",
+        "javascript"
+      ],
+      "city": "Berlin",
+      "country_code": "DE",
+      "timezone": null,
+      "format": "hybrid",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2026-12-04",
+      "ends_on": "2026-12-07",
+      "occurrence_dates": [
+        "2026-12-04",
+        "2026-12-07"
+      ]
+    }
+  ]
+}

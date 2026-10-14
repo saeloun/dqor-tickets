@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-516cb8ce94f9e522",
+    "name": "React Native Connection",
+    "url": "https://reactnativeconnection.io/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "react-native-connection-2026:paris:2026-09-24",
+      "source_url": "https://reactnativeconnection.io/",
+      "canonical_url": "https://reactnativeconnection.io/",
+      "canonical_kind": "event",
+      "registration_url": "https://reactnativeconnection.io/",
+      "title": "React Native Connection 2026",
+      "topics": [
+        "react"
+      ],
+      "city": "Paris",
+      "country_code": "FR",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "clear",
+      "review_reason": null,
+      "date_precision": "date",
+      "starts_on": "2026-09-24",
+      "ends_on": "2026-09-24"
+    }
+  ]
+}

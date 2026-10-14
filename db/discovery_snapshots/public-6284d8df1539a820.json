@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "public-6284d8df1539a820",
+    "name": "CityJS Conferences",
+    "url": "https://india.cityjsconf.org/",
+    "revision": "snapshot-sha256-a19d7d70a2b48c8075f9ebbd810c7a62eb3d0260a1b0bf283067033ee77b7f0c",
+    "fetched_at": "2026-10-11T14:38:00Z"
+  },
+  "records": [
+    {
+      "external_id": "cityjs-new-delhi-2026:new-delhi:2026-02-18",
+      "source_url": "https://india.cityjsconf.org/",
+      "canonical_url": "https://india.cityjsconf.org/",
+      "canonical_kind": "event",
+      "registration_url": "https://india.cityjsconf.org/",
+      "title": "CityJS New Delhi 2026",
+      "topics": [
+        "javascript"
+      ],
+      "city": "New Delhi",
+      "country_code": "IN",
+      "timezone": null,
+      "format": "unknown",
+      "status": "unknown",
+      "review_state": "hold",
+      "review_reason": "The inspected public sources have missing or conflicting date/time information.",
+      "date_precision": "date",
+      "starts_on": "2026-02-18",
+      "ends_on": "2026-02-19"
+    }
+  ]
+}
