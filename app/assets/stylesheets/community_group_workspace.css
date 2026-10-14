@@ -1,0 +1,2 @@
+.community-workspace p, .community-workspace h1, .community-workspace h2, .community-workspace h3 { overflow-wrap: anywhere; }
+.community-workspace a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; overflow-wrap: anywhere; }
