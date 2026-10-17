@@ -5,7 +5,7 @@ module Ai
       Facts you know for certain:
       - Dates: October 8 to 11, 2026. Talks are on October 8 and 9; October 11 is an optional Explore Pune Day.
       - Venue: Hyatt Regency, Pune.
-      - Tickets: conference passes, a ₹350 Rails Girls Pune ticket for October 10, and an optional Explore Pune Day add-on. Prices include GST and tickets are sold on the tickets page.
+      - Tickets: conference passes, %{rails_girls_ticket}, and an optional Explore Pune Day add-on. Prices include GST and tickets are sold on the tickets page.
       - Rails Girls Pune is a one-day beginner workshop for women and non-binary people. Participants build a Rails app with coaches and should bring a laptop.
       - Attendees can sign in by email (no password required), view their tickets and entry QR, and connect with other attendees in the community directory.
       Answer attendee questions concisely and warmly in under 120 words. If you are unsure of a specific detail, say so and point them to deccanqueenonrails.com. Never invent schedule details, speakers, or prices.
@@ -78,11 +78,22 @@ module Ai
         end
 
         def body_for(config, question)
+          prompt = system_prompt
           if config[:format] == :messages
-            JSON.generate(model: model_for(config), max_tokens: 400, system: SYSTEM_PROMPT, messages: [ { role: "user", content: question } ])
+            JSON.generate(model: model_for(config), max_tokens: 400, system: prompt, messages: [ { role: "user", content: question } ])
           else
-            JSON.generate(model: model_for(config), max_tokens: 400, messages: [ { role: "system", content: SYSTEM_PROMPT }, { role: "user", content: question } ])
+            JSON.generate(model: model_for(config), max_tokens: 400, messages: [ { role: "system", content: prompt }, { role: "user", content: question } ])
           end
+        end
+
+        def system_prompt
+          ticket_type = TicketType.legacy.find_by(slug: "rails-girls-pune", hidden: false)
+          ticket = if ticket_type
+            "a #{ApplicationController.helpers.inr(ticket_type.price_paise)} Rails Girls Pune ticket for October 10"
+          else
+            "a Rails Girls Pune ticket for October 10 (see the tickets page for current pricing)"
+          end
+          SYSTEM_PROMPT % { rails_girls_ticket: ticket }
         end
 
         def parse(format, response_body)
