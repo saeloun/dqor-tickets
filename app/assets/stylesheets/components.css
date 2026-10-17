@@ -234,6 +234,11 @@
   .nav-links { display: none; }
   .nav-mobile-toggle { display: flex; }
   .nav-actions .btn-nav { display: none; }
+  .nav-logo { min-width: 0; flex-shrink: 1; }
+  .nav-logo img { flex-shrink: 0; }
+  .nav-logo-text { min-width: 0; }
+  .nav-logo-text, .nav-logo-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-mobile-menu { max-height: calc(100dvh - var(--nav-height) - env(safe-area-inset-top, 0px)); overflow-y: auto; }
 }
 
 @media (max-width: 480px) {
