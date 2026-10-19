@@ -244,7 +244,7 @@ RSpec.describe "Avo admin actions", type: :request do
 
     it "creates the refund and enqueues the gateway job when confirmed" do
       order, ticket, ticket_type = dropped_price_order
-      sign_in_admin
+      admin = sign_in_admin
 
       expect {
         run_action(Avo::Actions::ApplyPriceAdjustmentRefunds, records: [ ticket_type ], fields: { confirm: true }, resource: "ticket_types")
@@ -253,7 +253,8 @@ RSpec.describe "Avo admin actions", type: :request do
       refund = order.refunds.sole
       expect(refund).to have_attributes(kind: "price_adjustment", amount_paise: 100_000)
       expect(ticket.reload.canceled_at).to be_nil
-      expect(action_messages.join).to include("Processed 1 order")
+      expect(action_messages.join).to include("Queued 1 order")
+      expect(order.payment_events.find_by!(kind: "price_adjustment_recorded").raw.fetch("actor_id")).to eq(admin.id)
     end
 
     it "reports a mixed batch as a partial success without rolling back the order that succeeded" do
@@ -269,7 +270,7 @@ RSpec.describe "Avo admin actions", type: :request do
         run_action(Avo::Actions::ApplyPriceAdjustmentRefunds, records: [ ticket_type ], fields: { confirm: true }, resource: "ticket_types")
       }.to change { order.refunds.count }.by(1).and change(Refund, :count).by(1)
 
-      expect(action_messages.join).to include("Processed 1 order", "failed", other_order.code)
+      expect(action_messages.join).to include("Queued 1 order", "failed", other_order.code)
       expect(ticket.reload.canceled_at).to be_nil
     end
 

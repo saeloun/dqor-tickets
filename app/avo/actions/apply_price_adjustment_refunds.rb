@@ -2,17 +2,17 @@ class Avo::Actions::ApplyPriceAdjustmentRefunds < Avo::BaseAction
   self.name = "Refund price drop to affected buyers"
 
   def fields
-    field :confirm, as: :boolean, name: "Confirm and process refunds (unchecked = dry run only)", default: false
+    field :confirm, as: :boolean, name: "Confirm and queue refunds (unchecked = dry run only)", default: false
   end
 
-  def handle(query:, fields:, **)
+  def handle(query:, fields:, current_user:, **)
     return error "Select one ticket type" unless query.one?
 
     ticket_type = query.first
     by_order = ticket_type.price_adjustment_candidates.includes(:order).group_by(&:order)
     return succeed "No tickets are eligible for a price adjustment refund" if by_order.empty?
 
-    fields[:confirm] ? process_confirmed(by_order) : report_dry_run(by_order)
+    fields[:confirm] ? process_confirmed(by_order, actor: current_user) : report_dry_run(by_order)
   end
 
   private
@@ -29,10 +29,10 @@ class Avo::Actions::ApplyPriceAdjustmentRefunds < Avo::BaseAction
       keep_modal_open
     end
 
-    def process_confirmed(by_order)
+    def process_confirmed(by_order, actor:)
       results = by_order.map do |order, tickets|
         begin
-          refund = order.apply_price_adjustment_refund!(tickets.map(&:id))
+          refund = order.apply_price_adjustment_refund!(tickets.map(&:id), actor:)
           { order: order.code, ok: true, amount_paise: refund.amount_paise }
         rescue Refund::AlreadyRefunded, ArgumentError => error
           { order: order.code, ok: false, error: error.message }
@@ -40,7 +40,7 @@ class Avo::Actions::ApplyPriceAdjustmentRefunds < Avo::BaseAction
       end
 
       succeeded, failed = results.partition { |result| result[:ok] }
-      summary = "Processed #{succeeded.size} order(s), ₹#{succeeded.sum { |result| result[:amount_paise] } / 100.0} total."
+      summary = "Queued #{succeeded.size} order(s), ₹#{succeeded.sum { |result| result[:amount_paise] } / 100.0} total."
 
       if failed.empty?
         succeed summary

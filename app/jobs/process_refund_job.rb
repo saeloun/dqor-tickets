@@ -1,4 +1,5 @@
 class ProcessRefundJob < ApplicationJob
+  self.enqueue_after_transaction_commit = false
   def perform(refund_id, payment_event_id)
     refund = Refund.legacy.find(refund_id)
     credit_note = refund.process!(refund.order.payment_events.find(payment_event_id))

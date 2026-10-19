@@ -33,6 +33,8 @@ module Webhooks
           record_failed_payment(payload, event_id)
         when "refund.processed"
           process_refund(payload, event_id)
+        when "refund.failed"
+          fail_refund(payload, event_id)
         end
       end
 
@@ -54,8 +56,21 @@ module Webhooks
         refund = Refund.legacy.find_by(razorpay_refund_id: refund_entity["id"])
         return unless refund
 
-        event = record_event(refund.order, payload, event_id)
-        ProcessRefundJob.perform_later(refund.id, event.id) if event
+        refund.order.with_lock do
+          event = record_event(refund.order, payload, event_id)
+          if event
+            job = ProcessRefundJob.perform_later(refund.id, event.id)
+            raise ActiveJob::EnqueueError, "refund processing could not be enqueued" unless job
+          end
+        end
+      end
+
+      def fail_refund(payload, event_id)
+        entity = payload.dig("payload", "refund", "entity") || {}
+        refund = Refund.legacy.find_by(razorpay_refund_id: entity["id"])
+        return unless refund && entity["amount"] == refund.amount_paise
+
+        refund.fail!(event_id:, reason: "gateway_refund_failed")
       end
 
       def find_order(payload)

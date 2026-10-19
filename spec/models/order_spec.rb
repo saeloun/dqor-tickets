@@ -158,7 +158,8 @@ RSpec.describe Order, type: :model do
         headers: { "Content-Type" => "application/json" }
       )
 
-      order.apply_price_adjustment_refund!([ ticket.id ])
+      adjustment = order.apply_price_adjustment_refund!([ ticket.id ])
+      adjustment.process!(create(:payment_event, order:, kind: "refund.processed", amount_paise: adjustment.amount_paise))
       cancellation = order.refund_tickets!([ ticket.id ])
 
       expect(cancellation.amount_paise).to eq(450_000)
@@ -172,15 +173,9 @@ RSpec.describe Order, type: :model do
         headers: { "Content-Type" => "application/json" }
       )
 
-      raised = nil
-      begin
-        perform_enqueued_jobs(only: InitiateRefundJob) { order.apply_price_adjustment_refund!([ ticket.id ]) }
-      rescue StandardError, Minitest::Assertion => error
-        raised = error
-      end
-
-      expect([ raised, raised&.cause ]).to include(an_instance_of(Razorpay::BadRequestError))
-      expect(order.refunds.sole).to have_attributes(status: "initiated", razorpay_refund_id: nil)
+      refund = order.apply_price_adjustment_refund!([ ticket.id ])
+      expect { InitiateRefundJob.perform_now(refund, "pay_test") }.to raise_error(Razorpay::BadRequestError)
+      expect(refund.reload).to have_attributes(status: "failed", razorpay_refund_id: nil)
       expect(ticket.reload.canceled_at).to be_nil
     end
 

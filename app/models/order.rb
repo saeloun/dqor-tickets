@@ -225,70 +225,65 @@ class Order < ApplicationRecord
   def refund_tickets!(ticket_ids)
     LegacyCommerce.assert!(self)
     selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
-    raise ArgumentError, "only a paid order can be refunded" unless paid?
+    with_lock do
+      raise ArgumentError, "only a paid order can be refunded" unless paid?
+      selected_tickets = tickets.where(id: selected_ids, canceled_at: nil)
+      raise ArgumentError, "select at least one refundable ticket" unless selected_tickets.count == selected_ids.size && selected_ids.any?
 
-    selected_tickets = tickets.where(id: selected_ids, canceled_at: nil)
-    raise ArgumentError, "select at least one refundable ticket" unless selected_tickets.count == selected_ids.size && selected_ids.any?
+      overlapping = refunds.where(status: Refund::OPEN_STATUSES).select { |refund| refund.ticket_ids.intersect?(selected_ids) }
+      raise Refund::AlreadyRefunded, "a cancellation refund is already in progress for those tickets" if overlapping.any?(&:cancellation?)
+      raise Refund::AlreadyRefunded, "an unresolved adjustment must be reconciled before cancellation" if overlapping.any? { |refund| !refund.processed? || refund.credit_note_pending? }
 
-    # Scoped to cancellation refunds only: a ticket with an open price_adjustment
-    # refund is still fully cancelable (the two kinds have independent guards).
-    already_canceling = refunds.where(status: Refund::OPEN_STATUSES, kind: "cancellation").flat_map(&:ticket_ids).intersection(selected_ids)
-    raise Refund::AlreadyRefunded, "a cancellation refund is already in progress for those tickets" if already_canceling.any?
-
-    invoice = invoices.invoice.first
-    purchase_lines = invoice&.line_items || metadata["invoice_purchase_lines"]
-    raise ArgumentError, "order #{code} has no captured purchase lines to refund against" unless purchase_lines
-    lines = purchase_lines.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
-    raise ArgumentError, "refund selection is missing captured purchase lines" unless lines.size == selected_ids.size
-
-    selected_tickets_by_id = selected_tickets.index_by(&:id)
-    # Net against anything already refunded for each ticket (e.g. a prior
-    # price_adjustment refund), so a full cancellation only pays the remainder.
-    ticket_amounts_paise = lines.each_with_object({}) do |line, hash|
-      ticket = selected_tickets_by_id.fetch(line.fetch("ticket_id"))
-      hash[line.fetch("ticket_id").to_s] = [ line.fetch("total_paise") - Refund.refunded_paise_for(ticket), 0 ].max
+      lines = captured_purchase_lines.select { |line| selected_ids.include?(line.fetch("ticket_id")) }
+      raise ArgumentError, "refund selection is missing captured purchase lines" unless lines.size == selected_ids.size
+      selected_tickets_by_id = selected_tickets.index_by(&:id)
+      ticket_amounts_paise = lines.to_h do |line|
+        ticket = selected_tickets_by_id.fetch(line.fetch("ticket_id"))
+        [ ticket.id.to_s, [ line.fetch("total_paise") - Refund.refunded_paise_for(ticket), 0 ].max ]
+      end
+      amount_paise = ticket_amounts_paise.values.sum
+      payment_id = payment_id_for_refund(amount_paise)
+      refund = refunds.create!(amount_paise:, ticket_ids: selected_ids, ticket_amounts_paise:, status: "initiated", kind: "cancellation")
+      dispatch_refund!(refund, payment_id:)
     end
-    amount_paise = ticket_amounts_paise.values.sum
-    payment_id = payment_id_for_refund(amount_paise)
-
-    refund = refunds.create!(amount_paise:, ticket_ids: selected_ids, ticket_amounts_paise:, status: "initiated", kind: "cancellation")
-    dispatch_refund!(refund, payment_id:)
   end
 
-  # Pure/read-only: the per-ticket price-drop amount still owed, netted against
-  # anything already refunded for that ticket. Shared by the Avo dry-run preview
-  # and apply_price_adjustment_refund! itself, so the two never disagree.
   def price_adjustment_breakdown(ticket_ids)
     LegacyCommerce.assert!(self)
-    selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
-    tickets.where(id: selected_ids, canceled_at: nil).includes(:ticket_type).each_with_object({}) do |ticket, hash|
-      delta = ticket.price_paise - ticket.ticket_type.price_paise
-      next unless delta.positive?
+    return {} unless paid?
 
-      remaining = [ delta, ticket.price_paise - Refund.refunded_paise_for(ticket) ].min
-      hash[ticket.id.to_s] = remaining if remaining.positive?
+    selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
+    excluded_ids = refunds.where(status: Refund::OPEN_STATUSES).flat_map(&:ticket_ids)
+    purchase_lines = captured_purchase_lines.index_by { |line| line.fetch("ticket_id") }
+    amounts = tickets.where(id: selected_ids - excluded_ids, canceled_at: nil).includes(:ticket_type).each_with_object({}) do |ticket, hash|
+      line = purchase_lines[ticket.id]
+      next unless line
+
+      delta = line.fetch("total_paise") - ticket.ticket_type.price_paise
+      hash[ticket.id.to_s] = delta if delta.positive?
     end
+    amounts.values.sum >= 100 ? amounts : {}
   end
 
-  def apply_price_adjustment_refund!(ticket_ids)
+  def apply_price_adjustment_refund!(ticket_ids, actor: nil)
     LegacyCommerce.assert!(self)
     selected_ids = Array(ticket_ids).map { |id| Integer(id) }.uniq
-    raise ArgumentError, "only a paid order can be refunded" unless paid?
-    raise ArgumentError, "select at least one ticket" if selected_ids.empty?
-
-    already_adjusted = refunds.where(status: Refund::OPEN_STATUSES, kind: "price_adjustment").flat_map(&:ticket_ids).intersection(selected_ids)
-    raise Refund::AlreadyRefunded, "a price adjustment refund is already in progress for those tickets" if already_adjusted.any?
-
-    ticket_amounts_paise = price_adjustment_breakdown(selected_ids)
-    raise ArgumentError, "no eligible price drop for the selected tickets" if ticket_amounts_paise.empty?
-
-    amount_paise = ticket_amounts_paise.values.sum
-    eligible_ids = ticket_amounts_paise.keys.map(&:to_i)
-    payment_id = payment_id_for_refund(amount_paise)
-
-    refund = refunds.create!(amount_paise:, ticket_ids: eligible_ids, ticket_amounts_paise:, status: "initiated", kind: "price_adjustment")
-    record_price_adjustment_audit!(refund, eligible_ids, ticket_amounts_paise)
-    dispatch_refund!(refund, payment_id:)
+    with_lock do
+      raise ArgumentError, "only a paid order can be refunded" unless paid?
+      raise ArgumentError, "select at least one ticket" if selected_ids.empty?
+      overlapping = refunds.where(status: Refund::OPEN_STATUSES).flat_map(&:ticket_ids).intersection(selected_ids)
+      ticket_amounts_paise = price_adjustment_breakdown(selected_ids)
+      if ticket_amounts_paise.empty? && overlapping.any?
+        raise Refund::AlreadyRefunded, "a refund is already in progress or completed for those tickets"
+      end
+      raise ArgumentError, "no eligible price drop for the selected tickets" if ticket_amounts_paise.empty?
+      amount_paise = ticket_amounts_paise.values.sum
+      eligible_ids = ticket_amounts_paise.keys.map(&:to_i)
+      payment_id = payment_id_for_refund(amount_paise)
+      refund = refunds.create!(amount_paise:, ticket_ids: eligible_ids, ticket_amounts_paise:, status: "initiated", kind: "price_adjustment")
+      record_price_adjustment_audit!(refund, eligible_ids, ticket_amounts_paise, actor:)
+      dispatch_refund!(refund, payment_id:)
+    end
   end
 
   def confirm_from_razorpay_if_stalled!
@@ -361,8 +356,14 @@ class Order < ApplicationRecord
   end
 
   private
+    def captured_purchase_lines
+      invoices.invoice.first&.line_items || metadata["invoice_purchase_lines"] ||
+        raise(ArgumentError, "order #{code} has no captured purchase lines to refund against")
+    end
+
     def payment_id_for_refund(amount_paise)
       return nil unless amount_paise.positive?
+      raise ArgumentError, "refund amount must be at least 100 paise" if amount_paise < 100
 
       payment_events.order(created_at: :desc).filter_map do |event|
         event.razorpay_payment_id || event.raw.dig("payload", "payment", "entity", "id")
@@ -374,12 +375,13 @@ class Order < ApplicationRecord
         event = payment_events.create!(razorpay_event_id: "free_refund_#{refund.id}", kind: "refund.processed", amount_paise: 0)
         ProcessRefundJob.perform_now(refund.id, event.id)
       else
-        InitiateRefundJob.perform_later(refund, payment_id)
+        job = InitiateRefundJob.perform_later(refund, payment_id)
+        raise ActiveJob::EnqueueError, "refund job could not be enqueued" unless job
       end
       refund
     end
 
-    def record_price_adjustment_audit!(refund, eligible_ids, ticket_amounts_paise)
+    def record_price_adjustment_audit!(refund, eligible_ids, ticket_amounts_paise, actor:)
       rows = tickets.where(id: eligible_ids).includes(:ticket_type).map do |ticket|
         {
           "ticket_id" => ticket.id,
@@ -393,7 +395,7 @@ class Order < ApplicationRecord
         razorpay_event_id: "price_adjustment_#{refund.id}",
         kind: "price_adjustment_recorded",
         amount_paise: refund.amount_paise,
-        raw: { "tickets" => rows }
+        raw: { "tickets" => rows, "actor_id" => actor&.id }
       )
     end
 

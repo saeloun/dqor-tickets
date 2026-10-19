@@ -1,5 +1,5 @@
 <%= mail_heading "A price drop refund" %>
 <%= mail_text "Hello #{@order.buyer_name}," %>
 <%= mail_text do %>The price of your <%= @tickets.size > 1 ? "tickets" : "ticket" %> has dropped since you purchased. We've refunded the difference — <strong>₹<%= @refund.amount_paise / 100.0 %></strong> — via refund <strong><%= @refund.razorpay_refund_id %></strong>. Credit note <strong><%= @credit_note.number %></strong> is attached.<% end %>
-<%= mail_text do %>Your <%= @tickets.size > 1 ? "tickets remain" : "ticket remains" %> valid — this refund does not affect your registration or attendance.<% end %>
+<%= mail_text do %>This price adjustment does not cancel tickets. View your order for the current status of each ticket.<% end %>
 <p style="margin:0 0 20px;"><%= mail_button "View your order", order_url(@order.code) %></p>

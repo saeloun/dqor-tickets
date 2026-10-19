@@ -14,11 +14,35 @@ class Refund < ApplicationRecord
   validates :amount_paise, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :ticket_amounts_paise_balances, on: :create
 
-  # Refunded-so-far balance for a ticket, across every open refund of any kind
-  # (cancellation or price_adjustment) — the single source of truth used to cap
-  # any future refund against this ticket at its original purchase price.
   def self.refunded_paise_for(ticket)
-    ticket.order.refunds.where(status: OPEN_STATUSES).sum { |refund| refund.ticket_amounts_paise.fetch(ticket.id.to_s, 0).to_i }
+    ticket.order.refunds.where(status: OPEN_STATUSES).sum { |refund| refund.reserved_paise_for(ticket) }
+  end
+
+  def reserved_paise_for(ticket)
+    return 0 unless ticket_ids.include?(ticket.id)
+    return ticket_amounts_paise.fetch(ticket.id.to_s).to_i if ticket_amounts_paise.present?
+
+    purchase_lines = order.invoices.invoice.first&.line_items || order.metadata["invoice_purchase_lines"]
+    lines = Array(purchase_lines).select { |line| ticket_ids.include?(line.fetch("ticket_id")) }
+    unless cancellation? && lines.size == ticket_ids.size && lines.sum { |line| line.fetch("total_paise") } == amount_paise
+      raise AlreadyRefunded, "legacy refund allocation requires reconciliation"
+    end
+    lines.find { |line| line.fetch("ticket_id") == ticket.id }.fetch("total_paise")
+  end
+
+  def fail!(event_id:, reason:)
+    order.with_lock do
+      with_lock do
+        return if processed? || failed? || provider_processed?
+        update!(status: "failed")
+        order.payment_events.create_or_find_by!(razorpay_event_id: event_id) do |event|
+          event.kind = "refund_failed"
+          event.amount_paise = amount_paise
+          event.level = "warn"
+          event.raw = { "refund_id" => id, "reason" => reason }
+        end
+      end
+    end
   end
 
   def process!(payment_event)
@@ -40,12 +64,6 @@ class Refund < ApplicationRecord
         purchase_lines = invoice&.line_items || order.metadata["invoice_purchase_lines"]
         raise AlreadyRefunded, "order #{order.code} has no invoice or captured purchase lines to credit" unless purchase_lines
         owned = order.tickets.where(id: ticket_ids)
-        # A price_adjustment refund never cancels its ticket, so this guard only
-        # protects the cancellation path. A price_adjustment that is still
-        # pending/initiated when a later cancellation refund for the same ticket
-        # (already netted against it via .refunded_paise_for) processes first can
-        # find its ticket already canceled — the gateway money was already sent
-        # and can't be un-sent, so process! must still be allowed to finish.
         raise AlreadyRefunded, "tickets on order #{order.code} were already refunded" if cancellation? && owned.any? && owned.where(canceled_at: nil).count != owned.count
 
         line_items = purchase_lines.select { |line_item| ticket_ids.include?(line_item.fetch("ticket_id")) }
@@ -70,6 +88,15 @@ class Refund < ApplicationRecord
   end
 
   private
+    def provider_processed?
+      return false unless razorpay_refund_id.present?
+
+      order.payment_events.where(kind: "refund.processed", amount_paise:).any? do |event|
+        entity = event.raw.dig("payload", "refund", "entity")
+        entity && entity["id"] == razorpay_refund_id && entity["amount"] == amount_paise
+      end
+    end
+
     def ticket_amounts_paise_balances
       return if ticket_amounts_paise.blank?
       errors.add(:ticket_amounts_paise, "must sum to amount_paise") unless ticket_amounts_paise.values.sum(&:to_i) == amount_paise
@@ -91,7 +118,10 @@ class Refund < ApplicationRecord
 
       synthetic = ticket_amounts_paise.present? &&
         original_lines.any? { |line| ticket_amounts_paise.fetch(line.fetch("ticket_id").to_s, 0).to_i != line.fetch("total_paise") }
-      lines = synthetic ? original_lines.map { |line| Invoice.delta_line_item(line, ticket_amounts_paise.fetch(line.fetch("ticket_id").to_s).to_i) } : original_lines
+      credited_lines = invoice.credit_notes.flat_map(&:line_items)
+      lines = synthetic ? original_lines.map do |line|
+        Invoice.delta_line_item(line, ticket_amounts_paise.fetch(line.fetch("ticket_id").to_s).to_i, credited_lines:)
+      end : original_lines
       unless lines.sum { |line| line.fetch("total_paise") } == amount_paise
         record_credit_note_pending!("PurchaseLinesMismatch")
         return
