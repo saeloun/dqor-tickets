@@ -1,0 +1,11 @@
+A price drop refund
+
+Hello <%= @order.buyer_name %>,
+
+The price of your <%= @tickets.size > 1 ? "tickets" : "ticket" %> has dropped since you purchased. We've refunded the
+difference — ₹<%= @refund.amount_paise / 100.0 %> — via refund <%= @refund.razorpay_refund_id %>.
+Credit note <%= @credit_note.number %> is attached.
+
+Your <%= @tickets.size > 1 ? "tickets remain" : "ticket remains" %> valid — this refund does not affect your registration or attendance.
+
+View your order: <%= order_url(@order.code) %>

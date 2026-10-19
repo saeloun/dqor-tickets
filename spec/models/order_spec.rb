@@ -113,6 +113,97 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#apply_price_adjustment_refund!" do
+    before { allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test") }
+
+    def dropped_price_order
+      order = create(:order, :paid, total_paise: 550_000)
+      ticket_type = create(:ticket_type, price_paise: 550_000)
+      ticket = create(:ticket, order:, ticket_type:, price_paise: 550_000)
+      Invoice.issue_for!(order)
+      create(:payment_event, order:, razorpay_payment_id: "pay_test")
+      ticket_type.update!(price_paise: 450_000)
+      [ order, ticket, ticket_type ]
+    end
+
+    it "refunds only the price-drop delta, leaves the ticket valid, and records an audit event" do
+      order, ticket, = dropped_price_order
+      stub_request(:post, "https://api.razorpay.com/v1/payments/pay_test/refund").to_return(
+        status: 200,
+        body: { entity: "refund", id: "rfnd_adj", amount: 100_000 }.to_json,
+        headers: { "Content-Type" => "application/json" }
+      )
+
+      refund = nil
+      perform_enqueued_jobs(only: InitiateRefundJob) do
+        refund = order.apply_price_adjustment_refund!([ ticket.id ])
+      end
+
+      expect(refund.reload).to have_attributes(kind: "price_adjustment", amount_paise: 100_000, razorpay_refund_id: "rfnd_adj", ticket_ids: [ ticket.id ])
+      expect(ticket.reload.canceled_at).to be_nil
+
+      audit = order.payment_events.find_by(kind: "price_adjustment_recorded")
+      expect(audit.amount_paise).to eq(100_000)
+      expect(audit.raw.fetch("tickets")).to contain_exactly(
+        "ticket_id" => ticket.id, "ticket_type_id" => ticket.ticket_type_id,
+        "old_price_paise" => 550_000, "new_price_paise" => 450_000, "delta_paise" => 100_000
+      )
+    end
+
+    it "only charges the remainder on a later full cancellation" do
+      order, ticket, = dropped_price_order
+      stub_request(:post, "https://api.razorpay.com/v1/payments/pay_test/refund").to_return(
+        status: 200,
+        body: { entity: "refund", id: "rfnd_adj", amount: 100_000 }.to_json,
+        headers: { "Content-Type" => "application/json" }
+      )
+
+      order.apply_price_adjustment_refund!([ ticket.id ])
+      cancellation = order.refund_tickets!([ ticket.id ])
+
+      expect(cancellation.amount_paise).to eq(450_000)
+    end
+
+    it "fails the job on a non-transient gateway error, leaving the refund uncompleted and the ticket valid" do
+      order, ticket, = dropped_price_order
+      stub_request(:post, "https://api.razorpay.com/v1/payments/pay_test/refund").to_return(
+        status: 400,
+        body: { error: { code: "BAD_REQUEST_ERROR", description: "refund amount exceeds captured amount" } }.to_json,
+        headers: { "Content-Type" => "application/json" }
+      )
+
+      raised = nil
+      begin
+        perform_enqueued_jobs(only: InitiateRefundJob) { order.apply_price_adjustment_refund!([ ticket.id ]) }
+      rescue StandardError, Minitest::Assertion => error
+        raised = error
+      end
+
+      expect([ raised, raised&.cause ]).to include(an_instance_of(Razorpay::BadRequestError))
+      expect(order.refunds.sole).to have_attributes(status: "initiated", razorpay_refund_id: nil)
+      expect(ticket.reload.canceled_at).to be_nil
+    end
+
+    it "raises when no eligible price drop exists for the selected tickets" do
+      order = create(:order, :paid)
+      ticket_type = create(:ticket_type, price_paise: 350_000)
+      ticket = create(:ticket, order:, ticket_type:, price_paise: 350_000)
+      Invoice.issue_for!(order)
+
+      expect { order.apply_price_adjustment_refund!([ ticket.id ]) }.to raise_error(ArgumentError, /no eligible price drop/)
+    end
+
+    it "refuses a second adjustment for a ticket already mid-adjustment, without enqueuing a second job" do
+      order, ticket, = dropped_price_order
+
+      order.apply_price_adjustment_refund!([ ticket.id ])
+
+      expect do
+        expect { order.apply_price_adjustment_refund!([ ticket.id ]) }.to raise_error(Refund::AlreadyRefunded, /already in progress/)
+      end.not_to change { order.refunds.count }
+    end
+  end
+
   describe "CSV exports" do
     it "exports buyer, GST, coupon, and attendee details" do
       ticket_type = create(:ticket_type, name: "Regular")

@@ -41,6 +41,16 @@ class OrderMailer < ApplicationMailer
     mail(to: @order.email, subject: "Your Deccan Queen on Rails credit note")
   end
 
+  def price_adjustment_refund_note(refund)
+    LegacyCommerce.assert!(refund)
+    @refund = refund
+    @order = refund.order
+    @tickets = @order.tickets.where(id: refund.ticket_ids)
+    @credit_note = @order.invoices.credit_note.find_by!(number: refund.credit_note_number)
+    attach(@credit_note)
+    mail(to: @order.email, subject: "A price drop refund for your Deccan Queen on Rails #{@tickets.size > 1 ? "tickets" : "ticket"}")
+  end
+
   private
     def attach(record)
       attachments[record.pdf.filename.to_s] = record.pdf.download

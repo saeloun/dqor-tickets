@@ -21,6 +21,12 @@ class TicketType < ApplicationRecord
     active? && (!sales_start_at || sales_start_at <= at) && (!sales_end_at || sales_end_at >= at)
   end
 
+  # Paid, uncanceled tickets purchased above this type's current price —
+  # candidates for a price-adjustment refund after a price drop.
+  def price_adjustment_candidates
+    tickets.legacy.where(canceled_at: nil).joins(:order).merge(Order.legacy.paid).where("tickets.price_paise > ?", price_paise)
+  end
+
   def conference_pass?
     slug.start_with?("conference-pass-")
   end

@@ -10,6 +10,11 @@ class Invoice < ApplicationRecord
   attr_readonly :order_id, :number, :kind, :issued_on, :refers_to_id,
     :buyer_snapshot, :line_items, :snapshot_version, :seller_snapshot, :tax_snapshot
 
+  # Transient, not persisted: lets a credit note carry delta-based (partial,
+  # recomputed-GST) lines instead of an unchanged subset of the original
+  # invoice's lines — used only for price-adjustment and remainder refunds.
+  attr_accessor :allow_synthetic_credit_lines
+
   belongs_to :order
   belongs_to :refers_to, class_name: "Invoice", optional: true
   has_many :credit_notes, class_name: "Invoice", foreign_key: :refers_to_id, dependent: :restrict_with_exception, inverse_of: :refers_to
@@ -43,7 +48,7 @@ class Invoice < ApplicationRecord
     order.with_lock { issue_locked_for!(order, **options) }
   end
 
-  def self.issue_locked_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil)
+  def self.issue_locked_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil, allow_synthetic_credit_lines: false)
     existing = order.invoices.invoice.first if kind.to_s == "invoice"
     return existing if existing
 
@@ -54,9 +59,13 @@ class Invoice < ApplicationRecord
       policy = { seller: refers_to.seller_snapshot, tax: refers_to.tax_snapshot }
       buyer = refers_to.buyer_snapshot
       lines = line_items || refers_to.line_items
-      unless lines.present? && lines.uniq.size == lines.size && (lines - refers_to.line_items).empty?
-        raise ArgumentError, "credit lines must be unchanged lines from the original invoice"
+      valid = if allow_synthetic_credit_lines
+        original_ticket_ids = refers_to.line_items.map { |line| line["ticket_id"] }
+        lines.present? && lines.uniq.size == lines.size && lines.all? { |line| original_ticket_ids.include?(line["ticket_id"]) }
+      else
+        lines.present? && lines.uniq.size == lines.size && (lines - refers_to.line_items).empty?
       end
+      raise ArgumentError, "credit lines must be unchanged lines from the original invoice" unless valid
     else
       policy = InvoicePolicy.snapshot
       buyer = buyer_snapshot(order)
@@ -79,7 +88,8 @@ class Invoice < ApplicationRecord
           seller_snapshot: policy.fetch(:seller),
           tax_snapshot: policy.fetch(:tax),
           kind:,
-          refers_to:
+          refers_to:,
+          allow_synthetic_credit_lines: kind.to_s == "credit_note" ? allow_synthetic_credit_lines : nil
         )
       end
     rescue ActiveRecord::RecordNotUnique
@@ -139,6 +149,27 @@ class Invoice < ApplicationRecord
     end
   end
 
+  # A partial-amount credit line for one ticket: used when crediting only a
+  # price drop (or a remainder after one), never the ticket's full original
+  # line total. Carries the original line's SAC/rates but recomputes the GST
+  # split on just `paise` via the same Gst.breakdown the original line used.
+  def self.delta_line_item(original_line, paise)
+    interstate = original_line["igst_rate"].to_i == 18
+    breakdown = Gst.breakdown(paise, state_code: interstate ? "29" : "27", gstin: interstate ? "present" : nil)
+    {
+      "ticket_id" => original_line.fetch("ticket_id"),
+      "ticket_type_id" => original_line["ticket_type_id"],
+      "name" => original_line.fetch("name"),
+      "price_paise" => paise,
+      "discount_paise" => 0,
+      "total_paise" => paise,
+      "sac" => original_line.fetch("sac"),
+      "cgst_rate" => original_line.fetch("cgst_rate"),
+      "sgst_rate" => original_line.fetch("sgst_rate"),
+      "igst_rate" => original_line.fetch("igst_rate")
+    }.merge(breakdown.stringify_keys)
+  end
+
   def delete
     raise ActiveRecord::ReadOnlyRecord, "invoices cannot be deleted"
   end
@@ -190,12 +221,21 @@ class Invoice < ApplicationRecord
     def credit_snapshot_matches_reference
       return unless credit_note? && refers_to
 
-      unless refers_to.snapshot_version == 2 && seller_snapshot == refers_to.seller_snapshot &&
-          buyer_snapshot == refers_to.buyer_snapshot && tax_snapshot == refers_to.tax_snapshot &&
-          line_items.is_a?(Array) && line_items.any? && line_items.uniq.size == line_items.size &&
-          (line_items - refers_to.line_items).empty?
-        errors.add(:refers_to, "requires original versioned snapshots and unchanged credit lines")
+      structurally_ok = refers_to.snapshot_version == 2 && seller_snapshot == refers_to.seller_snapshot &&
+        buyer_snapshot == refers_to.buyer_snapshot && tax_snapshot == refers_to.tax_snapshot &&
+        line_items.is_a?(Array) && line_items.any? && line_items.uniq.size == line_items.size
+
+      lines_ok = if allow_synthetic_credit_lines
+        original_by_ticket = refers_to.line_items.index_by { |line| line["ticket_id"] }
+        line_items.all? do |line|
+          original = original_by_ticket[line["ticket_id"]]
+          original && line["total_paise"].to_i.positive? && line["total_paise"].to_i <= original.fetch("total_paise") && valid_line?(line)
+        end
+      else
+        (line_items - refers_to.line_items).empty?
       end
+
+      errors.add(:refers_to, "requires original versioned snapshots and unchanged credit lines") unless structurally_ok && lines_ok
     end
 
     def reference_is_invoice
