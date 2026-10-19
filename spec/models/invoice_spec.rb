@@ -184,6 +184,70 @@ RSpec.describe Invoice, type: :model do
     expect(described_class.column_names).to include("seller_snapshot", "tax_snapshot", "snapshot_version")
   end
 
+  describe ".delta_line_item" do
+    it "recomputes the CGST/SGST split on just the delta for an intra-state line" do
+      order = order_with_ticket
+      original = described_class.issue_for!(order).line_items.sole
+
+      line = described_class.delta_line_item(original, 100_000)
+
+      expect(line).to include(
+        "ticket_id" => original.fetch("ticket_id"), "price_paise" => 100_000, "discount_paise" => 0, "total_paise" => 100_000,
+        "taxable" => 84_746, "cgst" => 7_627, "sgst" => 7_627, "igst" => 0
+      )
+    end
+
+    it "recomputes the IGST split on just the delta for an interstate line" do
+      order = order_with_ticket(gstin: "29AAAAA0000A1Z5", billing_state_code: "29")
+      original = described_class.issue_for!(order).line_items.sole
+
+      line = described_class.delta_line_item(original, 100_000)
+
+      expect(line).to include("total_paise" => 100_000, "taxable" => 84_746, "cgst" => 0, "sgst" => 0, "igst" => 15_254)
+    end
+  end
+
+  describe "allow_synthetic_credit_lines" do
+    it "accepts a delta-based credit line for a ticket that exists on the original invoice, at or below its amount" do
+      order = order_with_ticket
+      invoice = described_class.issue_for!(order)
+      line = described_class.delta_line_item(invoice.line_items.sole, 100_000)
+
+      credit_note = described_class.issue_for!(order, kind: :credit_note, refers_to: invoice, line_items: [ line ], allow_synthetic_credit_lines: true)
+
+      expect(credit_note.line_items.sole.fetch("total_paise")).to eq(100_000)
+      expect(credit_note.seller_snapshot).to eq(invoice.seller_snapshot)
+    end
+
+    it "rejects a synthetic credit line for a ticket not on the original invoice" do
+      order = order_with_ticket
+      invoice = described_class.issue_for!(order)
+      foreign_line = described_class.delta_line_item(invoice.line_items.sole, 100_000).merge("ticket_id" => invoice.line_items.sole.fetch("ticket_id") + 1)
+
+      expect { described_class.issue_for!(order, kind: :credit_note, refers_to: invoice, line_items: [ foreign_line ], allow_synthetic_credit_lines: true) }
+        .to raise_error(ArgumentError, /unchanged lines/)
+    end
+
+    it "rejects a synthetic credit line whose amount exceeds the original line" do
+      order = order_with_ticket
+      invoice = described_class.issue_for!(order)
+      inflated = described_class.delta_line_item(invoice.line_items.sole, invoice.line_items.sole.fetch("total_paise") + 1)
+
+      expect { described_class.issue_for!(order, kind: :credit_note, refers_to: invoice, line_items: [ inflated ], allow_synthetic_credit_lines: true) }
+        .to raise_error(ActiveRecord::RecordInvalid, /unchanged credit lines/)
+    end
+
+    it "leaves the default credit-note path exactly as strict as before" do
+      order = order_with_ticket
+      invoice = described_class.issue_for!(order)
+      altered = invoice.line_items.deep_dup
+      altered.first["total_paise"] -= 1
+
+      expect { described_class.issue_for!(order, kind: :credit_note, refers_to: invoice, line_items: altered) }
+        .to raise_error(ArgumentError, /unchanged lines/)
+    end
+  end
+
   it "validates credit provenance even for direct model creation" do
     original = described_class.issue_for!(order_with_ticket)
     attributes = original.attributes.except("id", "created_at", "updated_at").merge(

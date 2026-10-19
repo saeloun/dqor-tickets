@@ -220,6 +220,75 @@ RSpec.describe "Avo admin actions", type: :request do
     end
   end
 
+  describe "Refund price drop to affected buyers" do
+    def dropped_price_order(price_paise: 550_000, ticket_type: create(:ticket_type, price_paise:))
+      order = create(:order, :paid, total_paise: price_paise)
+      ticket = create(:ticket, order:, ticket_type:, price_paise:)
+      Invoice.issue_for!(order)
+      create(:payment_event, order:, razorpay_payment_id: "pay_#{SecureRandom.hex(6)}")
+      ticket_type.update!(price_paise: price_paise - 100_000)
+      [ order, ticket, ticket_type ]
+    end
+
+    it "reports affected orders and amounts without mutating anything, in dry-run mode" do
+      order, _ticket, ticket_type = dropped_price_order
+      sign_in_admin
+
+      expect {
+        run_action(Avo::Actions::ApplyPriceAdjustmentRefunds, records: [ ticket_type ], fields: { confirm: false }, resource: "ticket_types")
+      }.not_to change(Refund, :count)
+
+      expect(ActiveJob::Base.queue_adapter.enqueued_jobs).to be_empty
+      expect(action_messages.join).to include(order.code, "₹1000.0")
+    end
+
+    it "creates the refund and enqueues the gateway job when confirmed" do
+      order, ticket, ticket_type = dropped_price_order
+      admin = sign_in_admin
+
+      expect {
+        run_action(Avo::Actions::ApplyPriceAdjustmentRefunds, records: [ ticket_type ], fields: { confirm: true }, resource: "ticket_types")
+      }.to change { order.refunds.count }.by(1)
+
+      refund = order.refunds.sole
+      expect(refund).to have_attributes(kind: "price_adjustment", amount_paise: 100_000)
+      expect(ticket.reload.canceled_at).to be_nil
+      expect(action_messages.join).to include("Queued 1 order")
+      expect(order.payment_events.find_by!(kind: "price_adjustment_recorded").raw.fetch("actor_id")).to eq(admin.id)
+    end
+
+    it "reports a mixed batch as a partial success without rolling back the order that succeeded" do
+      ticket_type = create(:ticket_type, price_paise: 550_000)
+      order, ticket, = dropped_price_order(ticket_type:)
+      other_order, other_ticket, = dropped_price_order(ticket_type:)
+      # Simulate the other order already mid-adjustment for its ticket.
+      create(:refund, order: other_order, status: "initiated", kind: "price_adjustment",
+             ticket_ids: [ other_ticket.id ], ticket_amounts_paise: { other_ticket.id.to_s => 100_000 }, amount_paise: 100_000)
+      sign_in_admin
+
+      expect {
+        run_action(Avo::Actions::ApplyPriceAdjustmentRefunds, records: [ ticket_type ], fields: { confirm: true }, resource: "ticket_types")
+      }.to change { order.refunds.count }.by(1).and change(Refund, :count).by(1)
+
+      expect(action_messages.join).to include("Queued 1 order", "failed", other_order.code)
+      expect(ticket.reload.canceled_at).to be_nil
+    end
+
+    it "running confirm twice does not double-refund, reporting the second run as already in progress" do
+      order, ticket, ticket_type = dropped_price_order
+      sign_in_admin
+
+      run_action(Avo::Actions::ApplyPriceAdjustmentRefunds, records: [ ticket_type ], fields: { confirm: true }, resource: "ticket_types")
+
+      expect {
+        run_action(Avo::Actions::ApplyPriceAdjustmentRefunds, records: [ ticket_type ], fields: { confirm: true }, resource: "ticket_types")
+      }.not_to change { order.refunds.count }
+
+      expect(action_messages.join).to include("already in progress")
+      expect(ticket.reload.canceled_at).to be_nil
+    end
+  end
+
   describe "Resend confirmation" do
     it "re-delivers to an order that already had its confirmation sent" do
       order = create(:order, :paid)

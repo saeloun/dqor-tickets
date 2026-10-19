@@ -24,5 +24,6 @@ class Avo::Resources::TicketType < Avo::BaseResource
 
   def actions
     action Avo::Actions::IssueCompTickets
+    action Avo::Actions::ApplyPriceAdjustmentRefunds
   end
 end

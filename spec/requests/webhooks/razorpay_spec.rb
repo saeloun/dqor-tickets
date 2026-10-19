@@ -97,4 +97,53 @@ RSpec.describe "Razorpay webhooks", type: :request do
 
     expect(response).to have_http_status(:ok)
   end
+  it "releases a failed refund once and ignores a stale failure after processing" do
+    order = create(:order, :paid)
+    ticket = create(:ticket, order:)
+    Invoice.issue_for!(order)
+    refund = create(:refund, order:, razorpay_refund_id: "rfnd_failed", status: "initiated", ticket_ids: [ ticket.id ])
+    payload = { event: "refund.failed", payload: { refund: { entity: { id: refund.razorpay_refund_id, amount: refund.amount_paise } } } }
+    2.times { post_webhook(payload) }
+    expect(response).to have_http_status(:ok)
+    expect(refund.reload).to be_failed
+    expect(order.payment_events.where(kind: "refund_failed").count).to eq(1)
+    expect(ticket.reload.canceled_at).to be_nil
+    expect(enqueued_jobs).to be_empty
+
+    refund.update!(status: "processed")
+    post_webhook(payload, event_id: "stale_failure")
+    expect(refund.reload).to be_processed
+  end
+
+  it "does not release reservations for a mismatched failed webhook amount" do
+    refund = create(:refund, status: "initiated", razorpay_refund_id: "rfnd_failed")
+    payload = { event: "refund.failed", payload: { refund: { entity: { id: refund.razorpay_refund_id, amount: refund.amount_paise + 1 } } } }
+    post_webhook(payload)
+    expect(refund.reload).to be_initiated
+  end
+
+  it "rolls back a processed webhook event when durable enqueue fails so delivery can retry" do
+    order = create(:order, :paid)
+    refund = create(:refund, order:, razorpay_refund_id: "rfnd_queue")
+    payload = { event: "refund.processed", payload: { refund: { entity: { id: refund.razorpay_refund_id, amount: refund.amount_paise } } } }
+    allow(ProcessRefundJob).to receive(:perform_later).and_return(false)
+    expect { post_webhook(payload) }.to raise_error(ActiveJob::EnqueueError)
+    expect(order.payment_events.where(razorpay_event_id: "event_test")).to be_empty
+  end
+  it "preserves provider processing evidence when a stale failure arrives before the worker" do
+    allow(PdfRenderer).to receive(:render).and_return("%PDF-1.7 test")
+    order = create(:order, :paid)
+    ticket = create(:ticket, order:)
+    Invoice.issue_for!(order)
+    refund = create(:refund, order:, razorpay_refund_id: "rfnd_monotonic", status: "initiated", ticket_ids: [ ticket.id ], amount_paise: ticket.price_paise)
+    entity = { id: refund.razorpay_refund_id, amount: refund.amount_paise }
+    post_webhook({ event: "refund.processed", payload: { refund: { entity: } } }, event_id: "processed_first")
+    post_webhook({ event: "refund.failed", payload: { refund: { entity: } } }, event_id: "stale_failed_second")
+    expect(refund.reload).to be_initiated
+    event = order.payment_events.find_by!(razorpay_event_id: "processed_first")
+    ProcessRefundJob.perform_now(refund.id, event.id)
+    expect(refund.reload).to be_processed
+    expect(ticket.reload.canceled_at).to be_present
+    expect(order.payment_events.where(kind: "refund_failed")).to be_empty
+  end
 end

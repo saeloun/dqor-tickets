@@ -349,4 +349,19 @@ RSpec.describe TicketType, type: :model do
       expect(limited.available_quantity).to eq(0)
     end
   end
+
+  describe "#price_adjustment_candidates" do
+    it "finds only paid, uncanceled tickets purchased above the current price" do
+      type = create(:ticket_type, price_paise: 450_000)
+      order = create(:order, :paid)
+      above = create(:ticket, order:, ticket_type: type, price_paise: 550_000)
+      at_price = create(:ticket, order:, ticket_type: type, price_paise: 450_000)
+      canceled_above = create(:ticket, order:, ticket_type: type, price_paise: 550_000, canceled_at: Time.current)
+      pending_order = create(:order, status: :pending)
+      pending_above = create(:ticket, order: pending_order, ticket_type: type, price_paise: 550_000)
+
+      expect(type.price_adjustment_candidates).to contain_exactly(above)
+      expect(type.price_adjustment_candidates).not_to include(at_price, canceled_above, pending_above)
+    end
+  end
 end

@@ -29,6 +29,19 @@ RSpec.describe Refund, type: :model do
     create(:payment_event, order: refund.order, kind: "refund.processed", amount_paise:)
   end
 
+  def price_adjustment_refund_for(order, tickets, ticket_amounts_paise:, status: "initiated")
+    amounts = ticket_amounts_paise.transform_keys(&:to_s)
+    create(
+      :refund,
+      order:,
+      status:,
+      kind: "price_adjustment",
+      ticket_ids: Array(tickets).map(&:id),
+      ticket_amounts_paise: amounts,
+      amount_paise: amounts.values.sum
+    )
+  end
+
   describe "validations" do
     it "requires an order" do
       refund = described_class.new(amount_paise: 100, status: "initiated")
@@ -57,6 +70,46 @@ RSpec.describe Refund, type: :model do
 
     it "defaults ticket_ids to an empty list" do
       expect(create(:refund).ticket_ids).to eq([])
+    end
+  end
+
+  describe "#kind" do
+    it "defaults to cancellation" do
+      expect(create(:refund).kind).to eq("cancellation")
+    end
+
+    it "rejects an unknown kind" do
+      refund = build(:refund, kind: "banana")
+
+      expect(refund).not_to be_valid
+      expect(refund.errors[:kind]).to be_present
+    end
+  end
+
+  describe ".refunded_paise_for" do
+    it "is zero for a ticket with no refunds" do
+      _order, tickets, = paid_order
+
+      expect(described_class.refunded_paise_for(tickets.first)).to eq(0)
+    end
+
+    it "sums ticket_amounts_paise across open-status refunds only, ignoring failed ones" do
+      order, tickets, = paid_order
+      ticket = tickets.first
+      create(:refund, order:, status: "processed", kind: "price_adjustment", ticket_ids: [ ticket.id ], ticket_amounts_paise: { ticket.id.to_s => 50_000 }, amount_paise: 50_000)
+      create(:refund, order:, status: "failed", kind: "price_adjustment", ticket_ids: [ ticket.id ], ticket_amounts_paise: { ticket.id.to_s => 999_999 }, amount_paise: 999_999)
+
+      expect(described_class.refunded_paise_for(ticket.reload)).to eq(50_000)
+    end
+
+    it "only counts the amount recorded for that specific ticket, not other tickets on the same refund" do
+      order, tickets, = paid_order(ticket_count: 2)
+      first, second = tickets
+      create(:refund, order:, status: "processed", kind: "cancellation", ticket_ids: [ first.id, second.id ],
+             ticket_amounts_paise: { first.id.to_s => 120_000, second.id.to_s => 230_000 }, amount_paise: 350_000)
+
+      expect(described_class.refunded_paise_for(first.reload)).to eq(120_000)
+      expect(described_class.refunded_paise_for(second.reload)).to eq(230_000)
     end
   end
 
@@ -385,6 +438,74 @@ RSpec.describe Refund, type: :model do
       expect { refund.process!(refund_event(refund, amount_paise: 1)) }
         .to raise_error(ArgumentError, /amount does not match refund/)
       expect(order.invoices.credit_note.count).to eq(1)
+    end
+  end
+
+  describe "#process! for a price_adjustment refund" do
+    it "does not cancel the ticket and issues a synthetic, recomputed-GST credit note for only the delta" do
+      order, tickets, ticket_type = paid_order(price_paise: 550_000)
+      Invoice.issue_for!(order)
+      ticket = tickets.first
+      ticket_type.update!(price_paise: 450_000)
+      refund = price_adjustment_refund_for(order, ticket, ticket_amounts_paise: { ticket.id => 100_000 })
+
+      credit_note = refund.process!(refund_event(refund))
+
+      expect(ticket.reload.canceled_at).to be_nil
+      expect(refund.reload).to have_attributes(status: "processed", credit_note_number: credit_note.number)
+      expect(credit_note.line_items.sole).to include(
+        "ticket_id" => ticket.id,
+        "price_paise" => 100_000,
+        "discount_paise" => 0,
+        "total_paise" => 100_000,
+        "taxable" => 84_746,
+        "cgst" => 7_627,
+        "sgst" => 7_627,
+        "igst" => 0
+      )
+    end
+
+    it "is idempotent on a second process! call" do
+      order, tickets, ticket_type = paid_order(price_paise: 550_000)
+      Invoice.issue_for!(order)
+      ticket = tickets.first
+      ticket_type.update!(price_paise: 450_000)
+      refund = price_adjustment_refund_for(order, ticket, ticket_amounts_paise: { ticket.id => 100_000 })
+      event = refund_event(refund)
+
+      first = refund.process!(event)
+      second = refund.process!(event)
+
+      expect(second).to eq(first)
+      expect(order.invoices.credit_note.count).to eq(1)
+      expect(ticket.reload.canceled_at).to be_nil
+    end
+
+    it "does not release inventory, unlike a cancellation refund" do
+      order, tickets, ticket_type = paid_order(ticket_count: 1, price_paise: 550_000, capacity: 10)
+      Invoice.issue_for!(order)
+      ticket_type.update!(price_paise: 450_000)
+      refund = price_adjustment_refund_for(order, tickets.first, ticket_amounts_paise: { tickets.first.id => 100_000 })
+
+      expect { refund.process!(refund_event(refund)) }.not_to(change { ticket_type.reload.available_quantity })
+    end
+  end
+
+  describe "#process! for a cancellation refunding only the remainder after a prior price adjustment" do
+    it "cancels the ticket but credits only the remaining balance, with GST recomputed on that lesser amount" do
+      order, tickets, ticket_type = paid_order(price_paise: 550_000)
+      Invoice.issue_for!(order)
+      ticket = tickets.first
+      ticket_type.update!(price_paise: 450_000)
+      # The ₹1,000 price-adjustment portion was already refunded; a later full
+      # cancellation must only credit the remaining ₹4,500 (450_000 paise).
+      remainder = create(:refund, order:, status: "initiated", kind: "cancellation", ticket_ids: [ ticket.id ],
+                          ticket_amounts_paise: { ticket.id.to_s => 450_000 }, amount_paise: 450_000)
+
+      credit_note = remainder.process!(refund_event(remainder))
+
+      expect(ticket.reload.canceled_at).to be_present
+      expect(credit_note.line_items.sole).to include("ticket_id" => ticket.id, "total_paise" => 450_000)
     end
   end
 

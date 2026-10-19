@@ -11,7 +11,7 @@ class Avo::Actions::RefundTickets < Avo::BaseAction
     ticket_ids = fields[:ticket_ids].to_s.split(/[\s,]+/).compact_blank
     query.first.refund_tickets!(ticket_ids)
     succeed "Refund initiated"
-  rescue ArgumentError, ActiveRecord::RecordInvalid => error
+  rescue Refund::AlreadyRefunded, ArgumentError, ActiveRecord::RecordInvalid => error
     error error.message
     keep_modal_open
   end

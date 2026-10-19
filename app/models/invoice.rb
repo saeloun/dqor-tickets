@@ -10,6 +10,8 @@ class Invoice < ApplicationRecord
   attr_readonly :order_id, :number, :kind, :issued_on, :refers_to_id,
     :buyer_snapshot, :line_items, :snapshot_version, :seller_snapshot, :tax_snapshot
 
+  attr_accessor :allow_synthetic_credit_lines
+
   belongs_to :order
   belongs_to :refers_to, class_name: "Invoice", optional: true
   has_many :credit_notes, class_name: "Invoice", foreign_key: :refers_to_id, dependent: :restrict_with_exception, inverse_of: :refers_to
@@ -43,7 +45,7 @@ class Invoice < ApplicationRecord
     order.with_lock { issue_locked_for!(order, **options) }
   end
 
-  def self.issue_locked_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil)
+  def self.issue_locked_for!(order, kind: :invoice, refers_to: nil, issued_on: Date.current, line_items: nil, allow_synthetic_credit_lines: false)
     existing = order.invoices.invoice.first if kind.to_s == "invoice"
     return existing if existing
 
@@ -54,9 +56,13 @@ class Invoice < ApplicationRecord
       policy = { seller: refers_to.seller_snapshot, tax: refers_to.tax_snapshot }
       buyer = refers_to.buyer_snapshot
       lines = line_items || refers_to.line_items
-      unless lines.present? && lines.uniq.size == lines.size && (lines - refers_to.line_items).empty?
-        raise ArgumentError, "credit lines must be unchanged lines from the original invoice"
+      valid = if allow_synthetic_credit_lines
+        original_ticket_ids = refers_to.line_items.map { |line| line["ticket_id"] }
+        lines.present? && lines.map { |line| line["ticket_id"] }.uniq.size == lines.size && lines.all? { |line| original_ticket_ids.include?(line["ticket_id"]) }
+      else
+        lines.present? && lines.map { |line| line["ticket_id"] }.uniq.size == lines.size && (lines - refers_to.line_items).empty?
       end
+      raise ArgumentError, "credit lines must be unchanged lines from the original invoice" unless valid
     else
       policy = InvoicePolicy.snapshot
       buyer = buyer_snapshot(order)
@@ -79,7 +85,8 @@ class Invoice < ApplicationRecord
           seller_snapshot: policy.fetch(:seller),
           tax_snapshot: policy.fetch(:tax),
           kind:,
-          refers_to:
+          refers_to:,
+          allow_synthetic_credit_lines: kind.to_s == "credit_note" ? allow_synthetic_credit_lines : nil
         )
       end
     rescue ActiveRecord::RecordNotUnique
@@ -139,6 +146,19 @@ class Invoice < ApplicationRecord
     end
   end
 
+  def self.delta_line_item(original_line, paise, credited_lines: [])
+    previous = credited_lines.select { |line| line.fetch("ticket_id") == original_line.fetch("ticket_id") }
+    cumulative = previous.sum { |line| line.fetch("total_paise") } + paise
+    interstate = original_line["igst_rate"].to_i == 18
+    components = if cumulative == original_line.fetch("total_paise")
+      original_line.slice("taxable", "cgst", "sgst", "igst")
+    else
+      Gst.breakdown(cumulative, state_code: interstate ? "29" : "27", gstin: interstate ? "present" : nil).stringify_keys
+    end
+    breakdown = components.to_h { |key, value| [ key, value - previous.sum { |line| line.fetch(key) } ] }
+    original_line.merge("price_paise" => paise, "discount_paise" => 0, "total_paise" => paise).merge(breakdown)
+  end
+
   def delete
     raise ActiveRecord::ReadOnlyRecord, "invoices cannot be deleted"
   end
@@ -184,18 +204,41 @@ class Invoice < ApplicationRecord
       rates = line.values_at("cgst_rate", "sgst_rate", "igst_rate")
       return false unless [ [ 9, 9, 0 ], [ 0, 0, 18 ] ].include?(rates)
       expected = Gst.breakdown(line["total_paise"], state_code: rates.last == 18 ? "29" : "27", gstin: "present").stringify_keys
-      line["price_paise"] - line["discount_paise"] == line["total_paise"] && expected.all? { |key, value| line[key] == value }
+      balanced = line["price_paise"] - line["discount_paise"] == line["total_paise"] &&
+        line.values_at("taxable", "cgst", "sgst", "igst").sum == line["total_paise"]
+      balanced && (expected.all? { |key, value| line[key] == value } || synthetic_credit_line?(line))
     end
 
     def credit_snapshot_matches_reference
       return unless credit_note? && refers_to
 
-      unless refers_to.snapshot_version == 2 && seller_snapshot == refers_to.seller_snapshot &&
-          buyer_snapshot == refers_to.buyer_snapshot && tax_snapshot == refers_to.tax_snapshot &&
-          line_items.is_a?(Array) && line_items.any? && line_items.uniq.size == line_items.size &&
-          (line_items - refers_to.line_items).empty?
-        errors.add(:refers_to, "requires original versioned snapshots and unchanged credit lines")
+      structurally_ok = refers_to.snapshot_version == 2 && seller_snapshot == refers_to.seller_snapshot &&
+        buyer_snapshot == refers_to.buyer_snapshot && tax_snapshot == refers_to.tax_snapshot &&
+        line_items.is_a?(Array) && line_items.any? && line_items.map { |line| line["ticket_id"] }.uniq.size == line_items.size
+
+      lines_ok = if allow_synthetic_credit_lines
+        original_by_ticket = refers_to.line_items.index_by { |line| line["ticket_id"] }
+        line_items.all? do |line|
+          original = original_by_ticket[line["ticket_id"]]
+          original && synthetic_credit_line?(line) && valid_line?(line)
+        end
+      else
+        (line_items - refers_to.line_items).empty?
       end
+
+      errors.add(:refers_to, "requires original versioned snapshots and unchanged credit lines") unless structurally_ok && lines_ok
+    end
+
+    def synthetic_credit_line?(line)
+      return false unless credit_note? && allow_synthetic_credit_lines && refers_to
+      original = refers_to.line_items.find { |item| item["ticket_id"] == line["ticket_id"] }
+      return false unless original && line["total_paise"].is_a?(Integer) && line["total_paise"] >= 0
+
+      credited = @credited_reference_lines ||= refers_to.credit_notes.where.not(id: id).flat_map(&:line_items)
+      previous_total = credited.select { |item| item["ticket_id"] == line["ticket_id"] }.sum { |item| item.fetch("total_paise") }
+      return false if previous_total + line["total_paise"] > original.fetch("total_paise")
+
+      line == self.class.delta_line_item(original, line["total_paise"], credited_lines: credited)
     end
 
     def reference_is_invoice
