@@ -21,6 +21,10 @@
       <%= form.submit "Sign in", class: "btn btn-primary" %>
     <% end %>
 
+    <% if ENV["GOOGLE_CLIENT_ID"].present? && ENV["GOOGLE_CLIENT_SECRET"].present? %>
+      <%= button_to "Continue with Google", "/auth/google_oauth2?login_context=staff", method: :post, data: { turbo: false }, class: "btn btn-secondary" %>
+    <% end %>
+
     <p class="status-hint"><%= link_to "Forgot password?", new_password_path %></p>
     <p class="status-hint">Attending the conference? <%= link_to "Sign in to your attendee account", account_sign_in_path %>.</p>
   </section>
