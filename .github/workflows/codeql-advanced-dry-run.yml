@@ -1,0 +1,100 @@
+name: CodeQL Advanced Dry Run
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/codeql-advanced-dry-run.yml'
+      - '.github/codeql/**'
+      - '.github/scripts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-dry-run-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Dry run (${{ matrix.language }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+            os: ubuntu-24.04
+          - language: javascript-typescript
+            build-mode: none
+            os: ubuntu-24.04
+          - language: python
+            build-mode: none
+            os: ubuntu-24.04
+          - language: ruby
+            build-mode: none
+            os: ubuntu-24.04
+          - language: java-kotlin
+            build-mode: manual
+            os: ubuntu-24.04
+          - language: swift
+            build-mode: manual
+            os: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test result verification
+        run: python3 -m unittest discover -s .github/scripts/tests
+      - uses: actions/setup-java@v5
+        if: matrix.language == 'java-kotlin'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify Android SDK
+        if: matrix.language == 'java-kotlin'
+        run: |
+          test -d "$ANDROID_HOME/platforms/android-35"
+          test -d "$ANDROID_HOME/build-tools/35.0.0"
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          config-file: .github/codeql/advanced-dry-run.yml
+      - name: Build Android for extraction
+        if: matrix.language == 'java-kotlin'
+        working-directory: android
+        run: >-
+          ./gradlew --no-daemon --no-build-cache --rerun-tasks
+          -Pkotlin.incremental=false
+          -Pkotlin.compiler.execution.strategy=in-process
+          :app:assembleDebug
+      - name: Build Swift for extraction
+        if: matrix.language == 'swift'
+        run: >-
+          xcodebuild -project ios/DQORStaff/DQORStaff.xcodeproj
+          -scheme DQORStaff -configuration Debug -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath "$RUNNER_TEMP/dqor-codeql-swift"
+          CODE_SIGNING_ALLOWED=NO clean build
+      - name: Analyze without uploading
+        uses: github/codeql-action/analyze@v4
+        with:
+          output: codeql-dry-run-results
+          category: dry-run/${{ matrix.language }}
+          upload: never
+          upload-database: false
+      - name: Verify analysis and findings
+        run: python3 .github/scripts/verify_codeql_dry_run.py codeql-dry-run-results '${{ matrix.language }}'
+      - name: Verify Kotlin source coverage
+        if: matrix.language == 'java-kotlin'
+        run: python3 .github/scripts/verify_codeql_results.py codeql-dry-run-results
+      - name: Preserve dry-run analysis
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: codeql-dry-run-${{ matrix.language }}-${{ github.sha }}
+          path: codeql-dry-run-results/*.sarif
+          retention-days: 14
+          if-no-files-found: error
