@@ -135,13 +135,14 @@ RSpec.describe "Order document lifecycle", type: :model do
       expect(mail_jobs).to eq(2)
     end
 
-    it "keeps the confirmation re-sendable for as long as the documents stay pending" do
+    it "enqueues only one pending confirmation until the invoice is ready" do
       order = paid_order
 
-      3.times { expect(order.deliver_confirmation!(documents_pending: true)).to be(true) }
+      results = Array.new(3) { order.deliver_confirmation!(documents_pending: true) }
 
+      expect(results).to eq([ true, false, false ])
       expect(order.reload.metadata).to include("confirmation_documents_pending" => true)
-      expect(mail_jobs).to eq(3)
+      expect(mail_jobs).to eq(1)
     end
 
     it "tells the mailer the documents are pending and skips rendering entirely" do

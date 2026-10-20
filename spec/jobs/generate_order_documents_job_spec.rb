@@ -87,6 +87,48 @@ RSpec.describe GenerateOrderDocumentsJob, type: :job do
     expect(PdfRenderer).not_to have_received(:render)
   end
 
+  it "leaves a policy prerequisite actionable without automatic retries and permits an explicit retry" do
+    order = paid_order
+    order.deliver_confirmation!(documents_pending: true)
+    allow(InvoicePolicy).to receive(:snapshot).and_raise(InvoicePolicy::NotConfigured)
+    allow(Rails.logger).to receive(:warn)
+
+    expect do
+      perform_enqueued_jobs(only: described_class) { described_class.perform_later(order) }
+    end.not_to raise_error
+
+    expect(InvoicePolicy).to have_received(:snapshot).once
+    expect(Rails.logger).to have_received(:warn).with("Invoice document requires finance review order_id=#{order.id} reason=InvoicePolicy::NotConfigured").once
+    captured = order.reload.metadata.fetch("invoice_purchase_lines")
+    expect(order.metadata).to include("invoice_pending_reason" => "InvoicePolicy::NotConfigured", "confirmation_documents_pending" => true)
+    expect(order.invoices).to be_empty
+    expect(enqueued_jobs.count { |job| job[:job] == described_class }).to eq(0)
+    expect(enqueued_jobs.count { |job| job[:job] == MailDeliveryJob }).to eq(1)
+
+    order.tickets.sole.update!(price_paise: 1)
+    allow(InvoicePolicy).to receive(:snapshot).and_call_original
+    2.times { described_class.perform_now(order.reload) }
+
+    expect(order.invoices.invoice.sole.pdf).to be_attached
+    expect(order.invoices.invoice.sole.line_items.sole.fetch("total_paise")).to eq(captured.sole.fetch("total_paise"))
+    expect(order.reload.metadata.fetch("invoice_purchase_lines")).to eq(captured)
+    expect(order.metadata).not_to have_key("invoice_pending_reason")
+    expect(enqueued_jobs.count { |job| job[:job] == MailDeliveryJob }).to eq(2)
+  end
+
+  it "does not hide a document error with an unrelated cause or stale pending reason" do
+    order = paid_order
+    order.update!(metadata: { "invoice_pending_reason" => "InvoicePolicy::NotConfigured" })
+    allow(order).to receive(:attach_documents!).and_raise(Invoice::DocumentPending)
+    expect { described_class.new.perform(order) }.to raise_error(Invoice::DocumentPending)
+
+    order.update!(metadata: { "invoice_pending_reason" => "Invoice::LegacySnapshotUnavailable" })
+    allow(order).to receive(:attach_documents!) do
+      raise Invoice::DocumentPending, "synthetic prerequisite", cause: InvoicePolicy::NotConfigured.new
+    end
+    expect { described_class.new.perform(order) }.to raise_error(Invoice::DocumentPending)
+  end
+
   it "retries a rendering failure rather than confirming without the invoice" do
     order = paid_order
     attempts = 0
