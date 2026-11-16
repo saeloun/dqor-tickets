@@ -1,4 +1,6 @@
 class OrderMailer < ApplicationMailer
+  before_deliver :abort_expired_weekly_reminder
+
   def confirmation(order, documents_pending: false)
     LegacyCommerce.assert!(order)
     @order = order
@@ -52,6 +54,10 @@ class OrderMailer < ApplicationMailer
   end
 
   private
+    def abort_expired_weekly_reminder
+      throw :abort if params[:weekly_assignment_reminder] && Conference.status == :after
+    end
+
     def attach(record)
       attachments[record.pdf.filename.to_s] = record.pdf.download
     end
