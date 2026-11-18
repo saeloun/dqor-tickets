@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Build the app or remove the retired Murderbot Render service
+        type: choice
+        default: build
+        options: [build, remove-murderbot]
 
 concurrency:
   group: docker-${{ github.ref_name }}
@@ -15,6 +21,7 @@ env:
 
 jobs:
   build-and-push:
+    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'build'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -73,3 +80,57 @@ jobs:
           else
             echo "Render secrets not set; skipping deploy trigger."
           fi
+
+  remove-murderbot:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'remove-murderbot' && github.repository == 'saeloun/dqor-tickets'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions: {}
+    steps:
+      - name: Remove only the retired Murderbot service
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from urllib.error import HTTPError, URLError
+          from urllib.request import Request, urlopen
+
+          service_id = "srv-d9lefv95efls73b6qk90"
+          url = f"https://api.render.com/v1/services/{service_id}"
+          key = os.environ.get("RENDER_API_KEY")
+          if not key:
+              raise SystemExit("Render credential is unavailable")
+
+          def request(method):
+              req = Request(url, method=method, headers={"Authorization": f"Bearer {key}"})
+              try:
+                  with urlopen(req, timeout=30) as response:
+                      return response.status, json.load(response) if method == "GET" else None
+              except HTTPError as error:
+                  return error.code, None
+              except (URLError, ValueError):
+                  raise SystemExit("Render request failed; response details suppressed") from None
+
+          status, service = request("GET")
+          if status == 404:
+              print("Murderbot Render service is already absent")
+              raise SystemExit(0)
+          if status != 200:
+              raise SystemExit(f"Render preflight failed: HTTP {status}")
+          if (service.get("id"), service.get("name"), service.get("ownerId")) != (
+              service_id, "murderbot-club", "tea-cspvgg0gph6c738l6k20"
+          ):
+              raise SystemExit("Refusing to delete an unexpected service")
+          if service.get("serviceDetails", {}).get("disk"):
+              raise SystemExit("Refusing to delete a service with a persistent disk")
+
+          status, _ = request("DELETE")
+          if status != 204:
+              raise SystemExit(f"Render deletion failed: HTTP {status}")
+          status, _ = request("GET")
+          if status != 404:
+              raise SystemExit(f"Service absence is unverified: HTTP {status}")
+          print("Deleted Murderbot Render service; verified HTTP 404")
+          PY
